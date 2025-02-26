@@ -17,11 +17,13 @@ import {
   useToast,
   useColorModeValue,
   useColorMode,
+  Flex,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ColorModeToggle from "../components/common/ColorModeToggle";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
+import { MdOutlineWbSunny, MdModeNight } from "react-icons/md";
 
 /**
  * Trang Demo - Giúp người dùng dễ dàng test các luồng chính của hệ thống
@@ -41,6 +43,15 @@ export default function Demo() {
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("brand.600", "brand.400");
+  const buttonBgColor = useColorModeValue("brand.500", "brand.400");
+  const buttonHoverBgColor = useColorModeValue("brand.600", "brand.500");
+  const badgeBgColor = useColorModeValue("gray.100", "gray.700");
+  const badgeTextColor = useColorModeValue("gray.800", "gray.200");
+
+  // Icon for current theme
+  const ThemeIcon = colorMode === "dark" ? MdModeNight : MdOutlineWbSunny;
 
   // Danh sách sự kiện demo
   const demoEvents = [
@@ -137,7 +148,7 @@ export default function Demo() {
         <VStack spacing={8} align="stretch">
           {/* Tiêu đề */}
           <Box textAlign="center" py={6}>
-            <Heading as="h1" size="2xl" mb={4}>
+            <Heading as="h1" size="2xl" mb={4} color={headingColor}>
               {t("common.welcome")}
             </Heading>
             <Text fontSize="xl" color={textColor}>
@@ -145,45 +156,68 @@ export default function Demo() {
             </Text>
 
             {/* Demo của Theme và Language Switcher */}
-            <Box mt={6} p={4} bg={cardBgColor} borderRadius="md" shadow="md">
-              <Heading as="h3" size="md" mb={4}>
+            <Box
+              mt={6}
+              p={4}
+              bg={cardBgColor}
+              borderRadius="md"
+              shadow="md"
+              borderWidth="1px"
+              borderColor={borderColor}
+            >
+              <Heading as="h3" size="md" mb={4} color={headingColor}>
                 Language & Theme Demo
               </Heading>
               <HStack spacing={4} justify="center">
-                <Badge colorScheme="purple" p={2} borderRadius="md">
-                  {colorMode === "dark"
-                    ? t("common.darkMode")
-                    : t("common.lightMode")}
-                </Badge>
+                <Flex align="center" gap={2}>
+                  {ThemeIcon && <ThemeIcon />}
+                  <Badge
+                    bg={badgeBgColor}
+                    color={badgeTextColor}
+                    p={2}
+                    borderRadius="md"
+                  >
+                    {colorMode === "dark"
+                      ? t("common.darkMode")
+                      : t("common.lightMode")}
+                  </Badge>
+                </Flex>
                 <ColorModeToggle />
                 <LanguageSwitcher />
               </HStack>
             </Box>
           </Box>
 
-          <Divider />
+          <Divider borderColor={borderColor} />
 
           {/* Phần demo đăng nhập */}
           <Box>
-            <Heading as="h2" size="lg" mb={6}>
+            <Heading as="h2" size="lg" mb={6} color={headingColor}>
               {t("auth.login")} Demo
             </Heading>
             <HStack spacing={4} mb={6}>
               {!isLoggedIn ? (
                 <>
-                  <Button colorScheme="teal" onClick={loginAsUser}>
+                  <Button
+                    bg={buttonBgColor}
+                    color="white"
+                    _hover={{ bg: buttonHoverBgColor }}
+                    onClick={loginAsUser}
+                  >
                     {t("auth.login")} as User
                   </Button>
-                  <Button colorScheme="orange" onClick={loginAsOrganizer}>
+                  <Button
+                    bg={buttonBgColor}
+                    color="white"
+                    _hover={{ bg: buttonHoverBgColor }}
+                    onClick={loginAsOrganizer}
+                  >
                     {t("auth.login")} as Organizer
                   </Button>
                 </>
               ) : (
                 <>
-                  <Badge
-                    colorScheme={userRole === "organizer" ? "orange" : "teal"}
-                    p={2}
-                  >
+                  <Badge bg={badgeBgColor} color={badgeTextColor} p={2}>
                     Role: {userRole === "organizer" ? "Organizer" : "User"}
                   </Badge>
                   <Button colorScheme="red" onClick={logout}>
@@ -194,11 +228,11 @@ export default function Demo() {
             </HStack>
           </Box>
 
-          <Divider />
+          <Divider borderColor={borderColor} />
 
           {/* Events Section */}
           <Box>
-            <Heading as="h2" size="lg" mb={6}>
+            <Heading as="h2" size="lg" mb={6} color={headingColor}>
               {t("events.events")}
             </Heading>
 
@@ -210,6 +244,8 @@ export default function Demo() {
                   shadow="md"
                   borderRadius="lg"
                   overflow="hidden"
+                  borderWidth="1px"
+                  borderColor={borderColor}
                 >
                   <Image
                     src={event.imageUrl}
@@ -219,29 +255,36 @@ export default function Demo() {
                   />
                   <CardBody>
                     <Stack spacing={3}>
-                      <Heading size="md">{event.title}</Heading>
+                      <Heading size="md" color={headingColor}>
+                        {event.title}
+                      </Heading>
                       <Badge
-                        colorScheme={event.isPaid ? "red" : "green"}
+                        bg={badgeBgColor}
+                        color={badgeTextColor}
                         width="fit-content"
                       >
                         {event.isPaid ? t("events.paid") : t("events.free")}
                       </Badge>
-                      <Text>
+                      <Text color={textColor}>
                         {t("events.category")}:{" "}
                         {t(`events.categories.${event.type}`)}
                       </Text>
-                      <Text>
+                      <Text color={textColor}>
                         {t("events.location")}: {event.location}
                       </Text>
-                      <Text>
+                      <Text color={textColor}>
                         {t("events.startDate")}: {event.startDate} -{" "}
                         {t("events.endDate")}: {event.endDate}
                       </Text>
-                      {event.isPaid && <Text>{event.price}</Text>}
+                      {event.isPaid && (
+                        <Text color={textColor}>{event.price}</Text>
+                      )}
                       <HStack spacing={2} mt={2}>
                         <Button
                           size="sm"
-                          colorScheme="teal"
+                          bg={buttonBgColor}
+                          color="white"
+                          _hover={{ bg: buttonHoverBgColor }}
                           onClick={() => goToEventDetail(event.id)}
                         >
                           {t("common.details")}
@@ -249,7 +292,9 @@ export default function Demo() {
                         {isLoggedIn && (
                           <Button
                             size="sm"
-                            colorScheme="blue"
+                            bg={buttonBgColor}
+                            color="white"
+                            _hover={{ bg: buttonHoverBgColor }}
                             onClick={() => goToEventCheckout(event.id)}
                           >
                             {t("events.registerEvent")}
@@ -263,31 +308,31 @@ export default function Demo() {
             </SimpleGrid>
 
             {isLoggedIn && (
-              <Button mt={8} colorScheme="teal" onClick={goToMyTickets}>
+              <Button
+                mt={8}
+                bg={buttonBgColor}
+                color="white"
+                _hover={{ bg: buttonHoverBgColor }}
+                onClick={goToMyTickets}
+              >
                 {t("events.myEvents")}
               </Button>
             )}
           </Box>
 
-          <Divider />
+          <Divider borderColor={borderColor} />
 
           {/* Footer */}
           <Box textAlign="center" py={4}>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color={textColor}>
               {t("footer.copyright")}
             </Text>
             <HStack spacing={4} justify="center" mt={2}>
-              <Button variant="link" size="sm">
+              <Button variant="link" size="sm" color={headingColor}>
                 {t("footer.about")}
               </Button>
-              <Button variant="link" size="sm">
+              <Button variant="link" size="sm" color={headingColor}>
                 {t("footer.contactUs")}
-              </Button>
-              <Button variant="link" size="sm">
-                {t("footer.privacyPolicy")}
-              </Button>
-              <Button variant="link" size="sm">
-                {t("footer.termsOfService")}
               </Button>
             </HStack>
           </Box>
