@@ -39,7 +39,7 @@ import {
   Link,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaChartPie,
   FaCalendarAlt,
@@ -50,21 +50,8 @@ import {
   FaTrash,
   FaPlus,
   FaChartLine,
-  FaArrowUp,
-  FaArrowDown,
 } from "react-icons/fa";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import * as recharts from "recharts";
 
 // Định nghĩa các kiểu dữ liệu
 interface Event {
@@ -101,7 +88,126 @@ interface Analytics {
   attendeesBySource: { name: string; value: number }[];
 }
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+// Biểu đồ cột hiển thị sự kiện theo tháng
+const MonthlyEventsChart = ({
+  data,
+}: {
+  data: { name: string; events: number }[];
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setDimensions({
+        width: containerRef.current.clientWidth,
+        height: 300,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: 300,
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
+
+  return (
+    <Box ref={containerRef} h="300px">
+      <recharts.ResponsiveContainer width="100%" height="100%">
+        <recharts.BarChart
+          data={data}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <recharts.CartesianGrid strokeDasharray="3 3" />
+          <recharts.XAxis dataKey="name" />
+          <recharts.YAxis />
+          <recharts.Tooltip />
+          <recharts.Bar dataKey="events" fill="#38B2AC" />
+        </recharts.BarChart>
+      </recharts.ResponsiveContainer>
+    </Box>
+  );
+};
+
+// Biểu đồ tròn hiển thị người tham gia theo nguồn
+const AttendeesSourceChart = ({
+  data,
+}: {
+  data: { name: string; value: number }[];
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setDimensions({
+        width: containerRef.current.clientWidth,
+        height: 300,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: 300,
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const renderCustomizedLabel = (entry: any) => {
+    const { name, percent } = entry;
+    return `${name}: ${(percent * 100).toFixed(0)}%`;
+  };
+
+  if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
+
+  return (
+    <Box ref={containerRef} h="300px">
+      <recharts.ResponsiveContainer width="100%" height="100%">
+        <recharts.PieChart>
+          <recharts.Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            outerRadius={100}
+            fill="#8884d8"
+            dataKey="value"
+            label={renderCustomizedLabel}
+          >
+            {data.map((entry, index) => (
+              <recharts.Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </recharts.Pie>
+          <recharts.Tooltip />
+        </recharts.PieChart>
+      </recharts.ResponsiveContainer>
+    </Box>
+  );
+};
 
 const Dashboard = () => {
   const toast = useToast();
@@ -207,7 +313,7 @@ const Dashboard = () => {
     },
   ]);
 
-  const [attendees, setAttendees] = useState<Attendee[]>([
+  const attendees = [
     {
       id: "1",
       name: "John Smith",
@@ -248,7 +354,7 @@ const Dashboard = () => {
       purchaseDate: new Date("2023-10-25"),
       status: "cancelled",
     },
-  ]);
+  ];
 
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
@@ -269,7 +375,7 @@ const Dashboard = () => {
   };
 
   // Chuyển đến trang chỉnh sửa sự kiện
-  const handleEditEvent = (eventId: string) => {
+  const handleEditEvent = () => {
     toast({
       title: "Edit event",
       description: "Redirecting to edit page",
@@ -277,14 +383,10 @@ const Dashboard = () => {
       duration: 2000,
       isClosable: true,
     });
-
-    // Trong thực tế, sẽ chuyển hướng đến trang chỉnh sửa
-    // navigate(`/organizer/events/${eventId}/edit`);
   };
 
   // Màu sắc cho giao diện
   const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
   const statBg = useColorModeValue("gray.50", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
 
@@ -409,52 +511,14 @@ const Dashboard = () => {
           <Heading size="md" mb={4}>
             Events by Month
           </Heading>
-          <Box h="300px">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={analytics.eventsByMonth}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="events" fill="#38B2AC" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
+          <MonthlyEventsChart data={analytics.eventsByMonth} />
         </GridItem>
 
         <GridItem bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
           <Heading size="md" mb={4}>
             Attendees by Source
           </Heading>
-          <Box h="300px">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analytics.attendeesBySource}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  {analytics.attendeesBySource.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Box>
+          <AttendeesSourceChart data={analytics.attendeesBySource} />
         </GridItem>
       </Grid>
 
@@ -564,7 +628,7 @@ const Dashboard = () => {
                             <MenuList>
                               <MenuItem
                                 icon={<FaEdit />}
-                                onClick={() => handleEditEvent(event.id)}
+                                onClick={handleEditEvent}
                               >
                                 Edit Event
                               </MenuItem>

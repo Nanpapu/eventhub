@@ -14,6 +14,7 @@ import CreateEvent from "./pages/events/CreateEvent";
 import Profile from "./pages/user/Profile";
 import MyEvents from "./pages/user/MyEvents";
 import Dashboard from "./pages/organizer/Dashboard";
+import EventAttendees from "./pages/organizer/EventAttendees";
 
 // Cấu hình bộ định tuyến cho ứng dụng
 export const router = createBrowserRouter(
@@ -30,6 +31,10 @@ export const router = createBrowserRouter(
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-events" element={<MyEvents />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/organizer/events/:eventId/attendees"
+          element={<EventAttendees />}
+        />
       </Route>
     </Route>
   )
