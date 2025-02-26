@@ -11,6 +11,9 @@ import EventDetail from "./pages/events/EventDetail";
 import SearchResults from "./pages/events/SearchResults";
 import MainLayout from "./components/layout/MainLayout";
 import CreateEvent from "./pages/events/CreateEvent";
+import Profile from "./pages/user/Profile";
+import MyEvents from "./pages/user/MyEvents";
+import Dashboard from "./pages/organizer/Dashboard";
 
 // Cấu hình bộ định tuyến cho ứng dụng
 export const router = createBrowserRouter(
@@ -24,6 +27,9 @@ export const router = createBrowserRouter(
         <Route path="/search" element={<SearchResults />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/create-event" element={<CreateEvent />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/my-events" element={<MyEvents />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Route>
     </Route>
   )
