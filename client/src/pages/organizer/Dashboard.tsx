@@ -50,7 +50,7 @@ import {
   FaTrash,
   FaPlus,
   FaChartLine,
-  // FaQrcode, // Tạm thời comment do không sử dụng
+  FaQrcode,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -701,8 +701,7 @@ const Dashboard = () => {
                               >
                                 Manage Attendees
                               </MenuItem>
-                              {/* Tạm thời comment do lỗi với thư viện QR reader */}
-                              {/* <MenuItem
+                              <MenuItem
                                 icon={<FaQrcode />}
                                 onClick={() =>
                                   navigate(
@@ -711,7 +710,7 @@ const Dashboard = () => {
                                 }
                               >
                                 Check-in Attendees
-                              </MenuItem> */}
+                              </MenuItem>
                               <MenuItem
                                 icon={<FaTrash />}
                                 color="red.500"

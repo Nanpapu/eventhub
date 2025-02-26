@@ -57,11 +57,10 @@ export const router = createBrowserRouter(
           path="/organizer/events/:eventId/attendees"
           element={<EventAttendees />}
         />
-        {/* Tạm thời comment route này do lỗi với thư viện QR reader */}
-        {/* <Route
+        <Route
           path="/organizer/events/:eventId/check-in"
           element={<EventCheckIn />}
-        /> */}
+        />
 
         {/* Information Pages */}
         <Route path="/about" element={<AboutUs />} />

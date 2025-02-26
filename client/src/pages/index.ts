@@ -20,8 +20,7 @@ import MyTickets from "./user/MyTickets";
 // Organizer pages
 import Dashboard from "./organizer/Dashboard";
 import EventAttendees from "./organizer/EventAttendees";
-// Tạm thời comment do lỗi với thư viện QR reader
-// import EventCheckIn from "./organizer/EventCheckIn";
+import EventCheckIn from "./organizer/EventCheckIn";
 
 // Demo page
 import Demo from "./Demo";
@@ -39,6 +38,7 @@ export {
   Notifications,
   Dashboard,
   EventAttendees,
+  EventCheckIn,
   MyTickets,
   Demo,
 };

@@ -55,7 +55,8 @@ import {
   FaSyncAlt,
 } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
-import QrReader from "react-qr-reader";
+// Tạm thời comment để tránh lỗi
+// import QrReader from "react-qr-reader";
 
 // Interface cho dữ liệu người tham dự
 interface Attendee {
@@ -71,7 +72,8 @@ interface Attendee {
 
 /**
  * Trang Check-in cho người tổ chức sự kiện
- * Cho phép quét mã QR từ camera hoặc từ ảnh để xác nhận người tham dự
+ * Cho phép nhập mã vé để xác nhận người tham dự
+ * (Tạm thời bỏ chức năng quét QR để demo)
  */
 const EventCheckIn = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -94,7 +96,7 @@ const EventCheckIn = () => {
     location: "",
     totalAttendees: 0,
   });
-  const [activeCamera, setActiveCamera] = useState(true);
+  const [activeCamera, setActiveCamera] = useState(false); // Set to false by default now
   const [lastScannedAttendee, setLastScannedAttendee] =
     useState<Attendee | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -139,7 +141,7 @@ const EventCheckIn = () => {
     setCheckedInCount(mockAttendees.filter((a) => a.checkInTime).length);
   }, [eventId]);
 
-  // Xử lý khi quét QR thành công
+  // Xử lý khi quét QR thành công (tạm thời không sử dụng)
   const handleScan = (data: string | null) => {
     if (data) {
       setScanResult(data);
@@ -148,7 +150,7 @@ const EventCheckIn = () => {
     }
   };
 
-  // Xử lý lỗi quét QR
+  // Xử lý lỗi quét QR (tạm thời không sử dụng)
   const handleError = (err: Error) => {
     console.error(err);
     toast({
@@ -403,12 +405,12 @@ const EventCheckIn = () => {
         {/* Main Content */}
         <Tabs colorScheme="teal" variant="enclosed">
           <TabList>
-            <Tab fontWeight="medium">QR Scan</Tab>
+            <Tab fontWeight="medium">Manual Check-in</Tab>
             <Tab fontWeight="medium">Attendee List</Tab>
           </TabList>
 
           <TabPanels>
-            {/* QR Scanner Tab */}
+            {/* Manual Check-in Tab (thay thế cho QR Scanner Tab) */}
             <TabPanel px={0}>
               <VStack spacing={6} align="stretch">
                 <Box
@@ -420,76 +422,20 @@ const EventCheckIn = () => {
                   borderColor={borderColor}
                 >
                   <VStack spacing={5} align="stretch">
-                    <Heading size="md">Scan Ticket QR Code</Heading>
+                    <Heading size="md">Check-in by Ticket ID</Heading>
                     <Text>
-                      Position the QR code from the attendee's ticket in front
-                      of your camera to check them in.
+                      Enter the ticket ID from the attendee's ticket to check
+                      them in.
                     </Text>
 
-                    <HStack>
-                      <FormControl
-                        display="flex"
-                        alignItems="center"
-                        maxW="200px"
-                      >
-                        <FormLabel htmlFor="camera-toggle" mb="0">
-                          Camera Active
-                        </FormLabel>
-                        <Switch
-                          id="camera-toggle"
-                          colorScheme="teal"
-                          isChecked={activeCamera}
-                          onChange={() => setActiveCamera(!activeCamera)}
-                        />
-                      </FormControl>
-                      <Button
-                        leftIcon={isScanning ? <FaTimes /> : <FaCamera />}
-                        colorScheme={isScanning ? "red" : "teal"}
-                        onClick={() => setIsScanning(!isScanning)}
-                      >
-                        {isScanning ? "Cancel Scan" : "Start Scanning"}
-                      </Button>
-                    </HStack>
-
-                    {isScanning && activeCamera ? (
-                      <Box maxW="400px" mx="auto">
-                        <QrReader
-                          delay={300}
-                          onError={handleError}
-                          onScan={handleScan}
-                          style={{ width: "100%" }}
-                        />
-                      </Box>
-                    ) : (
-                      <Box
-                        h="300px"
-                        maxW="400px"
-                        mx="auto"
-                        borderWidth="1px"
-                        borderStyle="dashed"
-                        borderRadius="md"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <VStack>
-                          <FaQrcode size={40} color="gray" />
-                          <Text color="gray.500">
-                            Press Start Scanning to activate the camera
-                          </Text>
-                        </VStack>
-                      </Box>
-                    )}
-
-                    <Divider />
-
+                    {/* Manual Entry */}
                     <Box>
                       <Heading size="sm" mb={3}>
-                        Manual Entry
+                        Enter Ticket ID
                       </Heading>
                       <HStack>
                         <Input
-                          placeholder="Enter ticket ID"
+                          placeholder="Enter ticket ID (e.g. TIX-ABC123)"
                           value={manualTicketId}
                           onChange={(e) => setManualTicketId(e.target.value)}
                         />
@@ -500,6 +446,33 @@ const EventCheckIn = () => {
                           Check In
                         </Button>
                       </HStack>
+                    </Box>
+
+                    {/* QR Scanner feature - placeholder for future implementation */}
+                    <Box mt={4}>
+                      <Divider my={3} />
+                      <Heading size="sm" mb={3}>
+                        QR Scanner
+                      </Heading>
+                      <Box
+                        p={4}
+                        borderWidth="1px"
+                        borderStyle="dashed"
+                        borderRadius="md"
+                        bg="gray.50"
+                      >
+                        <VStack spacing={2} align="center">
+                          <FaQrcode size={40} color="gray" />
+                          <Text fontWeight="medium">
+                            QR Scanner Coming Soon
+                          </Text>
+                          <Text color="gray.500" textAlign="center">
+                            The QR scanner functionality will be implemented in
+                            a future update. For now, please use the manual
+                            ticket ID entry above.
+                          </Text>
+                        </VStack>
+                      </Box>
                     </Box>
                   </VStack>
                 </Box>
@@ -564,7 +537,7 @@ const EventCheckIn = () => {
               </VStack>
             </TabPanel>
 
-            {/* Attendee List Tab */}
+            {/* Attendee List Tab - giữ nguyên */}
             <TabPanel px={0}>
               <VStack spacing={6} align="stretch">
                 <Flex
