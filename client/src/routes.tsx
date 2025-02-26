@@ -4,17 +4,29 @@ import {
   createRoutesFromElements,
 } from "react-router-dom";
 import App from "./App";
-import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import EventDetail from "./pages/events/EventDetail";
-import SearchResults from "./pages/events/SearchResults";
+import {
+  Home,
+  Login,
+  Register,
+  SearchResults,
+  EventDetail,
+  CreateEvent,
+  Profile,
+  MyEvents,
+  Dashboard,
+  EventAttendees,
+} from "./pages/index";
+import {
+  AboutUs,
+  FAQ,
+  PrivacyPolicy,
+  TermsOfService,
+  HelpCenter,
+  Community,
+  PressKit,
+  ContactUs,
+} from "./pages/info/index";
 import MainLayout from "./components/layout/MainLayout";
-import CreateEvent from "./pages/events/CreateEvent";
-import Profile from "./pages/user/Profile";
-import MyEvents from "./pages/user/MyEvents";
-import Dashboard from "./pages/organizer/Dashboard";
-import EventAttendees from "./pages/organizer/EventAttendees";
 
 // Cấu hình bộ định tuyến cho ứng dụng
 export const router = createBrowserRouter(
@@ -35,6 +47,16 @@ export const router = createBrowserRouter(
           path="/organizer/events/:eventId/attendees"
           element={<EventAttendees />}
         />
+
+        {/* Information Pages */}
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/press" element={<PressKit />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Route>
     </Route>
   )

@@ -194,7 +194,11 @@ const Home = () => {
             EventHub helps you easily find, join, and organize events that match
             your interests.
           </Text>
-          <Button size="lg" colorScheme="teal" as={Link} to="/events">
+          <Button
+            size="lg"
+            colorScheme="teal"
+            onClick={() => navigate("/events")}
+          >
             Explore Now
           </Button>
         </VStack>

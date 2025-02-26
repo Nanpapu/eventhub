@@ -19,6 +19,7 @@ import {
   FaYoutube,
   FaInstagram,
   FaArrowRight,
+  FaFacebookF,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
@@ -88,15 +89,32 @@ export default function Footer() {
                 EventHub
               </Heading>
             </Flex>
-            <Text fontSize={"sm"}>© 2023 EventHub. All rights reserved</Text>
+            <Text fontSize={"sm"}>
+              © 2023 EventHub Vietnam. All rights reserved
+            </Text>
             <Stack direction={"row"} spacing={6}>
-              <SocialButton label={"Twitter"} href={"#"}>
+              <SocialButton
+                label={"Facebook"}
+                href={"https://facebook.com/eventhubvn"}
+              >
+                <FaFacebookF />
+              </SocialButton>
+              <SocialButton
+                label={"Twitter"}
+                href={"https://twitter.com/eventhubvn"}
+              >
                 <FaTwitter />
               </SocialButton>
-              <SocialButton label={"YouTube"} href={"#"}>
+              <SocialButton
+                label={"YouTube"}
+                href={"https://youtube.com/eventhubvn"}
+              >
                 <FaYoutube />
               </SocialButton>
-              <SocialButton label={"Instagram"} href={"#"}>
+              <SocialButton
+                label={"Instagram"}
+                href={"https://instagram.com/eventhubvn"}
+              >
                 <FaInstagram />
               </SocialButton>
             </Stack>
@@ -108,6 +126,9 @@ export default function Footer() {
             </ChakraLink>
             <ChakraLink as={Link} to={"/contact"}>
               Contact Us
+            </ChakraLink>
+            <ChakraLink as={Link} to={"/press"}>
+              Press Kit
             </ChakraLink>
             <ChakraLink as={Link} to={"/privacy"}>
               Privacy Policy

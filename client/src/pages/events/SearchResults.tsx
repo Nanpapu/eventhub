@@ -26,7 +26,7 @@ import {
   IconButton,
   Image,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiSearch, FiMapPin, FiCalendar, FiFilter, FiX } from "react-icons/fi";
 
@@ -243,7 +243,7 @@ const SearchResults = () => {
   };
 
   // Xử lý lọc sự kiện
-  const filterEvents = () => {
+  const filterEvents = useCallback(() => {
     let results = [...eventsData];
 
     // Lọc theo từ khóa
@@ -277,7 +277,7 @@ const SearchResults = () => {
     }
 
     setFilteredEvents(results);
-  };
+  }, [keyword, location, category, showFreeOnly, showPaidOnly]);
 
   // Reset tất cả bộ lọc
   const resetFilters = () => {
