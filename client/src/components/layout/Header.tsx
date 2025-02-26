@@ -54,17 +54,28 @@ const useAuth = () => {
     });
   };
 
+  // Thêm hàm login với vai trò organizer
+  const loginAsOrganizer = () => {
+    setIsAuthenticated(true);
+    setUser({
+      name: "Event Manager",
+      email: "organizer@example.com",
+      avatar: "https://bit.ly/3R7HRgG",
+      role: "organizer",
+    });
+  };
+
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
   };
 
-  return { isAuthenticated, user, login, logout };
+  return { isAuthenticated, user, login, loginAsOrganizer, logout };
 };
 
 export default function Header() {
   const { isOpen, onToggle } = useDisclosure();
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, login, loginAsOrganizer, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -84,8 +95,20 @@ export default function Header() {
   const quickLogin = () => {
     login();
     toast({
-      title: "Logged in successfully (Demo)",
+      title: "Logged in as User (Demo)",
       description: "This is just a UI demo, no actual authentication",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  // Demo đăng nhập nhanh với vai trò organizer
+  const quickLoginAsOrganizer = () => {
+    loginAsOrganizer();
+    toast({
+      title: "Logged in as Organizer (Demo)",
+      description: "You now have access to Organizer features",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -233,6 +256,21 @@ export default function Header() {
                 }}
               >
                 Demo Login
+              </Button>
+              {/* Nút đăng nhập nhanh với quyền Organizer */}
+              <Button
+                display={{ base: "none", md: "inline-flex" }}
+                fontSize={"xs"}
+                fontWeight={600}
+                color={"white"}
+                bg={"orange.500"}
+                onClick={quickLoginAsOrganizer}
+                size="sm"
+                _hover={{
+                  bg: "orange.400",
+                }}
+              >
+                Demo Organizer
               </Button>
             </>
           )}
