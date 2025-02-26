@@ -24,12 +24,22 @@ import {
   useColorModeValue,
   useToast,
   Switch,
-  Select,
   Flex,
+  HStack,
+  Tooltip,
+  Badge,
 } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FaEye, FaEyeSlash, FaCamera, FaGlobe, FaBell } from "react-icons/fa";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaCamera,
+  FaBell,
+  FaEdit,
+  FaSave,
+  FaTimes,
+} from "react-icons/fa";
 
 // Interface cho thông tin cá nhân
 interface ProfileFormData {
@@ -65,6 +75,10 @@ const Profile = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Thêm trạng thái mode cho từng tab
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [preferencesEditMode, setPreferencesEditMode] = useState(false);
 
   // Form cho thông tin cá nhân
   const {
@@ -103,11 +117,11 @@ const Profile = () => {
 
   // Giả lập dữ liệu người dùng (sẽ được thay thế bằng API call)
   const mockUserData = {
-    fullName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 890",
-    location: "New York, USA",
-    bio: "Software developer with 5 years of experience in web development.",
+    fullName: "Nguyễn Văn A",
+    email: "nguyenvana@example.com",
+    phone: "0901234567",
+    location: "TP. Hồ Chí Minh, Việt Nam",
+    bio: "Tôi là một người đam mê công nghệ và thích tham gia các sự kiện về công nghệ thông tin.",
     avatar: "https://bit.ly/3Q3eQvj",
   };
 
@@ -160,8 +174,8 @@ const Profile = () => {
 
       // Trong thực tế, đây sẽ là nơi để upload ảnh lên server
       toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully",
+        title: "Ảnh đại diện đã cập nhật",
+        description: "Ảnh đại diện của bạn đã được cập nhật thành công",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -182,18 +196,21 @@ const Profile = () => {
 
       // Hiển thị thông báo thành công
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully",
+        title: "Cập nhật hồ sơ",
+        description: "Thông tin hồ sơ của bạn đã được cập nhật thành công",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+
+      // Tắt chế độ chỉnh sửa
+      setProfileEditMode(false);
     } catch (err) {
       // Xử lý lỗi
       console.error("Error updating profile:", err);
       toast({
-        title: "Update failed",
-        description: "There was an error updating your profile",
+        title: "Cập nhật thất bại",
+        description: "Đã xảy ra lỗi khi cập nhật hồ sơ của bạn",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -209,8 +226,8 @@ const Profile = () => {
 
       // Hiển thị thông báo thành công
       toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully",
+        title: "Đổi mật khẩu",
+        description: "Mật khẩu của bạn đã được thay đổi thành công",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -222,8 +239,8 @@ const Profile = () => {
       // Xử lý lỗi
       console.error("Error updating password:", err);
       toast({
-        title: "Password update failed",
-        description: "There was an error changing your password",
+        title: "Đổi mật khẩu thất bại",
+        description: "Đã xảy ra lỗi khi thay đổi mật khẩu của bạn",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -239,18 +256,21 @@ const Profile = () => {
 
       // Hiển thị thông báo thành công
       toast({
-        title: "Preferences updated",
-        description: "Your preferences have been updated successfully",
+        title: "Cập nhật tùy chọn",
+        description: "Tùy chọn của bạn đã được cập nhật thành công",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+
+      // Tắt chế độ chỉnh sửa
+      setPreferencesEditMode(false);
     } catch (err) {
       // Xử lý lỗi
       console.error("Error updating preferences:", err);
       toast({
-        title: "Update failed",
-        description: "There was an error updating your preferences",
+        title: "Cập nhật thất bại",
+        description: "Đã xảy ra lỗi khi cập nhật tùy chọn của bạn",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -258,9 +278,28 @@ const Profile = () => {
     }
   };
 
+  // Hủy chỉnh sửa profile
+  const handleCancelProfileEdit = () => {
+    resetProfileForm({
+      fullName: mockUserData.fullName,
+      email: mockUserData.email,
+      phone: mockUserData.phone,
+      location: mockUserData.location,
+      bio: mockUserData.bio,
+    });
+    setProfileEditMode(false);
+  };
+
+  // Hủy chỉnh sửa tùy chọn
+  const handleCancelPreferencesEdit = () => {
+    resetPreferencesForm(mockPreferencesData);
+    setPreferencesEditMode(false);
+  };
+
   // Màu sắc dựa trên chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("lg", "dark-lg");
+  const highlightColor = useColorModeValue("gray.100", "gray.700");
 
   return (
     <Container maxW="4xl" py={8}>
@@ -277,17 +316,19 @@ const Profile = () => {
                   cursor="pointer"
                   onClick={handleAvatarClick}
                 />
-                <IconButton
-                  aria-label="Change profile picture"
-                  icon={<FaCamera />}
-                  size="sm"
-                  colorScheme="teal"
-                  borderRadius="full"
-                  position="absolute"
-                  bottom="0"
-                  right="0"
-                  onClick={handleAvatarClick}
-                />
+                <Tooltip label="Đổi ảnh đại diện" placement="top">
+                  <IconButton
+                    aria-label="Đổi ảnh đại diện"
+                    icon={<FaCamera />}
+                    size="sm"
+                    colorScheme="teal"
+                    borderRadius="full"
+                    position="absolute"
+                    bottom="0"
+                    right="0"
+                    onClick={handleAvatarClick}
+                  />
+                </Tooltip>
                 <input
                   type="file"
                   accept="image/*"
@@ -300,7 +341,7 @@ const Profile = () => {
               <Text color="gray.500">{mockUserData.email}</Text>
               <Divider />
               <VStack align="start" spacing={2} w="full">
-                <Text fontWeight="bold">Location</Text>
+                <Text fontWeight="bold">Địa điểm</Text>
                 <Text>{mockUserData.location}</Text>
               </VStack>
             </VStack>
@@ -312,104 +353,191 @@ const Profile = () => {
           <Box bg={bgColor} p={6} borderRadius="xl" boxShadow={boxShadow}>
             <Tabs colorScheme="teal" isFitted>
               <TabList mb={4}>
-                <Tab fontWeight="medium">Profile Information</Tab>
-                <Tab fontWeight="medium">Change Password</Tab>
-                <Tab fontWeight="medium">Preferences</Tab>
+                <Tab fontWeight="medium">Thông tin cá nhân</Tab>
+                <Tab fontWeight="medium">Đổi mật khẩu</Tab>
+                <Tab fontWeight="medium">Tùy chọn</Tab>
               </TabList>
 
               <TabPanels>
                 {/* Tab thông tin cá nhân */}
                 <TabPanel>
-                  <form onSubmit={handleSubmitProfile(onProfileSubmit)}>
-                    <VStack spacing={4} align="start">
-                      <Heading size="md" mb={2}>
-                        Edit Profile
-                      </Heading>
+                  <Box>
+                    <Flex justify="space-between" align="center" mb={4}>
+                      <Heading size="md">Thông tin cá nhân</Heading>
+                      {!profileEditMode ? (
+                        <Tooltip label="Chỉnh sửa thông tin">
+                          <Button
+                            leftIcon={<FaEdit />}
+                            colorScheme="teal"
+                            variant="outline"
+                            onClick={() => setProfileEditMode(true)}
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        </Tooltip>
+                      ) : (
+                        <HStack>
+                          <Button
+                            leftIcon={<FaTimes />}
+                            colorScheme="gray"
+                            variant="outline"
+                            onClick={handleCancelProfileEdit}
+                          >
+                            Hủy
+                          </Button>
+                          <Button
+                            leftIcon={<FaSave />}
+                            colorScheme="teal"
+                            form="profile-form"
+                            type="submit"
+                            isLoading={isProfileSubmitting}
+                          >
+                            Lưu thay đổi
+                          </Button>
+                        </HStack>
+                      )}
+                    </Flex>
 
-                      <FormControl isInvalid={!!profileErrors.fullName}>
-                        <FormLabel fontWeight="medium">Full Name</FormLabel>
-                        <Input
-                          {...registerProfile("fullName", {
-                            required: "Full name is required",
-                          })}
-                          size="md"
-                          focusBorderColor="teal.400"
-                        />
-                        <FormErrorMessage>
-                          {profileErrors.fullName?.message}
-                        </FormErrorMessage>
-                      </FormControl>
+                    <form
+                      id="profile-form"
+                      onSubmit={handleSubmitProfile(onProfileSubmit)}
+                    >
+                      <VStack spacing={4} align="start">
+                        <FormControl isInvalid={!!profileErrors.fullName}>
+                          <FormLabel fontWeight="medium">Họ và tên</FormLabel>
+                          {profileEditMode ? (
+                            <Input
+                              {...registerProfile("fullName", {
+                                required: "Họ và tên là bắt buộc",
+                              })}
+                              size="md"
+                              focusBorderColor="teal.400"
+                            />
+                          ) : (
+                            <Box
+                              p={2}
+                              borderRadius="md"
+                              bg={highlightColor}
+                              w="full"
+                            >
+                              {mockUserData.fullName}
+                            </Box>
+                          )}
+                          <FormErrorMessage>
+                            {profileErrors.fullName?.message}
+                          </FormErrorMessage>
+                        </FormControl>
 
-                      <FormControl isInvalid={!!profileErrors.email}>
-                        <FormLabel fontWeight="medium">Email</FormLabel>
-                        <Input
-                          {...registerProfile("email", {
-                            required: "Email is required",
-                            pattern: {
-                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                              message: "Invalid email address",
-                            },
-                          })}
-                          type="email"
-                          size="md"
-                          focusBorderColor="teal.400"
-                        />
-                        <FormErrorMessage>
-                          {profileErrors.email?.message}
-                        </FormErrorMessage>
-                      </FormControl>
+                        <FormControl isInvalid={!!profileErrors.email}>
+                          <FormLabel fontWeight="medium">Email</FormLabel>
+                          {profileEditMode ? (
+                            <Input
+                              {...registerProfile("email", {
+                                required: "Email là bắt buộc",
+                                pattern: {
+                                  value:
+                                    /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                  message: "Địa chỉ email không hợp lệ",
+                                },
+                              })}
+                              type="email"
+                              size="md"
+                              focusBorderColor="teal.400"
+                            />
+                          ) : (
+                            <Box
+                              p={2}
+                              borderRadius="md"
+                              bg={highlightColor}
+                              w="full"
+                            >
+                              {mockUserData.email}
+                            </Box>
+                          )}
+                          <FormErrorMessage>
+                            {profileErrors.email?.message}
+                          </FormErrorMessage>
+                        </FormControl>
 
-                      <FormControl isInvalid={!!profileErrors.phone}>
-                        <FormLabel fontWeight="medium">Phone Number</FormLabel>
-                        <Input
-                          {...registerProfile("phone")}
-                          size="md"
-                          focusBorderColor="teal.400"
-                        />
-                        <FormErrorMessage>
-                          {profileErrors.phone?.message}
-                        </FormErrorMessage>
-                      </FormControl>
+                        <FormControl isInvalid={!!profileErrors.phone}>
+                          <FormLabel fontWeight="medium">
+                            Số điện thoại
+                          </FormLabel>
+                          {profileEditMode ? (
+                            <Input
+                              {...registerProfile("phone")}
+                              size="md"
+                              focusBorderColor="teal.400"
+                              placeholder="Nhập số điện thoại của bạn"
+                            />
+                          ) : (
+                            <Box
+                              p={2}
+                              borderRadius="md"
+                              bg={highlightColor}
+                              w="full"
+                            >
+                              {mockUserData.phone || "Chưa cập nhật"}
+                            </Box>
+                          )}
+                          <FormErrorMessage>
+                            {profileErrors.phone?.message}
+                          </FormErrorMessage>
+                        </FormControl>
 
-                      <FormControl isInvalid={!!profileErrors.location}>
-                        <FormLabel fontWeight="medium">Location</FormLabel>
-                        <Input
-                          {...registerProfile("location")}
-                          size="md"
-                          focusBorderColor="teal.400"
-                          placeholder="City, Country"
-                        />
-                        <FormErrorMessage>
-                          {profileErrors.location?.message}
-                        </FormErrorMessage>
-                      </FormControl>
+                        <FormControl isInvalid={!!profileErrors.location}>
+                          <FormLabel fontWeight="medium">Địa điểm</FormLabel>
+                          {profileEditMode ? (
+                            <Input
+                              {...registerProfile("location")}
+                              size="md"
+                              focusBorderColor="teal.400"
+                              placeholder="Thành phố, Quốc gia"
+                            />
+                          ) : (
+                            <Box
+                              p={2}
+                              borderRadius="md"
+                              bg={highlightColor}
+                              w="full"
+                            >
+                              {mockUserData.location || "Chưa cập nhật"}
+                            </Box>
+                          )}
+                          <FormErrorMessage>
+                            {profileErrors.location?.message}
+                          </FormErrorMessage>
+                        </FormControl>
 
-                      <FormControl isInvalid={!!profileErrors.bio}>
-                        <FormLabel fontWeight="medium">Bio</FormLabel>
-                        <Input
-                          {...registerProfile("bio")}
-                          as="textarea"
-                          size="md"
-                          focusBorderColor="teal.400"
-                          rows={4}
-                          placeholder="A short bio about yourself"
-                        />
-                        <FormErrorMessage>
-                          {profileErrors.bio?.message}
-                        </FormErrorMessage>
-                      </FormControl>
-
-                      <Button
-                        mt={4}
-                        colorScheme="teal"
-                        isLoading={isProfileSubmitting}
-                        type="submit"
-                        alignSelf="flex-end"
-                      >
-                        Save Changes
-                      </Button>
-                    </VStack>
-                  </form>
+                        <FormControl isInvalid={!!profileErrors.bio}>
+                          <FormLabel fontWeight="medium">Giới thiệu</FormLabel>
+                          {profileEditMode ? (
+                            <Input
+                              {...registerProfile("bio")}
+                              as="textarea"
+                              size="md"
+                              focusBorderColor="teal.400"
+                              rows={4}
+                              placeholder="Mô tả ngắn về bản thân"
+                            />
+                          ) : (
+                            <Box
+                              p={2}
+                              borderRadius="md"
+                              bg={highlightColor}
+                              w="full"
+                              minH="100px"
+                            >
+                              {mockUserData.bio || "Chưa cập nhật"}
+                            </Box>
+                          )}
+                          <FormErrorMessage>
+                            {profileErrors.bio?.message}
+                          </FormErrorMessage>
+                        </FormControl>
+                      </VStack>
+                    </form>
+                  </Box>
                 </TabPanel>
 
                 {/* Tab đổi mật khẩu */}
@@ -417,17 +545,17 @@ const Profile = () => {
                   <form onSubmit={handleSubmitPassword(onPasswordSubmit)}>
                     <VStack spacing={4} align="start">
                       <Heading size="md" mb={2}>
-                        Change Password
+                        Đổi mật khẩu
                       </Heading>
 
                       <FormControl isInvalid={!!passwordErrors.currentPassword}>
                         <FormLabel fontWeight="medium">
-                          Current Password
+                          Mật khẩu hiện tại
                         </FormLabel>
                         <InputGroup>
                           <Input
                             {...registerPassword("currentPassword", {
-                              required: "Current password is required",
+                              required: "Mật khẩu hiện tại là bắt buộc",
                             })}
                             type={showCurrentPassword ? "text" : "password"}
                             size="md"
@@ -437,8 +565,8 @@ const Profile = () => {
                             <IconButton
                               aria-label={
                                 showCurrentPassword
-                                  ? "Hide password"
-                                  : "Show password"
+                                  ? "Ẩn mật khẩu"
+                                  : "Hiện mật khẩu"
                               }
                               icon={
                                 showCurrentPassword ? <FaEyeSlash /> : <FaEye />
@@ -455,21 +583,20 @@ const Profile = () => {
                       </FormControl>
 
                       <FormControl isInvalid={!!passwordErrors.newPassword}>
-                        <FormLabel fontWeight="medium">New Password</FormLabel>
+                        <FormLabel fontWeight="medium">Mật khẩu mới</FormLabel>
                         <InputGroup>
                           <Input
                             {...registerPassword("newPassword", {
-                              required: "New password is required",
+                              required: "Mật khẩu mới là bắt buộc",
                               minLength: {
                                 value: 8,
-                                message:
-                                  "Password must be at least 8 characters",
+                                message: "Mật khẩu phải có ít nhất 8 ký tự",
                               },
                               pattern: {
                                 value:
                                   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
                                 message:
-                                  "Password must contain at least one uppercase letter, one lowercase letter and one number",
+                                  "Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số",
                               },
                             })}
                             type={showNewPassword ? "text" : "password"}
@@ -480,8 +607,8 @@ const Profile = () => {
                             <IconButton
                               aria-label={
                                 showNewPassword
-                                  ? "Hide password"
-                                  : "Show password"
+                                  ? "Ẩn mật khẩu"
+                                  : "Hiện mật khẩu"
                               }
                               icon={
                                 showNewPassword ? <FaEyeSlash /> : <FaEye />
@@ -499,15 +626,14 @@ const Profile = () => {
 
                       <FormControl isInvalid={!!passwordErrors.confirmPassword}>
                         <FormLabel fontWeight="medium">
-                          Confirm New Password
+                          Xác nhận mật khẩu mới
                         </FormLabel>
                         <InputGroup>
                           <Input
                             {...registerPassword("confirmPassword", {
-                              required: "Please confirm your password",
+                              required: "Vui lòng xác nhận mật khẩu của bạn",
                               validate: (value) =>
-                                value === newPassword ||
-                                "Passwords do not match",
+                                value === newPassword || "Mật khẩu không khớp",
                             })}
                             type={showConfirmPassword ? "text" : "password"}
                             size="md"
@@ -517,8 +643,8 @@ const Profile = () => {
                             <IconButton
                               aria-label={
                                 showConfirmPassword
-                                  ? "Hide password"
-                                  : "Show password"
+                                  ? "Ẩn mật khẩu"
+                                  : "Hiện mật khẩu"
                               }
                               icon={
                                 showConfirmPassword ? <FaEyeSlash /> : <FaEye />
@@ -539,9 +665,8 @@ const Profile = () => {
                         colorScheme="teal"
                         isLoading={isPasswordSubmitting}
                         type="submit"
-                        alignSelf="flex-end"
                       >
-                        Update Password
+                        Cập nhật mật khẩu
                       </Button>
                     </VStack>
                   </form>
@@ -549,112 +674,123 @@ const Profile = () => {
 
                 {/* Tab tùy chọn (đơn giản hóa từ Settings) */}
                 <TabPanel>
-                  <form onSubmit={handleSubmitPreferences(onPreferencesSubmit)}>
-                    <VStack spacing={6} align="start">
-                      {/* Phần tùy chọn ngôn ngữ và định dạng */}
-                      <Box w="full">
-                        <Flex align="center" mb={4}>
-                          <Box
-                            bg="purple.50"
-                            p={2}
-                            borderRadius="md"
-                            color="purple.600"
-                            mr={2}
+                  <Box>
+                    <Flex justify="space-between" align="center" mb={4}>
+                      <Heading size="md">Tùy chọn thông báo</Heading>
+                      {!preferencesEditMode ? (
+                        <Tooltip label="Chỉnh sửa tùy chọn">
+                          <Button
+                            leftIcon={<FaEdit />}
+                            colorScheme="teal"
+                            variant="outline"
+                            onClick={() => setPreferencesEditMode(true)}
                           >
-                            <FaGlobe size={20} />
-                          </Box>
-                          <Heading size="md">Language & Format</Heading>
-                        </Flex>
-
-                        <VStack spacing={4} align="start" pl={10}>
-                          <FormControl>
-                            <FormLabel fontWeight="medium">Language</FormLabel>
-                            <Select
-                              {...registerPreferences("language")}
-                              focusBorderColor="purple.400"
-                            >
-                              <option value="en">English</option>
-                              <option value="vi">Tiếng Việt</option>
-                              <option value="fr">Français</option>
-                              <option value="es">Español</option>
-                              <option value="zh">中文</option>
-                            </Select>
-                          </FormControl>
-
-                          <FormControl>
-                            <FormLabel fontWeight="medium">
-                              Date Format
-                            </FormLabel>
-                            <Select
-                              {...registerPreferences("dateFormat")}
-                              focusBorderColor="purple.400"
-                            >
-                              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                            </Select>
-                          </FormControl>
-                        </VStack>
-                      </Box>
-
-                      <Divider />
-
-                      {/* Phần tùy chọn thông báo */}
-                      <Box w="full">
-                        <Flex align="center" mb={4}>
-                          <Box
-                            bg="blue.50"
-                            p={2}
-                            borderRadius="md"
-                            color="blue.600"
-                            mr={2}
+                            Chỉnh sửa
+                          </Button>
+                        </Tooltip>
+                      ) : (
+                        <HStack>
+                          <Button
+                            leftIcon={<FaTimes />}
+                            colorScheme="gray"
+                            variant="outline"
+                            onClick={handleCancelPreferencesEdit}
                           >
-                            <FaBell size={20} />
-                          </Box>
-                          <Heading size="md">Notifications</Heading>
-                        </Flex>
+                            Hủy
+                          </Button>
+                          <Button
+                            leftIcon={<FaSave />}
+                            colorScheme="teal"
+                            form="preferences-form"
+                            type="submit"
+                            isLoading={isPreferencesSubmitting}
+                          >
+                            Lưu thay đổi
+                          </Button>
+                        </HStack>
+                      )}
+                    </Flex>
 
-                        <VStack spacing={4} align="start" pl={10}>
-                          <FormControl display="flex" alignItems="center">
-                            <FormLabel htmlFor="email-notifications" mb="0">
-                              Email notifications
-                            </FormLabel>
-                            <Switch
-                              id="email-notifications"
-                              colorScheme="blue"
-                              {...registerPreferences("emailNotifications")}
-                            />
-                          </FormControl>
+                    <form
+                      id="preferences-form"
+                      onSubmit={handleSubmitPreferences(onPreferencesSubmit)}
+                    >
+                      <VStack spacing={6} align="start">
+                        {/* Phần tùy chọn thông báo */}
+                        <Box w="full">
+                          <Flex align="center" mb={4}>
+                            <Box
+                              bg="blue.50"
+                              p={2}
+                              borderRadius="md"
+                              color="blue.600"
+                              mr={2}
+                            >
+                              <FaBell size={20} />
+                            </Box>
+                            <Heading size="md">Thông báo</Heading>
+                          </Flex>
 
-                          <FormControl display="flex" alignItems="center">
-                            <FormLabel htmlFor="event-reminders" mb="0">
-                              Event reminders
-                            </FormLabel>
-                            <Switch
-                              id="event-reminders"
-                              colorScheme="blue"
-                              {...registerPreferences("eventReminders")}
-                            />
-                          </FormControl>
+                          <VStack spacing={4} align="start" pl={10}>
+                            <FormControl display="flex" alignItems="center">
+                              <FormLabel htmlFor="email-notifications" mb="0">
+                                Thông báo qua email
+                              </FormLabel>
+                              {preferencesEditMode ? (
+                                <Switch
+                                  id="email-notifications"
+                                  colorScheme="blue"
+                                  {...registerPreferences("emailNotifications")}
+                                />
+                              ) : (
+                                <Badge
+                                  colorScheme={
+                                    mockPreferencesData.emailNotifications
+                                      ? "green"
+                                      : "red"
+                                  }
+                                >
+                                  {mockPreferencesData.emailNotifications
+                                    ? "Bật"
+                                    : "Tắt"}
+                                </Badge>
+                              )}
+                            </FormControl>
 
-                          <Text fontSize="sm" color="gray.500" mt={2}>
-                            Event reminders will be sent 24 hours before your
-                            registered events.
-                          </Text>
-                        </VStack>
-                      </Box>
+                            <FormControl display="flex" alignItems="center">
+                              <FormLabel htmlFor="event-reminders" mb="0">
+                                Nhắc nhở sự kiện
+                              </FormLabel>
+                              {preferencesEditMode ? (
+                                <Switch
+                                  id="event-reminders"
+                                  colorScheme="blue"
+                                  {...registerPreferences("eventReminders")}
+                                />
+                              ) : (
+                                <Badge
+                                  colorScheme={
+                                    mockPreferencesData.eventReminders
+                                      ? "green"
+                                      : "red"
+                                  }
+                                >
+                                  {mockPreferencesData.eventReminders
+                                    ? "Bật"
+                                    : "Tắt"}
+                                </Badge>
+                              )}
+                            </FormControl>
 
-                      <Button
-                        mt={4}
-                        colorScheme="teal"
-                        isLoading={isPreferencesSubmitting}
-                        type="submit"
-                        alignSelf="flex-end"
-                      >
-                        Save Preferences
-                      </Button>
-                    </VStack>
-                  </form>
+                            <Text fontSize="sm" color="gray.500" mt={2}>
+                              Nhắc nhở sự kiện sẽ được gửi 24 giờ trước khi sự
+                              kiện diễn ra.
+                            </Text>
+                          </VStack>
+                        </Box>
+                      </VStack>
+                    </form>
+                  </Box>
                 </TabPanel>
               </TabPanels>
             </Tabs>
