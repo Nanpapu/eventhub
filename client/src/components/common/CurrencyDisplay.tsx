@@ -1,6 +1,5 @@
 import { Text, TextProps, useColorModeValue } from "@chakra-ui/react";
-import { formatCurrency } from "@/utils/formatters";
-import { useTranslation } from "react-i18next";
+import { formatCurrency } from "../../utils/formatters";
 
 export interface CurrencyDisplayProps extends TextProps {
   /**
@@ -39,7 +38,6 @@ const CurrencyDisplay = ({
   colorPositive = false,
   ...rest
 }: CurrencyDisplayProps) => {
-  const { t } = useTranslation();
   const defaultColor = useColorModeValue("gray.700", "gray.300");
   const negativeColor = "red.500";
   const positiveColor = "green.500";

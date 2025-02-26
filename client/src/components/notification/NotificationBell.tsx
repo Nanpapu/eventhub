@@ -108,7 +108,7 @@ const NotificationBell = () => {
         <PopoverTrigger>
           <IconButton
             ref={bellRef}
-            aria-label="Notifications"
+            aria-label="Thông báo"
             icon={<FiBell />}
             variant="ghost"
             size="lg"

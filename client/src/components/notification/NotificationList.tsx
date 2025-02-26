@@ -7,11 +7,9 @@ import {
   Heading,
   Icon,
   Badge,
-  Divider,
   Button,
   useColorModeValue,
   HStack,
-  Avatar,
   IconButton,
   Menu,
   MenuButton,
@@ -22,8 +20,6 @@ import {
 } from "@chakra-ui/react";
 import {
   FiCalendar,
-  FiUser,
-  FiClock,
   FiInfo,
   FiCheck,
   FiMoreVertical,

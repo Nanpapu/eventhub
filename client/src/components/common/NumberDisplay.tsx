@@ -1,6 +1,5 @@
 import { Text, TextProps, useColorModeValue } from "@chakra-ui/react";
-import { formatNumber, formatPercent } from "@/utils/formatters";
-import { useTranslation } from "react-i18next";
+import { formatNumber, formatPercent } from "../../utils/formatters";
 
 export interface NumberDisplayProps extends TextProps {
   /**
@@ -47,7 +46,6 @@ const NumberDisplay = ({
   colorPositive = false,
   ...rest
 }: NumberDisplayProps) => {
-  const { t } = useTranslation();
   const defaultColor = useColorModeValue("gray.700", "gray.300");
   const negativeColor = "red.500";
   const positiveColor = "green.500";

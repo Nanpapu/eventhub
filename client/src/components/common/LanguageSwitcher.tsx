@@ -11,7 +11,6 @@ import {
 } from "@chakra-ui/react";
 import { MdLanguage, MdKeyboardArrowDown } from "react-icons/md";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { useTranslation } from "react-i18next";
 
 /**
  * Component chuyển đổi ngôn ngữ
@@ -20,7 +19,6 @@ import { useTranslation } from "react-i18next";
  * - Hiển thị cờ và tên ngôn ngữ
  */
 const LanguageSwitcher = () => {
-  const { t } = useTranslation();
   const { currentLanguage, changeLanguage, languages } = useLanguage();
 
   // Màu sắc dựa theo chế độ màu
@@ -36,8 +34,8 @@ const LanguageSwitcher = () => {
         size="sm"
         rightIcon={<MdKeyboardArrowDown />}
         leftIcon={<MdLanguage />}
-        aria-label={t("languages.changeLanguage")}
-        title={t("languages.changeLanguage")}
+        aria-label="Thay đổi ngôn ngữ"
+        title="Thay đổi ngôn ngữ"
       >
         <HStack spacing={1}>
           <Text fontSize="sm">

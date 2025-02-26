@@ -12,7 +12,6 @@ import {
   formatDateTime,
   formatRelativeTime,
 } from "../../utils/formatters";
-import { useTranslation } from "react-i18next";
 import { FiCalendar, FiClock, FiAlertCircle } from "react-icons/fi";
 
 export interface DateDisplayProps extends FlexProps {
@@ -58,7 +57,6 @@ const DateDisplay = ({
   size = "md",
   ...rest
 }: DateDisplayProps) => {
-  const { t } = useTranslation();
   const textColor = useColorModeValue("gray.700", "gray.300");
   const iconColor = useColorModeValue("blue.500", "blue.300");
 
@@ -67,7 +65,7 @@ const DateDisplay = ({
 
   // Kiểm tra nếu ngày không hợp lệ
   if (isNaN(dateObj.getTime())) {
-    return <Text color="red.500">{t("errors.invalidDate")}</Text>;
+    return <Text color="red.500">Ngày không hợp lệ</Text>;
   }
 
   // Định dạng hiển thị dựa trên mode
