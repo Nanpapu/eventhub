@@ -11,11 +11,6 @@ import {
   Badge,
   Divider,
   useToast,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
   IconButton,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -30,7 +25,6 @@ import {
   FiShare2,
   FiHeart,
 } from "react-icons/fi";
-import { EventReview } from "../../components/events";
 import { FaTimes, FaCalendarCheck, FaShoppingCart } from "react-icons/fa";
 
 // Interface cho dữ liệu sự kiện
@@ -113,7 +107,6 @@ const EventDetail = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const cardBgColor = useColorModeValue("white", "gray.700");
-  const tabBgColor = useColorModeValue("gray.50", "gray.900");
   const infoBoxBgColor = useColorModeValue("gray.50", "gray.700");
   const infoBoxTextColor = useColorModeValue("gray.600", "gray.300");
   const iconColor = useColorModeValue("teal.500", "teal.300");
@@ -320,6 +313,12 @@ const EventDetail = () => {
                   {eventData.attendees} đã đăng ký / {eventData.capacity} chỗ
                 </Text>
               </Flex>
+
+              <Flex align="center" gap={2} w="100%">
+                <Box as={FiUsers} color={iconColor} />
+                <Text fontWeight="medium">Tổ chức:</Text>
+                <Text>{eventData.organizer.name}</Text>
+              </Flex>
             </VStack>
 
             <Divider borderColor={borderColor} />
@@ -331,43 +330,6 @@ const EventDetail = () => {
               </Heading>
               <Text color={textColor}>{eventData.description}</Text>
             </Box>
-
-            {/* Phần tabs cho thông tin chi tiết */}
-            <Tabs
-              isFitted
-              w="100%"
-              mt={4}
-              colorScheme="teal"
-              variant="enclosed"
-            >
-              <TabList bg={tabBgColor} borderRadius="md" p={1}>
-                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
-                  Chi Tiết
-                </Tab>
-                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
-                  Đánh Giá & Bình Luận
-                </Tab>
-              </TabList>
-              <TabPanels mt={4}>
-                {/* Details Tab */}
-                <TabPanel p={0}>
-                  <VStack align="start" spacing={4} color={textColor}>
-                    <Flex align="center" gap={2} w="100%">
-                      <Box as={FiUsers} color={iconColor} />
-                      <Text fontWeight="medium">Tổ chức:</Text>
-                      <Text>{eventData.organizer.name}</Text>
-                    </Flex>
-                  </VStack>
-                </TabPanel>
-
-                {/* Reviews & Comments Tab */}
-                <TabPanel p={0}>
-                  <VStack align="start" spacing={4}>
-                    <EventReview rating={4.5} reviewCount={32} />
-                  </VStack>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
           </VStack>
         </Box>
 
