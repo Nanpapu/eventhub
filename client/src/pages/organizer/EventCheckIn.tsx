@@ -61,10 +61,6 @@ import {
 } from "react-icons/fa";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useParams, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { DateDisplay } from "../../components/common";
-// Tạm thời comment để tránh lỗi
-// import QrReader from "react-qr-reader";
 
 /**
  * Các thiết lập cho quy trình check-in
@@ -95,7 +91,6 @@ interface Attendee {
  * (Tạm thời bỏ chức năng quét QR để demo)
  */
 const EventCheckIn = () => {
-  const { t } = useTranslation();
   const { eventId } = useParams<{ eventId: string }>();
   const toast = useToast();
   /* eslint-disable @typescript-eslint/no-unused-vars -- Sẽ sử dụng trong tương lai khi phát triển tính năng chuyển hướng */
@@ -115,7 +110,7 @@ const EventCheckIn = () => {
     location: string;
     totalAttendees: number;
   }>({
-    title: t("common.loading"),
+    title: "Loading",
     date: "",
     location: "",
     totalAttendees: 0,
@@ -195,8 +190,8 @@ const EventCheckIn = () => {
   const handleError = (err: Error) => {
     console.error(err);
     toast({
-      title: t("events.checkIn.checkInFailed"),
-      description: t("common.deviceError"),
+      title: "Check-in thất bại",
+      description: "Lỗi thiết bị",
       status: "error",
       duration: 3000,
       isClosable: true,
@@ -209,8 +204,8 @@ const EventCheckIn = () => {
   const handleManualCheckIn = () => {
     if (!manualTicketId.trim()) {
       toast({
-        title: t("errors.required"),
-        description: t("events.checkIn.enterTicketId"),
+        title: "Lỗi",
+        description: "Vui lòng nhập mã vé",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -234,8 +229,8 @@ const EventCheckIn = () => {
 
     if (!ticketId) {
       toast({
-        title: t("events.checkIn.invalidTicket"),
-        description: t("events.checkIn.invalidTicket"),
+        title: "Vé không hợp lệ",
+        description: "Vé không hợp lệ",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -248,8 +243,8 @@ const EventCheckIn = () => {
 
     if (!attendee) {
       toast({
-        title: t("events.checkIn.ticketNotFound"),
-        description: `${t("events.checkIn.ticketNotFound")}: ${ticketId}`,
+        title: "Không tìm thấy vé",
+        description: `Không tìm thấy vé: ${ticketId}`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -262,8 +257,8 @@ const EventCheckIn = () => {
       onOpen(); // Mở modal cảnh báo
 
       toast({
-        title: t("events.checkIn.alreadyCheckedIn"),
-        description: `${t("events.checkIn.alreadyCheckedIn")} ${new Date(
+        title: "Đã check-in trước đó",
+        description: `Đã check-in trước đó lúc ${new Date(
           attendee.checkInTime
         ).toLocaleTimeString()}`,
         status: "warning",
@@ -287,10 +282,8 @@ const EventCheckIn = () => {
     onOpen(); // Mở modal thông báo
 
     toast({
-      title: t("events.checkIn.checkInSuccess"),
-      description: `${attendee.name} ${t(
-        "events.checkIn.checkInSuccess"
-      ).toLowerCase()}`,
+      title: "Check-in thành công",
+      description: `${attendee.name} đã check-in thành công`,
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -328,13 +321,9 @@ const EventCheckIn = () => {
     setCheckedInCount(updatedAttendees.filter((a) => a.checkInTime).length);
 
     toast({
-      title: attendee.checkInTime
-        ? t("common.cancel")
-        : t("events.checkIn.checkInSuccess"),
+      title: attendee.checkInTime ? "Đã hủy" : "Check-in thành công",
       description: `${attendee.name} ${
-        attendee.checkInTime
-          ? t("events.checkInRemoved")
-          : t("events.checkInAdded")
+        attendee.checkInTime ? "đã hủy check-in" : "đã check-in"
       }`,
       status: attendee.checkInTime ? "info" : "success",
       duration: 3000,
@@ -345,8 +334,8 @@ const EventCheckIn = () => {
   // Export danh sách người tham dự (giả lập)
   const exportAttendees = () => {
     toast({
-      title: t("common.export"),
-      description: t("events.exportingAttendees"),
+      title: "Xuất dữ liệu",
+      description: "Đang xuất danh sách người tham dự",
       status: "info",
       duration: 3000,
       isClosable: true,
@@ -360,7 +349,7 @@ const EventCheckIn = () => {
         {/* Header */}
         <Box>
           <Heading size="lg" color={textColor}>
-            {t("events.checkIn.title")}
+            Check-in sự kiện
           </Heading>
           <HStack mt={2}>
             <Heading size="md" fontWeight="normal" color={secondaryTextColor}>
@@ -400,7 +389,7 @@ const EventCheckIn = () => {
               fontWeight="medium"
               color={useColorModeValue("teal.600", "teal.300")}
             >
-              {t("events.checkIn.totalAttendees")}
+              Tổng số người tham dự
             </Text>
             <Text
               fontSize="3xl"
@@ -425,7 +414,7 @@ const EventCheckIn = () => {
               fontWeight="medium"
               color={useColorModeValue("green.600", "green.300")}
             >
-              {t("events.checkIn.checkedIn")}
+              Đã check-in
             </Text>
             <Text
               fontSize="3xl"
@@ -450,7 +439,7 @@ const EventCheckIn = () => {
               fontWeight="medium"
               color={useColorModeValue("blue.600", "blue.300")}
             >
-              {t("events.checkIn.attendanceRate")}
+              Tỷ lệ tham dự
             </Text>
             <Text
               fontSize="3xl"
@@ -471,10 +460,10 @@ const EventCheckIn = () => {
         <Tabs colorScheme="teal" variant="enclosed">
           <TabList>
             <Tab fontWeight="medium" color={textColor}>
-              {t("events.checkIn.manualCheckIn")}
+              Check-in thủ công
             </Tab>
             <Tab fontWeight="medium" color={textColor}>
-              {t("events.checkIn.attendeeList")}
+              Danh sách người tham dự
             </Tab>
           </TabList>
 
@@ -492,20 +481,20 @@ const EventCheckIn = () => {
                 >
                   <VStack spacing={5} align="stretch">
                     <Heading size="md" color={textColor}>
-                      {t("events.checkIn.checkInByTicketId")}
+                      Check-in bằng mã vé
                     </Heading>
                     <Text color={secondaryTextColor}>
-                      {t("events.checkIn.checkInByTicketId") + "."}
+                      Nhập mã vé để check-in người tham dự.
                     </Text>
 
                     {/* Manual Entry */}
                     <Box>
                       <Heading size="sm" mb={3} color={textColor}>
-                        {t("events.checkIn.enterTicketId")}
+                        Nhập mã vé
                       </Heading>
                       <HStack>
                         <Input
-                          placeholder={t("events.checkIn.ticketIdPlaceholder")}
+                          placeholder="Nhập mã vé tại đây"
                           value={manualTicketId}
                           onChange={(e) => setManualTicketId(e.target.value)}
                           bg={useColorModeValue("white", "gray.700")}
@@ -517,7 +506,7 @@ const EventCheckIn = () => {
                           colorScheme="teal"
                           onClick={handleManualCheckIn}
                         >
-                          {t("events.checkIn.checkedIn")}
+                          Check-in
                         </Button>
                       </HStack>
                     </Box>
@@ -526,7 +515,7 @@ const EventCheckIn = () => {
                     <Box mt={4}>
                       <Divider my={3} borderColor={borderColor} />
                       <Heading size="sm" mb={3} color={textColor}>
-                        {t("events.checkIn.qrScanner")}
+                        Quét mã QR
                       </Heading>
                       <Box
                         p={4}
@@ -539,10 +528,10 @@ const EventCheckIn = () => {
                         <VStack spacing={2} align="center">
                           <FaQrcode size={40} color={grayIconColor} />
                           <Text fontWeight="medium" color={textColor}>
-                            {t("events.checkIn.qrScannerComingSoon")}
+                            Tính năng quét QR sắp ra mắt
                           </Text>
                           <Text color={secondaryTextColor} textAlign="center">
-                            {t("events.checkIn.qrScannerDescription")}
+                            Sử dụng thiết bị camera để quét mã QR của vé
                           </Text>
                         </VStack>
                       </Box>
@@ -560,16 +549,14 @@ const EventCheckIn = () => {
                   borderColor={borderColor}
                 >
                   <Heading size="md" mb={4} color={textColor}>
-                    {t("events.checkIn.recentCheckIns")}
+                    Check-in gần đây
                   </Heading>
                   <Table size="sm" variant="simple">
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
-                        <Th color={textColor}>{t("auth.fullName")}</Th>
-                        <Th color={textColor}>{t("events.ticketId")}</Th>
-                        <Th color={textColor}>
-                          {t("events.checkIn.checkInTime")}
-                        </Th>
+                        <Th color={textColor}>Họ tên</Th>
+                        <Th color={textColor}>Mã vé</Th>
+                        <Th color={textColor}>Thời gian check-in</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -614,7 +601,7 @@ const EventCheckIn = () => {
                         <Tr>
                           <Td colSpan={3} textAlign="center">
                             <Text color={secondaryTextColor}>
-                              {t("events.checkIn.noCheckInsYet")}
+                              Chưa có ai check-in
                             </Text>
                           </Td>
                         </Tr>
@@ -645,7 +632,7 @@ const EventCheckIn = () => {
                       <FaSearch color={grayIconColor} />
                     </InputLeftElement>
                     <Input
-                      placeholder={t("events.checkIn.searchAttendees")}
+                      placeholder="Tìm kiếm người tham dự"
                       value={searchKeyword}
                       onChange={(e) => setSearchKeyword(e.target.value)}
                       bg={useColorModeValue("white", "gray.700")}
@@ -664,14 +651,14 @@ const EventCheckIn = () => {
                       color={textColor}
                       _hover={{ bg: hoverBgColor }}
                     >
-                      {t("common.reset")}
+                      Đặt lại
                     </Button>
                     <Button
                       leftIcon={<FaFileDownload />}
                       onClick={exportAttendees}
                       colorScheme="teal"
                     >
-                      {t("common.export")}
+                      Xuất dữ liệu
                     </Button>
                   </HStack>
                 </Flex>
@@ -687,13 +674,11 @@ const EventCheckIn = () => {
                   <Table variant="simple">
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
-                        <Th color={textColor}>{t("events.attendees")}</Th>
-                        <Th color={textColor}>{t("events.event")}</Th>
-                        <Th color={textColor}>{t("common.status")}</Th>
-                        <Th color={textColor}>
-                          {t("events.checkIn.checkInTime")}
-                        </Th>
-                        <Th color={textColor}>{t("common.action")}</Th>
+                        <Th color={textColor}>Người tham dự</Th>
+                        <Th color={textColor}>Sự kiện</Th>
+                        <Th color={textColor}>Trạng thái</Th>
+                        <Th color={textColor}>Thời gian check-in</Th>
+                        <Th color={textColor}>Thao tác</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -740,8 +725,8 @@ const EventCheckIn = () => {
                               borderRadius="md"
                             >
                               {attendee.checkInTime
-                                ? t("events.checkIn.status.checkedIn")
-                                : t("events.checkIn.status.notCheckedIn")}
+                                ? "Đã check-in"
+                                : "Chưa check-in"}
                             </Badge>
                           </Td>
                           <Td color={textColor}>
@@ -781,7 +766,7 @@ const EventCheckIn = () => {
                             <VStack>
                               <FaSearch size={20} color={grayIconColor} />
                               <Text color={secondaryTextColor}>
-                                {t("common.noResults")}
+                                Không tìm thấy kết quả
                               </Text>
                             </VStack>
                           </Td>
@@ -806,8 +791,8 @@ const EventCheckIn = () => {
         >
           <ModalHeader color={textColor}>
             {lastScannedAttendee?.checkInTime
-              ? t("events.checkIn.checkInSuccess")
-              : t("events.checkIn.checkInFailed")}
+              ? "Check-in thành công"
+              : "Check-in thất bại"}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -817,9 +802,9 @@ const EventCheckIn = () => {
                   <Alert status="success" borderRadius="md">
                     <AlertIcon />
                     <Box>
-                      <AlertTitle>{t("common.success")}!</AlertTitle>
+                      <AlertTitle>Thành công!</AlertTitle>
                       <AlertDescription>
-                        {t("events.checkIn.checkInSuccess").toLowerCase()}
+                        đã check-in thành công
                       </AlertDescription>
                     </Box>
                   </Alert>
@@ -827,10 +812,8 @@ const EventCheckIn = () => {
                   <Alert status="error" borderRadius="md">
                     <AlertIcon />
                     <Box>
-                      <AlertTitle>{t("common.error")}!</AlertTitle>
-                      <AlertDescription>
-                        {t("events.checkIn.alreadyCheckedIn")}
-                      </AlertDescription>
+                      <AlertTitle>Lỗi!</AlertTitle>
+                      <AlertDescription>Đã check-in trước đó</AlertDescription>
                     </Box>
                   </Alert>
                 )}
@@ -865,7 +848,7 @@ const EventCheckIn = () => {
                           fontWeight="medium"
                           color={textColor}
                         >
-                          {t("events.ticketId")}:
+                          Mã vé:
                         </Text>
                         <Text fontSize="sm" fontFamily="mono" color={textColor}>
                           {lastScannedAttendee.ticketId}
@@ -877,7 +860,7 @@ const EventCheckIn = () => {
                           fontWeight="medium"
                           color={textColor}
                         >
-                          {t("events.ticketType")}:
+                          Loại vé:
                         </Text>
                         <Badge colorScheme="purple">
                           {lastScannedAttendee.ticketType}
@@ -889,7 +872,7 @@ const EventCheckIn = () => {
                           fontWeight="medium"
                           color={textColor}
                         >
-                          {t("events.checkIn.checkInTime")}:
+                          Thời gian check-in:
                         </Text>
                         <Text fontSize="sm" color={textColor}>
                           {lastScannedAttendee.checkInTime ? (
@@ -911,7 +894,7 @@ const EventCheckIn = () => {
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="teal" onClick={onClose}>
-              {t("common.continue")}
+              Tiếp tục
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -250,10 +250,10 @@ const EventAnalytics = () => {
               leftIcon={<FaArrowLeft />}
               variant="ghost"
             >
-              Back to Dashboard
+              Quay lại Bảng điều khiển
             </Button>
           </HStack>
-          <Heading>Loading analytics data...</Heading>
+          <Heading>Đang tải dữ liệu phân tích...</Heading>
         </VStack>
       </Container>
     );
@@ -267,17 +267,17 @@ const EventAnalytics = () => {
           <Breadcrumb mb={4} fontSize="sm">
             <BreadcrumbItem>
               <BreadcrumbLink as={RouterLink} to="/dashboard">
-                Dashboard
+                Bảng điều khiển
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem isCurrentPage>
-              <BreadcrumbLink>Event Analytics</BreadcrumbLink>
+              <BreadcrumbLink>Phân tích sự kiện</BreadcrumbLink>
             </BreadcrumbItem>
           </Breadcrumb>
 
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
             <Box>
-              <Heading size="lg">{analytics.title} - Analytics</Heading>
+              <Heading size="lg">{analytics.title} - Phân tích</Heading>
               <HStack mt={1}>
                 <Badge
                   colorScheme={
@@ -302,10 +302,10 @@ const EventAnalytics = () => {
                 w="150px"
                 size="sm"
               >
-                <option value="all">All Time</option>
-                <option value="month">Last Month</option>
-                <option value="week">Last Week</option>
-                <option value="day">Last Day</option>
+                <option value="all">Tất cả thời gian</option>
+                <option value="month">Tháng trước</option>
+                <option value="week">Tuần trước</option>
+                <option value="day">Ngày trước</option>
               </Select>
 
               <Menu>
@@ -317,10 +317,10 @@ const EventAnalytics = () => {
                   size="sm"
                 />
                 <MenuList>
-                  <MenuItem icon={<FaDownload />}>Export Data</MenuItem>
-                  <MenuItem icon={<FaPrint />}>Print Report</MenuItem>
-                  <MenuItem icon={<FaShareAlt />}>Share Report</MenuItem>
-                  <MenuItem icon={<FaFilter />}>Advanced Filters</MenuItem>
+                  <MenuItem icon={<FaDownload />}>Xuất dữ liệu</MenuItem>
+                  <MenuItem icon={<FaPrint />}>In báo cáo</MenuItem>
+                  <MenuItem icon={<FaShareAlt />}>Chia sẻ báo cáo</MenuItem>
+                  <MenuItem icon={<FaFilter />}>Bộ lọc nâng cao</MenuItem>
                 </MenuList>
               </Menu>
             </HStack>
@@ -340,7 +340,7 @@ const EventAnalytics = () => {
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Total Attendees</StatLabel>
+                  <StatLabel>Tổng số người tham dự</StatLabel>
                   <StatNumber>{analytics.totalAttendees}</StatNumber>
                   <StatHelpText>
                     {Math.round(
@@ -348,7 +348,7 @@ const EventAnalytics = () => {
                         analytics.totalAttendees) *
                         100
                     )}
-                    % checked in
+                    % đã check-in
                   </StatHelpText>
                 </Box>
                 <Box
@@ -371,13 +371,13 @@ const EventAnalytics = () => {
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Total Revenue</StatLabel>
+                  <StatLabel>Tổng doanh thu</StatLabel>
                   <StatNumber>
                     ${analytics.totalRevenue.toLocaleString()}
                   </StatNumber>
                   <StatHelpText>
                     <StatArrow type="increase" />
-                    {analytics.revenueGrowth}% from projections
+                    {analytics.revenueGrowth}% từ dự kiến
                   </StatHelpText>
                 </Box>
                 <Box
@@ -400,14 +400,14 @@ const EventAnalytics = () => {
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Avg. Ticket Price</StatLabel>
+                  <StatLabel>Giá vé trung bình</StatLabel>
                   <StatNumber>
                     $
                     {Math.round(
                       analytics.totalRevenue / analytics.totalAttendees
                     )}
                   </StatNumber>
-                  <StatHelpText>Per attendee</StatHelpText>
+                  <StatHelpText>Trên mỗi người tham dự</StatHelpText>
                 </Box>
                 <Box
                   bg="purple.500"
@@ -429,7 +429,7 @@ const EventAnalytics = () => {
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Check-in Rate</StatLabel>
+                  <StatLabel>Tỷ lệ check-in</StatLabel>
                   <StatNumber>
                     {Math.round(
                       (analytics.checkedInAttendees /
@@ -439,7 +439,8 @@ const EventAnalytics = () => {
                     %
                   </StatNumber>
                   <StatHelpText>
-                    {analytics.checkedInAttendees} of {analytics.totalAttendees}
+                    {analytics.checkedInAttendees} trong số{" "}
+                    {analytics.totalAttendees}
                   </StatHelpText>
                 </Box>
                 <Box
@@ -466,19 +467,19 @@ const EventAnalytics = () => {
               <Box as="span" mr={2}>
                 <FaChartLine />
               </Box>{" "}
-              Sales Analytics
+              Phân tích doanh số
             </Tab>
             <Tab fontWeight="medium">
               <Box as="span" mr={2}>
                 <FaUsers />
               </Box>{" "}
-              Attendee Analytics
+              Phân tích người tham dự
             </Tab>
             <Tab fontWeight="medium">
               <Box as="span" mr={2}>
                 <FaChartBar />
               </Box>{" "}
-              Marketing Performance
+              Hiệu suất tiếp thị
             </Tab>
           </TabList>
 
@@ -496,7 +497,7 @@ const EventAnalytics = () => {
                   borderColor={borderColor}
                 >
                   <Heading size="md" mb={6}>
-                    Revenue Over Time
+                    Doanh thu theo thời gian
                   </Heading>
                   <Box h="400px">
                     <ResponsiveContainer width="100%" height="100%">
@@ -534,7 +535,7 @@ const EventAnalytics = () => {
                       borderColor={borderColor}
                     >
                       <Heading size="md" mb={6}>
-                        Sales by Ticket Type
+                        Doanh số theo loại vé
                       </Heading>
                       <Box h="300px">
                         <ResponsiveContainer width="100%" height="100%">
@@ -577,7 +578,7 @@ const EventAnalytics = () => {
                       borderColor={borderColor}
                     >
                       <Heading size="md" mb={6}>
-                        Ticket Sales Over Time
+                        Vé bán theo thời gian
                       </Heading>
                       <Box h="300px">
                         <ResponsiveContainer width="100%" height="100%">
@@ -621,7 +622,7 @@ const EventAnalytics = () => {
                       borderColor={borderColor}
                     >
                       <Heading size="md" mb={6}>
-                        Attendee Demographics
+                        Thông tin nhân khẩu học người tham dự
                       </Heading>
                       <Box h="300px">
                         <ResponsiveContainer width="100%" height="100%">
@@ -664,7 +665,7 @@ const EventAnalytics = () => {
                       borderColor={borderColor}
                     >
                       <Heading size="md" mb={6}>
-                        Check-in Activity by Hour
+                        Hoạt động check-in theo giờ
                       </Heading>
                       <Box h="300px">
                         <ResponsiveContainer width="100%" height="100%">
@@ -699,7 +700,7 @@ const EventAnalytics = () => {
                   borderColor={borderColor}
                 >
                   <Heading size="md" mb={6}>
-                    Attendance Summary
+                    Tóm tắt tham dự
                   </Heading>
                   <Grid
                     templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
@@ -713,7 +714,7 @@ const EventAnalytics = () => {
                         borderRadius="md"
                       >
                         <Text fontSize="sm" color="blue.700">
-                          Total Registered
+                          Tổng số đăng ký
                         </Text>
                         <Heading>{analytics.totalAttendees}</Heading>
                       </VStack>
@@ -726,7 +727,7 @@ const EventAnalytics = () => {
                         borderRadius="md"
                       >
                         <Text fontSize="sm" color="green.700">
-                          Checked In
+                          Đã check-in
                         </Text>
                         <Heading>{analytics.checkedInAttendees}</Heading>
                       </VStack>
@@ -739,7 +740,7 @@ const EventAnalytics = () => {
                         borderRadius="md"
                       >
                         <Text fontSize="sm" color="red.700">
-                          No-Shows
+                          Không tham dự
                         </Text>
                         <Heading>
                           {analytics.totalAttendees -
@@ -764,16 +765,16 @@ const EventAnalytics = () => {
                   borderColor={borderColor}
                 >
                   <Heading size="md" mb={6}>
-                    Marketing Channels Performance
+                    Hiệu suất kênh tiếp thị
                   </Heading>
                   <Box overflow="auto">
                     <Table variant="simple">
                       <Thead>
                         <Tr>
-                          <Th>Source</Th>
-                          <Th isNumeric>Visitors</Th>
-                          <Th isNumeric>Conversions</Th>
-                          <Th isNumeric>Conversion Rate</Th>
+                          <Th>Nguồn</Th>
+                          <Th isNumeric>Lượt truy cập</Th>
+                          <Th isNumeric>Chuyển đổi</Th>
+                          <Th isNumeric>Tỷ lệ chuyển đổi</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -813,7 +814,7 @@ const EventAnalytics = () => {
                   borderColor={borderColor}
                 >
                   <Heading size="md" mb={6}>
-                    Conversion by Channel
+                    Chuyển đổi theo kênh
                   </Heading>
                   <Box h="400px">
                     <ResponsiveContainer width="100%" height="100%">

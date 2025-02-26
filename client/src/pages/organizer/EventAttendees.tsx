@@ -350,7 +350,7 @@ const EventAttendees = () => {
   if (isLoading) {
     return (
       <Container maxW="6xl" py={8}>
-        <Text>Loading attendee data...</Text>
+        <Text>Đang tải dữ liệu người tham dự...</Text>
       </Container>
     );
   }
@@ -358,7 +358,7 @@ const EventAttendees = () => {
   if (!eventData) {
     return (
       <Container maxW="6xl" py={8}>
-        <Text>Event not found</Text>
+        <Text>Không tìm thấy sự kiện</Text>
       </Container>
     );
   }
@@ -373,7 +373,7 @@ const EventAttendees = () => {
       >
         <BreadcrumbItem>
           <BreadcrumbLink as={RouterLink} to="/dashboard">
-            Dashboard
+            Bảng điều khiển
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem>
@@ -382,14 +382,14 @@ const EventAttendees = () => {
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Attendees</BreadcrumbLink>
+          <BreadcrumbLink>Người tham dự</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
       {/* Header */}
       <Box mb={6}>
         <Heading as="h1" size="xl" mb={2}>
-          {eventData.title} - Attendee Management
+          {eventData.title} - Quản lý người tham dự
         </Heading>
         <Text color="gray.500">
           {eventData.date.toLocaleDateString("en-US", {
@@ -404,51 +404,51 @@ const EventAttendees = () => {
       {/* Stats Overview */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} spacing={4} mb={6}>
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-          <StatLabel>Total Attendees</StatLabel>
+          <StatLabel>Tổng số người tham dự</StatLabel>
           <StatNumber>{stats.totalAttendees}</StatNumber>
           <StatHelpText>
             {Math.round((stats.totalAttendees / eventData.totalTickets) * 100)}%
-            of capacity
+            công suất
           </StatHelpText>
         </Stat>
 
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-          <StatLabel>Confirmed</StatLabel>
+          <StatLabel>Xác nhận</StatLabel>
           <StatNumber>{stats.confirmedAttendees}</StatNumber>
           <StatHelpText>
             {Math.round(
               (stats.confirmedAttendees / stats.totalAttendees) * 100
             )}
-            % confirmed
+            % đã xác nhận
           </StatHelpText>
         </Stat>
 
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-          <StatLabel>Checked In</StatLabel>
+          <StatLabel>Đã check-in</StatLabel>
           <StatNumber>{stats.checkedInAttendees}</StatNumber>
           <StatHelpText>
             {Math.round(
               (stats.checkedInAttendees / stats.confirmedAttendees) * 100
             )}
-            % checked in
+            % đã check-in
           </StatHelpText>
         </Stat>
 
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-          <StatLabel>VIP Tickets</StatLabel>
+          <StatLabel>Vé VIP</StatLabel>
           <StatNumber>{stats.vipTickets}</StatNumber>
           <StatHelpText>
-            {Math.round((stats.vipTickets / stats.totalAttendees) * 100)}% of
-            total
+            {Math.round((stats.vipTickets / stats.totalAttendees) * 100)}% trong
+            tổng số
           </StatHelpText>
         </Stat>
 
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-          <StatLabel>Standard Tickets</StatLabel>
+          <StatLabel>Vé thường</StatLabel>
           <StatNumber>{stats.standardTickets}</StatNumber>
           <StatHelpText>
             {Math.round((stats.standardTickets / stats.totalAttendees) * 100)}%
-            of total
+            trong tổng số
           </StatHelpText>
         </Stat>
       </SimpleGrid>
@@ -457,9 +457,9 @@ const EventAttendees = () => {
       <Box bg={cardBg} borderRadius="lg" boxShadow="md" mb={6}>
         <Tabs colorScheme="teal" isFitted variant="enclosed">
           <TabList>
-            <Tab fontWeight="medium">All Attendees</Tab>
-            <Tab fontWeight="medium">Checked In</Tab>
-            <Tab fontWeight="medium">Not Checked In</Tab>
+            <Tab fontWeight="medium">Tất cả người tham dự</Tab>
+            <Tab fontWeight="medium">Đã check-in</Tab>
+            <Tab fontWeight="medium">Chưa check-in</Tab>
           </TabList>
 
           <TabPanels>
@@ -475,7 +475,7 @@ const EventAttendees = () => {
                     <FaSearch color="gray.300" />
                   </InputLeftElement>
                   <Input
-                    placeholder="Search by name or email"
+                    placeholder="Tìm kiếm theo tên hoặc email"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -486,10 +486,10 @@ const EventAttendees = () => {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
-                    <option value="all">All Statuses</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="pending">Pending</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="confirmed">Đã xác nhận</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="cancelled">Đã hủy</option>
                   </Select>
                 </FormControl>
 
@@ -498,26 +498,26 @@ const EventAttendees = () => {
                     value={filterTicketType}
                     onChange={(e) => setFilterTicketType(e.target.value)}
                   >
-                    <option value="all">All Ticket Types</option>
+                    <option value="all">Tất cả loại vé</option>
                     <option value="VIP">VIP</option>
-                    <option value="Standard">Standard</option>
+                    <option value="Standard">Thường</option>
                   </Select>
                 </FormControl>
 
                 <Flex flex={1} justifyContent="flex-end">
                   <HStack spacing={2}>
-                    <Tooltip label="Send email to attendees">
+                    <Tooltip label="Gửi email cho người tham dự">
                       <IconButton
-                        aria-label="Send email to attendees"
+                        aria-label="Gửi email cho người tham dự"
                         icon={<FaEnvelope />}
                         colorScheme="blue"
                         variant="outline"
                         onClick={handleSendEmail}
                       />
                     </Tooltip>
-                    <Tooltip label="Export attendee list">
+                    <Tooltip label="Xuất danh sách người tham dự">
                       <IconButton
-                        aria-label="Export attendee list"
+                        aria-label="Xuất danh sách người tham dự"
                         icon={<FaFileExport />}
                         colorScheme="green"
                         variant="outline"
@@ -533,20 +533,20 @@ const EventAttendees = () => {
                 <Table variant="simple">
                   <Thead>
                     <Tr>
-                      <Th>Name</Th>
+                      <Th>Tên</Th>
                       <Th>Email</Th>
-                      <Th>Ticket</Th>
-                      <Th>Status</Th>
+                      <Th>Vé</Th>
+                      <Th>Trạng thái</Th>
                       <Th>Check-in</Th>
-                      <Th>Purchase Date</Th>
-                      <Th>Actions</Th>
+                      <Th>Ngày mua</Th>
+                      <Th>Thao tác</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {filteredAttendees.length === 0 ? (
                       <Tr>
                         <Td colSpan={7} textAlign="center" py={4}>
-                          No attendees found matching your filters
+                          Không tìm thấy người tham dự phù hợp với bộ lọc
                         </Td>
                       </Tr>
                     ) : (

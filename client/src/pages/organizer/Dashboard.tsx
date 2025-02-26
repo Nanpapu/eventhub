@@ -424,8 +424,8 @@ const Dashboard = () => {
     // Trong thực tế, gọi API để lấy dữ liệu sự kiện để chỉnh sửa
     navigate(`/create-event?edit=${eventId}`);
     toast({
-      title: "Edit event",
-      description: "Loading event data for editing",
+      title: "Chỉnh sửa sự kiện",
+      description: "Đang tải dữ liệu sự kiện để chỉnh sửa",
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -446,8 +446,8 @@ const Dashboard = () => {
     setEvents(updatedEvents);
 
     toast({
-      title: "Event deleted",
-      description: "The event has been removed successfully",
+      title: "Đã xóa sự kiện",
+      description: "Sự kiện đã được xóa thành công",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -466,9 +466,11 @@ const Dashboard = () => {
     <Container maxW="7xl" py={8}>
       <Box mb={6}>
         <Heading as="h1" size="xl" mb={2}>
-          Organizer Dashboard
+          Bảng Điều Khiển Nhà Tổ Chức
         </Heading>
-        <Text color="gray.500">Manage your events and analyze performance</Text>
+        <Text color="gray.500">
+          Quản lý sự kiện và phân tích hiệu suất của bạn
+        </Text>
       </Box>
 
       {/* Thống kê tổng quan */}
@@ -476,9 +478,9 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Total Events</StatLabel>
+              <StatLabel fontWeight="medium">Tổng Số Sự Kiện</StatLabel>
               <StatNumber>{analytics.totalEvents}</StatNumber>
-              <StatHelpText>{analytics.upcomingEvents} upcoming</StatHelpText>
+              <StatHelpText>{analytics.upcomingEvents} sắp tới</StatHelpText>
             </Box>
             <Box
               bg="teal.500"
@@ -498,13 +500,13 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Total Attendees</StatLabel>
+              <StatLabel fontWeight="medium">Tổng Số Người Tham Gia</StatLabel>
               <StatNumber>{analytics.totalAttendeesMonth}</StatNumber>
               <StatHelpText>
                 <StatArrow
                   type={analytics.attendeesGrowth > 0 ? "increase" : "decrease"}
                 />
-                {Math.abs(analytics.attendeesGrowth)}% from last month
+                {Math.abs(analytics.attendeesGrowth)}% so với tháng trước
               </StatHelpText>
             </Box>
             <Box
@@ -525,7 +527,7 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Total Revenue</StatLabel>
+              <StatLabel fontWeight="medium">Tổng Doanh Thu</StatLabel>
               <StatNumber>
                 ${analytics.totalRevenue.toLocaleString()}
               </StatNumber>
@@ -533,7 +535,7 @@ const Dashboard = () => {
                 <StatArrow
                   type={analytics.revenueGrowth > 0 ? "increase" : "decrease"}
                 />
-                {Math.abs(analytics.revenueGrowth)}% from last month
+                {Math.abs(analytics.revenueGrowth)}% so với tháng trước
               </StatHelpText>
             </Box>
             <Box
@@ -554,11 +556,11 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Conversion Rate</StatLabel>
+              <StatLabel fontWeight="medium">Tỷ Lệ Chuyển Đổi</StatLabel>
               <StatNumber>24.8%</StatNumber>
               <StatHelpText>
                 <StatArrow type="increase" />
-                3.2% from last month
+                3.2% so với tháng trước
               </StatHelpText>
             </Box>
             <Box
@@ -581,14 +583,14 @@ const Dashboard = () => {
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6} mb={8}>
         <GridItem bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
           <Heading size="md" mb={4}>
-            Events by Month
+            Số Sự Kiện Theo Tháng
           </Heading>
           <MonthlyEventsChart data={analytics.eventsByMonth} />
         </GridItem>
 
         <GridItem bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
           <Heading size="md" mb={4}>
-            Attendees by Source
+            Người Tham Gia Theo Nguồn
           </Heading>
           <AttendeesSourceChart data={analytics.attendeesBySource} />
         </GridItem>
@@ -598,16 +600,16 @@ const Dashboard = () => {
       <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
         <Tabs colorScheme="teal" isFitted variant="enclosed">
           <TabList mb={4}>
-            <Tab fontWeight="medium">Upcoming Events</Tab>
-            <Tab fontWeight="medium">Past Events</Tab>
-            <Tab fontWeight="medium">Recent Attendees</Tab>
+            <Tab fontWeight="medium">Sự Kiện Sắp Tới</Tab>
+            <Tab fontWeight="medium">Sự Kiện Đã Qua</Tab>
+            <Tab fontWeight="medium">Người Tham Gia Gần Đây</Tab>
           </TabList>
 
           <TabPanels>
             {/* Tab sự kiện sắp tới */}
             <TabPanel p={0}>
               <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">Manage Your Upcoming Events</Heading>
+                <Heading size="md">Quản Lý Sự Kiện Sắp Tới Của Bạn</Heading>
                 <Button
                   as={RouterLink}
                   to="/create-event"
@@ -615,21 +617,21 @@ const Dashboard = () => {
                   leftIcon={<FaPlus />}
                   size="sm"
                 >
-                  Create New Event
+                  Tạo Sự Kiện Mới
                 </Button>
               </Flex>
 
               {upcomingEvents.length === 0 ? (
-                <Text py={4}>You don't have any upcoming events.</Text>
+                <Text py={4}>Bạn không có sự kiện sắp tới nào.</Text>
               ) : (
                 <Table variant="simple">
                   <Thead bg={tableHeaderBg}>
                     <Tr>
-                      <Th>Event</Th>
-                      <Th>Date</Th>
-                      <Th>Ticket Sales</Th>
-                      <Th>Revenue</Th>
-                      <Th>Actions</Th>
+                      <Th>Sự Kiện</Th>
+                      <Th>Ngày</Th>
+                      <Th>Bán Vé</Th>
+                      <Th>Doanh Thu</Th>
+                      <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -655,14 +657,14 @@ const Dashboard = () => {
                               </Link>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
-                                  ? "Online Event"
+                                  ? "Sự Kiện Trực Tuyến"
                                   : event.location}
                               </Text>
                             </VStack>
                           </HStack>
                         </Td>
                         <Td>
-                          {event.date.toLocaleDateString("en-US", {
+                          {event.date.toLocaleDateString("vi-VN", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -702,7 +704,7 @@ const Dashboard = () => {
                                 icon={<FaEdit />}
                                 onClick={() => handleEditEvent(event.id)}
                               >
-                                Edit Event
+                                Chỉnh Sửa Sự Kiện
                               </MenuItem>
                               <MenuItem
                                 icon={<FaChartLine />}
@@ -712,7 +714,7 @@ const Dashboard = () => {
                                   )
                                 }
                               >
-                                View Analytics
+                                Xem Phân Tích
                               </MenuItem>
                               <MenuItem
                                 icon={<FaUsers />}
@@ -722,7 +724,7 @@ const Dashboard = () => {
                                   )
                                 }
                               >
-                                Manage Attendees
+                                Quản Lý Người Tham Gia
                               </MenuItem>
                               <MenuItem
                                 icon={<FaQrcode />}
@@ -732,14 +734,14 @@ const Dashboard = () => {
                                   )
                                 }
                               >
-                                Check-in Attendees
+                                Điểm Danh Người Tham Gia
                               </MenuItem>
                               <MenuItem
                                 icon={<FaTrash />}
                                 color="red.500"
                                 onClick={() => confirmDeleteEvent(event.id)}
                               >
-                                Delete Event
+                                Xóa Sự Kiện
                               </MenuItem>
                             </MenuList>
                           </Menu>
@@ -754,20 +756,20 @@ const Dashboard = () => {
             {/* Tab sự kiện đã qua */}
             <TabPanel p={0}>
               <Heading size="md" mb={4}>
-                Your Past Events
+                Sự Kiện Đã Qua Của Bạn
               </Heading>
 
               {pastEvents.length === 0 ? (
-                <Text py={4}>You don't have any past events.</Text>
+                <Text py={4}>Bạn không có sự kiện đã qua nào.</Text>
               ) : (
                 <Table variant="simple">
                   <Thead bg={tableHeaderBg}>
                     <Tr>
-                      <Th>Event</Th>
-                      <Th>Date</Th>
-                      <Th>Attendees</Th>
-                      <Th>Revenue</Th>
-                      <Th>Actions</Th>
+                      <Th>Sự Kiện</Th>
+                      <Th>Ngày</Th>
+                      <Th>Người Tham Gia</Th>
+                      <Th>Doanh Thu</Th>
+                      <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -793,14 +795,14 @@ const Dashboard = () => {
                               </Link>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
-                                  ? "Online Event"
+                                  ? "Sự Kiện Trực Tuyến"
                                   : event.location}
                               </Text>
                             </VStack>
                           </HStack>
                         </Td>
                         <Td>
-                          {event.date.toLocaleDateString("en-US", {
+                          {event.date.toLocaleDateString("vi-VN", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -825,7 +827,7 @@ const Dashboard = () => {
                                   )
                                 }
                               >
-                                View Analytics
+                                Xem Phân Tích
                               </MenuItem>
                               <MenuItem
                                 icon={<FaUsers />}
@@ -835,14 +837,14 @@ const Dashboard = () => {
                                   )
                                 }
                               >
-                                View Attendees
+                                Xem Người Tham Gia
                               </MenuItem>
                               <MenuItem
                                 icon={<FaTrash />}
                                 color="red.500"
                                 onClick={() => confirmDeleteEvent(event.id)}
                               >
-                                Delete Event
+                                Xóa Sự Kiện
                               </MenuItem>
                             </MenuList>
                           </Menu>
@@ -857,20 +859,20 @@ const Dashboard = () => {
             {/* Tab người tham gia gần đây */}
             <TabPanel p={0}>
               <Heading size="md" mb={4}>
-                Recent Attendees
+                Người Tham Gia Gần Đây
               </Heading>
 
               {attendees.length === 0 ? (
-                <Text py={4}>No attendees data available.</Text>
+                <Text py={4}>Không có dữ liệu người tham gia.</Text>
               ) : (
                 <Table variant="simple">
                   <Thead bg={tableHeaderBg}>
                     <Tr>
-                      <Th>Name</Th>
+                      <Th>Tên</Th>
                       <Th>Email</Th>
-                      <Th>Ticket Type</Th>
-                      <Th>Purchase Date</Th>
-                      <Th>Status</Th>
+                      <Th>Loại Vé</Th>
+                      <Th>Ngày Mua</Th>
+                      <Th>Trạng Thái</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -880,7 +882,7 @@ const Dashboard = () => {
                         <Td>{attendee.email}</Td>
                         <Td>{attendee.ticketType}</Td>
                         <Td>
-                          {attendee.purchaseDate.toLocaleDateString("en-US", {
+                          {attendee.purchaseDate.toLocaleDateString("vi-VN", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -898,7 +900,11 @@ const Dashboard = () => {
                             borderRadius="full"
                             px={2}
                           >
-                            {attendee.status}
+                            {attendee.status === "confirmed"
+                              ? "Đã xác nhận"
+                              : attendee.status === "cancelled"
+                              ? "Đã hủy"
+                              : "Đang chờ"}
                           </Badge>
                         </Td>
                       </Tr>
@@ -918,20 +924,20 @@ const Dashboard = () => {
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
-            <AlertDialogHeader>Confirm Delete</AlertDialogHeader>
+            <AlertDialogHeader>Xác Nhận Xóa</AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to delete this event?
+              Bạn có chắc chắn muốn xóa sự kiện này không?
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
-                Cancel
+                Hủy
               </Button>
               <Button
                 colorScheme="red"
                 onClick={() => handleDeleteConfirmed()}
                 ml={3}
               >
-                Delete
+                Xóa
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
