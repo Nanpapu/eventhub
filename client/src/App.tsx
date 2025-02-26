@@ -1,8 +1,9 @@
-import { ChakraProvider } from '@chakra-ui/react';
-import { Outlet } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ChakraProvider } from "@chakra-ui/react";
+import { Outlet } from "react-router-dom";
+import Layout from "./components/layout/Layout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 function App() {
   return (
     <ChakraProvider>
@@ -13,4 +14,5 @@ function App() {
     </ChakraProvider>
   );
 }
+
 export default App;

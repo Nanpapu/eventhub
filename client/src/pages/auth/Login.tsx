@@ -11,13 +11,15 @@ import {
   Link as ChakraLink,
   FormErrorMessage,
   useToast,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+} from "@chakra-ui/react";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+
 interface LoginFormValues {
   email: string;
   password: string;
 }
+
 const Login = () => {
   const toast = useToast();
   const {
@@ -25,36 +27,39 @@ const Login = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>();
+
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // Gi? l?p dang nh?p thành công - khi có backend thì g?i API ? dây
-      console.log('Login data:', data);
+      // Simulate successful login - will call API when backend is ready
+      console.log("Login data:", data);
       toast({
-        title: 'Ðang nh?p thành công!',
-        status: 'success',
+        title: "Login successful!",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: 'Ðang nh?p th?t b?i!',
-        description: 'Vui lòng ki?m tra l?i email và m?t kh?u.',
-        status: 'error',
+        title: "Login failed!",
+        description: "Please check your email and password.",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
   };
+
   return (
     <Container maxW="md" py={12}>
       <Box bg="white" p={8} borderRadius="lg" boxShadow="lg">
         <Stack spacing={6}>
           <Heading textAlign="center" size="xl">
-            Ðang nh?p
+            Login
           </Heading>
           <Text textAlign="center" color="gray.600">
-            Chào m?ng b?n tr? l?i v?i EventHub
+            Welcome back to EventHub
           </Text>
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <FormControl isInvalid={!!errors.email}>
@@ -62,31 +67,33 @@ const Login = () => {
                 <Input
                   type="email"
                   placeholder="your.email@example.com"
-                  {...register('email', {
-                    required: 'Email là b?t bu?c',
+                  {...register("email", {
+                    required: "Email is required",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Email không h?p l?',
+                      message: "Invalid email address",
                     },
                   })}
                 />
                 <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
               </FormControl>
+
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel>M?t kh?u</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <Input
                   type="password"
                   placeholder="********"
-                  {...register('password', {
-                    required: 'M?t kh?u là b?t bu?c',
+                  {...register("password", {
+                    required: "Password is required",
                     minLength: {
                       value: 6,
-                      message: 'M?t kh?u ph?i có ít nh?t 6 ký t?',
+                      message: "Password must be at least 6 characters",
                     },
                   })}
                 />
                 <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
               </FormControl>
+
               <Button
                 type="submit"
                 colorScheme="teal"
@@ -94,14 +101,20 @@ const Login = () => {
                 fontSize="md"
                 isLoading={isSubmitting}
               >
-                Ðang nh?p
+                Login
               </Button>
             </Stack>
           </form>
+
           <Text textAlign="center">
-            Chua có tài kho?n?{' '}
-            <ChakraLink as={Link} to="/register" color="teal.500">
-              Ðang ký ngay
+            Don't have an account?{" "}
+            <ChakraLink
+              as={Link}
+              to="/register"
+              color="teal.500"
+              sx={{ textDecoration: "none" }}
+            >
+              Register now
             </ChakraLink>
           </Text>
         </Stack>
@@ -109,4 +122,5 @@ const Login = () => {
     </Container>
   );
 };
+
 export default Login;

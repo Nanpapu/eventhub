@@ -1,10 +1,11 @@
-import { Box, Text, Container, Stack, Link, Divider } from '@chakra-ui/react';
+import { Box, Text, Container, Stack, Link, Divider } from "@chakra-ui/react";
+
 const Footer = () => {
   return (
     <Box as="footer" bg="gray.100" py={10}>
       <Container maxW="container.xl">
         <Stack
-          direction={{ base: 'column', md: 'row' }}
+          direction={{ base: "column", md: "row" }}
           spacing={8}
           justify="space-between"
           align="start"
@@ -15,34 +16,35 @@ const Footer = () => {
               EventHub
             </Text>
             <Text color="gray.600">
-              N?n t?ng qu?n lý và t? ch?c s? ki?n toàn di?n
+              Comprehensive event management platform
             </Text>
           </Stack>
           <Stack align="start" spacing={3}>
             <Text fontWeight="bold">Platform</Text>
-            <Link href="#">Tìm s? ki?n</Link>
-            <Link href="#">T?o s? ki?n</Link>
-            <Link href="#">Tr? thành nhà t? ch?c</Link>
+            <Link href="#">Find Events</Link>
+            <Link href="#">Create Event</Link>
+            <Link href="#">Become an Organizer</Link>
           </Stack>
           <Stack align="start" spacing={3}>
-            <Text fontWeight="bold">Công ty</Text>
-            <Link href="#">V? chúng tôi</Link>
-            <Link href="#">Liên h?</Link>
+            <Text fontWeight="bold">Company</Text>
+            <Link href="#">About Us</Link>
+            <Link href="#">Contact</Link>
             <Link href="#">Blog</Link>
           </Stack>
           <Stack align="start" spacing={3}>
-            <Text fontWeight="bold">H? tr?</Text>
-            <Link href="#">Tr? giúp</Link>
-            <Link href="#">Ði?u kho?n</Link>
-            <Link href="#">Chính sách</Link>
+            <Text fontWeight="bold">Support</Text>
+            <Link href="#">Help</Link>
+            <Link href="#">Terms</Link>
+            <Link href="#">Privacy Policy</Link>
           </Stack>
         </Stack>
         <Divider />
         <Text pt={6} fontSize="sm" textAlign="center">
-          © {new Date().getFullYear()} EventHub. All rights reserved.
+          Â© {new Date().getFullYear()} EventHub. All rights reserved.
         </Text>
       </Container>
     </Box>
   );
 };
+
 export default Footer;

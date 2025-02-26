@@ -13,16 +13,18 @@ import {
   useToast,
   Radio,
   RadioGroup,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+} from "@chakra-ui/react";
+import { Link } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+
 interface RegisterFormValues {
   fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'user' | 'organizer';
+  role: "user" | "organizer";
 }
+
 const Register = () => {
   const toast = useToast();
   const {
@@ -33,111 +35,122 @@ const Register = () => {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     defaultValues: {
-      role: 'user',
+      role: "user",
     },
   });
-  const password = watch('password');
+
+  const password = watch("password");
+
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      // Gi? l?p dang ký thành công - khi có backend thì g?i API ? dây
-      console.log('Register data:', data);
+      // Simulate successful registration - will call API when backend is ready
+      console.log("Register data:", data);
       toast({
-        title: 'Ðang ký thành công!',
-        description: 'B?n dã dang ký tài kho?n thành công.',
-        status: 'success',
+        title: "Registration successful!",
+        description: "Your account has been created.",
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: 'Ðang ký th?t b?i!',
-        description: 'Có l?i x?y ra trong quá trình dang ký.',
-        status: 'error',
+        title: "Registration failed!",
+        description: "An error occurred during registration.",
+        status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
   };
+
   return (
     <Container maxW="md" py={12}>
       <Box bg="white" p={8} borderRadius="lg" boxShadow="lg">
         <Stack spacing={6}>
           <Heading textAlign="center" size="xl">
-            Ðang ký tài kho?n
+            Create Account
           </Heading>
           <Text textAlign="center" color="gray.600">
-            T?o tài kho?n d? tr?i nghi?m t?t c? tính nang c?a EventHub
+            Create an account to experience all features of EventHub
           </Text>
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <FormControl isInvalid={!!errors.fullName}>
-                <FormLabel>H? và tên</FormLabel>
+                <FormLabel>Full Name</FormLabel>
                 <Input
-                  placeholder="H? và tên c?a b?n"
-                  {...register('fullName', {
-                    required: 'H? và tên là b?t bu?c',
+                  placeholder="Your full name"
+                  {...register("fullName", {
+                    required: "Full name is required",
                   })}
                 />
                 <FormErrorMessage>{errors.fullName?.message}</FormErrorMessage>
               </FormControl>
+
               <FormControl isInvalid={!!errors.email}>
                 <FormLabel>Email</FormLabel>
                 <Input
                   type="email"
                   placeholder="your.email@example.com"
-                  {...register('email', {
-                    required: 'Email là b?t bu?c',
+                  {...register("email", {
+                    required: "Email is required",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Email không h?p l?',
+                      message: "Invalid email address",
                     },
                   })}
                 />
                 <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
               </FormControl>
+
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel>M?t kh?u</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <Input
                   type="password"
                   placeholder="********"
-                  {...register('password', {
-                    required: 'M?t kh?u là b?t bu?c',
+                  {...register("password", {
+                    required: "Password is required",
                     minLength: {
                       value: 6,
-                      message: 'M?t kh?u ph?i có ít nh?t 6 ký t?',
+                      message: "Password must be at least 6 characters",
                     },
                   })}
                 />
                 <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
               </FormControl>
+
               <FormControl isInvalid={!!errors.confirmPassword}>
-                <FormLabel>Xác nh?n m?t kh?u</FormLabel>
+                <FormLabel>Confirm Password</FormLabel>
                 <Input
                   type="password"
                   placeholder="********"
-                  {...register('confirmPassword', {
-                    required: 'Vui lòng xác nh?n m?t kh?u',
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
                     validate: (value) =>
-                      value === password || 'M?t kh?u xác nh?n không kh?p',
+                      value === password || "Passwords do not match",
                   })}
                 />
-                <FormErrorMessage>{errors.confirmPassword?.message}</FormErrorMessage>
+                <FormErrorMessage>
+                  {errors.confirmPassword?.message}
+                </FormErrorMessage>
               </FormControl>
+
               <FormControl>
-                <FormLabel>B?n mu?n</FormLabel>
+                <FormLabel>I want to</FormLabel>
                 <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
                     <RadioGroup {...field}>
                       <Stack direction="row">
-                        <Radio value="user">Tham gia s? ki?n</Radio>
-                        <Radio value="organizer">T? ch?c s? ki?n</Radio>
+                        <Radio value="user">Attend events</Radio>
+                        <Radio value="organizer">Organize events</Radio>
                       </Stack>
                     </RadioGroup>
                   )}
                 />
               </FormControl>
+
               <Button
                 type="submit"
                 colorScheme="teal"
@@ -146,14 +159,20 @@ const Register = () => {
                 isLoading={isSubmitting}
                 mt={2}
               >
-                Ðang ký
+                Register
               </Button>
             </Stack>
           </form>
+
           <Text textAlign="center">
-            Ðã có tài kho?n?{' '}
-            <ChakraLink as={Link} to="/login" color="teal.500">
-              Ðang nh?p
+            Already have an account?{" "}
+            <ChakraLink
+              as={Link}
+              to="/login"
+              color="teal.500"
+              sx={{ textDecoration: "none" }}
+            >
+              Login
             </ChakraLink>
           </Text>
         </Stack>
@@ -161,4 +180,5 @@ const Register = () => {
     </Container>
   );
 };
+
 export default Register;
