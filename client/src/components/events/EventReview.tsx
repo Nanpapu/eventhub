@@ -44,6 +44,8 @@ interface EventReviewProps {
  * Component hiển thị danh sách đánh giá và cho phép người dùng thêm đánh giá mới
  */
 const EventReview = ({
+  // eventId không được sử dụng hiện tại nhưng vẫn giữ lại cho tính mở rộng API trong tương lai
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eventId,
   currentUserId = "current-user", // Giá trị mặc định cho demo
   canAddReview = true,
@@ -58,6 +60,7 @@ const EventReview = ({
   const [newReviewRating, setNewReviewRating] = useState(0);
   const [newReviewComment, setNewReviewComment] = useState("");
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -66,11 +69,15 @@ const EventReview = ({
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const userReviewBg = useColorModeValue("teal.50", "teal.900");
   const userReviewBorderColor = useColorModeValue("teal.200", "teal.700");
+  const formBgColor = useColorModeValue("gray.50", "gray.700");
+  const ratingLabelColor = useColorModeValue("teal.600", "teal.300");
+  const placeholderBgColor = useColorModeValue("gray.100", "gray.600");
+  const hoverBgColor = useColorModeValue("gray.100", "gray.600");
 
   // Tải dữ liệu đánh giá từ API (mock data cho demo)
   useEffect(() => {
     // Nếu không có eventId, không cần gọi API
-    if (!eventId) return;
+    // if (!eventId) return;
 
     // Mock data - trong thực tế sẽ gọi API
     const mockReviews: Review[] = [
@@ -117,7 +124,7 @@ const EventReview = ({
       setNewReviewRating(existingUserReview.rating);
       setNewReviewComment(existingUserReview.comment);
     }
-  }, [eventId, currentUserId]);
+  }, [currentUserId]);
 
   // Tính rating trung bình
   const calculateAverageRating = (): number => {
@@ -168,12 +175,30 @@ const EventReview = ({
     );
   };
 
+  // Gợi ý đánh giá dựa trên số sao
+  const getRatingHint = () => {
+    switch (newReviewRating) {
+      case 1:
+        return "Rất không hài lòng";
+      case 2:
+        return "Không hài lòng";
+      case 3:
+        return "Bình thường";
+      case 4:
+        return "Hài lòng";
+      case 5:
+        return "Rất hài lòng";
+      default:
+        return "Chọn đánh giá của bạn";
+    }
+  };
+
   // Xử lý thêm/cập nhật đánh giá
   const handleSubmitReview = () => {
     if (newReviewRating === 0) {
       toast({
-        title: "Error",
-        description: "Please select a rating",
+        title: "Vui lòng chọn số sao",
+        description: "Bạn chưa chọn số sao đánh giá cho sự kiện này",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -183,8 +208,8 @@ const EventReview = ({
 
     if (newReviewComment.trim() === "") {
       toast({
-        title: "Error",
-        description: "Please write a review comment",
+        title: "Vui lòng nhập nội dung đánh giá",
+        description: "Hãy chia sẻ trải nghiệm của bạn về sự kiện này",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -192,54 +217,61 @@ const EventReview = ({
       return;
     }
 
-    // Tạo đánh giá mới hoặc cập nhật đánh giá hiện có
-    const reviewData: Review = {
-      id: userReview ? userReview.id : `new-${Date.now()}`,
-      userId: currentUserId,
-      userName: "Current User", // Trong thực tế lấy từ thông tin người dùng
-      userAvatar: "https://randomuser.me/api/portraits/men/10.jpg", // Trong thực tế lấy từ thông tin người dùng
-      rating: newReviewRating,
-      comment: newReviewComment,
-      createdAt: new Date(),
-      isEdited: isEditingReview,
-    };
+    // Simulation of API call
+    setIsSubmitting(true);
 
-    if (userReview) {
-      // Cập nhật đánh giá hiện có
-      const updatedReviews = reviews.map((review) =>
-        review.id === userReview.id ? reviewData : review
-      );
-      setReviews(updatedReviews);
-      setUserReview(reviewData);
-      toast({
-        title: "Review updated",
-        description: "Your review has been updated successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } else {
-      // Thêm đánh giá mới
-      const updatedReviews = [...reviews, reviewData];
-      setReviews(updatedReviews);
-      setUserReview(reviewData);
-      toast({
-        title: "Review added",
-        description: "Your review has been added successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    // Simulate API delay
+    setTimeout(() => {
+      // Tạo đánh giá mới hoặc cập nhật đánh giá hiện có
+      const reviewData: Review = {
+        id: userReview ? userReview.id : `new-${Date.now()}`,
+        userId: currentUserId,
+        userName: "Current User", // Trong thực tế lấy từ thông tin người dùng
+        userAvatar: "https://randomuser.me/api/portraits/men/10.jpg", // Trong thực tế lấy từ thông tin người dùng
+        rating: newReviewRating,
+        comment: newReviewComment,
+        createdAt: new Date(),
+        isEdited: isEditingReview,
+      };
 
-    // Reset form
-    setIsAddingReview(false);
-    setIsEditingReview(false);
+      if (userReview) {
+        // Cập nhật đánh giá hiện có
+        const updatedReviews = reviews.map((review) =>
+          review.id === userReview.id ? reviewData : review
+        );
+        setReviews(updatedReviews);
+        setUserReview(reviewData);
+        toast({
+          title: "Đã cập nhật đánh giá!",
+          description: "Cảm ơn bạn đã chia sẻ ý kiến về sự kiện này",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Thêm đánh giá mới
+        const updatedReviews = [reviewData, ...reviews];
+        setReviews(updatedReviews);
+        setUserReview(reviewData);
+        toast({
+          title: "Đã thêm đánh giá mới!",
+          description: "Cảm ơn bạn đã chia sẻ ý kiến về sự kiện này",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
 
-    // Gọi callback
-    if (onReviewAdded) {
-      onReviewAdded();
-    }
+      // Reset form
+      setIsAddingReview(false);
+      setIsEditingReview(false);
+      setIsSubmitting(false);
+
+      // Gọi callback
+      if (onReviewAdded) {
+        onReviewAdded();
+      }
+    }, 1000);
   };
 
   // Xử lý xóa đánh giá
@@ -256,8 +288,8 @@ const EventReview = ({
     setNewReviewComment("");
 
     toast({
-      title: "Review deleted",
-      description: "Your review has been deleted successfully",
+      title: "Đã xóa đánh giá!",
+      description: "Đánh giá của bạn đã được xóa thành công",
       status: "info",
       duration: 3000,
       isClosable: true,
@@ -275,7 +307,7 @@ const EventReview = ({
 
   return (
     <Box>
-      {/* Rating và form đánh giá */}
+      {/* Rating và nút thêm đánh giá */}
       <VStack align="start" spacing={6} mb={8} w="100%">
         <Flex
           direction={{ base: "column", sm: "row" }}
@@ -285,58 +317,94 @@ const EventReview = ({
           wrap="wrap"
           gap={4}
         >
-          <HStack>
+          <HStack spacing={3}>
             {renderStars(calculateAverageRating())}
             <Text fontWeight="bold" fontSize="lg" color={textColor}>
               {calculateAverageRating()} ({getReviewCount()}{" "}
-              {getReviewCount() === 1 ? "review" : "reviews"})
+              {getReviewCount() === 1 ? "đánh giá" : "đánh giá"})
             </Text>
           </HStack>
 
           {canAddReview && !isAddingReview && !userReview && (
             <Button
-              size="sm"
+              size="md"
               colorScheme="teal"
+              leftIcon={<FaStar />}
               onClick={() => setIsAddingReview(true)}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+              transition="all 0.2s"
             >
-              Write a Review
+              Viết đánh giá
             </Button>
           )}
         </Flex>
 
-        {/* Form thêm/chỉnh sửa đánh giá */}
+        {/* Form thêm/chỉnh sửa đánh giá - Thiết kế cải tiến */}
         {(isAddingReview || isEditingReview) && (
           <Box
             w="100%"
-            p={4}
+            p={6}
             borderWidth="1px"
-            borderRadius="md"
+            borderRadius="lg"
             borderColor={borderColor}
-            bg={bgColor}
+            bg={formBgColor}
+            boxShadow="md"
+            position="relative"
+            transition="all 0.3s"
           >
-            <VStack align="start" spacing={4}>
-              <Heading size="md" color={textColor}>
-                {isEditingReview ? "Edit Your Review" : "Write a Review"}
+            <VStack align="start" spacing={6}>
+              <Heading size="md" color={textColor} mb={2}>
+                {isEditingReview
+                  ? "Chỉnh sửa đánh giá của bạn"
+                  : "Chia sẻ trải nghiệm của bạn"}
               </Heading>
 
-              <FormControl>
-                <FormLabel color={textColor}>Rating</FormLabel>
-                <Box py={2}>{renderStars(newReviewRating, true)}</Box>
-              </FormControl>
+              {/* Rating stars với hiệu ứng và gợi ý */}
+              <Box w="100%">
+                <Text fontWeight="medium" color={ratingLabelColor} mb={2}>
+                  Đánh giá của bạn*
+                </Text>
+                <Flex align="center" mb={2}>
+                  <HStack spacing={2}>
+                    {renderStars(newReviewRating, true)}
+                  </HStack>
+                  <Text ml={4} color={textColor} fontWeight="medium">
+                    {getRatingHint()}
+                  </Text>
+                </Flex>
+              </Box>
 
-              <FormControl>
-                <FormLabel color={textColor}>Comment</FormLabel>
+              {/* Textarea với gợi ý nâng cao */}
+              <FormControl isRequired>
+                <FormLabel fontWeight="medium" color={ratingLabelColor}>
+                  Nội dung đánh giá*
+                </FormLabel>
                 <Textarea
                   value={newReviewComment}
                   onChange={(e) => setNewReviewComment(e.target.value)}
-                  placeholder="Share your experience about this event..."
+                  placeholder={`Hãy chia sẻ trải nghiệm của bạn về sự kiện này...
+- Điều gì bạn thích nhất?
+- Bạn học được gì từ sự kiện?
+- Bạn có đề xuất gì để cải thiện?`}
                   size="md"
                   color={textColor}
                   borderColor={borderColor}
+                  bg={bgColor}
+                  _hover={{ borderColor: "teal.400" }}
+                  _focus={{
+                    borderColor: "teal.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)",
+                  }}
+                  minH="150px"
+                  resize="vertical"
+                  p={4}
                 />
+                <Text fontSize="xs" color={secondaryTextColor} mt={1}>
+                  {newReviewComment.length}/500 ký tự
+                </Text>
               </FormControl>
 
-              <HStack w="100%" justify="space-between">
+              <HStack w="100%" justify="space-between" pt={2}>
                 <Button
                   onClick={() => {
                     setIsAddingReview(false);
@@ -345,14 +413,26 @@ const EventReview = ({
                     if (isEditingReview && userReview) {
                       setNewReviewRating(userReview.rating);
                       setNewReviewComment(userReview.comment);
+                    } else {
+                      setNewReviewRating(0);
+                      setNewReviewComment("");
                     }
                   }}
                   variant="outline"
+                  borderColor={borderColor}
                 >
-                  Cancel
+                  Hủy
                 </Button>
-                <Button colorScheme="teal" onClick={handleSubmitReview}>
-                  {isEditingReview ? "Update Review" : "Submit Review"}
+                <Button
+                  colorScheme="teal"
+                  onClick={handleSubmitReview}
+                  isLoading={isSubmitting}
+                  loadingText="Đang gửi..."
+                  leftIcon={isEditingReview ? <FaEdit /> : <FaStar />}
+                  _hover={{ transform: "translateY(-2px)" }}
+                  transition="all 0.2s"
+                >
+                  {isEditingReview ? "Cập nhật đánh giá" : "Gửi đánh giá"}
                 </Button>
               </HStack>
             </VStack>
@@ -360,112 +440,154 @@ const EventReview = ({
         )}
       </VStack>
 
-      {/* Đánh giá của người dùng hiện tại */}
+      {/* Đánh giá của người dùng hiện tại - Thiết kế cải tiến */}
       {userReview && !isEditingReview && (
         <Box
           w="100%"
-          p={4}
-          mb={6}
+          p={5}
+          mb={8}
           borderWidth="1px"
-          borderRadius="md"
+          borderRadius="lg"
           borderColor={userReviewBorderColor}
           bg={userReviewBg}
           position="relative"
+          boxShadow="sm"
+          _hover={{ boxShadow: "md" }}
+          transition="all 0.3s"
         >
-          <Heading size="sm" mb={2} color={textColor}>
-            Your Review
-          </Heading>
+          <Flex justify="space-between" align="start" mb={3}>
+            <Heading size="sm" color={textColor}>
+              Đánh giá của bạn
+            </Heading>
 
-          <HStack position="absolute" top={4} right={4}>
-            <Tooltip label="Edit review">
-              <IconButton
-                aria-label="Edit review"
-                icon={<FaEdit />}
-                size="sm"
-                onClick={() => {
-                  setIsEditingReview(true);
-                  setNewReviewRating(userReview.rating);
-                  setNewReviewComment(userReview.comment);
-                }}
-                variant="ghost"
-              />
-            </Tooltip>
-            <Tooltip label="Delete review">
-              <IconButton
-                aria-label="Delete review"
-                icon={<FaTrash />}
-                size="sm"
-                onClick={handleDeleteReview}
-                variant="ghost"
-                colorScheme="red"
-              />
-            </Tooltip>
-          </HStack>
+            <HStack spacing={2}>
+              <Tooltip label="Chỉnh sửa đánh giá" placement="top">
+                <IconButton
+                  aria-label="Chỉnh sửa đánh giá"
+                  icon={<FaEdit />}
+                  size="sm"
+                  onClick={() => {
+                    setIsEditingReview(true);
+                    setNewReviewRating(userReview.rating);
+                    setNewReviewComment(userReview.comment);
+                  }}
+                  variant="ghost"
+                  colorScheme="teal"
+                  _hover={{ bg: hoverBgColor }}
+                />
+              </Tooltip>
+              <Tooltip label="Xóa đánh giá" placement="top">
+                <IconButton
+                  aria-label="Xóa đánh giá"
+                  icon={<FaTrash />}
+                  size="sm"
+                  onClick={handleDeleteReview}
+                  variant="ghost"
+                  colorScheme="red"
+                  _hover={{ bg: hoverBgColor }}
+                />
+              </Tooltip>
+            </HStack>
+          </Flex>
 
           {/* Phần nội dung đánh giá của người dùng hiện tại */}
-          <VStack align="start" spacing={2}>
-            <HStack>
+          <VStack align="start" spacing={3}>
+            <Flex align="center" wrap="wrap" gap={2}>
               {renderStars(userReview.rating)}
               <Text fontSize="sm" color={secondaryTextColor}>
                 {formatReviewDate(userReview.createdAt)}
-                {userReview.isEdited && " (edited)"}
+                {userReview.isEdited && " (đã chỉnh sửa)"}
               </Text>
-            </HStack>
-            <Text color={textColor}>{userReview.comment}</Text>
+            </Flex>
+            <Text color={textColor} fontSize="md" fontStyle="italic">
+              "{userReview.comment}"
+            </Text>
           </VStack>
         </Box>
       )}
 
       {/* Tất cả đánh giá (bao gồm cả reviews và comments) */}
-      <Heading size="md" mb={4} color={textColor}>
-        All Reviews
-      </Heading>
+      <Box mb={4}>
+        <Heading size="md" mb={5} color={textColor}>
+          Tất cả đánh giá (
+          {reviews.filter((r) => r.userId !== currentUserId).length})
+        </Heading>
 
-      {reviews.filter((review) => review.userId !== currentUserId).length ===
-      0 ? (
-        <Text color={secondaryTextColor}>
-          No reviews yet. Be the first to review this event!
-        </Text>
-      ) : (
-        <VStack spacing={4} align="start" w="100%">
-          {reviews
-            .filter((review) => review.userId !== currentUserId)
-            .map((review) => (
-              <Box
-                key={review.id}
-                p={4}
-                borderWidth="1px"
-                borderRadius="md"
-                w="100%"
-                borderColor={borderColor}
-                bg={bgColor}
+        {reviews.filter((review) => review.userId !== currentUserId).length ===
+        0 ? (
+          <Box
+            py={10}
+            textAlign="center"
+            bg={placeholderBgColor}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+            borderStyle="dashed"
+          >
+            <Text color={secondaryTextColor} fontSize="lg">
+              Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ trải nghiệm!
+            </Text>
+            {canAddReview && !userReview && !isAddingReview && (
+              <Button
+                mt={4}
+                colorScheme="teal"
+                leftIcon={<FaStar />}
+                onClick={() => setIsAddingReview(true)}
               >
-                <HStack spacing={4} mb={2}>
-                  <Avatar
-                    size="sm"
-                    name={review.userName}
-                    src={review.userAvatar}
-                  />
-                  <Box>
-                    <Text fontWeight="bold" color={textColor}>
-                      {review.userName}
-                    </Text>
-                    <HStack>
-                      {renderStars(review.rating)}
-                      <Text fontSize="sm" color={secondaryTextColor}>
-                        {formatReviewDate(review.createdAt)}
-                        {review.isEdited && " (edited)"}
+                Viết đánh giá
+              </Button>
+            )}
+          </Box>
+        ) : (
+          <VStack spacing={5} align="start" w="100%">
+            {reviews
+              .filter((review) => review.userId !== currentUserId)
+              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+              .map((review) => (
+                <Box
+                  key={review.id}
+                  p={5}
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  w="100%"
+                  borderColor={borderColor}
+                  bg={bgColor}
+                  boxShadow="sm"
+                  _hover={{ boxShadow: "md" }}
+                  transition="all 0.2s"
+                >
+                  <HStack spacing={4} mb={3}>
+                    <Avatar
+                      size="md"
+                      name={review.userName}
+                      src={review.userAvatar}
+                    />
+                    <Box>
+                      <Text fontWeight="bold" color={textColor} fontSize="md">
+                        {review.userName}
                       </Text>
-                    </HStack>
-                  </Box>
-                </HStack>
-                <Text ml={{ base: 0, md: 12 }} mt={2} color={textColor}>
-                  {review.comment}
-                </Text>
-              </Box>
-            ))}
-        </VStack>
-      )}
+                      <HStack mt={1}>
+                        {renderStars(review.rating)}
+                        <Text fontSize="sm" color={secondaryTextColor} ml={1}>
+                          {formatReviewDate(review.createdAt)}
+                          {review.isEdited && " (đã chỉnh sửa)"}
+                        </Text>
+                      </HStack>
+                    </Box>
+                  </HStack>
+                  <Text
+                    color={textColor}
+                    ml={14}
+                    fontSize="md"
+                    fontStyle="italic"
+                  >
+                    "{review.comment}"
+                  </Text>
+                </Box>
+              ))}
+          </VStack>
+        )}
+      </Box>
     </Box>
   );
 };

@@ -1,67 +1,111 @@
-# EventHub - Nền tảng Sự kiện
+# EventHub - Nền tảng Tổ chức và Quản lý Sự kiện
 
-## Tóm tắt cập nhật
+EventHub là một nền tảng toàn diện cho phép người dùng tạo, quản lý và tham gia các sự kiện. Dự án này được xây dựng với NextJS và cung cấp giao diện người dùng hiện đại với hỗ trợ chế độ Dark/Light Mode.
 
-### Dark/Light Mode
+## Cập nhật mới nhất
 
-Toàn bộ dự án đã được cập nhật để hỗ trợ chế độ Dark/Light mode. Các thành phần sau đã được cập nhật:
+### Chế độ Dark/Light Mode
 
-#### Các trang chính:
+Các trang và component quan trọng đã được cập nhật để hỗ trợ chế độ Dark/Light Mode, sử dụng `useColorModeValue` từ Chakra UI:
 
-- `Home.tsx`: Đã áp dụng biến màu sắc cho dark/light mode
-- `EventDetail.tsx`: Đã cập nhật để sử dụng màu sắc theo chế độ hiện tại
-- `SearchResults.tsx`: Đã triển khai đầy đủ biến màu sắc
-- `CreateEvent.tsx`: Đã áp dụng biến màu sắc cho background và border
-- `Checkout.tsx`: Đã triển khai đầy đủ biến màu sắc
-- `Login.tsx` & `Register.tsx`: Đã triển khai dark/light mode
+- **Trang chính:**
 
-#### Các thành phần layout:
+  - `Home.tsx`: Đã cập nhật các màu sắc của tất cả thành phần (card, text, button, v.v)
 
-- `Header.tsx`: Đã triển khai đầy đủ biến màu sắc
-- `Footer.tsx`: Đã triển khai các biến màu phù hợp
+- **Trang xác thực:**
 
-#### Components:
+  - `Login.tsx`: Đã cập nhật màu sắc và bố cục
+  - `Register.tsx`: Đã cập nhật màu sắc và bố cục
 
-- `EventReview.tsx`: Đã cập nhật để hỗ trợ dark/light mode và sửa bugs
+- **Trang sự kiện:**
 
-### Cải tiến UI/UX
+  - `EventDetail.tsx`: Đã cập nhật UI hoàn toàn với hỗ trợ Dark/Light mode
+  - `SearchResults.tsx`: Đã cập nhật bố cục tìm kiếm
+  - `CreateEvent.tsx`: Đã cập nhật form tạo sự kiện
+  - `Checkout.tsx`: Đã cập nhật giao diện thanh toán
 
-1. **Gộp Reviews và Comments**:
+- **Components:**
+  - `EventReview.tsx`: Đã cải tiến giao diện nhập đánh giá và hiển thị đánh giá
+  - `Header.tsx`: Đã cập nhật navigation bar
+  - `Footer.tsx`: Đã cập nhật footer
 
-   - Đã gộp thành phần Reviews và Comments thành một giao diện thống nhất
-   - Cải thiện trải nghiệm người dùng bằng cách tránh phân chia không cần thiết
-   - Phù hợp hơn với bản chất của các đánh giá và bình luận
+### Cải thiện UI/UX
 
-2. **Sửa lỗi trong EventReview component**:
-   - Sửa lỗi sai chính tả trong tên property 'currentUserId'
-   - Thêm các props rating và reviewCount để hỗ trợ hiển thị đánh giá tổng quan
-   - Thêm xử lý dark/light mode cho tất cả các phần tử UI
+- **Hợp nhất Reviews và Comments**: Đã gộp Reviews và Comments thành một giao diện thống nhất để mang lại trải nghiệm người dùng tốt hơn và nhất quán.
+
+- **EventReview Component**:
+
+  - Đã sửa lỗi `currentUserId` không phải `currentUserID`
+  - Thêm props `rating` và `reviewCount` để hiển thị số lượng đánh giá
+  - Cải thiện giao diện form nhập đánh giá với hiệu ứng và gợi ý theo rating
+  - Thêm hiển thị số ký tự và chức năng hiển thị gợi ý chất lượng
+  - Thêm hiệu ứng loading khi đang gửi đánh giá
+
+- **EventDetail Component**:
+  - Cải thiện hoàn toàn bố cục hiển thị chi tiết sự kiện
+  - Thêm layout responsive 2 cột
+  - Điều chỉnh màu sắc để hỗ trợ Dark/Light mode
+  - Hiển thị chi tiết sự kiện rõ ràng hơn
 
 ## Cấu trúc dự án
 
 ```
-client/
-├── src/
-│   ├── components/     # Các thành phần UI có thể tái sử dụng
-│   ├── pages/          # Các trang chính của ứng dụng
-│   └── utils/          # Các tiện ích và hàm hỗ trợ
+eventhub/
+├── client/                # Frontend Next.js application
+│   ├── public/            # Static files
+│   └── src/
+│       ├── components/    # Reusable components
+│       │   ├── events/    # Event-related components
+│       │   ├── layout/    # Layout components
+│       │   └── ui/        # UI components
+│       ├── pages/         # Application pages
+│       │   ├── auth/      # Authentication pages
+│       │   ├── events/    # Event pages
+│       │   └── ...        # Other pages
+│       ├── utils/         # Utility functions
+│       └── styles/        # Global styles
+├── server/                # Backend code (API, etc.)
+└── ...
 ```
 
 ## Hướng dẫn phát triển
 
-1. **Cài đặt các dependencies**:
+1. **Cài đặt dependencies:**
 
-   ```
+   ```bash
    pnpm install
    ```
 
-2. **Chạy môi trường phát triển**:
+2. **Chạy môi trường development:**
 
-   ```
-   pnpm dev
+   ```bash
+   pnpm run dev
    ```
 
-3. **Build cho production**:
+3. **Build cho production:**
+   ```bash
+   pnpm run build
    ```
-   pnpm build
-   ```
+
+## Dark/Light Mode
+
+Chế độ Dark/Light Mode được triển khai sử dụng Chakra UI's `useColorModeValue`. Người dùng có thể chuyển đổi giữa Dark và Light thông qua nút ở header và thiết lập sẽ được lưu trên trình duyệt.
+
+```tsx
+// Ví dụ: sử dụng useColorModeValue
+const bgColor = useColorModeValue("white", "gray.800");
+const textColor = useColorModeValue("gray.800", "white");
+const borderColor = useColorModeValue("gray.200", "gray.700");
+```
+
+## Review & Comments
+
+Component `EventReview` hiện hỗ trợ tốt hơn cho việc hiển thị đánh giá và bình luận, với UI cải tiến và phù hợp với cả Dark/Light mode.
+
+## Demo tính năng
+
+Đăng ký và đăng nhập vào hệ thống, sau đó khám phá các sự kiện, đọc đánh giá chi tiết và tham gia các sự kiện ưa thích. Hưởng thụ trải nghiệm tương tự nhau dù ở chế độ sáng hay tối!
+
+---
+
+Phát triển bởi nhóm EventHub.
