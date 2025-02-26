@@ -538,7 +538,7 @@ const NAV_ITEMS: Array<NavItem> = [
         label: "Danh mục",
         labelKey: "events.category",
         subLabel: "Duyệt sự kiện theo danh mục",
-        href: "/categories",
+        href: "/events/categories",
       },
     ],
   },
@@ -550,11 +550,73 @@ const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Về chúng tôi",
     labelKey: "footer.about",
-    href: "/about",
+    children: [
+      {
+        label: "Về chúng tôi",
+        labelKey: "footer.about",
+        subLabel: "Tìm hiểu thêm về EventHub",
+        href: "/about",
+      },
+      {
+        label: "Liên hệ",
+        labelKey: "footer.contact",
+        subLabel: "Gửi câu hỏi hoặc ý kiến đóng góp",
+        href: "/contact",
+      },
+      {
+        label: "Bộ hồ sơ báo chí",
+        labelKey: "footer.press",
+        subLabel: "Thông tin cho báo chí",
+        href: "/press",
+      },
+    ],
+  },
+  {
+    label: "Chính sách",
+    labelKey: "footer.policies",
+    children: [
+      {
+        label: "Chính sách bảo mật",
+        labelKey: "footer.privacy",
+        subLabel: "Cách chúng tôi bảo vệ dữ liệu của bạn",
+        href: "/privacy",
+      },
+      {
+        label: "Điều khoản dịch vụ",
+        labelKey: "footer.terms",
+        subLabel: "Quy định sử dụng dịch vụ",
+        href: "/terms",
+      },
+    ],
   },
   {
     label: "Trợ giúp",
     labelKey: "footer.faq",
-    href: "/help",
+    children: [
+      {
+        label: "Câu hỏi thường gặp",
+        labelKey: "footer.help",
+        subLabel: "Giải đáp các câu hỏi phổ biến",
+        href: "/help",
+      },
+      {
+        label: "Trung tâm trợ giúp",
+        labelKey: "footer.faq",
+        subLabel: "Hướng dẫn chi tiết về EventHub",
+        href: "/faq",
+      },
+      {
+        label: "Trở thành nhà tổ chức",
+        labelKey: "footer.becomeOrganizer",
+        subLabel: "Tạo và quản lý sự kiện của riêng bạn",
+        href: "/become-organizer",
+      },
+      {
+        label: "Cộng đồng",
+        labelKey: "footer.community",
+        subLabel: "Tham gia cộng đồng EventHub",
+        href: "/community",
+      },
+    ],
   },
 ];

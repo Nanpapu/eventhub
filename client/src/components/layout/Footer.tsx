@@ -208,6 +208,12 @@ export default function Footer() {
             <ChakraLink as={Link} to={"/community"}>
               Cộng đồng
             </ChakraLink>
+            <ChakraLink as={Link} to={"/events/categories"}>
+              Khám phá danh mục
+            </ChakraLink>
+            <ChakraLink as={Link} to={"/resources"}>
+              Tài nguyên
+            </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
             <ListHeader>Luôn cập nhật</ListHeader>

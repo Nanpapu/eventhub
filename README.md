@@ -4,6 +4,15 @@ EventHub là một nền tảng toàn diện cho phép người dùng tạo, qu�
 
 ## Cập nhật mới nhất
 
+### Cải thiện cấu trúc đường dẫn
+
+Chúng tôi đã cập nhật cấu trúc đường dẫn trong ứng dụng để đảm bảo tính nhất quán và trải nghiệm người dùng tốt hơn:
+
+- **/events**: Hiển thị tất cả các sự kiện
+- **/events/[event_id]**: Hiển thị chi tiết một sự kiện cụ thể
+- **/categories**: Hiển thị tất cả các danh mục sự kiện (conference, workshop, concert...)
+- **/categories/[category_name]**: Hiển thị tất cả sự kiện thuộc một danh mục cụ thể
+
 ### Chế độ Dark/Light Mode
 
 Các trang và component quan trọng đã được cập nhật để hỗ trợ chế độ Dark/Light Mode, sử dụng `useColorModeValue` từ Chakra UI:
