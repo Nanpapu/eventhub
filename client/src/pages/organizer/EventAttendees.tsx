@@ -4,7 +4,6 @@ import {
   Container,
   Flex,
   FormControl,
-  FormLabel,
   Heading,
   Input,
   Select,
@@ -20,7 +19,6 @@ import {
   InputLeftElement,
   Stack,
   HStack,
-  VStack,
   Stat,
   StatLabel,
   StatNumber,
@@ -50,7 +48,7 @@ import {
   useDisclosure,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import {
   FaSearch,
@@ -88,7 +86,6 @@ interface Event {
 
 const EventAttendees = () => {
   const { eventId } = useParams<{ eventId: string }>();
-  const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -844,7 +841,7 @@ const EventAttendees = () => {
       {/* Alert Dialog for Confirmation */}
       <AlertDialog
         isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
+        leastDestructiveRef={cancelRef as React.RefObject<HTMLButtonElement>}
         onClose={onClose}
       >
         <AlertDialogOverlay>

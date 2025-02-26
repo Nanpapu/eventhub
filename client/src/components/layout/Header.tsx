@@ -294,7 +294,7 @@ const DesktopNav = () => {
               <ChakraLink
                 as={navItem.href ? Link : "span"}
                 p={2}
-                to={navItem.href ?? "#"}
+                {...(navItem.href ? { to: navItem.href } : {})}
                 fontSize={"sm"}
                 fontWeight={500}
                 color={linkColor}

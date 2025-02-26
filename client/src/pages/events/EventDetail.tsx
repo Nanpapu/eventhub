@@ -20,10 +20,9 @@ import {
   FormControl,
   Textarea,
   IconButton,
-  Input,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   FiCalendar,
   FiMapPin,
@@ -32,7 +31,6 @@ import {
   FiHeart,
   FiClock,
   FiDollarSign,
-  FiMessageSquare,
 } from "react-icons/fi";
 
 // Interface cho dữ liệu sự kiện
@@ -115,8 +113,9 @@ const commentsData: Comment[] = [
 ];
 
 const EventDetail = () => {
-  // Lấy ID sự kiện từ URL
-  const { id } = useParams<{ id: string }>();
+  // Lấy ID sự kiện từ URL nhưng không sử dụng
+  // const { id } = useParams<{ id: string }>();
+  useParams<{ id: string }>(); // giữ useParams để khi cần ID trong tương lai
   const toast = useToast();
 
   // State cho các trạng thái trong trang

@@ -52,6 +52,7 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import * as recharts from "recharts";
+import React from "react";
 
 // Định nghĩa các kiểu dữ liệu
 interface Event {
@@ -65,15 +66,6 @@ interface Event {
   soldTickets: number;
   status: "upcoming" | "ongoing" | "past" | "cancelled";
   revenue: number;
-}
-
-interface Attendee {
-  id: string;
-  name: string;
-  email: string;
-  ticketType: string;
-  purchaseDate: Date;
-  status: "confirmed" | "cancelled" | "pending";
 }
 
 interface Analytics {
@@ -122,20 +114,37 @@ const MonthlyEventsChart = ({
 
   if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
 
+  // Sử dụng createElement thay vì JSX syntax
   return (
     <Box ref={containerRef} h="300px">
-      <recharts.ResponsiveContainer width="100%" height="100%">
-        <recharts.BarChart
-          data={data}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <recharts.CartesianGrid strokeDasharray="3 3" />
-          <recharts.XAxis dataKey="name" />
-          <recharts.YAxis />
-          <recharts.Tooltip />
-          <recharts.Bar dataKey="events" fill="#38B2AC" />
-        </recharts.BarChart>
-      </recharts.ResponsiveContainer>
+      {React.createElement(
+        recharts.ResponsiveContainer,
+        { width: "100%", height: "100%" },
+        React.createElement(
+          recharts.BarChart,
+          {
+            data,
+            margin: { top: 5, right: 30, left: 20, bottom: 5 },
+          },
+          [
+            React.createElement(recharts.CartesianGrid, {
+              strokeDasharray: "3 3",
+              key: "grid",
+            }),
+            React.createElement(recharts.XAxis, {
+              dataKey: "name",
+              key: "xaxis",
+            }),
+            React.createElement(recharts.YAxis, { key: "yaxis" }),
+            React.createElement(recharts.Tooltip, { key: "tooltip" }),
+            React.createElement(recharts.Bar, {
+              dataKey: "events",
+              fill: "#38B2AC",
+              key: "bar",
+            }),
+          ]
+        )
+      )}
     </Box>
   );
 };
@@ -174,37 +183,45 @@ const AttendeesSourceChart = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const renderCustomizedLabel = (entry: any) => {
+  const renderCustomizedLabel = (entry: { name: string; percent: number }) => {
     const { name, percent } = entry;
     return `${name}: ${(percent * 100).toFixed(0)}%`;
   };
 
   if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
 
+  // Sử dụng createElement thay vì JSX syntax
+  const cells = data.map((entry, index) =>
+    React.createElement(recharts.Cell, {
+      key: `cell-${index}`,
+      fill: COLORS[index % COLORS.length],
+    })
+  );
+
   return (
     <Box ref={containerRef} h="300px">
-      <recharts.ResponsiveContainer width="100%" height="100%">
-        <recharts.PieChart>
-          <recharts.Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            outerRadius={100}
-            fill="#8884d8"
-            dataKey="value"
-            label={renderCustomizedLabel}
-          >
-            {data.map((entry, index) => (
-              <recharts.Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </recharts.Pie>
-          <recharts.Tooltip />
-        </recharts.PieChart>
-      </recharts.ResponsiveContainer>
+      {React.createElement(
+        recharts.ResponsiveContainer,
+        { width: "100%", height: "100%" },
+        React.createElement(recharts.PieChart, {}, [
+          React.createElement(
+            recharts.Pie,
+            {
+              data,
+              cx: "50%",
+              cy: "50%",
+              labelLine: false,
+              outerRadius: 100,
+              fill: "#8884d8",
+              dataKey: "value",
+              label: renderCustomizedLabel,
+              key: "pie",
+            },
+            cells
+          ),
+          React.createElement(recharts.Tooltip, { key: "tooltip" }),
+        ])
+      )}
     </Box>
   );
 };

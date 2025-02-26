@@ -14,10 +14,6 @@ import {
   HStack,
   Badge,
   Divider,
-  RangeSlider,
-  RangeSliderTrack,
-  RangeSliderFilledTrack,
-  RangeSliderThumb,
   Checkbox,
   Stack,
   useDisclosure,
@@ -225,7 +221,6 @@ const SearchResults = () => {
   const [keyword, setKeyword] = useState(initialKeyword);
   const [location, setLocation] = useState(initialLocation);
   const [category, setCategory] = useState(initialCategory);
-  const [events, setEvents] = useState<EventType[]>(eventsData);
   const [filteredEvents, setFilteredEvents] = useState<EventType[]>(eventsData);
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [showFreeOnly, setShowFreeOnly] = useState(false);

@@ -190,11 +190,6 @@ const MyEvents = () => {
     onOpen();
   };
 
-  // Màu sắc cho các thành phần UI
-  const cardBg = useColorModeValue("white", "gray.800");
-  const boxShadow = useColorModeValue("lg", "dark-lg");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-
   return (
     <Container maxW="6xl" py={8}>
       <VStack spacing={6} align="stretch">
@@ -351,17 +346,18 @@ const EventCard = ({
   onCancelRegistration,
   onViewTicket,
 }: EventCardProps) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  // Màu sắc cho các thành phần UI (xóa các biến không sử dụng)
+  // const cardBg = useColorModeValue("white", "gray.800");
+  // const borderColor = useColorModeValue("gray.200", "gray.700");
 
   return (
     <Box
-      bg={cardBg}
+      bg={useColorModeValue("white", "gray.800")}
       borderRadius="lg"
       overflow="hidden"
       boxShadow="lg"
       borderWidth="1px"
-      borderColor={borderColor}
+      borderColor={useColorModeValue("gray.200", "gray.700")}
       transition="transform 0.3s"
       _hover={{
         transform: "translateY(-5px)",
