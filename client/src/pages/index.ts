@@ -24,7 +24,7 @@ import EventCheckIn from "./organizer/EventCheckIn";
 import EventAnalytics from "./organizer/EventAnalytics";
 
 // Demo page
-import Demo from "./Demo";
+// import Demo from "./Demo";
 
 export {
   Home,
@@ -42,5 +42,5 @@ export {
   EventCheckIn,
   EventAnalytics,
   MyTickets,
-  Demo,
+  // Demo,
 };

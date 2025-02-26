@@ -10,16 +10,14 @@ import {
   HStack,
   Badge,
   Divider,
-  Avatar,
   useToast,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
-  FormControl,
-  Textarea,
   IconButton,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -57,17 +55,6 @@ interface EventData {
   capacity: number;
 }
 
-// Interface cho dữ liệu bình luận
-interface Comment {
-  id: number;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  date: string;
-}
-
 // Dữ liệu mẫu cho sự kiện
 const eventData: EventData = {
   id: 1,
@@ -91,29 +78,8 @@ const eventData: EventData = {
   capacity: 50,
 };
 
-// Dữ liệu mẫu cho bình luận
-const commentsData: Comment[] = [
-  {
-    id: 1,
-    user: {
-      name: "Nguyen Van A",
-      avatar: "https://bit.ly/3G0lIHt",
-    },
-    content:
-      "This looks like an awesome workshop! Will there be any follow-up sessions?",
-    date: "10/08/2023",
-  },
-  {
-    id: 2,
-    user: {
-      name: "Tran Thi B",
-      avatar: "https://bit.ly/40QpHal",
-    },
-    content:
-      "I attended a similar workshop by TechDesign Academy last year and it was amazing. Highly recommended for beginners!",
-    date: "09/08/2023",
-  },
-];
+// Dữ liệu mẫu cho bình luận - không còn sử dụng nhưng giữ lại làm tài liệu
+// const commentsData: Comment[] = [ ... ];
 
 const EventDetail = () => {
   // Lấy ID sự kiện từ URL nhưng không sử dụng
@@ -124,8 +90,18 @@ const EventDetail = () => {
   // State cho các trạng thái trong trang
   const [isRegistered, setIsRegistered] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<Comment[]>(commentsData);
+
+  // State comments không còn sử dụng sau khi gộp với reviews
+  // const [commentText, setCommentText] = useState("");
+  // const [comments, setComments] = useState<Comment[]>(commentsData);
+
+  // Màu sắc thay đổi theo chế độ màu
+  const bgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.800", "white");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
+  const cardBgColor = useColorModeValue("white", "gray.700");
+  const tabBgColor = useColorModeValue("gray.50", "gray.900");
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
@@ -177,35 +153,10 @@ const EventDetail = () => {
     });
   };
 
-  // Xử lý đăng bình luận
-  const handlePostComment = () => {
-    if (commentText.trim() === "") return;
-
-    const newComment: Comment = {
-      id: comments.length + 1,
-      user: {
-        name: "Current User", // Sẽ được thay thế bằng thông tin người dùng thực khi có backend
-        avatar: "https://bit.ly/3Q3eQvj",
-      },
-      content: commentText,
-      date: new Date().toLocaleDateString(),
-    };
-
-    setComments([newComment, ...comments]);
-    setCommentText("");
-
-    toast({
-      title: "Comment posted!",
-      status: "success",
-      duration: 2000,
-      isClosable: true,
-    });
-  };
-
   return (
     <Container maxW="container.xl" py={8}>
       {/* Phần hình ảnh và thông tin cơ bản của sự kiện */}
-      <Box position="relative" mb={8}>
+      <Box position="relative" mb={8} bg={bgColor} borderRadius="lg">
         <Image
           src={eventData.image}
           alt={eventData.title}
@@ -241,7 +192,14 @@ const EventDetail = () => {
       {/* Grid layout cho nội dung */}
       <Flex direction={{ base: "column", lg: "row" }} gap={8} mb={10}>
         {/* Cột thông tin chi tiết sự kiện */}
-        <Box flex="2">
+        <Box
+          flex="2"
+          bg={bgColor}
+          p={6}
+          borderRadius="lg"
+          borderColor={borderColor}
+          borderWidth="1px"
+        >
           <VStack align="start" spacing={5}>
             {/* Tiêu đề và nút tương tác */}
             <Flex
@@ -251,7 +209,7 @@ const EventDetail = () => {
               direction={{ base: "column", sm: "row" }}
               gap={{ base: 4, sm: 0 }}
             >
-              <Heading as="h1" size="xl">
+              <Heading as="h1" size="xl" color={textColor}>
                 {eventData.title}
               </Heading>
 
@@ -276,12 +234,14 @@ const EventDetail = () => {
             <VStack align="start" spacing={3} w="100%">
               <Flex align="center" gap={2}>
                 <Box as={FiCalendar} color="teal.500" />
-                <Text fontWeight="medium">{eventData.date}</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {eventData.date}
+                </Text>
               </Flex>
 
               <Flex align="center" gap={2}>
                 <Box as={FiClock} color="teal.500" />
-                <Text>
+                <Text color={textColor}>
                   {eventData.startTime} - {eventData.endTime}
                 </Text>
               </Flex>
@@ -289,8 +249,12 @@ const EventDetail = () => {
               <Flex align="start" gap={2}>
                 <Box as={FiMapPin} color="teal.500" mt={1} />
                 <VStack align="start" spacing={0}>
-                  <Text fontWeight="medium">{eventData.location}</Text>
-                  <Text color="gray.600">{eventData.address}</Text>
+                  <Text fontWeight="medium" color={textColor}>
+                    {eventData.location}
+                  </Text>
+                  <Text fontSize="sm" color={secondaryTextColor}>
+                    {eventData.address}
+                  </Text>
                 </VStack>
               </Flex>
 
@@ -310,147 +274,66 @@ const EventDetail = () => {
               </Flex>
             </VStack>
 
-            <Divider />
+            <Divider borderColor={borderColor} />
 
-            {/* Tabs cho nội dung chi tiết và bình luận */}
-            <Tabs w="100%" colorScheme="teal" isLazy>
-              <TabList>
-                <Tab fontWeight="medium">About</Tab>
-                <Tab fontWeight="medium">Comments ({comments.length})</Tab>
-                <Tab fontWeight="medium">Reviews</Tab>
+            {/* Mô tả sự kiện */}
+            <Box>
+              <Heading as="h3" size="md" mb={3} color={textColor}>
+                About This Event
+              </Heading>
+              <Text color={textColor}>{eventData.description}</Text>
+            </Box>
+
+            {/* Phần tabs cho thông tin chi tiết */}
+            <Tabs
+              isFitted
+              w="100%"
+              mt={4}
+              colorScheme="teal"
+              variant="enclosed"
+            >
+              <TabList bg={tabBgColor} borderRadius="md" p={1}>
+                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
+                  Details
+                </Tab>
+                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
+                  Reviews & Comments
+                </Tab>
               </TabList>
-
-              <TabPanels>
-                {/* Tab chi tiết sự kiện */}
-                <TabPanel px={0}>
-                  <VStack align="start" spacing={6}>
-                    <Box>
-                      <Heading size="md" mb={3}>
-                        Description
-                      </Heading>
-                      <Text whiteSpace="pre-line">{eventData.description}</Text>
-                    </Box>
-
-                    <Box w="100%">
-                      <Heading size="md" mb={3}>
-                        Organizer
-                      </Heading>
-                      <Flex align="center" gap={3}>
-                        <Avatar
-                          src={eventData.organizer.avatar}
-                          name={eventData.organizer.name}
-                          size="md"
-                        />
-                        <VStack align="start" spacing={0}>
-                          <Text fontWeight="bold">
-                            {eventData.organizer.name}
-                          </Text>
-                          <Text color="gray.600">Event Organizer</Text>
-                        </VStack>
-                      </Flex>
-                    </Box>
+              <TabPanels mt={4}>
+                {/* Details Tab */}
+                <TabPanel p={0}>
+                  <VStack align="start" spacing={4} color={textColor}>
+                    <Flex align="center" gap={2} w="100%">
+                      <Box as={FiUser} color="teal.500" />
+                      <Text fontWeight="medium">Organizer:</Text>
+                      <Text>{eventData.organizer.name}</Text>
+                    </Flex>
                   </VStack>
                 </TabPanel>
 
-                {/* Tab bình luận */}
-                <TabPanel px={0}>
-                  <VStack align="start" spacing={6} w="100%">
-                    {/* Form đăng bình luận */}
-                    <Box w="100%">
-                      <FormControl mb={3}>
-                        <Textarea
-                          placeholder="Add a comment..."
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                        />
-                      </FormControl>
-                      <Button
-                        colorScheme="teal"
-                        onClick={handlePostComment}
-                        isDisabled={commentText.trim() === ""}
-                      >
-                        Post Comment
-                      </Button>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Danh sách bình luận */}
-                    <VStack align="start" spacing={4} w="100%">
-                      {comments.length > 0 ? (
-                        comments.map((comment) => (
-                          <Box
-                            key={comment.id}
-                            p={4}
-                            bg="gray.50"
-                            borderRadius="md"
-                            w="100%"
-                          >
-                            <Flex gap={3}>
-                              <Avatar
-                                src={comment.user.avatar}
-                                name={comment.user.name}
-                                size="sm"
-                              />
-                              <Box>
-                                <Flex
-                                  align="center"
-                                  justify="space-between"
-                                  w="100%"
-                                  mb={1}
-                                >
-                                  <Text fontWeight="bold">
-                                    {comment.user.name}
-                                  </Text>
-                                  <Text fontSize="sm" color="gray.500">
-                                    {comment.date}
-                                  </Text>
-                                </Flex>
-                                <Text>{comment.content}</Text>
-                              </Box>
-                            </Flex>
-                          </Box>
-                        ))
-                      ) : (
-                        <Text color="gray.500">
-                          No comments yet. Be the first to comment!
-                        </Text>
-                      )}
-                    </VStack>
+                {/* Reviews & Comments Tab */}
+                <TabPanel p={0}>
+                  <VStack align="start" spacing={4}>
+                    <EventReview rating={4.5} reviewCount={32} />
                   </VStack>
-                </TabPanel>
-
-                {/* Tab đánh giá */}
-                <TabPanel px={0}>
-                  <EventReview
-                    eventId={eventData.id.toString()}
-                    canAddReview={true}
-                    currentUserId="current-user"
-                    onReviewAdded={() => {
-                      toast({
-                        title: "Thank you for your review!",
-                        status: "success",
-                        duration: 3000,
-                        isClosable: true,
-                      });
-                    }}
-                  />
                 </TabPanel>
               </TabPanels>
             </Tabs>
           </VStack>
         </Box>
 
-        {/* Cột bên phải với thông tin đăng ký */}
+        {/* Cột thông tin đăng ký và chi tiết */}
         <Box
           flex="1"
           p={6}
-          bg="white"
+          borderWidth="1px"
           borderRadius="lg"
-          boxShadow="md"
-          alignSelf="flex-start"
+          height="fit-content"
           position="sticky"
           top="100px"
+          bg={cardBgColor}
+          borderColor={borderColor}
         >
           <VStack spacing={5} align="stretch">
             <Heading size="md">Registration</Heading>

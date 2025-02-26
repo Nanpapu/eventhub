@@ -18,7 +18,7 @@ import {
   Notifications,
   Checkout,
   MyTickets,
-  Demo,
+  // Demo,
   EventCheckIn,
   EventAnalytics,
 } from "./pages/index";
@@ -53,7 +53,7 @@ export const router = createBrowserRouter(
         <Route path="/my-tickets" element={<MyTickets />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/demo" element={<Demo />} />
+        {/* <Route path="/demo" element={<Demo />} /> */}
         <Route
           path="/organizer/events/:eventId/attendees"
           element={<EventAttendees />}
