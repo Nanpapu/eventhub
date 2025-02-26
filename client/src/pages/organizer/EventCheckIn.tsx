@@ -62,6 +62,7 @@ import {
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { DateDisplay } from "../../components/common";
 // Tạm thời comment để tránh lỗi
 // import QrReader from "react-qr-reader";
 
@@ -132,19 +133,16 @@ const EventCheckIn = () => {
   const qrReaderRef = useRef(null);
 
   // Các màu sắc theo theme
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  const bgColor = useColorModeValue("bg.primary", "bg.primary");
-  const cardBgColor = useColorModeValue("card.bg", "card.bg");
-  const borderColor = useColorModeValue("card.border", "card.border");
-  const textColor = useColorModeValue("text.primary", "text.primary");
-  const secondaryTextColor = useColorModeValue(
-    "text.secondary",
-    "text.secondary"
-  );
-  const tableBgColor = useColorModeValue("white", "gray.800");
+  const bgColor = useColorModeValue("white", "gray.900");
+  const cardBgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const tableHeaderBgColor = useColorModeValue("gray.50", "gray.700");
-  const hoverBgColor = useColorModeValue("hover.bg", "hover.bg");
-  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const hoverBgColor = useColorModeValue("gray.50", "gray.700");
+  const grayIconColor = useColorModeValue("gray.300", "gray.500");
+  const grayBgColor = useColorModeValue("gray.50", "gray.700");
+  const inputHoverBorderColor = useColorModeValue("gray.300", "gray.600");
 
   // Giả lập dữ liệu cho demo
   useEffect(() => {
@@ -198,8 +196,7 @@ const EventCheckIn = () => {
     console.error(err);
     toast({
       title: t("events.checkIn.checkInFailed"),
-      description:
-        "Could not access camera or encountered an error while scanning",
+      description: t("common.deviceError"),
       status: "error",
       duration: 3000,
       isClosable: true,
@@ -335,25 +332,21 @@ const EventCheckIn = () => {
         ? t("common.cancel")
         : t("events.checkIn.checkInSuccess"),
       description: `${attendee.name} ${
-        attendee.checkInTime ? "removed from" : "added to"
-      } check-in list`,
+        attendee.checkInTime
+          ? t("events.checkInRemoved")
+          : t("events.checkInAdded")
+      }`,
       status: attendee.checkInTime ? "info" : "success",
       duration: 3000,
       isClosable: true,
     });
   };
 
-  // Format timestamp thành chuỗi thời gian dễ đọc
-  const formatTime = (timestamp?: string) => {
-    if (!timestamp) return "-";
-    return new Date(timestamp).toLocaleTimeString();
-  };
-
   // Export danh sách người tham dự (giả lập)
   const exportAttendees = () => {
     toast({
       title: t("common.export"),
-      description: "Attendee list is being downloaded",
+      description: t("events.exportingAttendees"),
       status: "info",
       duration: 3000,
       isClosable: true,
@@ -362,11 +355,13 @@ const EventCheckIn = () => {
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
+    <Container maxW="container.xl" py={8} bg={bgColor}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <Box>
-          <Heading size="lg">{t("events.checkIn.title")}</Heading>
+          <Heading size="lg" color={textColor}>
+            {t("events.checkIn.title")}
+          </Heading>
           <HStack mt={2}>
             <Heading size="md" fontWeight="normal" color={secondaryTextColor}>
               {eventDetails.title}
@@ -475,8 +470,12 @@ const EventCheckIn = () => {
         {/* Main Content */}
         <Tabs colorScheme="teal" variant="enclosed">
           <TabList>
-            <Tab fontWeight="medium">{t("events.checkIn.manualCheckIn")}</Tab>
-            <Tab fontWeight="medium">{t("events.checkIn.attendeeList")}</Tab>
+            <Tab fontWeight="medium" color={textColor}>
+              {t("events.checkIn.manualCheckIn")}
+            </Tab>
+            <Tab fontWeight="medium" color={textColor}>
+              {t("events.checkIn.attendeeList")}
+            </Tab>
           </TabList>
 
           <TabPanels>
@@ -492,7 +491,7 @@ const EventCheckIn = () => {
                   borderColor={borderColor}
                 >
                   <VStack spacing={5} align="stretch">
-                    <Heading size="md">
+                    <Heading size="md" color={textColor}>
                       {t("events.checkIn.checkInByTicketId")}
                     </Heading>
                     <Text color={secondaryTextColor}>
@@ -501,7 +500,7 @@ const EventCheckIn = () => {
 
                     {/* Manual Entry */}
                     <Box>
-                      <Heading size="sm" mb={3}>
+                      <Heading size="sm" mb={3} color={textColor}>
                         {t("events.checkIn.enterTicketId")}
                       </Heading>
                       <HStack>
@@ -509,6 +508,10 @@ const EventCheckIn = () => {
                           placeholder={t("events.checkIn.ticketIdPlaceholder")}
                           value={manualTicketId}
                           onChange={(e) => setManualTicketId(e.target.value)}
+                          bg={useColorModeValue("white", "gray.700")}
+                          borderColor={borderColor}
+                          _hover={{ borderColor: inputHoverBorderColor }}
+                          _focus={{ borderColor: "teal.500" }}
                         />
                         <Button
                           colorScheme="teal"
@@ -521,8 +524,8 @@ const EventCheckIn = () => {
 
                     {/* QR Scanner feature - placeholder for future implementation */}
                     <Box mt={4}>
-                      <Divider my={3} />
-                      <Heading size="sm" mb={3}>
+                      <Divider my={3} borderColor={borderColor} />
+                      <Heading size="sm" mb={3} color={textColor}>
                         {t("events.checkIn.qrScanner")}
                       </Heading>
                       <Box
@@ -530,11 +533,12 @@ const EventCheckIn = () => {
                         borderWidth="1px"
                         borderStyle="dashed"
                         borderRadius="md"
-                        bg={useColorModeValue("gray.50", "gray.700")}
+                        borderColor={borderColor}
+                        bg={grayBgColor}
                       >
                         <VStack spacing={2} align="center">
-                          <FaQrcode size={40} color="gray" />
-                          <Text fontWeight="medium">
+                          <FaQrcode size={40} color={grayIconColor} />
+                          <Text fontWeight="medium" color={textColor}>
                             {t("events.checkIn.qrScannerComingSoon")}
                           </Text>
                           <Text color={secondaryTextColor} textAlign="center">
@@ -555,15 +559,17 @@ const EventCheckIn = () => {
                   borderWidth="1px"
                   borderColor={borderColor}
                 >
-                  <Heading size="md" mb={4}>
+                  <Heading size="md" mb={4} color={textColor}>
                     {t("events.checkIn.recentCheckIns")}
                   </Heading>
                   <Table size="sm" variant="simple">
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
-                        <Th>{t("auth.fullName")}</Th>
-                        <Th>{t("events.ticketId")}</Th>
-                        <Th>{t("events.checkIn.checkInTime")}</Th>
+                        <Th color={textColor}>{t("auth.fullName")}</Th>
+                        <Th color={textColor}>{t("events.ticketId")}</Th>
+                        <Th color={textColor}>
+                          {t("events.checkIn.checkInTime")}
+                        </Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -576,7 +582,7 @@ const EventCheckIn = () => {
                         )
                         .slice(0, 5)
                         .map((attendee) => (
-                          <Tr key={attendee.id}>
+                          <Tr key={attendee.id} _hover={{ bg: hoverBgColor }}>
                             <Td>
                               <HStack>
                                 <Avatar
@@ -584,13 +590,24 @@ const EventCheckIn = () => {
                                   name={attendee.name}
                                   src={attendee.avatar}
                                 />
-                                <Text>{attendee.name}</Text>
+                                <Text color={textColor}>{attendee.name}</Text>
                               </HStack>
                             </Td>
                             <Td>
-                              <Text fontFamily="mono">{attendee.ticketId}</Text>
+                              <Text fontFamily="mono" color={textColor}>
+                                {attendee.ticketId}
+                              </Text>
                             </Td>
-                            <Td>{formatTime(attendee.checkInTime)}</Td>
+                            <Td color={textColor}>
+                              {attendee.checkInTime && (
+                                <DateDisplay
+                                  date={attendee.checkInTime}
+                                  mode="time"
+                                  showIcon
+                                  size="sm"
+                                />
+                              )}
+                            </Td>
                           </Tr>
                         ))}
                       {attendees.filter((a) => a.checkInTime).length === 0 && (
@@ -625,12 +642,16 @@ const EventCheckIn = () => {
                 >
                   <InputGroup maxW={{ base: "100%", md: "300px" }}>
                     <InputLeftElement pointerEvents="none">
-                      <FaSearch color="gray.300" />
+                      <FaSearch color={grayIconColor} />
                     </InputLeftElement>
                     <Input
                       placeholder={t("events.checkIn.searchAttendees")}
                       value={searchKeyword}
                       onChange={(e) => setSearchKeyword(e.target.value)}
+                      bg={useColorModeValue("white", "gray.700")}
+                      borderColor={borderColor}
+                      _hover={{ borderColor: inputHoverBorderColor }}
+                      _focus={{ borderColor: "teal.500" }}
                     />
                   </InputGroup>
 
@@ -639,12 +660,16 @@ const EventCheckIn = () => {
                       leftIcon={<FaSyncAlt />}
                       variant="outline"
                       onClick={() => setSearchKeyword("")}
+                      borderColor={borderColor}
+                      color={textColor}
+                      _hover={{ bg: hoverBgColor }}
                     >
                       {t("common.reset")}
                     </Button>
                     <Button
                       leftIcon={<FaFileDownload />}
                       onClick={exportAttendees}
+                      colorScheme="teal"
                     >
                       {t("common.export")}
                     </Button>
@@ -662,11 +687,13 @@ const EventCheckIn = () => {
                   <Table variant="simple">
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
-                        <Th>{t("events.attendees")}</Th>
-                        <Th>{t("events.event")}</Th>
-                        <Th>{t("common.status")}</Th>
-                        <Th>{t("events.checkIn.checkInTime")}</Th>
-                        <Th>{t("common.action")}</Th>
+                        <Th color={textColor}>{t("events.attendees")}</Th>
+                        <Th color={textColor}>{t("events.event")}</Th>
+                        <Th color={textColor}>{t("common.status")}</Th>
+                        <Th color={textColor}>
+                          {t("events.checkIn.checkInTime")}
+                        </Th>
+                        <Th color={textColor}>{t("common.action")}</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -680,7 +707,9 @@ const EventCheckIn = () => {
                                 src={attendee.avatar}
                               />
                               <Box>
-                                <Text fontWeight="medium">{attendee.name}</Text>
+                                <Text fontWeight="medium" color={textColor}>
+                                  {attendee.name}
+                                </Text>
                                 <Text fontSize="xs" color={secondaryTextColor}>
                                   {attendee.email}
                                 </Text>
@@ -689,7 +718,11 @@ const EventCheckIn = () => {
                           </Td>
                           <Td>
                             <VStack align="start" spacing={0}>
-                              <Text fontFamily="mono" fontSize="sm">
+                              <Text
+                                fontFamily="mono"
+                                fontSize="sm"
+                                color={textColor}
+                              >
                                 {attendee.ticketId}
                               </Text>
                               <Badge colorScheme="purple" variant="subtle">
@@ -711,7 +744,18 @@ const EventCheckIn = () => {
                                 : t("events.checkIn.status.notCheckedIn")}
                             </Badge>
                           </Td>
-                          <Td>{formatTime(attendee.checkInTime)}</Td>
+                          <Td color={textColor}>
+                            {attendee.checkInTime ? (
+                              <DateDisplay
+                                date={attendee.checkInTime}
+                                mode="time"
+                                showIcon
+                                size="sm"
+                              />
+                            ) : (
+                              "-"
+                            )}
+                          </Td>
                           <Td>
                             <IconButton
                               aria-label="Toggle check-in status"
@@ -735,7 +779,7 @@ const EventCheckIn = () => {
                         <Tr>
                           <Td colSpan={5} textAlign="center" py={4}>
                             <VStack>
-                              <FaSearch size={20} color="gray" />
+                              <FaSearch size={20} color={grayIconColor} />
                               <Text color={secondaryTextColor}>
                                 {t("common.noResults")}
                               </Text>
@@ -755,8 +799,12 @@ const EventCheckIn = () => {
       {/* Modal for displaying check-in result */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent bg={cardBgColor}>
-          <ModalHeader>
+        <ModalContent
+          bg={cardBgColor}
+          borderColor={borderColor}
+          borderWidth="1px"
+        >
+          <ModalHeader color={textColor}>
             {lastScannedAttendee?.checkInTime
               ? t("events.checkIn.checkInSuccess")
               : t("events.checkIn.checkInFailed")}
@@ -791,6 +839,7 @@ const EventCheckIn = () => {
                   borderWidth="1px"
                   borderRadius="md"
                   borderColor={borderColor}
+                  bg={cardBgColor}
                 >
                   <VStack align="start" spacing={3}>
                     <HStack w="100%">
@@ -800,7 +849,7 @@ const EventCheckIn = () => {
                         src={lastScannedAttendee.avatar}
                       />
                       <Box>
-                        <Text fontWeight="bold">
+                        <Text fontWeight="bold" color={textColor}>
                           {lastScannedAttendee.name}
                         </Text>
                         <Text fontSize="sm" color={secondaryTextColor}>
@@ -808,18 +857,26 @@ const EventCheckIn = () => {
                         </Text>
                       </Box>
                     </HStack>
-                    <Divider />
+                    <Divider borderColor={borderColor} />
                     <Box w="100%">
                       <HStack justify="space-between">
-                        <Text fontSize="sm" fontWeight="medium">
+                        <Text
+                          fontSize="sm"
+                          fontWeight="medium"
+                          color={textColor}
+                        >
                           {t("events.ticketId")}:
                         </Text>
-                        <Text fontSize="sm" fontFamily="mono">
+                        <Text fontSize="sm" fontFamily="mono" color={textColor}>
                           {lastScannedAttendee.ticketId}
                         </Text>
                       </HStack>
                       <HStack justify="space-between" mt={1}>
-                        <Text fontSize="sm" fontWeight="medium">
+                        <Text
+                          fontSize="sm"
+                          fontWeight="medium"
+                          color={textColor}
+                        >
                           {t("events.ticketType")}:
                         </Text>
                         <Badge colorScheme="purple">
@@ -827,15 +884,23 @@ const EventCheckIn = () => {
                         </Badge>
                       </HStack>
                       <HStack justify="space-between" mt={1}>
-                        <Text fontSize="sm" fontWeight="medium">
+                        <Text
+                          fontSize="sm"
+                          fontWeight="medium"
+                          color={textColor}
+                        >
                           {t("events.checkIn.checkInTime")}:
                         </Text>
-                        <Text fontSize="sm">
-                          {lastScannedAttendee.checkInTime
-                            ? new Date(
-                                lastScannedAttendee.checkInTime
-                              ).toLocaleTimeString()
-                            : "-"}
+                        <Text fontSize="sm" color={textColor}>
+                          {lastScannedAttendee.checkInTime ? (
+                            <DateDisplay
+                              date={lastScannedAttendee.checkInTime}
+                              mode="time"
+                              showTooltip={false}
+                            />
+                          ) : (
+                            "-"
+                          )}
                         </Text>
                       </HStack>
                     </Box>
