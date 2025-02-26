@@ -113,6 +113,9 @@ const EventDetail = () => {
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const cardBgColor = useColorModeValue("white", "gray.700");
   const tabBgColor = useColorModeValue("gray.50", "gray.900");
+  const infoBoxBgColor = useColorModeValue("gray.50", "gray.700");
+  const infoBoxTextColor = useColorModeValue("gray.600", "gray.300");
+  const iconColor = useColorModeValue("teal.500", "teal.300");
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
@@ -244,21 +247,21 @@ const EventDetail = () => {
             {/* Chi tiết về thời gian và địa điểm */}
             <VStack align="start" spacing={3} w="100%">
               <Flex align="center" gap={2}>
-                <Box as={FiCalendar} color="teal.500" />
+                <Box as={FiCalendar} color={iconColor} />
                 <Text fontWeight="medium" color={textColor}>
                   {eventData.date}
                 </Text>
               </Flex>
 
               <Flex align="center" gap={2}>
-                <Box as={FiClock} color="teal.500" />
+                <Box as={FiClock} color={iconColor} />
                 <Text color={textColor}>
                   {eventData.startTime} - {eventData.endTime}
                 </Text>
               </Flex>
 
               <Flex align="start" gap={2}>
-                <Box as={FiMapPin} color="teal.500" mt={1} />
+                <Box as={FiMapPin} color={iconColor} mt={1} />
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium" color={textColor}>
                     {eventData.location}
@@ -271,14 +274,16 @@ const EventDetail = () => {
 
               {eventData.isPaid && (
                 <Flex align="center" gap={2}>
-                  <Box as={FiDollarSign} color="teal.500" />
-                  <Text fontWeight="bold">{eventData.price} VND</Text>
+                  <Box as={FiDollarSign} color={iconColor} />
+                  <Text fontWeight="bold" color={textColor}>
+                    {eventData.price} VND
+                  </Text>
                 </Flex>
               )}
 
               <Flex align="center" gap={2}>
-                <Box as={FiUser} color="teal.500" />
-                <Text>
+                <Box as={FiUser} color={iconColor} />
+                <Text color={textColor}>
                   {eventData.attendees} registered / {eventData.capacity}{" "}
                   capacity
                 </Text>
@@ -316,7 +321,7 @@ const EventDetail = () => {
                 <TabPanel p={0}>
                   <VStack align="start" spacing={4} color={textColor}>
                     <Flex align="center" gap={2} w="100%">
-                      <Box as={FiUser} color="teal.500" />
+                      <Box as={FiUser} color={iconColor} />
                       <Text fontWeight="medium">Organizer:</Text>
                       <Text>{eventData.organizer.name}</Text>
                     </Flex>
@@ -347,27 +352,31 @@ const EventDetail = () => {
           borderColor={borderColor}
         >
           <VStack spacing={5} align="stretch">
-            <Heading size="md">Registration</Heading>
+            <Heading size="md" color={textColor}>
+              Registration
+            </Heading>
 
             <VStack align="start" spacing={3}>
               <Flex align="center" gap={2}>
-                <Box as={FiCalendar} color="teal.500" />
-                <Text fontWeight="medium">{eventData.date}</Text>
+                <Box as={FiCalendar} color={iconColor} />
+                <Text fontWeight="medium" color={textColor}>
+                  {eventData.date}
+                </Text>
               </Flex>
 
               <Flex align="center" gap={2}>
-                <Box as={FiClock} color="teal.500" />
-                <Text>
+                <Box as={FiClock} color={iconColor} />
+                <Text color={textColor}>
                   {eventData.startTime} - {eventData.endTime}
                 </Text>
               </Flex>
             </VStack>
 
-            <Box bg="gray.50" p={3} borderRadius="md">
-              <Text fontWeight="medium">
+            <Box bg={infoBoxBgColor} p={3} borderRadius="md">
+              <Text fontWeight="medium" color={textColor}>
                 {eventData.attendees} people have registered
               </Text>
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color={infoBoxTextColor}>
                 {eventData.capacity - eventData.attendees} spots left
               </Text>
             </Box>
@@ -395,7 +404,7 @@ const EventDetail = () => {
                 </Button>
               )}
 
-              <Text fontSize="sm" color="gray.600" textAlign="center">
+              <Text fontSize="sm" color={infoBoxTextColor} textAlign="center">
                 Registration closes 24 hours before event starts
               </Text>
             </VStack>
@@ -405,10 +414,10 @@ const EventDetail = () => {
 
       {/* Phần sự kiện liên quan */}
       <Box mt={10}>
-        <Heading size="lg" mb={6}>
+        <Heading size="lg" mb={6} color={textColor}>
           Similar Events
         </Heading>
-        <Text color="gray.600">
+        <Text color={secondaryTextColor}>
           Coming soon... Similar events will be available when backend is
           connected.
         </Text>
