@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Container,
   Flex,
   Heading,
   Image,
@@ -8,6 +9,7 @@ import {
   VStack,
   HStack,
   Badge,
+  Divider,
   useToast,
   Tab,
   TabList,
@@ -16,57 +18,52 @@ import {
   Tabs,
   IconButton,
   useColorModeValue,
-  Grid,
-  GridItem,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  Avatar,
-  Tooltip,
-  Center,
-  Spinner,
-  Icon,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiShare2 } from "react-icons/fi";
-import { EventReview } from "../../components/events";
 import {
-  BsBookmark,
-  BsBookmarkFill,
-  BsCalendar,
-  BsGeoAlt,
-  BsPerson,
-  BsPeople,
-} from "react-icons/bs";
-import { FiMail } from "react-icons/fi";
+  FiCalendar,
+  FiMapPin,
+  FiUser,
+  FiShare2,
+  FiHeart,
+  FiClock,
+  FiDollarSign,
+  FiShoppingCart,
+} from "react-icons/fi";
+import { EventReview } from "../../components/events";
 
 // Interface cho dữ liệu sự kiện
-export interface EventData {
-  id: string | number;
+interface EventData {
+  id: number;
   title: string;
   description: string;
-  category: string;
-  imageUrl: string;
+  date: string;
+  startTime: string;
+  endTime: string;
   location: string;
-  startDate: string;
-  endDate: string;
-  isFree: boolean;
+  address: string;
+  image: string;
+  category: string;
+  isPaid: boolean;
   price?: number;
-  availableTickets?: number;
-  rating?: number;
-  reviewCount?: number;
-  attendees?: any[];
-  organizer?: {
-    id: string;
+  organizer: {
     name: string;
-    image?: string;
-    events?: number;
+    avatar: string;
   };
+  attendees: number;
+  capacity: number;
+}
+
+// Interface cho dữ liệu bình luận
+interface Comment {
+  id: number;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  content: string;
+  date: string;
 }
 
 // Dữ liệu mẫu cho sự kiện
@@ -102,15 +99,12 @@ const EventDetail = () => {
   const navigate = useNavigate();
 
   // State cho các trạng thái trong trang
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [eventData, setEventData] = useState<EventData | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [isPastEvent, setIsPastEvent] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string } | null>({
-    id: "user-123",
-  }); // Mock user
+  const [isSaved, setIsSaved] = useState(false);
+
+  // State comments không còn sử dụng sau khi gộp với reviews
+  // const [commentText, setCommentText] = useState("");
+  // const [comments, setComments] = useState<Comment[]>(commentsData);
 
   // Màu sắc thay đổi theo chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
@@ -119,38 +113,6 @@ const EventDetail = () => {
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const cardBgColor = useColorModeValue("white", "gray.700");
   const tabBgColor = useColorModeValue("gray.50", "gray.900");
-
-  // Tải dữ liệu sự kiện
-  useEffect(() => {
-    // Mock data - sẽ thay thế bằng API call thực tế
-    setTimeout(() => {
-      setEventData({
-        id: "1",
-        title: "React Developer Conference 2023",
-        description:
-          "Join us for the biggest React conference in Asia. Learn from industry experts and connect with the React community.\n\nThis three-day event features workshops, talks, and networking opportunities. Whether you're a beginner or an experienced developer, there's something for everyone!",
-        category: "Technology",
-        imageUrl:
-          "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-        location: "Singapore Convention Center",
-        startDate: "2023-10-15T09:00:00",
-        endDate: "2023-10-17T18:00:00",
-        isFree: false,
-        price: 299.99,
-        availableTickets: 45,
-        rating: 4.7,
-        reviewCount: 32,
-        attendees: [{ id: "1" }, { id: "2" }],
-        organizer: {
-          id: "org1",
-          name: "React Asia",
-          image: "https://randomuser.me/api/portraits/men/32.jpg",
-          events: 15,
-        },
-      });
-      setIsLoading(false);
-    }, 1000);
-  }, [id]);
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
@@ -203,405 +165,255 @@ const EventDetail = () => {
   };
 
   return (
-    <Box
-      maxW="1200px"
-      mx="auto"
-      px={{ base: 4, md: 8 }}
-      py={8}
-      bg={bgColor}
-      color={textColor}
-    >
-      {isLoading ? (
-        <Center h="400px">
-          <Spinner size="xl" color="teal.500" />
-        </Center>
-      ) : error ? (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : (
-        <>
-          {/* Breadcrumb */}
-          <Breadcrumb mb={8} fontSize="sm" color={secondaryTextColor}>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/events">Events</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrentPage>
-              <BreadcrumbLink>{eventData?.title}</BreadcrumbLink>
-            </BreadcrumbItem>
-          </Breadcrumb>
+    <Container maxW="container.xl" py={8}>
+      {/* Phần hình ảnh và thông tin cơ bản của sự kiện */}
+      <Box position="relative" mb={8} bg={bgColor} borderRadius="lg">
+        <Image
+          src={eventData.image}
+          alt={eventData.title}
+          w="100%"
+          h={{ base: "200px", md: "400px" }}
+          objectFit="cover"
+          borderRadius="lg"
+        />
 
-          {/* Event Detail */}
-          <Grid templateColumns={{ base: "1fr", md: "5fr 3fr" }} gap={10}>
-            {/* Left Column */}
-            <GridItem>
-              {/* Event Image */}
-              <Box
-                position="relative"
-                borderRadius="xl"
-                overflow="hidden"
-                boxShadow="xl"
-                mb={6}
-              >
-                <Image
-                  src={eventData?.imageUrl || "/images/event-placeholder.jpg"}
-                  alt={eventData?.title}
-                  w="100%"
-                  h={{ base: "250px", md: "400px" }}
-                  objectFit="cover"
+        {/* Badge thể loại và trạng thái */}
+        <HStack position="absolute" top={4} right={4} spacing={2}>
+          <Badge
+            colorScheme="teal"
+            fontSize="sm"
+            px={2}
+            py={1}
+            borderRadius="md"
+          >
+            {eventData.category}
+          </Badge>
+          <Badge
+            colorScheme={eventData.isPaid ? "purple" : "green"}
+            fontSize="sm"
+            px={2}
+            py={1}
+            borderRadius="md"
+          >
+            {eventData.isPaid ? "Paid" : "Free"}
+          </Badge>
+        </HStack>
+      </Box>
+
+      {/* Grid layout cho nội dung */}
+      <Flex direction={{ base: "column", lg: "row" }} gap={8} mb={10}>
+        {/* Cột thông tin chi tiết sự kiện */}
+        <Box
+          flex="2"
+          bg={bgColor}
+          p={6}
+          borderRadius="lg"
+          borderColor={borderColor}
+          borderWidth="1px"
+        >
+          <VStack align="start" spacing={5}>
+            {/* Tiêu đề và nút tương tác */}
+            <Flex
+              w="100%"
+              justify="space-between"
+              align={{ base: "start", sm: "center" }}
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 4, sm: 0 }}
+            >
+              <Heading as="h1" size="xl" color={textColor}>
+                {eventData.title}
+              </Heading>
+
+              <HStack spacing={2}>
+                <IconButton
+                  aria-label="Save event"
+                  icon={<FiHeart fill={isSaved ? "red" : "none"} />}
+                  onClick={handleSaveEvent}
+                  variant="outline"
+                  colorScheme={isSaved ? "red" : "gray"}
                 />
+                <IconButton
+                  aria-label="Share event"
+                  icon={<FiShare2 />}
+                  onClick={handleShare}
+                  variant="outline"
+                />
+              </HStack>
+            </Flex>
 
-                {/* Category and Paid/Free Badge */}
-                <HStack position="absolute" top={4} right={4} spacing={2}>
-                  <Badge
-                    colorScheme="teal"
-                    borderRadius="full"
-                    px={3}
-                    py={1}
-                    fontSize="sm"
-                    textTransform="capitalize"
-                  >
-                    {eventData?.category}
-                  </Badge>
-                  <Badge
-                    colorScheme={eventData?.isFree ? "green" : "purple"}
-                    borderRadius="full"
-                    px={3}
-                    py={1}
-                    fontSize="sm"
-                  >
-                    {eventData?.isFree ? "Free" : "Paid"}
-                  </Badge>
-                </HStack>
-              </Box>
+            {/* Chi tiết về thời gian và địa điểm */}
+            <VStack align="start" spacing={3} w="100%">
+              <Flex align="center" gap={2}>
+                <Box as={FiCalendar} color="teal.500" />
+                <Text fontWeight="medium" color={textColor}>
+                  {eventData.date}
+                </Text>
+              </Flex>
 
-              {/* Event Content */}
-              <VStack align="start" spacing={6}>
-                <Flex
-                  width="100%"
-                  justifyContent="space-between"
-                  alignItems={{ base: "start", md: "center" }}
-                  flexDirection={{ base: "column", md: "row" }}
-                  gap={4}
-                >
-                  <Heading size="xl" color={textColor}>
-                    {eventData?.title}
-                  </Heading>
+              <Flex align="center" gap={2}>
+                <Box as={FiClock} color="teal.500" />
+                <Text color={textColor}>
+                  {eventData.startTime} - {eventData.endTime}
+                </Text>
+              </Flex>
 
-                  <HStack spacing={2}>
-                    <Tooltip
-                      label={isSaved ? "Remove from saved" : "Save event"}
-                    >
-                      <IconButton
-                        aria-label="Save event"
-                        icon={isSaved ? <BsBookmarkFill /> : <BsBookmark />}
-                        colorScheme="teal"
-                        variant="outline"
-                        onClick={handleSaveEvent}
-                        borderColor={borderColor}
-                        color={textColor}
-                        _hover={{ bg: "teal.50", color: "teal.500" }}
-                      />
-                    </Tooltip>
-                    <Tooltip label="Share event">
-                      <IconButton
-                        aria-label="Share event"
-                        icon={<FiShare2 />}
-                        colorScheme="teal"
-                        variant="outline"
-                        borderColor={borderColor}
-                        color={textColor}
-                        _hover={{ bg: "teal.50", color: "teal.500" }}
-                      />
-                    </Tooltip>
-                  </HStack>
-                </Flex>
-
-                {/* Event Details */}
-                <Grid
-                  templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
-                  gap={6}
-                  width="100%"
-                  p={5}
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                  borderRadius="md"
-                  bg={cardBgColor}
-                >
-                  <HStack>
-                    <Icon as={BsCalendar} boxSize={5} color="teal.500" />
-                    <Box>
-                      <Text fontWeight="bold" color={textColor}>
-                        Date & Time
-                      </Text>
-                      <Text color={secondaryTextColor}>
-                        {new Date(
-                          eventData?.startDate || ""
-                        ).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </Text>
-                      <Text color={secondaryTextColor}>
-                        {new Date(
-                          eventData?.startDate || ""
-                        ).toLocaleTimeString()}{" "}
-                        -{" "}
-                        {new Date(
-                          eventData?.endDate || ""
-                        ).toLocaleTimeString()}
-                      </Text>
-                    </Box>
-                  </HStack>
-
-                  <HStack>
-                    <Icon as={BsGeoAlt} boxSize={5} color="teal.500" />
-                    <Box>
-                      <Text fontWeight="bold" color={textColor}>
-                        Location
-                      </Text>
-                      <Text color={secondaryTextColor}>
-                        {eventData?.location}
-                      </Text>
-                    </Box>
-                  </HStack>
-
-                  <HStack>
-                    <Icon as={BsPerson} boxSize={5} color="teal.500" />
-                    <Box>
-                      <Text fontWeight="bold" color={textColor}>
-                        Organizer
-                      </Text>
-                      <Text color={secondaryTextColor}>
-                        {eventData?.organizer?.name}
-                      </Text>
-                    </Box>
-                  </HStack>
-
-                  <HStack>
-                    <Icon as={BsPeople} boxSize={5} color="teal.500" />
-                    <Box>
-                      <Text fontWeight="bold" color={textColor}>
-                        Attendees
-                      </Text>
-                      <Text color={secondaryTextColor}>
-                        {eventData?.attendees?.length || 0} registered
-                      </Text>
-                    </Box>
-                  </HStack>
-                </Grid>
-
-                {/* Description */}
-                <Box width="100%">
-                  <Heading size="md" mb={4} color={textColor}>
-                    About this event
-                  </Heading>
-                  <Text color={textColor} whiteSpace="pre-line">
-                    {eventData?.description}
+              <Flex align="start" gap={2}>
+                <Box as={FiMapPin} color="teal.500" mt={1} />
+                <VStack align="start" spacing={0}>
+                  <Text fontWeight="medium" color={textColor}>
+                    {eventData.location}
                   </Text>
-                </Box>
-
-                {/* Tabs: Reviews & Comments */}
-                <Box width="100%" mt={8}>
-                  <Tabs isFitted variant="enclosed" colorScheme="teal">
-                    <TabList
-                      mb="1em"
-                      bg={tabBgColor}
-                      borderColor={borderColor}
-                      borderRadius="md"
-                    >
-                      <Tab
-                        _selected={{
-                          color: "teal.500",
-                          borderColor: "teal.500",
-                          borderBottomColor: cardBgColor,
-                          bg: cardBgColor,
-                        }}
-                        color={textColor}
-                      >
-                        Reviews & Comments
-                      </Tab>
-                    </TabList>
-                    <TabPanels
-                      borderWidth="1px"
-                      borderColor={borderColor}
-                      borderRadius="md"
-                      p={4}
-                      bg={cardBgColor}
-                    >
-                      <TabPanel>
-                        <EventReview
-                          eventId={eventData?.id}
-                          currentUserId={currentUser?.id}
-                          canAddReview={isRegistered && !isPastEvent}
-                          onReviewAdded={() => console.log("Review added")}
-                          rating={eventData?.rating}
-                          reviewCount={eventData?.reviewCount}
-                        />
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                </Box>
-              </VStack>
-            </GridItem>
-
-            {/* Right Column - Pricing & Registration */}
-            <GridItem>
-              <Box
-                position="sticky"
-                top="100px"
-                p={6}
-                borderWidth="1px"
-                borderRadius="lg"
-                borderColor={borderColor}
-                boxShadow="lg"
-                bg={cardBgColor}
-              >
-                <VStack spacing={6} align="stretch">
-                  {/* Price */}
-                  <Flex justify="space-between" align="center">
-                    <Text fontWeight="bold" fontSize="xl" color={textColor}>
-                      {eventData?.isFree
-                        ? "Free"
-                        : `$${eventData?.price?.toFixed(2)}`}
-                    </Text>
-                    {isPastEvent && (
-                      <Badge colorScheme="red" p={2} borderRadius="md">
-                        Event Ended
-                      </Badge>
-                    )}
-                  </Flex>
-
-                  {/* Registration button */}
-                  {!isPastEvent && (
-                    <Button
-                      colorScheme="teal"
-                      size="lg"
-                      width="100%"
-                      onClick={
-                        eventData?.isFree ? handleRegister : handleBuyTicket
-                      }
-                      isDisabled={isRegistered && eventData?.isFree}
-                    >
-                      {isRegistered && eventData?.isFree
-                        ? "Already Registered"
-                        : eventData?.isFree
-                        ? "Register Now"
-                        : "Buy Ticket"}
-                    </Button>
-                  )}
-
-                  {/* Remaining tickets */}
-                  {!eventData?.isFree && !isPastEvent && (
-                    <Text
-                      fontSize="sm"
-                      color={secondaryTextColor}
-                      textAlign="center"
-                    >
-                      Only {eventData?.availableTickets} tickets remaining!
-                    </Text>
-                  )}
-
-                  {/* Event summary */}
-                  <Box pt={6} borderTopWidth="1px" borderColor={borderColor}>
-                    <VStack spacing={4} align="start">
-                      <Heading size="sm" color={textColor}>
-                        Event Summary
-                      </Heading>
-
-                      {!eventData?.isFree && (
-                        <Flex justify="space-between" width="100%">
-                          <Text color={secondaryTextColor}>
-                            Price per ticket
-                          </Text>
-                          <Text fontWeight="bold" color={textColor}>
-                            ${eventData?.price?.toFixed(2)}
-                          </Text>
-                        </Flex>
-                      )}
-
-                      <Flex justify="space-between" width="100%">
-                        <Text color={secondaryTextColor}>Date</Text>
-                        <Text fontWeight="medium" color={textColor}>
-                          {new Date(
-                            eventData?.startDate || ""
-                          ).toLocaleDateString()}
-                        </Text>
-                      </Flex>
-
-                      <Flex justify="space-between" width="100%">
-                        <Text color={secondaryTextColor}>Time</Text>
-                        <Text fontWeight="medium" color={textColor}>
-                          {new Date(
-                            eventData?.startDate || ""
-                          ).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Text>
-                      </Flex>
-
-                      <Flex justify="space-between" width="100%">
-                        <Text color={secondaryTextColor}>Location</Text>
-                        <Text
-                          fontWeight="medium"
-                          color={textColor}
-                          textAlign="right"
-                        >
-                          {eventData?.location}
-                        </Text>
-                      </Flex>
-                    </VStack>
-                  </Box>
-
-                  {/* Organizer Info */}
-                  <Box pt={6} borderTopWidth="1px" borderColor={borderColor}>
-                    <VStack spacing={4} align="start">
-                      <Heading size="sm" color={textColor}>
-                        Event Organizer
-                      </Heading>
-                      <HStack spacing={3}>
-                        <Avatar
-                          size="md"
-                          name={eventData?.organizer?.name}
-                          src={eventData?.organizer?.image}
-                        />
-                        <Box>
-                          <Text fontWeight="bold" color={textColor}>
-                            {eventData?.organizer?.name}
-                          </Text>
-                          <Text fontSize="sm" color={secondaryTextColor}>
-                            {eventData?.organizer?.events} events hosted
-                          </Text>
-                        </Box>
-                      </HStack>
-                      <Button
-                        variant="outline"
-                        leftIcon={<FiMail />}
-                        size="sm"
-                        width="100%"
-                        borderColor={borderColor}
-                        color={textColor}
-                        _hover={{ bg: "teal.50", color: "teal.500" }}
-                      >
-                        Contact Organizer
-                      </Button>
-                    </VStack>
-                  </Box>
+                  <Text fontSize="sm" color={secondaryTextColor}>
+                    {eventData.address}
+                  </Text>
                 </VStack>
-              </Box>
-            </GridItem>
-          </Grid>
-        </>
-      )}
-    </Box>
+              </Flex>
+
+              {eventData.isPaid && (
+                <Flex align="center" gap={2}>
+                  <Box as={FiDollarSign} color="teal.500" />
+                  <Text fontWeight="bold">{eventData.price} VND</Text>
+                </Flex>
+              )}
+
+              <Flex align="center" gap={2}>
+                <Box as={FiUser} color="teal.500" />
+                <Text>
+                  {eventData.attendees} registered / {eventData.capacity}{" "}
+                  capacity
+                </Text>
+              </Flex>
+            </VStack>
+
+            <Divider borderColor={borderColor} />
+
+            {/* Mô tả sự kiện */}
+            <Box>
+              <Heading as="h3" size="md" mb={3} color={textColor}>
+                About This Event
+              </Heading>
+              <Text color={textColor}>{eventData.description}</Text>
+            </Box>
+
+            {/* Phần tabs cho thông tin chi tiết */}
+            <Tabs
+              isFitted
+              w="100%"
+              mt={4}
+              colorScheme="teal"
+              variant="enclosed"
+            >
+              <TabList bg={tabBgColor} borderRadius="md" p={1}>
+                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
+                  Details
+                </Tab>
+                <Tab _selected={{ bg: cardBgColor, color: textColor }}>
+                  Reviews & Comments
+                </Tab>
+              </TabList>
+              <TabPanels mt={4}>
+                {/* Details Tab */}
+                <TabPanel p={0}>
+                  <VStack align="start" spacing={4} color={textColor}>
+                    <Flex align="center" gap={2} w="100%">
+                      <Box as={FiUser} color="teal.500" />
+                      <Text fontWeight="medium">Organizer:</Text>
+                      <Text>{eventData.organizer.name}</Text>
+                    </Flex>
+                  </VStack>
+                </TabPanel>
+
+                {/* Reviews & Comments Tab */}
+                <TabPanel p={0}>
+                  <VStack align="start" spacing={4}>
+                    <EventReview rating={4.5} reviewCount={32} />
+                  </VStack>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </VStack>
+        </Box>
+
+        {/* Cột thông tin đăng ký và chi tiết */}
+        <Box
+          flex="1"
+          p={6}
+          borderWidth="1px"
+          borderRadius="lg"
+          height="fit-content"
+          position="sticky"
+          top="100px"
+          bg={cardBgColor}
+          borderColor={borderColor}
+        >
+          <VStack spacing={5} align="stretch">
+            <Heading size="md">Registration</Heading>
+
+            <VStack align="start" spacing={3}>
+              <Flex align="center" gap={2}>
+                <Box as={FiCalendar} color="teal.500" />
+                <Text fontWeight="medium">{eventData.date}</Text>
+              </Flex>
+
+              <Flex align="center" gap={2}>
+                <Box as={FiClock} color="teal.500" />
+                <Text>
+                  {eventData.startTime} - {eventData.endTime}
+                </Text>
+              </Flex>
+            </VStack>
+
+            <Box bg="gray.50" p={3} borderRadius="md">
+              <Text fontWeight="medium">
+                {eventData.attendees} people have registered
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                {eventData.capacity - eventData.attendees} spots left
+              </Text>
+            </Box>
+
+            {/* Nút đăng ký và mua vé */}
+            <VStack spacing={3} width="100%">
+              <Button
+                colorScheme={isRegistered ? "red" : "teal"}
+                size="lg"
+                onClick={handleRegister}
+                width="100%"
+              >
+                {isRegistered ? "Cancel Registration" : "Register for Event"}
+              </Button>
+
+              {eventData.isPaid && eventData.price && (
+                <Button
+                  colorScheme="purple"
+                  size="lg"
+                  width="100%"
+                  leftIcon={<FiShoppingCart />}
+                  onClick={handleBuyTicket}
+                >
+                  Buy Ticket - ${eventData.price.toFixed(2)}
+                </Button>
+              )}
+
+              <Text fontSize="sm" color="gray.600" textAlign="center">
+                Registration closes 24 hours before event starts
+              </Text>
+            </VStack>
+          </VStack>
+        </Box>
+      </Flex>
+
+      {/* Phần sự kiện liên quan */}
+      <Box mt={10}>
+        <Heading size="lg" mb={6}>
+          Similar Events
+        </Heading>
+        <Text color="gray.600">
+          Coming soon... Similar events will be available when backend is
+          connected.
+        </Text>
+      </Box>
+    </Container>
   );
 };
 
