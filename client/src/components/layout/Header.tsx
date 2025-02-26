@@ -85,15 +85,11 @@ export default function Header() {
   const { t } = useTranslation();
 
   // Màu sắc theo theme
-  const bgColor = useColorModeValue("bg.primary", "bg.primary");
-  const borderColor = useColorModeValue("card.border", "card.border");
-  const textColor = useColorModeValue("text.primary", "text.primary");
-  const secondaryTextColor = useColorModeValue(
-    "text.secondary",
-    "text.secondary"
-  );
+  const bgColor = useColorModeValue("white", "gray.900");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const logoColor = useColorModeValue("teal.600", "teal.300");
-  const menuHoverBg = useColorModeValue("hover.bg", "hover.bg");
 
   // Xử lý đăng xuất
   const handleLogout = () => {
@@ -315,16 +311,18 @@ export default function Header() {
 
 const DesktopNav = () => {
   const { t } = useTranslation();
-  const linkColor = useColorModeValue("text.primary", "text.primary");
+  const linkColor = useColorModeValue("gray.800", "gray.100");
   const linkHoverColor = useColorModeValue("teal.600", "teal.300");
-  const popoverContentBgColor = useColorModeValue("bg.primary", "bg.primary");
-  const borderColor = useColorModeValue("card.border", "card.border");
+  const popoverContentBgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   return (
     <Stack direction={"row"} spacing={4}>
       {NAV_ITEMS.map((navItem) => {
         // Lấy tên item theo i18n nếu tồn tại key
-        const label = navItem.labelKey ? t(navItem.labelKey) : navItem.label;
+        const displayLabel = navItem.labelKey
+          ? t(navItem.labelKey)
+          : navItem.label;
 
         return (
           <Box key={navItem.label}>
@@ -342,7 +340,7 @@ const DesktopNav = () => {
                     color: linkHoverColor,
                   }}
                 >
-                  {label}
+                  {displayLabel}
                 </ChakraLink>
               </PopoverTrigger>
 
@@ -360,15 +358,15 @@ const DesktopNav = () => {
                   <Stack>
                     {navItem.children.map((child) => {
                       // Lấy tên child item theo i18n nếu tồn tại key
-                      const childLabel = child.labelKey
+                      const childDisplayLabel = child.labelKey
                         ? t(child.labelKey)
                         : child.label;
 
                       return (
                         <DesktopSubNav
                           key={child.label}
-                          label={childLabel}
                           {...child}
+                          displayLabel={childDisplayLabel}
                         />
                       );
                     })}
@@ -383,9 +381,18 @@ const DesktopNav = () => {
   );
 };
 
-const DesktopSubNav = ({ label, href, subLabel, subLabelKey }: NavItem) => {
+interface DesktopSubNavProps extends Omit<NavItem, "label"> {
+  displayLabel: string;
+}
+
+const DesktopSubNav = ({
+  displayLabel,
+  href,
+  subLabel,
+  subLabelKey,
+}: DesktopSubNavProps) => {
   const { t } = useTranslation();
-  const hoverBg = useColorModeValue("hover.bg", "hover.bg");
+  const hoverBg = useColorModeValue("gray.50", "gray.700");
   const subLabelText = subLabelKey ? t(subLabelKey) : subLabel;
 
   return (
@@ -405,7 +412,7 @@ const DesktopSubNav = ({ label, href, subLabel, subLabelKey }: NavItem) => {
             _groupHover={{ color: "teal.500" }}
             fontWeight={500}
           >
-            {label}
+            {displayLabel}
           </Text>
           <Text fontSize={"sm"}>{subLabelText}</Text>
         </Box>
@@ -426,7 +433,8 @@ const DesktopSubNav = ({ label, href, subLabel, subLabelKey }: NavItem) => {
 };
 
 const MobileNav = () => {
-  const bgColor = useColorModeValue("bg.primary", "bg.primary");
+  const bgColor = useColorModeValue("white", "gray.900");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   return (
     <Stack
@@ -435,7 +443,7 @@ const MobileNav = () => {
       display={{ md: "none" }}
       borderWidth="0 0 1px 0"
       borderStyle="solid"
-      borderColor={useColorModeValue("card.border", "card.border")}
+      borderColor={borderColor}
     >
       {NAV_ITEMS.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
@@ -448,6 +456,8 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
   const { t } = useTranslation();
   const { isOpen, onToggle } = useDisclosure();
   const itemLabel = labelKey ? t(labelKey) : label;
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
 
   return (
     <Stack spacing={4} onClick={children && onToggle}>
@@ -461,7 +471,9 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
           textDecoration: "none",
         }}
       >
-        <Text fontWeight={600}>{itemLabel}</Text>
+        <Text fontWeight={600} color={textColor}>
+          {itemLabel}
+        </Text>
         {children && (
           <Icon
             as={ChevronDownIcon}
@@ -469,6 +481,7 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
             transform={isOpen ? "rotate(180deg)" : ""}
             w={6}
             h={6}
+            color={textColor}
           />
         )}
       </Flex>
@@ -479,7 +492,7 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
           pl={4}
           borderLeft={1}
           borderStyle={"solid"}
-          borderColor={useColorModeValue("card.border", "card.border")}
+          borderColor={borderColor}
           align={"start"}
         >
           {children &&
@@ -493,6 +506,10 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
                   as={Link}
                   py={2}
                   to={child.href ?? "#"}
+                  color={textColor}
+                  _hover={{
+                    color: "teal.500",
+                  }}
                 >
                   {childLabel}
                 </ChakraLink>

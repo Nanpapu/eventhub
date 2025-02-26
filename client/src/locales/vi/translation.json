@@ -26,7 +26,30 @@
     "lightMode": "Chế độ sáng",
     "continue": "Tiếp tục",
     "reset": "Đặt lại",
-    "export": "Xuất"
+    "export": "Xuất",
+    "close": "Đóng",
+    "add": "Thêm",
+    "remove": "Xóa bỏ",
+    "viewDetails": "Xem chi tiết",
+    "next": "Tiếp theo",
+    "previous": "Trước đó",
+    "home": "Trang chủ",
+    "events": "Sự kiện",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "dashboard": "Bảng điều khiển",
+    "notifications": "Thông báo",
+    "goBack": "Quay lại",
+    "goTo": "Đi đến {{destination}}",
+    "toggleDarkMode": "Chuyển đổi chế độ tối",
+    "changeLanguage": "Thay đổi ngôn ngữ",
+    "optional": "Tùy chọn",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
+    "apply": "Áp dụng",
+    "backToEvents": "Quay lại danh sách sự kiện"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -43,7 +66,53 @@
     "createAccount": "Tạo tài khoản",
     "loginSuccess": "Đăng nhập thành công",
     "logoutSuccess": "Đăng xuất thành công",
-    "loginFailed": "Đăng nhập thất bại"
+    "loginFailed": "Đăng nhập thất bại",
+    "login": {
+      "title": "Đăng nhập vào EventHub",
+      "emailPlaceholder": "Nhập email của bạn",
+      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "rememberMe": "Ghi nhớ đăng nhập",
+      "noAccount": "Chưa có tài khoản?",
+      "signUp": "Đăng ký",
+      "loginSuccess": "Đăng nhập thành công",
+      "loginFailed": "Đăng nhập thất bại"
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "namePlaceholder": "Nhập họ và tên của bạn",
+      "emailPlaceholder": "Nhập email của bạn",
+      "passwordPlaceholder": "Tạo mật khẩu",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
+      "alreadyHaveAccount": "Đã có tài khoản?",
+      "signIn": "Đăng nhập",
+      "registerSuccess": "Đăng ký thành công",
+      "registerFailed": "Đăng ký thất bại"
+    },
+    "forgotPassword": {
+      "title": "Quên mật khẩu",
+      "instruction": "Nhập email của bạn và chúng tôi sẽ gửi cho bạn đường dẫn để đặt lại mật khẩu",
+      "emailPlaceholder": "Nhập email của bạn",
+      "resetLinkSent": "Đường dẫn đặt lại mật khẩu đã được gửi đến email của bạn",
+      "resetLinkFailed": "Không thể gửi đường dẫn đặt lại mật khẩu"
+    },
+    "resetPassword": {
+      "title": "Đặt lại mật khẩu",
+      "newPasswordPlaceholder": "Nhập mật khẩu mới",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu mới",
+      "resetSuccess": "Mật khẩu đã được đặt lại thành công",
+      "resetFailed": "Không thể đặt lại mật khẩu"
+    },
+    "logout": {
+      "logoutSuccess": "Đăng xuất thành công",
+      "logoutFailed": "Đăng xuất thất bại"
+    },
+    "profile": {
+      "title": "Hồ sơ",
+      "personalInfo": "Thông tin cá nhân",
+      "updateProfile": "Cập nhật hồ sơ",
+      "updateSuccess": "Cập nhật hồ sơ thành công",
+      "updateFailed": "Cập nhật hồ sơ thất bại"
+    }
   },
   "events": {
     "events": "Sự kiện",
@@ -123,7 +192,102 @@
       "ticketNotFound": "Không tìm thấy vé",
       "invalidTicket": "Vé không hợp lệ",
       "checkInTime": "Thời gian đăng ký"
-    }
+    },
+    "title": "Sự kiện",
+    "updateEvent": "Cập nhật sự kiện",
+    "eventDetails": "Chi tiết sự kiện",
+    "eventDate": "Ngày diễn ra",
+    "organizer": "Người tổ chức",
+    "tickets": "Vé",
+    "ticketTypes": "Loại vé",
+    "createSuccess": "Tạo sự kiện thành công",
+    "updateSuccess": "Cập nhật sự kiện thành công",
+    "deleteSuccess": "Xóa sự kiện thành công",
+    "createFailed": "Tạo sự kiện thất bại",
+    "updateFailed": "Cập nhật sự kiện thất bại",
+    "deleteFailed": "Xóa sự kiện thất bại",
+    "noEvents": "Không tìm thấy sự kiện",
+    "filterEvents": "Lọc sự kiện",
+    "sortEvents": "Sắp xếp sự kiện",
+    "categories": {
+      "conference": "Hội nghị",
+      "workshop": "Hội thảo",
+      "music": "Âm nhạc",
+      "networking": "Giao lưu",
+      "food": "Ẩm thực",
+      "exhibition": "Triển lãm",
+      "sports": "Thể thao",
+      "technology": "Công nghệ",
+      "business": "Kinh doanh",
+      "education": "Giáo dục",
+      "health": "Sức khỏe",
+      "arts": "Nghệ thuật",
+      "other": "Khác"
+    },
+    "filterType": {
+      "upcoming": "Sắp diễn ra",
+      "past": "Đã diễn ra",
+      "all": "Tất cả",
+      "today": "Hôm nay",
+      "thisWeek": "Tuần này",
+      "thisMonth": "Tháng này",
+      "free": "Miễn phí",
+      "paid": "Có phí"
+    },
+    "sortType": {
+      "dateAsc": "Ngày (Tăng dần)",
+      "dateDesc": "Ngày (Giảm dần)",
+      "priceAsc": "Giá (Thấp đến cao)",
+      "priceDesc": "Giá (Cao đến thấp)",
+      "nameAsc": "Tên (A-Z)",
+      "nameDesc": "Tên (Z-A)"
+    },
+    "eventStatus": {
+      "upcoming": "Sắp diễn ra",
+      "ongoing": "Đang diễn ra",
+      "past": "Đã diễn ra",
+      "canceled": "Đã hủy",
+      "postponed": "Đã hoãn"
+    },
+    "checkIn": {
+      "title": "Điểm danh sự kiện",
+      "manualCheckIn": "Điểm danh thủ công",
+      "checkInByTicketId": "Điểm danh bằng mã vé",
+      "enterTicketId": "Nhập mã vé",
+      "ticketIdPlaceholder": "Nhập mã vé (ví dụ: TIX-ABC123)",
+      "attendeeList": "Danh sách người tham dự",
+      "qrScanner": "Quét mã QR",
+      "checkInSuccess": "Điểm danh thành công",
+      "checkInFailed": "Điểm danh thất bại",
+      "alreadyCheckedIn": "Đã điểm danh",
+      "ticketNotFound": "Không tìm thấy vé",
+      "invalidTicket": "Vé không hợp lệ",
+      "checkInTime": "Thời gian điểm danh"
+    },
+    "searchResults": "Kết quả tìm kiếm sự kiện",
+    "allLocations": "Tất cả địa điểm",
+    "resetFilters": "Đặt lại bộ lọc",
+    "eventsFound": "sự kiện được tìm thấy",
+    "noEventsFound": "Không tìm thấy sự kiện nào phù hợp",
+    "tryAdjustingFilters": "Hãy thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm",
+    "filterType": {
+      "free": "Sự kiện miễn phí",
+      "paid": "Sự kiện có phí"
+    },
+    "categories": {
+      "all": "Tất cả thể loại",
+      "conference": "Hội nghị",
+      "workshop": "Hội thảo",
+      "meetup": "Gặp gỡ",
+      "networking": "Networking",
+      "music": "Âm nhạc",
+      "exhibition": "Triển lãm",
+      "food": "Ẩm thực",
+      "other": "Khác"
+    },
+    "time": "Thời gian",
+    "ticketPrice": "Giá vé",
+    "ticketsLeft": "Vé còn lại"
   },
   "user": {
     "profile": "Hồ sơ",
@@ -154,30 +318,44 @@
   },
   "errors": {
     "required": "Trường này là bắt buộc",
-    "invalidEmail": "Email không hợp lệ",
-    "passwordLength": "Mật khẩu phải có ít nhất 8 ký tự",
+    "invalidEmail": "Địa chỉ email không hợp lệ",
+    "minLength": "Phải có ít nhất {{length}} ký tự",
+    "maxLength": "Phải có ít hơn {{length}} ký tự",
     "passwordMatch": "Mật khẩu không khớp",
-    "unauthorized": "Bạn không có quyền thực hiện hành động này",
-    "notFound": "Không tìm thấy tài nguyên",
-    "serverError": "Lỗi máy chủ đã xảy ra",
+    "unexpected": "Đã xảy ra lỗi không mong muốn",
+    "notFound": "Không tìm thấy",
+    "unauthorized": "Truy cập không được phép",
+    "forbidden": "Truy cập bị cấm",
+    "serverError": "Lỗi máy chủ",
+    "networkError": "Lỗi mạng",
+    "invalidCredentials": "Thông tin đăng nhập không hợp lệ",
+    "duplicateEmail": "Email đã tồn tại",
     "invalidDate": "Ngày không hợp lệ",
-    "pastDate": "Ngày không thể ở quá khứ",
-    "endBeforeStart": "Ngày kết thúc không thể trước ngày bắt đầu"
+    "invalidPhone": "Số điện thoại không hợp lệ",
+    "invalidUrl": "URL không hợp lệ",
+    "invalidTicketId": "Mã vé không hợp lệ",
+    "ticketNotFound": "Không tìm thấy vé",
+    "error": "Lỗi",
+    "eventNotFound": "Sự kiện không tồn tại!",
+    "eventNotFoundDesc": "Không tìm thấy thông tin sự kiện bạn đang tìm kiếm."
   },
   "footer": {
     "about": "Về chúng tôi",
     "contactUs": "Liên hệ",
-    "privacyPolicy": "Chính sách bảo mật",
-    "termsOfService": "Điều khoản dịch vụ",
+    "terms": "Điều khoản dịch vụ",
+    "privacy": "Chính sách bảo mật",
     "faq": "Câu hỏi thường gặp",
-    "copyright": "Bản quyền © {year} EventHub. Đã đăng ký bản quyền.",
-    "subscribeNewsletter": "Đăng ký nhận bản tin",
-    "emailPlaceholder": "Email của bạn",
-    "subscribe": "Đăng ký",
-    "subscribeSuccess": "Đăng ký thành công! Cảm ơn bạn.",
-    "subscribeError": "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-    "aboutUs": "Về chúng tôi",
-    "followUs": "Theo dõi chúng tôi"
+    "help": "Trung tâm trợ giúp",
+    "careers": "Cơ hội việc làm",
+    "press": "Báo chí",
+    "blog": "Blog",
+    "copyright": "© {{year}} EventHub. Đã đăng ký bản quyền.",
+    "followUs": "Theo dõi chúng tôi",
+    "subscribe": "Đăng ký nhận bản tin",
+    "subscribePlaceholder": "Nhập email của bạn",
+    "subscribeButton": "Đăng ký",
+    "subscribeSuccess": "Đăng ký nhận bản tin thành công",
+    "subscribeFailed": "Đăng ký nhận bản tin thất bại"
   },
   "languages": {
     "changeLanguage": "Thay đổi ngôn ngữ",
@@ -209,5 +387,140 @@
     "currencyFormat": "{amount}",
     "percentFormat": "{percent}",
     "numberFormat": "{number}"
+  },
+  "home": {
+    "hero": {
+      "title": "Khám phá và tham gia các sự kiện thú vị",
+      "subtitle": "EventHub giúp bạn dễ dàng tìm, tham gia và tổ chức các sự kiện phù hợp với sở thích của bạn.",
+      "exploreEvents": "Khám phá ngay"
+    },
+    "search": {
+      "title": "Tìm kiếm trải nghiệm tiếp theo của bạn",
+      "keywordPlaceholder": "Tìm kiếm sự kiện",
+      "locationPlaceholder": "Địa điểm",
+      "categoryPlaceholder": "Danh mục"
+    },
+    "featuredEvents": {
+      "title": "Sự kiện nổi bật",
+      "subtitle": "Khám phá các sự kiện phổ biến sắp diễn ra",
+      "viewAll": "Xem tất cả sự kiện"
+    },
+    "organizer": {
+      "title": "Bạn muốn tổ chức sự kiện?",
+      "subtitle": "EventHub cung cấp nền tảng quản lý sự kiện toàn diện giúp bạn dễ dàng tạo và quản lý sự kiện của mình.",
+      "getStarted": "Bắt đầu ngay"
+    }
+  },
+  "tickets": {
+    "title": "Vé",
+    "buyTicket": "Mua vé",
+    "ticketDetails": "Chi tiết vé",
+    "ticketType": "Loại vé",
+    "ticketPrice": "Giá vé",
+    "ticketQuantity": "Số lượng",
+    "bookingDate": "Ngày đặt",
+    "ticketId": "Mã vé",
+    "ticketStatus": "Trạng thái",
+    "checkIn": "Điểm danh",
+    "purchaseSuccess": "Mua vé thành công",
+    "purchaseFailed": "Mua vé thất bại",
+    "noTickets": "Không tìm thấy vé",
+    "myTickets": "Vé của tôi",
+    "ticketStatus": {
+      "valid": "Có hiệu lực",
+      "used": "Đã sử dụng",
+      "expired": "Đã hết hạn",
+      "canceled": "Đã hủy"
+    },
+    "confirm": {
+      "title": "Xác nhận mua vé",
+      "description": "Vui lòng xem lại chi tiết đơn hàng trước khi tiến hành thanh toán",
+      "paymentMethod": "Phương thức thanh toán",
+      "total": "Tổng cộng",
+      "proceedToPayment": "Tiến hành thanh toán",
+      "cancelOrder": "Hủy đơn hàng"
+    },
+    "payment": {
+      "title": "Thanh toán",
+      "description": "Hoàn tất thanh toán để đảm bảo vé của bạn",
+      "cardNumber": "Số thẻ",
+      "cardholderName": "Tên chủ thẻ",
+      "expiryDate": "Ngày hết hạn",
+      "cvv": "CVV",
+      "payNow": "Thanh toán ngay",
+      "paymentSuccess": "Thanh toán thành công",
+      "paymentFailed": "Thanh toán thất bại",
+      "processingPayment": "Đang xử lý thanh toán..."
+    }
+  },
+  "dashboard": {
+    "overview": "Tổng quan",
+    "events": "Sự kiện",
+    "tickets": "Vé",
+    "sales": "Doanh số",
+    "attendees": "Người tham dự",
+    "analytics": "Phân tích",
+    "reports": "Báo cáo",
+    "settings": "Cài đặt",
+    "stats": {
+      "totalEvents": "Tổng số sự kiện",
+      "activeEvents": "Sự kiện đang diễn ra",
+      "totalAttendees": "Tổng số người tham dự",
+      "totalSales": "Tổng doanh số",
+      "ticketsSold": "Số vé đã bán",
+      "averageAttendance": "Tỷ lệ tham dự trung bình",
+      "upcomingEvents": "Sự kiện sắp tới"
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "profile": "Hồ sơ",
+    "notifications": "Thông báo",
+    "security": "Bảo mật",
+    "preferences": "Tùy chọn",
+    "language": "Ngôn ngữ",
+    "theme": "Giao diện",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "autoTheme": "Tự động (theo hệ thống)",
+    "timeZone": "Múi giờ",
+    "currency": "Tiền tệ",
+    "account": {
+      "title": "Tài khoản",
+      "deleteAccount": "Xóa tài khoản",
+      "confirmDelete": "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.",
+      "deleteSuccess": "Xóa tài khoản thành công",
+      "deleteFailed": "Xóa tài khoản thất bại"
+    }
+  },
+  "checkout": {
+    "title": "Đặt vé sự kiện",
+    "selectQuantity": "Chọn số lượng vé",
+    "ticketQuantity": "Số lượng vé",
+    "total": "Tổng cộng",
+    "ticketInfo": "Thông tin vé",
+    "transactionId": "Mã giao dịch",
+    "resendEmail": "Gửi lại email",
+    "viewMyTickets": "Xem vé của tôi",
+    "steps": {
+      "selectTickets": "Chọn vé",
+      "ticketQuantity": "Số lượng vé",
+      "payment": "Thanh toán",
+      "paymentInfo": "Thông tin thanh toán",
+      "confirmation": "Xác nhận",
+      "confirmTickets": "Xác nhận vé"
+    },
+    "errors": {
+      "minimumTicket": "Vui lòng chọn ít nhất 1 vé",
+      "notEnoughTickets": "Chỉ còn {{available}} vé có sẵn",
+      "ticketLimit": "Giới hạn đặt vé",
+      "maxPerOrder": "Tối đa {{max}} vé mỗi lần đặt"
+    },
+    "success": {
+      "title": "Đặt vé thành công!",
+      "thankYou": "Cảm ơn bạn đã đặt vé! Thông tin chi tiết đã được gửi đến email của bạn.",
+      "emailSent": "Thông tin vé đã được gửi đến email của bạn",
+      "emailResent": "Đã gửi lại email xác nhận"
+    }
   }
 }

@@ -33,6 +33,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { FaCheck, FaTicketAlt, FaEnvelope } from "react-icons/fa";
 import CheckoutForm from "../../components/checkout/CheckoutForm";
+import { useTranslation } from "react-i18next";
+import { CurrencyDisplay } from "../../components/common";
 
 // Định nghĩa interface cho event
 interface EventData {
@@ -117,18 +119,12 @@ const mockEvents: EventData[] = [
   },
 ];
 
-// Các bước trong quy trình thanh toán
-const steps = [
-  { title: "Chọn vé", description: "Số lượng vé" },
-  { title: "Thanh toán", description: "Thông tin thanh toán" },
-  { title: "Xác nhận", description: "Xác nhận vé" },
-];
-
 /**
  * Trang thanh toán cho việc mua vé sự kiện
  * Quy trình 3 bước: chọn vé, thanh toán, xác nhận
  */
 export default function Checkout() {
+  const { t } = useTranslation();
   const { eventId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -138,8 +134,31 @@ export default function Checkout() {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Các bước trong quy trình thanh toán
+  const steps = [
+    {
+      title: t("checkout.steps.selectTickets"),
+      description: t("checkout.steps.ticketQuantity"),
+    },
+    {
+      title: t("checkout.steps.payment"),
+      description: t("checkout.steps.paymentInfo"),
+    },
+    {
+      title: t("checkout.steps.confirmation"),
+      description: t("checkout.steps.confirmTickets"),
+    },
+  ];
+
+  // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const successBg = useColorModeValue("green.50", "green.900");
+  const successBorderColor = useColorModeValue("green.200", "green.700");
+  const successIconBg = useColorModeValue("green.100", "green.800");
+  const successIconColor = useColorModeValue("green.700", "green.200");
+  const confirmBoxBg = useColorModeValue("white", "gray.700");
 
   // Giả lập fetch dữ liệu sự kiện
   useEffect(() => {
@@ -158,8 +177,8 @@ export default function Checkout() {
   const handleContinueToPayment = () => {
     if (ticketQuantity < 1) {
       toast({
-        title: "Lỗi",
-        description: "Vui lòng chọn ít nhất 1 vé",
+        title: t("errors.error"),
+        description: t("checkout.errors.minimumTicket"),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -169,8 +188,10 @@ export default function Checkout() {
 
     if (event && ticketQuantity > event.availableTickets) {
       toast({
-        title: "Lỗi",
-        description: `Chỉ còn ${event.availableTickets} vé có sẵn`,
+        title: t("errors.error"),
+        description: t("checkout.errors.notEnoughTickets", {
+          available: event.availableTickets,
+        }),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -180,8 +201,10 @@ export default function Checkout() {
 
     if (event && ticketQuantity > event.maxPerOrder) {
       toast({
-        title: "Giới hạn đặt vé",
-        description: `Tối đa ${event.maxPerOrder} vé mỗi lần đặt`,
+        title: t("checkout.errors.ticketLimit"),
+        description: t("checkout.errors.maxPerOrder", {
+          max: event.maxPerOrder,
+        }),
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -206,8 +229,8 @@ export default function Checkout() {
   // Xử lý khi hoàn tất thanh toán
   const handleFinish = () => {
     toast({
-      title: "Đặt vé thành công!",
-      description: "Thông tin vé đã được gửi đến email của bạn",
+      title: t("checkout.success.title"),
+      description: t("checkout.success.emailSent"),
       status: "success",
       duration: 5000,
       isClosable: true,
@@ -223,7 +246,7 @@ export default function Checkout() {
   if (isLoading) {
     return (
       <Container maxW="4xl" py={8} centerContent>
-        <Text>Đang tải thông tin thanh toán...</Text>
+        <Text color={textColor}>{t("common.loading")}</Text>
       </Container>
     );
   }
@@ -233,13 +256,11 @@ export default function Checkout() {
       <Container maxW="4xl" py={8}>
         <Alert status="error" borderRadius="md">
           <AlertIcon />
-          <AlertTitle>Sự kiện không tồn tại!</AlertTitle>
-          <AlertDescription>
-            Không tìm thấy thông tin sự kiện bạn đang tìm kiếm.
-          </AlertDescription>
+          <AlertTitle>{t("errors.eventNotFound")}</AlertTitle>
+          <AlertDescription>{t("errors.eventNotFoundDesc")}</AlertDescription>
         </Alert>
         <Button mt={4} onClick={() => navigate("/events")}>
-          Quay lại danh sách sự kiện
+          {t("common.backToEvents")}
         </Button>
       </Container>
     );
@@ -248,8 +269,8 @@ export default function Checkout() {
   return (
     <Container maxW="4xl" py={8}>
       <VStack spacing={8} align="stretch">
-        <Heading size="xl" textAlign="center">
-          Đặt vé sự kiện
+        <Heading size="xl" textAlign="center" color={textColor}>
+          {t("checkout.title")}
         </Heading>
 
         <Stepper
@@ -290,43 +311,59 @@ export default function Checkout() {
               borderColor={borderColor}
               boxShadow="md"
             >
-              <Heading size="md">Chọn số lượng vé</Heading>
+              <Heading size="md" color={textColor}>
+                {t("checkout.selectQuantity")}
+              </Heading>
 
               <HStack spacing={4} py={4}>
-                <Text fontWeight="medium">Sự kiện:</Text>
-                <Text>{event.title}</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {t("events.event")}:
+                </Text>
+                <Text color={textColor}>{event.title}</Text>
               </HStack>
 
               <HStack spacing={4}>
-                <Text fontWeight="medium">Thời gian:</Text>
-                <Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {t("events.time")}:
+                </Text>
+                <Text color={textColor}>
                   {event.date} • {event.time}
                 </Text>
               </HStack>
 
               <HStack spacing={4}>
-                <Text fontWeight="medium">Địa điểm:</Text>
-                <Text>{event.location}</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {t("events.location")}:
+                </Text>
+                <Text color={textColor}>{event.location}</Text>
               </HStack>
 
               <HStack spacing={4}>
-                <Text fontWeight="medium">Giá vé:</Text>
-                <Text>
-                  {event.price === 0
-                    ? "Miễn phí"
-                    : `$${event.price.toFixed(2)}`}
+                <Text fontWeight="medium" color={textColor}>
+                  {t("events.ticketPrice")}:
+                </Text>
+                <Text color={textColor}>
+                  {event.price === 0 ? (
+                    t("common.free")
+                  ) : (
+                    <CurrencyDisplay amount={event.price} />
+                  )}
                 </Text>
               </HStack>
 
               <HStack spacing={4}>
-                <Text fontWeight="medium">Vé còn lại:</Text>
-                <Text>{event.availableTickets}</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {t("events.ticketsLeft")}:
+                </Text>
+                <Text color={textColor}>{event.availableTickets}</Text>
               </HStack>
 
               <Divider my={2} />
 
               <Flex align="center" justify="space-between">
-                <Text fontWeight="medium">Số lượng vé:</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {t("checkout.ticketQuantity")}:
+                </Text>
                 <NumberInput
                   maxW={32}
                   min={1}
@@ -346,21 +383,21 @@ export default function Checkout() {
 
               <Divider my={2} />
 
-              <Flex justify="space-between" fontWeight="bold">
-                <Text>Tổng cộng:</Text>
-                <Text>${(event.price * ticketQuantity).toFixed(2)}</Text>
+              <Flex justify="space-between" fontWeight="bold" color={textColor}>
+                <Text>{t("checkout.total")}:</Text>
+                <CurrencyDisplay amount={event.price * ticketQuantity} />
               </Flex>
 
               <HStack spacing={4} justify="flex-end" pt={4}>
                 <Button variant="outline" onClick={handleBackToEvent}>
-                  Quay lại
+                  {t("common.back")}
                 </Button>
                 <Button
                   colorScheme="teal"
                   rightIcon={<FaTicketAlt />}
                   onClick={handleContinueToPayment}
                 >
-                  Tiếp tục
+                  {t("common.continue")}
                 </Button>
               </HStack>
             </VStack>
@@ -379,19 +416,19 @@ export default function Checkout() {
             <VStack
               spacing={6}
               align="stretch"
-              bg="green.50"
+              bg={successBg}
               p={6}
               borderRadius="lg"
               borderWidth="1px"
-              borderColor="green.200"
+              borderColor={successBorderColor}
               boxShadow="md"
             >
               <Box textAlign="center">
                 <Box
                   mx="auto"
                   mb={4}
-                  bg="green.100"
-                  color="green.700"
+                  bg={successIconBg}
+                  color={successIconColor}
                   w="80px"
                   h="80px"
                   borderRadius="full"
@@ -402,57 +439,56 @@ export default function Checkout() {
                   <FaCheck size={40} />
                 </Box>
 
-                <Heading size="lg" color="green.700" mb={2}>
-                  Đặt vé thành công!
+                <Heading size="lg" color={successIconColor} mb={2}>
+                  {t("checkout.success.title")}
                 </Heading>
 
-                <Text color="green.600" mb={4}>
-                  Cảm ơn bạn đã đặt vé! Thông tin chi tiết đã được gửi đến email
-                  của bạn.
+                <Text color={successIconColor} mb={4}>
+                  {t("checkout.success.thankYou")}
                 </Text>
               </Box>
 
-              <Box bg="white" p={4} borderRadius="md" boxShadow="sm">
-                <Heading size="md" mb={4}>
-                  Thông tin vé
+              <Box bg={confirmBoxBg} p={4} borderRadius="md" boxShadow="sm">
+                <Heading size="md" mb={4} color={textColor}>
+                  {t("checkout.ticketInfo")}
                 </Heading>
 
                 <VStack spacing={3} align="stretch">
                   <HStack>
-                    <Text fontWeight="medium" width="40%">
-                      Sự kiện:
+                    <Text fontWeight="medium" width="40%" color={textColor}>
+                      {t("events.event")}:
                     </Text>
-                    <Text>{event.title}</Text>
+                    <Text color={textColor}>{event.title}</Text>
                   </HStack>
 
                   <HStack>
-                    <Text fontWeight="medium" width="40%">
-                      Số lượng vé:
+                    <Text fontWeight="medium" width="40%" color={textColor}>
+                      {t("checkout.ticketQuantity")}:
                     </Text>
-                    <Text>{ticketQuantity}</Text>
+                    <Text color={textColor}>{ticketQuantity}</Text>
                   </HStack>
 
                   <HStack>
-                    <Text fontWeight="medium" width="40%">
-                      Mã giao dịch:
+                    <Text fontWeight="medium" width="40%" color={textColor}>
+                      {t("checkout.transactionId")}:
                     </Text>
-                    <Text>{transactionId}</Text>
+                    <Text color={textColor}>{transactionId}</Text>
                   </HStack>
 
                   <HStack>
-                    <Text fontWeight="medium" width="40%">
-                      Thời gian:
+                    <Text fontWeight="medium" width="40%" color={textColor}>
+                      {t("events.time")}:
                     </Text>
-                    <Text>
+                    <Text color={textColor}>
                       {event.date} • {event.time}
                     </Text>
                   </HStack>
 
                   <HStack>
-                    <Text fontWeight="medium" width="40%">
-                      Địa điểm:
+                    <Text fontWeight="medium" width="40%" color={textColor}>
+                      {t("events.location")}:
                     </Text>
-                    <Text>{event.location}</Text>
+                    <Text color={textColor}>{event.location}</Text>
                   </HStack>
                 </VStack>
               </Box>
@@ -462,14 +498,14 @@ export default function Checkout() {
                   leftIcon={<FaEnvelope />}
                   onClick={() =>
                     toast({
-                      title: "Đã gửi lại email xác nhận",
+                      title: t("checkout.success.emailResent"),
                       status: "success",
                       duration: 3000,
                       isClosable: true,
                     })
                   }
                 >
-                  Gửi lại email
+                  {t("checkout.resendEmail")}
                 </Button>
 
                 <Button
@@ -477,7 +513,7 @@ export default function Checkout() {
                   rightIcon={<FaTicketAlt />}
                   onClick={handleFinish}
                 >
-                  Xem vé của tôi
+                  {t("checkout.viewMyTickets")}
                 </Button>
               </HStack>
             </VStack>

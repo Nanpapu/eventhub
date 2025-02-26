@@ -84,15 +84,12 @@ export default function Footer() {
   const isOrganizer = false;
 
   // Thiết lập màu sắc theo theme
-  const bgColor = useColorModeValue("bg.secondary", "bg.primary");
-  const textColor = useColorModeValue("text.primary", "text.primary");
-  const secondaryTextColor = useColorModeValue(
-    "text.secondary",
-    "text.secondary"
-  );
+  const bgColor = useColorModeValue("white", "gray.900");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const logoColor = useColorModeValue("teal.600", "teal.300");
-  const borderColor = useColorModeValue("card.border", "card.border");
-  const formBg = useColorModeValue("whiteAlpha.100", "blackAlpha.100");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const formBg = useColorModeValue("gray.50", "gray.700");
 
   // Kiểm tra email hợp lệ
   const isValidEmail = (email: string) => {
@@ -198,7 +195,7 @@ export default function Footer() {
               {t("footer.contactUs")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/press"}>
-              Press Kit
+              {t("footer.pressKit")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/privacy"}>
               {t("footer.privacyPolicy")}
@@ -208,12 +205,12 @@ export default function Footer() {
             </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>Support</ListHeader>
+            <ListHeader>{t("footer.support")}</ListHeader>
             <ChakraLink as={Link} to={"/help"}>
               {t("footer.faq")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/faq"}>
-              Help Center
+              {t("footer.helpCenter")}
             </ChakraLink>
             {isOrganizer ? (
               <ChakraLink as={Link} to={"/dashboard"}>
@@ -221,36 +218,36 @@ export default function Footer() {
               </ChakraLink>
             ) : (
               <ChakraLink as={Link} to={"/become-organizer"}>
-                Become an Organizer
+                {t("footer.becomeOrganizer")}
               </ChakraLink>
             )}
             <ChakraLink as={Link} to={"/community"}>
-              Community
+              {t("footer.community")}
             </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>Stay up to date</ListHeader>
+            <ListHeader>{t("footer.stayUpdated")}</ListHeader>
             <Stack direction={"row"}>
               <Input
-                placeholder={"Your email address"}
+                placeholder={t("footer.emailPlaceholder")}
                 bg={formBg}
                 border={1}
                 borderStyle={"solid"}
                 borderColor={borderColor}
                 _focus={{
-                  bg: "whiteAlpha.300",
+                  bg: useColorModeValue("gray.100", "gray.600"),
                 }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 isDisabled={isSubscribing}
               />
               <IconButton
-                bg={useColorModeValue("teal.500", "teal.500")}
+                bg={"teal.500"}
                 color={useColorModeValue("white", "gray.800")}
                 _hover={{
                   bg: "teal.600",
                 }}
-                aria-label="Subscribe"
+                aria-label={t("footer.subscribe")}
                 icon={<FaArrowRight />}
                 onClick={handleSubscribe}
                 isLoading={isSubscribing}

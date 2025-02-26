@@ -26,7 +26,34 @@
     "lightMode": "Light Mode",
     "continue": "Continue",
     "reset": "Reset",
-    "export": "Export"
+    "export": "Export",
+    "close": "Close",
+    "add": "Add",
+    "remove": "Remove",
+    "viewDetails": "View Details",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "next": "Next",
+    "previous": "Previous",
+    "home": "Home",
+    "events": "Events",
+    "profile": "Profile",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "notifications": "Notifications",
+    "goBack": "Go Back",
+    "goTo": "Go to {{destination}}",
+    "toggleDarkMode": "Toggle Dark Mode",
+    "changeLanguage": "Change Language",
+    "optional": "Optional",
+    "viewDetails": "View Details",
+    "search": "Search",
+    "apply": "Apply",
+    "free": "Free",
+    "paid": "Paid",
+    "backToEvents": "Back to events"
   },
   "auth": {
     "login": "Login",
@@ -43,7 +70,54 @@
     "createAccount": "Create Account",
     "loginSuccess": "Logged in successfully",
     "logoutSuccess": "Logged out successfully",
-    "loginFailed": "Login failed"
+    "loginFailed": "Login failed",
+    "login": {
+      "title": "Login to EventHub",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "loginSuccess": "Login successful",
+      "loginFailed": "Login failed"
+    },
+    "register": {
+      "title": "Create an Account",
+      "namePlaceholder": "Enter your full name",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Create a password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "registerSuccess": "Registration successful",
+      "registerFailed": "Registration failed"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "instruction": "Enter your email and we'll send you a link to reset your password",
+      "emailPlaceholder": "Enter your email",
+      "resetLinkSent": "Reset link has been sent to your email",
+      "resetLinkFailed": "Failed to send reset link"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "resetSuccess": "Password has been reset successfully",
+      "resetFailed": "Failed to reset password"
+    },
+    "logout": {
+      "logoutSuccess": "Logout successful",
+      "logoutFailed": "Logout failed"
+    },
+    "profile": {
+      "title": "Profile",
+      "personalInfo": "Personal Information",
+      "updateProfile": "Update Profile",
+      "updateSuccess": "Profile updated successfully",
+      "updateFailed": "Failed to update profile"
+    }
   },
   "events": {
     "events": "Events",
@@ -123,7 +197,103 @@
       "ticketNotFound": "Ticket Not Found",
       "invalidTicket": "Invalid Ticket",
       "checkInTime": "Check-in Time"
-    }
+    },
+    "title": "Events",
+    "updateEvent": "Update Event",
+    "eventDetails": "Event Details",
+    "eventDate": "Event Date",
+    "organizer": "Organizer",
+    "tickets": "Tickets",
+    "ticketTypes": "Ticket Types",
+    "createSuccess": "Event created successfully",
+    "updateSuccess": "Event updated successfully",
+    "deleteSuccess": "Event deleted successfully",
+    "createFailed": "Failed to create event",
+    "updateFailed": "Failed to update event",
+    "deleteFailed": "Failed to delete event",
+    "noEvents": "No events found",
+    "searchEvents": "Search events",
+    "filterEvents": "Filter events",
+    "sortEvents": "Sort events",
+    "categories": {
+      "conference": "Conference",
+      "workshop": "Workshop",
+      "music": "Music",
+      "networking": "Networking",
+      "food": "Food",
+      "exhibition": "Exhibition",
+      "sports": "Sports",
+      "technology": "Technology",
+      "business": "Business",
+      "education": "Education",
+      "health": "Health",
+      "arts": "Arts",
+      "other": "Other"
+    },
+    "filterType": {
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "all": "All",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "free": "Free",
+      "paid": "Paid"
+    },
+    "sortType": {
+      "dateAsc": "Date (Ascending)",
+      "dateDesc": "Date (Descending)",
+      "priceAsc": "Price (Low to High)",
+      "priceDesc": "Price (High to Low)",
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)"
+    },
+    "eventStatus": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "past": "Past",
+      "canceled": "Canceled",
+      "postponed": "Postponed"
+    },
+    "checkIn": {
+      "title": "Event Check-in",
+      "manualCheckIn": "Manual Check-in",
+      "checkInByTicketId": "Check-in by Ticket ID",
+      "enterTicketId": "Enter Ticket ID",
+      "ticketIdPlaceholder": "Enter ticket ID (e.g. TIX-ABC123)",
+      "attendeeList": "Attendee List",
+      "qrScanner": "QR Scanner",
+      "checkInSuccess": "Check-in Successful",
+      "checkInFailed": "Check-in Failed",
+      "alreadyCheckedIn": "Already Checked In",
+      "ticketNotFound": "Ticket Not Found",
+      "invalidTicket": "Invalid Ticket",
+      "checkInTime": "Check-in Time"
+    },
+    "searchResults": "Event Search Results",
+    "allLocations": "All Locations",
+    "resetFilters": "Reset Filters",
+    "eventsFound": "events found",
+    "noEventsFound": "No events found matching your search criteria",
+    "tryAdjustingFilters": "Try adjusting your filters or search terms",
+    "filterType": {
+      "free": "Free Events",
+      "paid": "Paid Events"
+    },
+    "categories": {
+      "all": "All Categories",
+      "conference": "Conference",
+      "workshop": "Workshop",
+      "meetup": "Meetup",
+      "networking": "Networking",
+      "music": "Music",
+      "exhibition": "Exhibition",
+      "food": "Food & Drink",
+      "other": "Other"
+    },
+    "time": "Time",
+    "ticketPrice": "Ticket Price",
+    "ticketsLeft": "Tickets Left"
   },
   "user": {
     "profile": "Profile",
@@ -155,14 +325,25 @@
   "errors": {
     "required": "This field is required",
     "invalidEmail": "Invalid email address",
-    "passwordLength": "Password must be at least 8 characters",
+    "minLength": "Must be at least {{length}} characters",
+    "maxLength": "Must be less than {{length}} characters",
     "passwordMatch": "Passwords do not match",
-    "unauthorized": "You are not authorized to perform this action",
-    "notFound": "Resource not found",
-    "serverError": "Server error occurred",
+    "unexpected": "An unexpected error occurred",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "serverError": "Server error",
+    "networkError": "Network error",
+    "invalidCredentials": "Invalid credentials",
+    "duplicateEmail": "Email already exists",
     "invalidDate": "Invalid date",
-    "pastDate": "Date cannot be in the past",
-    "endBeforeStart": "End date cannot be before start date"
+    "invalidPhone": "Invalid phone number",
+    "invalidUrl": "Invalid URL",
+    "invalidTicketId": "Invalid ticket ID",
+    "ticketNotFound": "Ticket not found",
+    "error": "Error",
+    "eventNotFound": "Event Not Found!",
+    "eventNotFoundDesc": "We couldn't find the event you're looking for."
   },
   "footer": {
     "termsOfService": "Terms of Service",
@@ -176,7 +357,19 @@
     "privacyPolicy": "Privacy Policy",
     "contactUs": "Contact Us",
     "aboutUs": "About Us",
-    "followUs": "Follow Us"
+    "followUs": "Follow Us",
+    "about": "About Us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "help": "Help Center",
+    "careers": "Careers",
+    "press": "Press",
+    "blog": "Blog",
+    "copyright": "© {{year}} EventHub. All rights reserved.",
+    "followUs": "Follow Us",
+    "subscribePlaceholder": "Enter your email",
+    "subscribeButton": "Subscribe",
+    "subscribeFailed": "Failed to subscribe to newsletter"
   },
   "header": {
     "login": "Log In",
@@ -208,5 +401,140 @@
     "currencyFormat": "{amount}",
     "percentFormat": "{percent}",
     "numberFormat": "{number}"
+  },
+  "home": {
+    "hero": {
+      "title": "Discover and join exciting events",
+      "subtitle": "EventHub helps you easily find, join, and organize events that match your interests.",
+      "exploreEvents": "Explore Now"
+    },
+    "search": {
+      "title": "Find Your Next Experience",
+      "keywordPlaceholder": "Search events",
+      "locationPlaceholder": "Location",
+      "categoryPlaceholder": "Category"
+    },
+    "featuredEvents": {
+      "title": "Featured Events",
+      "subtitle": "Discover popular events happening soon",
+      "viewAll": "View All Events"
+    },
+    "organizer": {
+      "title": "Want to organize an event?",
+      "subtitle": "EventHub provides a comprehensive event management platform to help you easily create and manage your events.",
+      "getStarted": "Get Started"
+    }
+  },
+  "tickets": {
+    "title": "Tickets",
+    "buyTicket": "Buy Ticket",
+    "ticketDetails": "Ticket Details",
+    "ticketType": "Ticket Type",
+    "ticketPrice": "Ticket Price",
+    "ticketQuantity": "Quantity",
+    "bookingDate": "Booking Date",
+    "ticketId": "Ticket ID",
+    "ticketStatus": "Status",
+    "checkIn": "Check In",
+    "purchaseSuccess": "Ticket purchase successful",
+    "purchaseFailed": "Ticket purchase failed",
+    "noTickets": "No tickets found",
+    "myTickets": "My Tickets",
+    "ticketStatus": {
+      "valid": "Valid",
+      "used": "Used",
+      "expired": "Expired",
+      "canceled": "Canceled"
+    },
+    "confirm": {
+      "title": "Confirm Purchase",
+      "description": "Please review your order details before proceeding to payment",
+      "paymentMethod": "Payment Method",
+      "total": "Total",
+      "proceedToPayment": "Proceed to Payment",
+      "cancelOrder": "Cancel Order"
+    },
+    "payment": {
+      "title": "Payment",
+      "description": "Complete your payment to secure your tickets",
+      "cardNumber": "Card Number",
+      "cardholderName": "Cardholder Name",
+      "expiryDate": "Expiry Date",
+      "cvv": "CVV",
+      "payNow": "Pay Now",
+      "paymentSuccess": "Payment successful",
+      "paymentFailed": "Payment failed",
+      "processingPayment": "Processing payment..."
+    }
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "events": "Events",
+    "tickets": "Tickets",
+    "sales": "Sales",
+    "attendees": "Attendees",
+    "analytics": "Analytics",
+    "reports": "Reports",
+    "settings": "Settings",
+    "stats": {
+      "totalEvents": "Total Events",
+      "activeEvents": "Active Events",
+      "totalAttendees": "Total Attendees",
+      "totalSales": "Total Sales",
+      "ticketsSold": "Tickets Sold",
+      "averageAttendance": "Average Attendance",
+      "upcomingEvents": "Upcoming Events"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "security": "Security",
+    "preferences": "Preferences",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "autoTheme": "Auto (follow system)",
+    "timeZone": "Time Zone",
+    "currency": "Currency",
+    "account": {
+      "title": "Account",
+      "deleteAccount": "Delete Account",
+      "confirmDelete": "Are you sure you want to delete your account? This action cannot be undone.",
+      "deleteSuccess": "Account deleted successfully",
+      "deleteFailed": "Failed to delete account"
+    }
+  },
+  "checkout": {
+    "title": "Event Tickets",
+    "selectQuantity": "Select Ticket Quantity",
+    "ticketQuantity": "Ticket Quantity",
+    "total": "Total",
+    "ticketInfo": "Ticket Information",
+    "transactionId": "Transaction ID",
+    "resendEmail": "Resend Email",
+    "viewMyTickets": "View My Tickets",
+    "steps": {
+      "selectTickets": "Select Tickets",
+      "ticketQuantity": "Ticket Quantity",
+      "payment": "Payment",
+      "paymentInfo": "Payment Information",
+      "confirmation": "Confirmation",
+      "confirmTickets": "Confirm Tickets"
+    },
+    "errors": {
+      "minimumTicket": "Please select at least 1 ticket",
+      "notEnoughTickets": "Only {{available}} tickets available",
+      "ticketLimit": "Ticket Order Limit",
+      "maxPerOrder": "Maximum {{max}} tickets per order"
+    },
+    "success": {
+      "title": "Booking Successful!",
+      "thankYou": "Thank you for your purchase! Ticket details have been sent to your email.",
+      "emailSent": "Ticket information has been sent to your email",
+      "emailResent": "Confirmation email resent"
+    }
   }
 }
