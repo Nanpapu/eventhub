@@ -34,6 +34,7 @@ import { useState } from "react";
 import { NotificationBell } from "../notification";
 import ColorModeToggle from "../common/ColorModeToggle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 // Giả lập trạng thái đăng nhập (sẽ được thay thế bằng context/redux sau này)
 const useAuth = () => {
@@ -81,12 +82,24 @@ export default function Header() {
   const { isAuthenticated, user, login, loginAsOrganizer, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const { t } = useTranslation();
+
+  // Màu sắc theo theme
+  const bgColor = useColorModeValue("bg.primary", "bg.primary");
+  const borderColor = useColorModeValue("card.border", "card.border");
+  const textColor = useColorModeValue("text.primary", "text.primary");
+  const secondaryTextColor = useColorModeValue(
+    "text.secondary",
+    "text.secondary"
+  );
+  const logoColor = useColorModeValue("teal.600", "teal.300");
+  const menuHoverBg = useColorModeValue("hover.bg", "hover.bg");
 
   // Xử lý đăng xuất
   const handleLogout = () => {
     logout();
     toast({
-      title: "Logged out successfully",
+      title: t("auth.logoutSuccess"),
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -98,8 +111,8 @@ export default function Header() {
   const quickLogin = () => {
     login();
     toast({
-      title: "Logged in as User (Demo)",
-      description: "This is just a UI demo, no actual authentication",
+      title: t("auth.loginSuccess") + " (Demo)",
+      description: t("common.welcome"),
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -110,8 +123,12 @@ export default function Header() {
   const quickLoginAsOrganizer = () => {
     loginAsOrganizer();
     toast({
-      title: "Logged in as Organizer (Demo)",
-      description: "You now have access to Organizer features",
+      title:
+        t("auth.loginSuccess") +
+        " - " +
+        t("user.organizerDashboard") +
+        " (Demo)",
+      description: t("common.welcome"),
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -121,14 +138,14 @@ export default function Header() {
   return (
     <Box position="sticky" top={0} zIndex={10}>
       <Flex
-        bg={useColorModeValue("white", "gray.800")}
-        color={useColorModeValue("gray.600", "white")}
+        bg={bgColor}
+        color={textColor}
         minH={"60px"}
         py={{ base: 2 }}
         px={{ base: 4 }}
         borderBottom={1}
         borderStyle={"solid"}
-        borderColor={useColorModeValue("gray.200", "gray.900")}
+        borderColor={borderColor}
         align={"center"}
         boxShadow="sm"
       >
@@ -150,14 +167,14 @@ export default function Header() {
             to="/"
             textAlign={useBreakpointValue({ base: "center", md: "left" })}
             fontFamily={"heading"}
-            color={useColorModeValue("teal.600", "white")}
+            color={logoColor}
             fontWeight="bold"
             fontSize="xl"
             _hover={{
               textDecoration: "none",
             }}
           >
-            EventHub
+            {t("common.appName")}
           </ChakraLink>
 
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
@@ -187,7 +204,7 @@ export default function Header() {
                 colorScheme="teal"
                 variant="outline"
               >
-                Create Event
+                {t("events.createEvent")}
               </Button>
 
               <Box display={{ base: "none", md: "flex" }}>
@@ -217,29 +234,29 @@ export default function Header() {
                   <Text px={3} py={2} fontWeight="bold">
                     {user?.name}
                   </Text>
-                  <Text px={3} pb={2} fontSize="sm" color="gray.500">
+                  <Text px={3} pb={2} fontSize="sm" color={secondaryTextColor}>
                     {user?.email}
                   </Text>
                   <MenuDivider />
                   <MenuItem as={Link} to="/profile">
-                    Profile
+                    {t("user.profile")}
                   </MenuItem>
                   {user?.role === "organizer" && (
                     <MenuItem as={Link} to="/dashboard">
-                      Dashboard
+                      {t("user.organizerDashboard")}
                     </MenuItem>
                   )}
                   <MenuItem as={Link} to="/my-events">
-                    My Events
+                    {t("events.myEvents")}
                   </MenuItem>
                   <MenuItem as={Link} to="/my-tickets">
-                    Vé của tôi
+                    {t("user.myRegistrations")}
                   </MenuItem>
                   <MenuItem as={Link} to="/notifications">
-                    Notifications
+                    {t("notifications.notifications")}
                   </MenuItem>
                   <MenuDivider />
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  <MenuItem onClick={handleLogout}>{t("auth.logout")}</MenuItem>
                 </MenuList>
               </Menu>
             </>
@@ -252,52 +269,38 @@ export default function Header() {
                 variant={"link"}
                 to={"/login"}
               >
-                Sign In
+                {t("auth.login")}
               </Button>
               <Button
                 as={Link}
                 display={{ base: "none", md: "inline-flex" }}
                 fontSize={"sm"}
                 fontWeight={600}
-                color={"white"}
-                bg={"teal.500"}
                 to={"/register"}
-                _hover={{
-                  bg: "teal.400",
-                }}
+                colorScheme="teal"
               >
-                Sign Up
+                {t("auth.register")}
               </Button>
-              {/* Nút Đăng nhập nhanh - chỉ cho demo UI */}
-              <Button
-                display={{ base: "none", md: "inline-flex" }}
-                fontSize={"xs"}
-                fontWeight={600}
-                color={"white"}
-                bg={"purple.500"}
-                onClick={quickLogin}
-                size="sm"
-                _hover={{
-                  bg: "purple.400",
-                }}
-              >
-                Demo Login
-              </Button>
-              {/* Nút đăng nhập nhanh với quyền Organizer */}
-              <Button
-                display={{ base: "none", md: "inline-flex" }}
-                fontSize={"xs"}
-                fontWeight={600}
-                color={"white"}
-                bg={"orange.500"}
-                onClick={quickLoginAsOrganizer}
-                size="sm"
-                _hover={{
-                  bg: "orange.400",
-                }}
-              >
-                Demo Organizer
-              </Button>
+
+              {/* UI Demo: Nút đăng nhập nhanh - Chỉ để test, sẽ bị xóa khi tích hợp auth thực tế */}
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  size="sm"
+                  colorScheme="gray"
+                  variant="ghost"
+                >
+                  Demo Login
+                </MenuButton>
+                <MenuList>
+                  <MenuItem onClick={quickLogin}>
+                    {t("auth.login")} (User)
+                  </MenuItem>
+                  <MenuItem onClick={quickLoginAsOrganizer}>
+                    {t("auth.login")} (Organizer)
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             </>
           )}
         </Stack>
@@ -310,113 +313,90 @@ export default function Header() {
   );
 }
 
-// Navigation Items
-const NAV_ITEMS: Array<NavItem> = [
-  {
-    label: "Events",
-    children: [
-      {
-        label: "All Events",
-        subLabel: "Explore all upcoming events",
-        href: "/events",
-      },
-      {
-        label: "By Category",
-        subLabel: "Search events by category",
-        href: "/events?view=categories",
-      },
-    ],
-  },
-  {
-    label: "Create Event",
-    href: "/create-event",
-  },
-  {
-    label: "About Us",
-    href: "/about",
-  },
-  {
-    label: "Demo",
-    href: "/demo",
-  },
-];
-
-interface NavItem {
-  label: string;
-  subLabel?: string;
-  children?: Array<NavItem>;
-  href?: string;
-}
-
 const DesktopNav = () => {
-  const linkColor = useColorModeValue("gray.600", "gray.200");
-  const linkHoverColor = useColorModeValue("teal.800", "white");
-  const popoverContentBgColor = useColorModeValue("white", "gray.800");
+  const { t } = useTranslation();
+  const linkColor = useColorModeValue("text.primary", "text.primary");
+  const linkHoverColor = useColorModeValue("teal.600", "teal.300");
+  const popoverContentBgColor = useColorModeValue("bg.primary", "bg.primary");
+  const borderColor = useColorModeValue("card.border", "card.border");
 
   return (
     <Stack direction={"row"} spacing={4}>
-      {NAV_ITEMS.map((navItem) => (
-        <Box key={navItem.label}>
-          <Popover trigger={"hover"} placement={"bottom-start"}>
-            <PopoverTrigger>
-              <ChakraLink
-                as={navItem.href ? Link : "span"}
-                p={2}
-                {...(navItem.href ? { to: navItem.href } : {})}
-                fontSize={"sm"}
-                fontWeight={500}
-                color={linkColor}
-                _hover={{
-                  textDecoration: "none",
-                  color: linkHoverColor,
-                }}
-              >
-                {navItem.label}
-                {navItem.children && (
-                  <Icon
-                    as={ChevronDownIcon}
-                    transition={"all .25s ease-in-out"}
-                    w={4}
-                    h={4}
-                    ml={1}
-                  />
-                )}
-              </ChakraLink>
-            </PopoverTrigger>
+      {NAV_ITEMS.map((navItem) => {
+        // Lấy tên item theo i18n nếu tồn tại key
+        const label = navItem.labelKey ? t(navItem.labelKey) : navItem.label;
 
-            {navItem.children && (
-              <PopoverContent
-                border={0}
-                boxShadow={"xl"}
-                bg={popoverContentBgColor}
-                p={4}
-                rounded={"xl"}
-                minW={"sm"}
-              >
-                <Stack>
-                  {navItem.children.map((child) => (
-                    <DesktopSubNav key={child.label} {...child} />
-                  ))}
-                </Stack>
-              </PopoverContent>
-            )}
-          </Popover>
-        </Box>
-      ))}
+        return (
+          <Box key={navItem.label}>
+            <Popover trigger={"hover"} placement={"bottom-start"}>
+              <PopoverTrigger>
+                <ChakraLink
+                  as={Link}
+                  p={2}
+                  to={navItem.href ?? "#"}
+                  fontSize={"sm"}
+                  fontWeight={500}
+                  color={linkColor}
+                  _hover={{
+                    textDecoration: "none",
+                    color: linkHoverColor,
+                  }}
+                >
+                  {label}
+                </ChakraLink>
+              </PopoverTrigger>
+
+              {navItem.children && (
+                <PopoverContent
+                  border={0}
+                  boxShadow={"xl"}
+                  bg={popoverContentBgColor}
+                  p={4}
+                  rounded={"xl"}
+                  minW={"sm"}
+                  borderWidth="1px"
+                  borderColor={borderColor}
+                >
+                  <Stack>
+                    {navItem.children.map((child) => {
+                      // Lấy tên child item theo i18n nếu tồn tại key
+                      const childLabel = child.labelKey
+                        ? t(child.labelKey)
+                        : child.label;
+
+                      return (
+                        <DesktopSubNav
+                          key={child.label}
+                          label={childLabel}
+                          {...child}
+                        />
+                      );
+                    })}
+                  </Stack>
+                </PopoverContent>
+              )}
+            </Popover>
+          </Box>
+        );
+      })}
     </Stack>
   );
 };
 
-const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
+const DesktopSubNav = ({ label, href, subLabel, subLabelKey }: NavItem) => {
+  const { t } = useTranslation();
+  const hoverBg = useColorModeValue("hover.bg", "hover.bg");
+  const subLabelText = subLabelKey ? t(subLabelKey) : subLabel;
+
   return (
     <ChakraLink
       as={Link}
-      to={href || "#"}
+      to={href ?? "#"}
       role={"group"}
       display={"block"}
       p={2}
       rounded={"md"}
-      _hover={{ bg: useColorModeValue("teal.50", "gray.900") }}
+      _hover={{ bg: hoverBg }}
     >
       <Stack direction={"row"} align={"center"}>
         <Box>
@@ -427,13 +407,13 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
           >
             {label}
           </Text>
-          <Text fontSize={"sm"}>{subLabel}</Text>
+          <Text fontSize={"sm"}>{subLabelText}</Text>
         </Box>
         <Flex
           transition={"all .3s ease"}
           transform={"translateX(-10px)"}
           opacity={0}
-          _groupHover={{ opacity: 1, transform: "translateX(0)" }}
+          _groupHover={{ opacity: "100%", transform: "translateX(0)" }}
           justify={"flex-end"}
           align={"center"}
           flex={1}
@@ -446,11 +426,16 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
 };
 
 const MobileNav = () => {
+  const bgColor = useColorModeValue("bg.primary", "bg.primary");
+
   return (
     <Stack
-      bg={useColorModeValue("white", "gray.800")}
+      bg={bgColor}
       p={4}
       display={{ md: "none" }}
+      borderWidth="0 0 1px 0"
+      borderStyle="solid"
+      borderColor={useColorModeValue("card.border", "card.border")}
     >
       {NAV_ITEMS.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
@@ -459,8 +444,10 @@ const MobileNav = () => {
   );
 };
 
-const MobileNavItem = ({ label, children, href }: NavItem) => {
+const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
+  const { t } = useTranslation();
   const { isOpen, onToggle } = useDisclosure();
+  const itemLabel = labelKey ? t(labelKey) : label;
 
   return (
     <Stack spacing={4} onClick={children && onToggle}>
@@ -474,12 +461,7 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
           textDecoration: "none",
         }}
       >
-        <Text
-          fontWeight={600}
-          color={useColorModeValue("gray.600", "gray.200")}
-        >
-          {label}
-        </Text>
+        <Text fontWeight={600}>{itemLabel}</Text>
         {children && (
           <Icon
             as={ChevronDownIcon}
@@ -497,22 +479,73 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
           pl={4}
           borderLeft={1}
           borderStyle={"solid"}
-          borderColor={useColorModeValue("gray.200", "gray.700")}
+          borderColor={useColorModeValue("card.border", "card.border")}
           align={"start"}
         >
           {children &&
-            children.map((child) => (
-              <ChakraLink
-                key={child.label}
-                as={Link}
-                to={child.href || "#"}
-                py={2}
-              >
-                {child.label}
-              </ChakraLink>
-            ))}
+            children.map((child) => {
+              const childLabel = child.labelKey
+                ? t(child.labelKey)
+                : child.label;
+              return (
+                <ChakraLink
+                  key={child.label}
+                  as={Link}
+                  py={2}
+                  to={child.href ?? "#"}
+                >
+                  {childLabel}
+                </ChakraLink>
+              );
+            })}
         </Stack>
       </Collapse>
     </Stack>
   );
 };
+
+interface NavItem {
+  label: string;
+  labelKey?: string;
+  subLabel?: string;
+  subLabelKey?: string;
+  children?: Array<NavItem>;
+  href?: string;
+}
+
+const NAV_ITEMS: Array<NavItem> = [
+  {
+    label: "Events",
+    labelKey: "events.events",
+    children: [
+      {
+        label: "All Events",
+        labelKey: "common.all",
+        subLabel: "Find events near you",
+        subLabelKey: "events.searchEvents",
+        href: "/events",
+      },
+      {
+        label: "Categories",
+        labelKey: "events.category",
+        subLabel: "Browse events by category",
+        href: "/categories",
+      },
+    ],
+  },
+  {
+    label: "Create Event",
+    labelKey: "events.createEvent",
+    href: "/create-event",
+  },
+  {
+    label: "About",
+    labelKey: "footer.about",
+    href: "/about",
+  },
+  {
+    label: "Help",
+    labelKey: "footer.faq",
+    href: "/help",
+  },
+];

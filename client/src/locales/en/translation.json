@@ -165,16 +165,48 @@
     "endBeforeStart": "End date cannot be before start date"
   },
   "footer": {
-    "about": "About Us",
-    "contactUs": "Contact Us",
-    "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "faq": "FAQ",
-    "copyright": "© 2023 EventHub. All rights reserved."
+    "copyright": "Copyright © {year} EventHub. All rights reserved.",
+    "subscribeNewsletter": "Subscribe to our newsletter",
+    "emailPlaceholder": "Your email",
+    "subscribe": "Subscribe",
+    "subscribeSuccess": "Successfully subscribed! Thank you.",
+    "subscribeError": "An error occurred. Please try again later.",
+    "privacyPolicy": "Privacy Policy",
+    "contactUs": "Contact Us",
+    "aboutUs": "About Us",
+    "followUs": "Follow Us"
+  },
+  "header": {
+    "login": "Log In",
+    "logout": "Log Out",
+    "register": "Register",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "createEvent": "Create Event",
+    "myEvents": "My Events",
+    "myTickets": "My Tickets",
+    "settings": "Settings",
+    "organizerDashboard": "Organizer Dashboard",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "searchEvents": "Search events...",
+    "demoLoginUser": "Demo Login (User)",
+    "demoLoginOrganizer": "Demo Login (Organizer)"
   },
   "languages": {
     "changeLanguage": "Change Language",
     "english": "English",
     "vietnamese": "Tiếng Việt"
+  },
+  "formatters": {
+    "dateFormat": "Date: {date}",
+    "timeFormat": "Time: {time}",
+    "dateTimeFormat": "{date} at {time}",
+    "currencyFormat": "{amount}",
+    "percentFormat": "{percent}",
+    "numberFormat": "{number}"
   }
 }

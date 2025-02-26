@@ -23,6 +23,7 @@ import {
   FaFacebookF,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 // Trong thực tế, bạn sẽ import useAuth từ context
 // import { useAuth } from "../../contexts/AuthContext";
 
@@ -73,6 +74,7 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const toast = useToast();
+  const { t } = useTranslation();
 
   // Sẽ sử dụng context auth trong thực tế
   // const { isAuthenticated, user } = useAuth();
@@ -80,6 +82,17 @@ export default function Footer() {
 
   // Tạm thời để false, trong thực tế sẽ lấy từ context
   const isOrganizer = false;
+
+  // Thiết lập màu sắc theo theme
+  const bgColor = useColorModeValue("bg.secondary", "bg.primary");
+  const textColor = useColorModeValue("text.primary", "text.primary");
+  const secondaryTextColor = useColorModeValue(
+    "text.secondary",
+    "text.secondary"
+  );
+  const logoColor = useColorModeValue("teal.600", "teal.300");
+  const borderColor = useColorModeValue("card.border", "card.border");
+  const formBg = useColorModeValue("whiteAlpha.100", "blackAlpha.100");
 
   // Kiểm tra email hợp lệ
   const isValidEmail = (email: string) => {
@@ -90,7 +103,7 @@ export default function Footer() {
   const handleSubscribe = () => {
     if (!email) {
       toast({
-        title: "Email is required",
+        title: t("errors.required"),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -100,7 +113,7 @@ export default function Footer() {
 
     if (!isValidEmail(email)) {
       toast({
-        title: "Invalid email format",
+        title: t("errors.invalidEmail"),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -114,8 +127,8 @@ export default function Footer() {
       setIsSubscribing(false);
       setEmail("");
       toast({
-        title: "Subscribed successfully!",
-        description: "You'll receive our latest updates via email.",
+        title: t("common.success"),
+        description: t("common.welcome"),
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -125,8 +138,8 @@ export default function Footer() {
 
   return (
     <Box
-      bg={useColorModeValue("gray.50", "gray.900")}
-      color={useColorModeValue("gray.700", "gray.200")}
+      bg={bgColor}
+      color={textColor}
       mt="auto" // Giúp footer luôn ở dưới cùng nếu nội dung trang không đủ cao
     >
       <Container as={Stack} maxW={"6xl"} py={10}>
@@ -140,14 +153,14 @@ export default function Footer() {
                 as={Link}
                 to="/"
                 size="md"
-                color={useColorModeValue("teal.600", "teal.300")}
+                color={logoColor}
                 sx={{ textDecoration: "none" }}
               >
-                EventHub
+                {t("common.appName")}
               </Heading>
             </Flex>
-            <Text fontSize={"sm"}>
-              © 2024 EventHub Vietnam. All rights reserved
+            <Text fontSize={"sm"} color={secondaryTextColor}>
+              © 2024 EventHub Vietnam. {t("footer.copyright")}
             </Text>
             <Stack direction={"row"} spacing={6}>
               <SocialButton
@@ -177,34 +190,34 @@ export default function Footer() {
             </Stack>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>Company</ListHeader>
+            <ListHeader>{t("footer.about")}</ListHeader>
             <ChakraLink as={Link} to={"/about"}>
-              About Us
+              {t("footer.about")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/contact"}>
-              Contact Us
+              {t("footer.contactUs")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/press"}>
               Press Kit
             </ChakraLink>
             <ChakraLink as={Link} to={"/privacy"}>
-              Privacy Policy
+              {t("footer.privacyPolicy")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/terms"}>
-              Terms of Service
+              {t("footer.termsOfService")}
             </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
             <ListHeader>Support</ListHeader>
             <ChakraLink as={Link} to={"/help"}>
-              Help Center
+              {t("footer.faq")}
             </ChakraLink>
             <ChakraLink as={Link} to={"/faq"}>
-              FAQ
+              Help Center
             </ChakraLink>
             {isOrganizer ? (
               <ChakraLink as={Link} to={"/dashboard"}>
-                Organizer Dashboard
+                {t("user.organizerDashboard")}
               </ChakraLink>
             ) : (
               <ChakraLink as={Link} to={"/become-organizer"}>
@@ -220,10 +233,10 @@ export default function Footer() {
             <Stack direction={"row"}>
               <Input
                 placeholder={"Your email address"}
-                bg={useColorModeValue("whiteAlpha.100", "blackAlpha.100")}
+                bg={formBg}
                 border={1}
                 borderStyle={"solid"}
-                borderColor={useColorModeValue("gray.200", "gray.700")}
+                borderColor={borderColor}
                 _focus={{
                   bg: "whiteAlpha.300",
                 }}

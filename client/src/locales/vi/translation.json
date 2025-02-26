@@ -98,21 +98,21 @@
     "joinEvent": "Tham gia sự kiện",
     "leaveEvent": "Rời khỏi sự kiện",
     "checkIn": {
-      "title": "Điểm danh sự kiện",
-      "manualCheckIn": "Điểm danh thủ công",
-      "checkInByTicketId": "Điểm danh bằng mã vé",
+      "title": "Đăng ký tham dự sự kiện",
+      "manualCheckIn": "Đăng ký thủ công",
+      "checkInByTicketId": "Đăng ký bằng mã vé",
       "enterTicketId": "Nhập mã vé",
       "ticketIdPlaceholder": "Nhập mã vé (ví dụ: TIX-ABC123)",
       "attendeeList": "Danh sách người tham dự",
-      "qrScanner": "Máy quét QR",
+      "qrScanner": "Quét mã QR",
       "qrScannerComingSoon": "Máy quét QR sắp ra mắt",
       "qrScannerDescription": "Chức năng quét mã QR sẽ được triển khai trong bản cập nhật tương lai. Hiện tại, vui lòng sử dụng chức năng nhập mã vé thủ công ở trên.",
       "recentCheckIns": "Điểm danh gần đây",
       "noCheckInsYet": "Chưa có ai điểm danh",
       "searchAttendees": "Tìm kiếm theo tên, email hoặc mã vé",
-      "checkInSuccess": "Điểm danh thành công",
-      "checkInFailed": "Điểm danh thất bại",
-      "alreadyCheckedIn": "Đã điểm danh rồi",
+      "checkInSuccess": "Đăng ký thành công",
+      "checkInFailed": "Đăng ký thất bại",
+      "alreadyCheckedIn": "Đã đăng ký trước đó",
       "totalAttendees": "Tổng số người tham dự",
       "checkedIn": "Đã điểm danh",
       "attendanceRate": "Tỷ lệ tham dự",
@@ -122,7 +122,7 @@
       },
       "ticketNotFound": "Không tìm thấy vé",
       "invalidTicket": "Vé không hợp lệ",
-      "checkInTime": "Thời gian điểm danh"
+      "checkInTime": "Thời gian đăng ký"
     }
   },
   "user": {
@@ -170,11 +170,44 @@
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ",
     "faq": "Câu hỏi thường gặp",
-    "copyright": "© 2023 EventHub. Bản quyền thuộc về EventHub."
+    "copyright": "Bản quyền © {year} EventHub. Đã đăng ký bản quyền.",
+    "subscribeNewsletter": "Đăng ký nhận bản tin",
+    "emailPlaceholder": "Email của bạn",
+    "subscribe": "Đăng ký",
+    "subscribeSuccess": "Đăng ký thành công! Cảm ơn bạn.",
+    "subscribeError": "Đã xảy ra lỗi. Vui lòng thử lại sau.",
+    "aboutUs": "Về chúng tôi",
+    "followUs": "Theo dõi chúng tôi"
   },
   "languages": {
     "changeLanguage": "Thay đổi ngôn ngữ",
     "english": "English",
     "vietnamese": "Tiếng Việt"
+  },
+  "header": {
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "register": "Đăng ký",
+    "profile": "Hồ sơ",
+    "dashboard": "Bảng điều khiển",
+    "createEvent": "Tạo sự kiện",
+    "myEvents": "Sự kiện của tôi",
+    "myTickets": "Vé của tôi",
+    "settings": "Cài đặt",
+    "organizerDashboard": "Trang quản lý",
+    "language": "Ngôn ngữ",
+    "theme": "Giao diện",
+    "notifications": "Thông báo",
+    "searchEvents": "Tìm kiếm sự kiện...",
+    "demoLoginUser": "Đăng nhập mẫu (Người dùng)",
+    "demoLoginOrganizer": "Đăng nhập mẫu (Nhà tổ chức)"
+  },
+  "formatters": {
+    "dateFormat": "Ngày {date}",
+    "timeFormat": "Lúc {time}",
+    "dateTimeFormat": "{date} lúc {time}",
+    "currencyFormat": "{amount}",
+    "percentFormat": "{percent}",
+    "numberFormat": "{number}"
   }
 }
