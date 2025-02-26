@@ -142,15 +142,6 @@ const EventAnalytics = () => {
   const redBoxBg = useColorModeValue("red.50", "rgba(229, 62, 62, 0.1)");
   const redTextColor = useColorModeValue("red.700", "red.300");
 
-  // const COLORS = [
-  //   "#0088FE",
-  //   "#00C49F",
-  //   "#FFBB28",
-  //   "#FF8042",
-  //   "#8884D8",
-  //   "#D88489",
-  // ];
-
   // Giả lập dữ liệu phân tích (trong thực tế sẽ được lấy từ API)
   useEffect(() => {
     setIsLoading(true);

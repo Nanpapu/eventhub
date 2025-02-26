@@ -37,13 +37,14 @@ import {
   useColorModeValue,
   useToast,
   Link,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -67,6 +68,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  TooltipProps,
   PieChart,
   Pie,
   Cell,
@@ -98,6 +100,44 @@ interface Analytics {
   attendeesBySource: { name: string; value: number }[];
 }
 
+// Custom tooltip cho biểu đồ
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) => {
+  const tooltipBg = useColorModeValue("white", "gray.800");
+  const tooltipBorder = useColorModeValue("gray.200", "gray.600");
+  const tooltipText = useColorModeValue("gray.800", "gray.100");
+
+  if (active && payload && payload.length) {
+    return (
+      <Box
+        bg={tooltipBg}
+        p={2}
+        boxShadow="sm"
+        borderRadius="md"
+        border="1px solid"
+        borderColor={tooltipBorder}
+      >
+        <Text fontWeight="bold" color={tooltipText}>
+          {label}
+        </Text>
+        {payload.map((entry, index) => (
+          <Text
+            key={`tooltip-${index}`}
+            color={entry.color}
+            fontWeight="medium"
+          >
+            {entry.name}: {entry.value}
+          </Text>
+        ))}
+      </Box>
+    );
+  }
+  return null;
+};
+
 // Biểu đồ cột hiển thị sự kiện theo tháng
 const MonthlyEventsChart = ({
   data,
@@ -106,6 +146,8 @@ const MonthlyEventsChart = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
+  const chartGridColor = useColorModeValue("#e0e0e0", "#4a5568");
+  const chartAxisColor = useColorModeValue("#666", "#cbd5e0");
 
   useEffect(() => {
     if (containerRef.current) {
@@ -142,11 +184,11 @@ const MonthlyEventsChart = ({
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="events" fill="#38B2AC" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+          <XAxis dataKey="name" stroke={chartAxisColor} />
+          <YAxis stroke={chartAxisColor} />
+          <Tooltip content={<CustomTooltip />} />
+          <Bar dataKey="events" fill="#38B2AC" name="Số sự kiện" />
         </BarChart>
       </ResponsiveContainer>
     </Box>
@@ -162,6 +204,7 @@ const AttendeesSourceChart = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+  const pieStrokeColor = useColorModeValue("white", "gray.800");
 
   useEffect(() => {
     if (containerRef.current) {
@@ -254,11 +297,12 @@ const AttendeesSourceChart = ({
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
+                stroke={pieStrokeColor}
                 name={entry.name}
               />
             ))}
           </Pie>
-          <Tooltip />
+          <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
     </Box>
@@ -270,7 +314,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
-  const cancelRef = useRef(null);
 
   // Dữ liệu mẫu (sẽ được thay thế bằng API calls)
   const analytics: Analytics = {
@@ -917,21 +960,14 @@ const Dashboard = () => {
         </Tabs>
       </Box>
 
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader>Xác Nhận Xóa</AlertDialogHeader>
-            <AlertDialogBody>
-              Bạn có chắc chắn muốn xóa sự kiện này không?
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Hủy
-              </Button>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay>
+          <ModalContent>
+            <ModalHeader>Xác Nhận Xóa</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>Bạn có chắc chắn muốn xóa sự kiện này không?</ModalBody>
+            <ModalFooter>
+              <Button onClick={onClose}>Hủy</Button>
               <Button
                 colorScheme="red"
                 onClick={() => handleDeleteConfirmed()}
@@ -939,10 +975,10 @@ const Dashboard = () => {
               >
                 Xóa
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      </Modal>
     </Container>
   );
 };
