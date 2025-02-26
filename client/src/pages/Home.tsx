@@ -16,6 +16,8 @@ import {
 } from "@chakra-ui/react";
 import { FiSearch, FiMapPin, FiCalendar } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Sample event data
 const events = [
@@ -139,6 +141,22 @@ const EventCard = ({ event }: EventCardProps) => {
 };
 
 const Home = () => {
+  // Thêm state cho form tìm kiếm
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
+  const [searchCategory, setSearchCategory] = useState("");
+  const navigate = useNavigate();
+
+  // Xử lý submit form tìm kiếm
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchKeyword) params.append("keyword", searchKeyword);
+    if (searchLocation) params.append("location", searchLocation);
+    if (searchCategory) params.append("category", searchCategory);
+
+    navigate(`/events?${params.toString()}`);
+  };
+
   return (
     <Container maxW="100%" px={0}>
       {/* Hero Section */}
@@ -176,13 +194,13 @@ const Home = () => {
             EventHub helps you easily find, join, and organize events that match
             your interests.
           </Text>
-          <Button size="lg" colorScheme="teal">
+          <Button size="lg" colorScheme="teal" as={Link} to="/events">
             Explore Now
           </Button>
         </VStack>
       </Box>
 
-      {/* Search Section */}
+      {/* Search Section - Đã được cập nhật với state và xử lý */}
       <Box mb={10} p={6} bg="white" borderRadius="lg" boxShadow="md">
         <Flex
           direction={{ base: "column", md: "row" }}
@@ -193,17 +211,31 @@ const Home = () => {
             <InputLeftElement pointerEvents="none">
               <FiSearch color="gray.300" />
             </InputLeftElement>
-            <Input placeholder="Search events" />
+            <Input
+              placeholder="Search events"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
           </InputGroup>
 
           <InputGroup size="lg" flex={1}>
             <InputLeftElement pointerEvents="none">
               <FiMapPin color="gray.300" />
             </InputLeftElement>
-            <Input placeholder="Location" />
+            <Input
+              placeholder="Location"
+              value={searchLocation}
+              onChange={(e) => setSearchLocation(e.target.value)}
+            />
           </InputGroup>
 
-          <Select placeholder="Category" size="lg" flex={1}>
+          <Select
+            placeholder="Category"
+            size="lg"
+            flex={1}
+            value={searchCategory}
+            onChange={(e) => setSearchCategory(e.target.value)}
+          >
             <option value="conference">Conference</option>
             <option value="workshop">Workshop</option>
             <option value="meetup">Meetup</option>
@@ -212,7 +244,7 @@ const Home = () => {
             <option value="other">Other</option>
           </Select>
 
-          <Button colorScheme="teal" size="lg" px={10}>
+          <Button colorScheme="teal" size="lg" px={10} onClick={handleSearch}>
             Search
           </Button>
         </Flex>
