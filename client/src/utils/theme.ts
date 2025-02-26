@@ -20,6 +20,61 @@ const colors = {
     800: "#00324D",
     900: "#00161A",
   },
+  // Bổ sung màu cho event types
+  event: {
+    conference: "#805AD5",
+    workshop: "#3182CE",
+    meetup: "#38A169",
+    concert: "#E53E3E",
+    exhibition: "#DD6B20",
+    other: "#718096",
+  },
+};
+
+// Semantic tokens giúp quản lý màu sắc theo ngữ cảnh
+const semanticTokens = {
+  colors: {
+    // Màu nền cho trang
+    "bg.primary": {
+      default: "white",
+      _dark: "gray.800",
+    },
+    "bg.secondary": {
+      default: "gray.50",
+      _dark: "gray.700",
+    },
+    "bg.tertiary": {
+      default: "gray.100",
+      _dark: "gray.600",
+    },
+    // Màu nền cho card/component
+    "card.bg": {
+      default: "white",
+      _dark: "gray.800",
+    },
+    "card.border": {
+      default: "gray.200",
+      _dark: "gray.700",
+    },
+    // Màu cho text
+    "text.primary": {
+      default: "gray.800",
+      _dark: "white",
+    },
+    "text.secondary": {
+      default: "gray.600",
+      _dark: "gray.300",
+    },
+    "text.tertiary": {
+      default: "gray.500",
+      _dark: "gray.400",
+    },
+    // Màu hover cho các thành phần
+    "hover.bg": {
+      default: "gray.100",
+      _dark: "gray.700",
+    },
+  },
 };
 
 // Tùy chỉnh component styles
@@ -45,6 +100,53 @@ const components = {
           color: props.colorMode === "dark" ? "white" : "brand.500",
         },
       }),
+      ghost: (props: { colorMode: string }) => ({
+        color: props.colorMode === "dark" ? "gray.300" : "gray.600",
+        _hover: {
+          bg: props.colorMode === "dark" ? "whiteAlpha.200" : "blackAlpha.200",
+        },
+      }),
+    },
+  },
+  Card: {
+    baseStyle: (props: { colorMode: string }) => ({
+      container: {
+        bg: props.colorMode === "dark" ? "gray.800" : "white",
+        borderColor: props.colorMode === "dark" ? "gray.700" : "gray.200",
+      },
+    }),
+  },
+  Link: {
+    baseStyle: (props: { colorMode: string }) => ({
+      color: props.colorMode === "dark" ? "teal.300" : "teal.600",
+      _hover: {
+        textDecoration: "none",
+        color: props.colorMode === "dark" ? "teal.200" : "teal.700",
+      },
+    }),
+  },
+  Heading: {
+    baseStyle: (props: { colorMode: string }) => ({
+      color: props.colorMode === "dark" ? "white" : "gray.800",
+    }),
+  },
+  Input: {
+    variants: {
+      outline: (props: { colorMode: string }) => ({
+        field: {
+          borderColor: props.colorMode === "dark" ? "gray.600" : "gray.300",
+          _hover: {
+            borderColor: props.colorMode === "dark" ? "gray.500" : "gray.400",
+          },
+          _focus: {
+            borderColor: props.colorMode === "dark" ? "teal.300" : "teal.500",
+            boxShadow:
+              props.colorMode === "dark"
+                ? "0 0 0 1px #4FD1C5"
+                : "0 0 0 1px #319795",
+          },
+        },
+      }),
     },
   },
 };
@@ -53,6 +155,7 @@ const components = {
 const theme = extendTheme({
   config,
   colors,
+  semanticTokens,
   components,
   fonts: {
     heading: `'Poppins', sans-serif`,

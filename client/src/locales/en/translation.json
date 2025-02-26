@@ -23,7 +23,10 @@
     "success": "Success",
     "failed": "Failed",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "continue": "Continue",
+    "reset": "Reset",
+    "export": "Export"
   },
   "auth": {
     "login": "Login",
@@ -93,7 +96,34 @@
     "updateEventSuccess": "Event updated successfully",
     "deleteEventSuccess": "Event deleted successfully",
     "joinEvent": "Join Event",
-    "leaveEvent": "Leave Event"
+    "leaveEvent": "Leave Event",
+    "checkIn": {
+      "title": "Event Check-in",
+      "manualCheckIn": "Manual Check-in",
+      "checkInByTicketId": "Check-in by Ticket ID",
+      "enterTicketId": "Enter Ticket ID",
+      "ticketIdPlaceholder": "Enter ticket ID (e.g. TIX-ABC123)",
+      "attendeeList": "Attendee List",
+      "qrScanner": "QR Scanner",
+      "qrScannerComingSoon": "QR Scanner Coming Soon",
+      "qrScannerDescription": "The QR scanner functionality will be implemented in a future update. For now, please use the manual ticket ID entry above.",
+      "recentCheckIns": "Recent Check-ins",
+      "noCheckInsYet": "No check-ins yet",
+      "searchAttendees": "Search by name, email, or ticket ID",
+      "checkInSuccess": "Check-in Successful",
+      "checkInFailed": "Check-in Failed",
+      "alreadyCheckedIn": "Already Checked In",
+      "totalAttendees": "Total Attendees",
+      "checkedIn": "Checked-in",
+      "attendanceRate": "Attendance Rate",
+      "status": {
+        "checkedIn": "Checked In",
+        "notCheckedIn": "Not Checked In"
+      },
+      "ticketNotFound": "Ticket Not Found",
+      "invalidTicket": "Invalid Ticket",
+      "checkInTime": "Check-in Time"
+    }
   },
   "user": {
     "profile": "Profile",

@@ -23,7 +23,10 @@
     "success": "Thành công",
     "failed": "Thất bại",
     "darkMode": "Chế độ tối",
-    "lightMode": "Chế độ sáng"
+    "lightMode": "Chế độ sáng",
+    "continue": "Tiếp tục",
+    "reset": "Đặt lại",
+    "export": "Xuất"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -93,7 +96,34 @@
     "updateEventSuccess": "Cập nhật sự kiện thành công",
     "deleteEventSuccess": "Xóa sự kiện thành công",
     "joinEvent": "Tham gia sự kiện",
-    "leaveEvent": "Rời khỏi sự kiện"
+    "leaveEvent": "Rời khỏi sự kiện",
+    "checkIn": {
+      "title": "Điểm danh sự kiện",
+      "manualCheckIn": "Điểm danh thủ công",
+      "checkInByTicketId": "Điểm danh bằng mã vé",
+      "enterTicketId": "Nhập mã vé",
+      "ticketIdPlaceholder": "Nhập mã vé (ví dụ: TIX-ABC123)",
+      "attendeeList": "Danh sách người tham dự",
+      "qrScanner": "Máy quét QR",
+      "qrScannerComingSoon": "Máy quét QR sắp ra mắt",
+      "qrScannerDescription": "Chức năng quét mã QR sẽ được triển khai trong bản cập nhật tương lai. Hiện tại, vui lòng sử dụng chức năng nhập mã vé thủ công ở trên.",
+      "recentCheckIns": "Điểm danh gần đây",
+      "noCheckInsYet": "Chưa có ai điểm danh",
+      "searchAttendees": "Tìm kiếm theo tên, email hoặc mã vé",
+      "checkInSuccess": "Điểm danh thành công",
+      "checkInFailed": "Điểm danh thất bại",
+      "alreadyCheckedIn": "Đã điểm danh rồi",
+      "totalAttendees": "Tổng số người tham dự",
+      "checkedIn": "Đã điểm danh",
+      "attendanceRate": "Tỷ lệ tham dự",
+      "status": {
+        "checkedIn": "Đã điểm danh",
+        "notCheckedIn": "Chưa điểm danh"
+      },
+      "ticketNotFound": "Không tìm thấy vé",
+      "invalidTicket": "Vé không hợp lệ",
+      "checkInTime": "Thời gian điểm danh"
+    }
   },
   "user": {
     "profile": "Hồ sơ",
