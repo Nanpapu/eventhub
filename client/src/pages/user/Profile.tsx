@@ -3,7 +3,6 @@ import {
   Button,
   Container,
   Divider,
-  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -21,7 +20,6 @@ import {
   Text,
   Avatar,
   IconButton,
-  Stack,
   VStack,
   useColorModeValue,
   useToast,
@@ -103,7 +101,15 @@ const Profile = () => {
     });
 
     setAvatarPreview(mockUserData.avatar);
-  }, [resetProfileForm]);
+  }, [
+    resetProfileForm,
+    mockUserData.fullName,
+    mockUserData.email,
+    mockUserData.phone,
+    mockUserData.location,
+    mockUserData.bio,
+    mockUserData.avatar,
+  ]);
 
   // Xử lý upload ảnh đại diện
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,8 +151,9 @@ const Profile = () => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
+    } catch (err) {
       // Xử lý lỗi
+      console.error("Error updating profile:", err);
       toast({
         title: "Update failed",
         description: "There was an error updating your profile",
@@ -174,8 +181,9 @@ const Profile = () => {
 
       // Reset form
       resetPasswordForm();
-    } catch (error) {
+    } catch (err) {
       // Xử lý lỗi
+      console.error("Error updating password:", err);
       toast({
         title: "Password update failed",
         description: "There was an error changing your password",
