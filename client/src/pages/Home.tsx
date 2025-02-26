@@ -363,54 +363,116 @@ const Home = () => {
 
         {/* Join as Organizer Section */}
         <Box
-          bg="teal.500"
-          color="white"
-          py={16}
+          position="relative"
+          py={20}
           px={8}
-          borderRadius="lg"
+          borderRadius="xl"
           mb={16}
+          overflow="hidden"
+          boxShadow="xl"
         >
-          <Container maxW="container.xl">
+          {/* Background với gradient overlay */}
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            backgroundImage="url('https://images.unsplash.com/photo-1540317580384-e5d43867caa6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80')"
+            backgroundSize="cover"
+            backgroundPosition="center"
+            zIndex={0}
+          />
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bgGradient="linear(to-r, teal.600, rgba(49, 151, 149, 0.9), rgba(38, 166, 154, 0.8))"
+            zIndex={1}
+          />
+
+          <Container maxW="container.xl" position="relative" zIndex={2}>
             <Flex
               direction={{ base: "column", md: "row" }}
               justify="space-between"
               align="center"
             >
               <VStack
-                spacing={4}
+                spacing={6}
                 align={{ base: "center", md: "flex-start" }}
                 maxW={{ md: "60%" }}
-                mb={{ base: 6, md: 0 }}
+                mb={{ base: 10, md: 0 }}
               >
-                <Heading as="h2" size="xl">
-                  Trở thành nhà tổ chức sự kiện
-                </Heading>
-                <Text fontSize="lg" maxW="container.md">
+                <Box>
+                  <Text
+                    fontSize="md"
+                    fontWeight="bold"
+                    color="teal.100"
+                    mb={2}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                  >
+                    Dành cho nhà tổ chức
+                  </Text>
+                  <Heading
+                    as="h2"
+                    size="2xl"
+                    color="white"
+                    lineHeight="1.2"
+                    textShadow="0px 2px 4px rgba(0,0,0,0.2)"
+                  >
+                    Trở thành nhà tổ chức sự kiện
+                  </Heading>
+                </Box>
+
+                <Text
+                  fontSize="xl"
+                  maxW="container.md"
+                  color="white"
+                  textShadow="0px 1px 2px rgba(0,0,0,0.1)"
+                >
                   Bạn có ý tưởng cho một sự kiện tuyệt vời? Hãy đăng ký trở
                   thành nhà tổ chức và bắt đầu tạo các sự kiện của riêng bạn
                   ngay hôm nay!
                 </Text>
+
                 <Button
                   size="lg"
-                  colorScheme="white"
-                  variant="outline"
-                  _hover={{ bg: "whiteAlpha.200" }}
+                  colorScheme="teal"
+                  color="teal.900"
+                  bg="white"
+                  _hover={{ bg: "gray.100" }}
+                  px={8}
+                  py={6}
+                  fontWeight="bold"
                   as={Link}
                   to="/become-organizer"
                   sx={{ textDecoration: "none" }}
+                  boxShadow="md"
                 >
                   Bắt đầu ngay
                 </Button>
               </VStack>
 
-              <Image
-                src="https://bit.ly/3qJyXvj"
-                alt="Event Organizer"
+              <Box
+                bg="white"
+                p={4}
+                borderRadius="xl"
+                boxShadow="xl"
                 width={{ base: "100%", md: "35%" }}
-                height="auto"
-                borderRadius="md"
-                fallbackSrc="https://via.placeholder.com/400x300?text=Event+Organizing"
-              />
+                display={{ base: "none", md: "block" }}
+              >
+                <Image
+                  src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+                  alt="Nhà tổ chức sự kiện"
+                  width="100%"
+                  height="auto"
+                  borderRadius="lg"
+                  fallbackSrc="https://via.placeholder.com/400x300?text=Event+Organizing"
+                />
+              </Box>
             </Flex>
           </Container>
         </Box>
