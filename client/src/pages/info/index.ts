@@ -7,6 +7,7 @@ import HelpCenter from "./HelpCenter";
 import Community from "./Community";
 import PressKit from "./PressKit";
 import ContactUs from "./ContactUs";
+import BecomeOrganizer from "./BecomeOrganizer";
 
 export {
   AboutUs,
@@ -17,4 +18,5 @@ export {
   Community,
   PressKit,
   ContactUs,
+  BecomeOrganizer,
 };

@@ -25,6 +25,7 @@ import {
   Community,
   PressKit,
   ContactUs,
+  BecomeOrganizer,
 } from "./pages/info/index";
 import MainLayout from "./components/layout/MainLayout";
 
@@ -57,6 +58,7 @@ export const router = createBrowserRouter(
         <Route path="/community" element={<Community />} />
         <Route path="/press" element={<PressKit />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/become-organizer" element={<BecomeOrganizer />} />
       </Route>
     </Route>
   )

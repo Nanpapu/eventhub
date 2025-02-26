@@ -12,8 +12,9 @@ import {
   Heading,
   Input,
   IconButton,
+  useToast,
 } from "@chakra-ui/react";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import {
   FaTwitter,
   FaYoutube,
@@ -22,6 +23,8 @@ import {
   FaFacebookF,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+// Trong thực tế, bạn sẽ import useAuth từ context
+// import { useAuth } from "../../contexts/AuthContext";
 
 const ListHeader = ({ children }: { children: ReactNode }) => {
   return (
@@ -66,6 +69,60 @@ const SocialButton = ({
 };
 
 export default function Footer() {
+  // State cho form đăng ký email
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const toast = useToast();
+
+  // Sẽ sử dụng context auth trong thực tế
+  // const { isAuthenticated, user } = useAuth();
+  // const isOrganizer = isAuthenticated && user?.role === "organizer";
+
+  // Tạm thời để false, trong thực tế sẽ lấy từ context
+  const isOrganizer = false;
+
+  // Kiểm tra email hợp lệ
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Xử lý đăng ký nhận thông báo
+  const handleSubscribe = () => {
+    if (!email) {
+      toast({
+        title: "Email is required",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      toast({
+        title: "Invalid email format",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Giả lập gửi đăng ký
+    setIsSubscribing(true);
+    setTimeout(() => {
+      setIsSubscribing(false);
+      setEmail("");
+      toast({
+        title: "Subscribed successfully!",
+        description: "You'll receive our latest updates via email.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    }, 1000);
+  };
+
   return (
     <Box
       bg={useColorModeValue("gray.50", "gray.900")}
@@ -90,7 +147,7 @@ export default function Footer() {
               </Heading>
             </Flex>
             <Text fontSize={"sm"}>
-              © 2023 EventHub Vietnam. All rights reserved
+              © 2024 EventHub Vietnam. All rights reserved
             </Text>
             <Stack direction={"row"} spacing={6}>
               <SocialButton
@@ -145,9 +202,15 @@ export default function Footer() {
             <ChakraLink as={Link} to={"/faq"}>
               FAQ
             </ChakraLink>
-            <ChakraLink as={Link} to={"/organizers"}>
-              Organizers
-            </ChakraLink>
+            {isOrganizer ? (
+              <ChakraLink as={Link} to={"/dashboard"}>
+                Organizer Dashboard
+              </ChakraLink>
+            ) : (
+              <ChakraLink as={Link} to={"/become-organizer"}>
+                Become an Organizer
+              </ChakraLink>
+            )}
             <ChakraLink as={Link} to={"/community"}>
               Community
             </ChakraLink>
@@ -164,6 +227,9 @@ export default function Footer() {
                 _focus={{
                   bg: "whiteAlpha.300",
                 }}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                isDisabled={isSubscribing}
               />
               <IconButton
                 bg={useColorModeValue("teal.500", "teal.500")}
@@ -173,6 +239,8 @@ export default function Footer() {
                 }}
                 aria-label="Subscribe"
                 icon={<FaArrowRight />}
+                onClick={handleSubscribe}
+                isLoading={isSubscribing}
               />
             </Stack>
           </Stack>
