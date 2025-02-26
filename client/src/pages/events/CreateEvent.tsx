@@ -18,8 +18,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Radio,
-  RadioGroup,
   Select,
   Stack,
   Switch,
@@ -29,7 +27,7 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -81,7 +79,6 @@ const CreateEvent = () => {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     formState: { errors, isSubmitting },
@@ -119,7 +116,8 @@ const CreateEvent = () => {
 
       // Chuyển hướng về trang chủ sau khi tạo sự kiện thành công
       setTimeout(() => navigate("/"), 2000);
-    } catch (error) {
+    } catch (err) {
+      console.error("Error creating event:", err);
       toast({
         title: "Failed to create event",
         description:

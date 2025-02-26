@@ -294,7 +294,15 @@ const SearchResults = () => {
   // Cập nhật kết quả khi các bộ lọc thay đổi
   useEffect(() => {
     filterEvents();
-  }, [keyword, location, category, showFreeOnly, showPaidOnly, priceRange]);
+  }, [
+    keyword,
+    location,
+    category,
+    showFreeOnly,
+    showPaidOnly,
+    priceRange,
+    filterEvents,
+  ]);
 
   return (
     <Container maxW="container.xl" py={8}>

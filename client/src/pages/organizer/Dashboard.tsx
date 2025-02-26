@@ -63,7 +63,6 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import React from "react";
 
 // Định nghĩa các kiểu dữ liệu
 interface Event {
@@ -247,6 +246,7 @@ const AttendeesSourceChart = ({
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
+                name={entry.name}
               />
             ))}
           </Pie>
