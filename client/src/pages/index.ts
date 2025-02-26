@@ -21,6 +21,7 @@ import MyTickets from "./user/MyTickets";
 import Dashboard from "./organizer/Dashboard";
 import EventAttendees from "./organizer/EventAttendees";
 import EventCheckIn from "./organizer/EventCheckIn";
+import EventAnalytics from "./organizer/EventAnalytics";
 
 // Demo page
 import Demo from "./Demo";
@@ -39,6 +40,7 @@ export {
   Dashboard,
   EventAttendees,
   EventCheckIn,
+  EventAnalytics,
   MyTickets,
   Demo,
 };

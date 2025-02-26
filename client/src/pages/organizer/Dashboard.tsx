@@ -37,6 +37,13 @@ import {
   useColorModeValue,
   useToast,
   Link,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -261,6 +268,9 @@ const AttendeesSourceChart = ({
 const Dashboard = () => {
   const toast = useToast();
   const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const cancelRef = useRef(null);
 
   // Dữ liệu mẫu (sẽ được thay thế bằng API calls)
   const analytics: Analytics = {
@@ -409,9 +419,30 @@ const Dashboard = () => {
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
   const pastEvents = events.filter((event) => event.status === "past");
 
-  // Xử lý xóa sự kiện
-  const handleDeleteEvent = (eventId: string) => {
-    const updatedEvents = events.filter((event) => event.id !== eventId);
+  // Chuyển đến trang chỉnh sửa sự kiện
+  const handleEditEvent = (eventId: string) => {
+    // Trong thực tế, gọi API để lấy dữ liệu sự kiện để chỉnh sửa
+    navigate(`/create-event?edit=${eventId}`);
+    toast({
+      title: "Edit event",
+      description: "Loading event data for editing",
+      status: "info",
+      duration: 2000,
+      isClosable: true,
+    });
+  };
+
+  // Mở hộp thoại xác nhận khi xóa sự kiện
+  const confirmDeleteEvent = (eventId: string) => {
+    setEventToDelete(eventId);
+    onOpen();
+  };
+
+  // Xử lý xóa sự kiện sau khi xác nhận
+  const handleDeleteConfirmed = () => {
+    if (!eventToDelete) return;
+
+    const updatedEvents = events.filter((event) => event.id !== eventToDelete);
     setEvents(updatedEvents);
 
     toast({
@@ -421,17 +452,9 @@ const Dashboard = () => {
       duration: 3000,
       isClosable: true,
     });
-  };
 
-  // Chuyển đến trang chỉnh sửa sự kiện
-  const handleEditEvent = () => {
-    toast({
-      title: "Edit event",
-      description: "Redirecting to edit page",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    });
+    onClose();
+    setEventToDelete(null);
   };
 
   // Màu sắc cho giao diện
@@ -677,7 +700,7 @@ const Dashboard = () => {
                             <MenuList>
                               <MenuItem
                                 icon={<FaEdit />}
-                                onClick={handleEditEvent}
+                                onClick={() => handleEditEvent(event.id)}
                               >
                                 Edit Event
                               </MenuItem>
@@ -714,7 +737,7 @@ const Dashboard = () => {
                               <MenuItem
                                 icon={<FaTrash />}
                                 color="red.500"
-                                onClick={() => handleDeleteEvent(event.id)}
+                                onClick={() => confirmDeleteEvent(event.id)}
                               >
                                 Delete Event
                               </MenuItem>
@@ -817,7 +840,7 @@ const Dashboard = () => {
                               <MenuItem
                                 icon={<FaTrash />}
                                 color="red.500"
-                                onClick={() => handleDeleteEvent(event.id)}
+                                onClick={() => confirmDeleteEvent(event.id)}
                               >
                                 Delete Event
                               </MenuItem>
@@ -887,6 +910,33 @@ const Dashboard = () => {
           </TabPanels>
         </Tabs>
       </Box>
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Confirm Delete</AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure you want to delete this event?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={() => handleDeleteConfirmed()}
+                ml={3}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Container>
   );
 };
