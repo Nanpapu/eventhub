@@ -15,6 +15,9 @@ import {
   MyEvents,
   Dashboard,
   EventAttendees,
+  Notifications,
+  Checkout,
+  MyTickets,
 } from "./pages/index";
 import {
   AboutUs,
@@ -40,9 +43,12 @@ export const router = createBrowserRouter(
         <Route path="/events" element={<SearchResults />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/events/:eventId/checkout" element={<Checkout />} />
         <Route path="/create-event" element={<CreateEvent />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-events" element={<MyEvents />} />
+        <Route path="/my-tickets" element={<MyTickets />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route
           path="/organizer/events/:eventId/attendees"

@@ -9,10 +9,13 @@ import Register from "./auth/Register";
 import SearchResults from "./events/SearchResults";
 import EventDetail from "./events/EventDetail";
 import CreateEvent from "./events/CreateEvent";
+import Checkout from "./events/Checkout";
 
 // User pages
 import Profile from "./user/Profile";
 import MyEvents from "./user/MyEvents";
+import Notifications from "./user/Notifications";
+import MyTickets from "./user/MyTickets";
 
 // Organizer pages
 import Dashboard from "./organizer/Dashboard";
@@ -25,8 +28,11 @@ export {
   SearchResults,
   EventDetail,
   CreateEvent,
+  Checkout,
   Profile,
   MyEvents,
+  Notifications,
   Dashboard,
   EventAttendees,
+  MyTickets,
 };

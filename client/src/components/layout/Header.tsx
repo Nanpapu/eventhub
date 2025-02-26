@@ -31,6 +31,7 @@ import {
 } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import NotificationCenter from "../notifications/NotificationCenter";
 
 // Giả lập trạng thái đăng nhập (sẽ được thay thế bằng context/redux sau này)
 const useAuth = () => {
@@ -183,6 +184,10 @@ export default function Header() {
                 Create Event
               </Button>
 
+              <Box display={{ base: "none", md: "flex" }}>
+                <NotificationCenter />
+              </Box>
+
               <Menu>
                 <MenuButton
                   as={Button}
@@ -211,6 +216,12 @@ export default function Header() {
                   )}
                   <MenuItem as={Link} to="/my-events">
                     My Events
+                  </MenuItem>
+                  <MenuItem as={Link} to="/my-tickets">
+                    Vé của tôi
+                  </MenuItem>
+                  <MenuItem as={Link} to="/notifications">
+                    Notifications
                   </MenuItem>
                   <MenuDivider />
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>

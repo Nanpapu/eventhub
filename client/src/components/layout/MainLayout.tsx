@@ -2,6 +2,7 @@ import { Box, Flex } from "@chakra-ui/react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import ScrollToTop from "../common/ScrollToTop";
 
 /**
  * Layout chính cho toàn bộ ứng dụng
@@ -13,6 +14,9 @@ export default function MainLayout() {
       direction="column"
       minH="100vh" // Đảm bảo layout chiếm toàn bộ chiều cao màn hình
     >
+      {/* Component cuộn lên đầu trang khi chuyển trang */}
+      <ScrollToTop />
+
       {/* Header cố định ở trên cùng */}
       <Header />
 
