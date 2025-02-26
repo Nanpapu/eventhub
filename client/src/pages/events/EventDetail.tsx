@@ -77,13 +77,14 @@ const eventData: EventData = {
   endTime: "04:00 PM",
   location: "Technology Innovation Hub",
   address: "123 Tech Street, District 1, Ho Chi Minh City",
-  image: "https://bit.ly/3IZUfQd",
+  image: "https://images.pexels.com/photos/7149165/pexels-photo-7149165.jpeg",
   category: "workshop",
   isPaid: true,
   price: 25.99,
   organizer: {
     name: "TechDesign Academy",
-    avatar: "https://bit.ly/3Q3eQvj",
+    avatar:
+      "https://ui-avatars.com/api/?name=TechDesign+Academy&background=0D8ABC&color=fff",
   },
   attendees: 42,
   capacity: 50,

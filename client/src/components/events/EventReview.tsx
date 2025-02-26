@@ -85,7 +85,8 @@ const EventReview = ({
         id: "r1",
         userId: "user1",
         userName: "John Doe",
-        userAvatar: "https://randomuser.me/api/portraits/men/1.jpg",
+        userAvatar:
+          "https://ui-avatars.com/api/?name=John+Doe&background=2c3e50&color=fff&size=128",
         rating: 5,
         comment:
           "Sự kiện rất tuyệt vời! Tôi rất hài lòng với nội dung và cách tổ chức. Chắc chắn sẽ tham gia các sự kiện tiếp theo.",
@@ -95,7 +96,8 @@ const EventReview = ({
         id: "r2",
         userId: "user2",
         userName: "Jane Smith",
-        userAvatar: "https://randomuser.me/api/portraits/women/2.jpg",
+        userAvatar:
+          "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane&backgroundColor=ffdfbf",
         rating: 4,
         comment:
           "Nhìn chung là tốt, nhưng có thể cải thiện hơn ở phần âm thanh. Phần nội dung rất bổ ích.",
@@ -105,7 +107,8 @@ const EventReview = ({
         id: "r3",
         userId: "user3",
         userName: "Robert Johnson",
-        userAvatar: "https://randomuser.me/api/portraits/men/3.jpg",
+        userAvatar:
+          "https://api.dicebear.com/7.x/bottts/svg?seed=Robert&backgroundColor=b6e3f4",
         rating: 3,
         comment:
           "Sự kiện khá bình thường, không có gì đặc biệt. Tôi mong đợi nhiều hơn từ phần hỏi đáp.",
@@ -227,7 +230,8 @@ const EventReview = ({
         id: userReview ? userReview.id : `new-${Date.now()}`,
         userId: currentUserId,
         userName: "Current User", // Trong thực tế lấy từ thông tin người dùng
-        userAvatar: "https://randomuser.me/api/portraits/men/10.jpg", // Trong thực tế lấy từ thông tin người dùng
+        userAvatar:
+          "https://api.dicebear.com/7.x/micah/svg?seed=CurrentUser&backgroundColor=ffdfbf", // Trong thực tế lấy từ thông tin người dùng
         rating: newReviewRating,
         comment: newReviewComment,
         createdAt: new Date(),
