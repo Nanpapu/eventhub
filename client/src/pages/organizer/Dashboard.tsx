@@ -50,6 +50,7 @@ import {
   FaTrash,
   FaPlus,
   FaChartLine,
+  FaQrcode,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -699,6 +700,16 @@ const Dashboard = () => {
                                 }
                               >
                                 Manage Attendees
+                              </MenuItem>
+                              <MenuItem
+                                icon={<FaQrcode />}
+                                onClick={() =>
+                                  navigate(
+                                    `/organizer/events/${event.id}/check-in`
+                                  )
+                                }
+                              >
+                                Check-in Attendees
                               </MenuItem>
                               <MenuItem
                                 icon={<FaTrash />}

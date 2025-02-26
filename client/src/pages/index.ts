@@ -20,6 +20,7 @@ import MyTickets from "./user/MyTickets";
 // Organizer pages
 import Dashboard from "./organizer/Dashboard";
 import EventAttendees from "./organizer/EventAttendees";
+import EventCheckIn from "./organizer/EventCheckIn";
 
 // Demo page
 import Demo from "./Demo";
@@ -37,6 +38,7 @@ export {
   Notifications,
   Dashboard,
   EventAttendees,
+  EventCheckIn,
   MyTickets,
   Demo,
 };

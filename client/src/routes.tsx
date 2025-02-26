@@ -19,6 +19,7 @@ import {
   Checkout,
   MyTickets,
   Demo,
+  EventCheckIn,
 } from "./pages/index";
 import {
   AboutUs,
@@ -55,6 +56,10 @@ export const router = createBrowserRouter(
         <Route
           path="/organizer/events/:eventId/attendees"
           element={<EventAttendees />}
+        />
+        <Route
+          path="/organizer/events/:eventId/check-in"
+          element={<EventCheckIn />}
         />
 
         {/* Information Pages */}

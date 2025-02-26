@@ -33,6 +33,7 @@ import {
   FiDollarSign,
   FiShoppingCart,
 } from "react-icons/fi";
+import { EventReview } from "../../components/events";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
@@ -316,6 +317,7 @@ const EventDetail = () => {
               <TabList>
                 <Tab fontWeight="medium">About</Tab>
                 <Tab fontWeight="medium">Comments ({comments.length})</Tab>
+                <Tab fontWeight="medium">Reviews</Tab>
               </TabList>
 
               <TabPanels>
@@ -416,6 +418,23 @@ const EventDetail = () => {
                       )}
                     </VStack>
                   </VStack>
+                </TabPanel>
+
+                {/* Tab đánh giá */}
+                <TabPanel px={0}>
+                  <EventReview
+                    eventId={eventData.id.toString()}
+                    canAddReview={true}
+                    currentUserId="current-user"
+                    onReviewAdded={() => {
+                      toast({
+                        title: "Thank you for your review!",
+                        status: "success",
+                        duration: 3000,
+                        isClosable: true,
+                      });
+                    }}
+                  />
                 </TabPanel>
               </TabPanels>
             </Tabs>

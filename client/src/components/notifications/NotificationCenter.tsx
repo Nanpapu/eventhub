@@ -229,7 +229,7 @@ const NotificationItem = ({
 export default function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { isOpen, onToggle, onClose } = useDisclosure();
-  const bgColor = useColorModeValue("white", "gray.800");
+  // const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
   // Giả lập dữ liệu thông báo
