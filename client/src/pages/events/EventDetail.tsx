@@ -22,7 +22,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FiCalendar,
   FiMapPin,
@@ -31,6 +31,7 @@ import {
   FiHeart,
   FiClock,
   FiDollarSign,
+  FiShoppingCart,
 } from "react-icons/fi";
 
 // Interface cho dữ liệu sự kiện
@@ -79,7 +80,8 @@ const eventData: EventData = {
   address: "123 Tech Street, District 1, Ho Chi Minh City",
   image: "https://bit.ly/3IZUfQd",
   category: "workshop",
-  isPaid: false,
+  isPaid: true,
+  price: 25.99,
   organizer: {
     name: "TechDesign Academy",
     avatar: "https://bit.ly/3Q3eQvj",
@@ -114,9 +116,9 @@ const commentsData: Comment[] = [
 
 const EventDetail = () => {
   // Lấy ID sự kiện từ URL nhưng không sử dụng
-  // const { id } = useParams<{ id: string }>();
-  useParams<{ id: string }>(); // giữ useParams để khi cần ID trong tương lai
+  const { id } = useParams<{ id: string }>();
   const toast = useToast();
+  const navigate = useNavigate();
 
   // State cho các trạng thái trong trang
   const [isRegistered, setIsRegistered] = useState(false);
@@ -158,6 +160,17 @@ const EventDetail = () => {
       title: "Share link copied!",
       description: "Event link has been copied to clipboard.",
       status: "success",
+      duration: 2000,
+      isClosable: true,
+    });
+  };
+
+  // Xử lý chuyển tới trang thanh toán
+  const handleBuyTicket = () => {
+    navigate(`/events/${id}/checkout`);
+    toast({
+      title: "Proceeding to checkout",
+      status: "info",
       duration: 2000,
       isClosable: true,
     });
@@ -446,17 +459,33 @@ const EventDetail = () => {
               </Text>
             </Box>
 
-            <Button
-              colorScheme={isRegistered ? "red" : "teal"}
-              size="lg"
-              onClick={handleRegister}
-            >
-              {isRegistered ? "Cancel Registration" : "Register for Event"}
-            </Button>
+            {/* Nút đăng ký và mua vé */}
+            <VStack spacing={3} width="100%">
+              <Button
+                colorScheme={isRegistered ? "red" : "teal"}
+                size="lg"
+                onClick={handleRegister}
+                width="100%"
+              >
+                {isRegistered ? "Cancel Registration" : "Register for Event"}
+              </Button>
 
-            <Text fontSize="sm" color="gray.600" textAlign="center">
-              Registration closes 24 hours before event starts
-            </Text>
+              {eventData.isPaid && eventData.price && (
+                <Button
+                  colorScheme="purple"
+                  size="lg"
+                  width="100%"
+                  leftIcon={<FiShoppingCart />}
+                  onClick={handleBuyTicket}
+                >
+                  Buy Ticket - ${eventData.price.toFixed(2)}
+                </Button>
+              )}
+
+              <Text fontSize="sm" color="gray.600" textAlign="center">
+                Registration closes 24 hours before event starts
+              </Text>
+            </VStack>
           </VStack>
         </Box>
       </Flex>

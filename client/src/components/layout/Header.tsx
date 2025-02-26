@@ -320,6 +320,10 @@ const NAV_ITEMS: Array<NavItem> = [
     label: "About Us",
     href: "/about",
   },
+  {
+    label: "Demo",
+    href: "/demo",
+  },
 ];
 
 interface NavItem {

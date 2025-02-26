@@ -21,6 +21,9 @@ import MyTickets from "./user/MyTickets";
 import Dashboard from "./organizer/Dashboard";
 import EventAttendees from "./organizer/EventAttendees";
 
+// Demo page
+import Demo from "./Demo";
+
 export {
   Home,
   Login,
@@ -35,4 +38,5 @@ export {
   Dashboard,
   EventAttendees,
   MyTickets,
+  Demo,
 };
