@@ -13,9 +13,18 @@ import {
   useToast,
   Radio,
   RadioGroup,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+  HStack,
+  Divider,
+  useColorModeValue,
+  Flex,
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
+import { useState } from "react";
+import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 
 interface RegisterFormValues {
   fullName: string;
@@ -27,6 +36,10 @@ interface RegisterFormValues {
 
 const Register = () => {
   const toast = useToast();
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -41,9 +54,12 @@ const Register = () => {
 
   const password = watch("password");
 
+  const togglePassword = () => setShowPassword(!showPassword);
+  const toggleConfirmPassword = () =>
+    setShowConfirmPassword(!showConfirmPassword);
+
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      // Simulate successful registration - will call API when backend is ready
       console.log("Register data:", data);
       toast({
         title: "Registration successful!",
@@ -51,7 +67,10 @@ const Register = () => {
         status: "success",
         duration: 3000,
         isClosable: true,
+        position: "top",
       });
+
+      setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
       toast({
         title: "Registration failed!",
@@ -59,27 +78,46 @@ const Register = () => {
         status: "error",
         duration: 3000,
         isClosable: true,
+        position: "top",
       });
     }
   };
 
+  const bgColor = useColorModeValue("white", "gray.800");
+  const boxShadow = useColorModeValue("lg", "dark-lg");
+
   return (
-    <Container maxW="md" py={12}>
-      <Box bg="white" p={8} borderRadius="lg" boxShadow="lg">
+    <Container maxW="md" py={8}>
+      <Box bg={bgColor} p={8} borderRadius="xl" boxShadow={boxShadow}>
         <Stack spacing={6}>
+          <Button
+            leftIcon={<FaArrowLeft />}
+            variant="ghost"
+            alignSelf="flex-start"
+            size="sm"
+            onClick={() => navigate("/")}
+          >
+            Back to Home
+          </Button>
+
           <Heading textAlign="center" size="xl">
             Create Account
           </Heading>
-          <Text textAlign="center" color="gray.600">
+
+          <Text textAlign="center" color="gray.500" fontSize="md">
             Create an account to experience all features of EventHub
           </Text>
+
+          <Divider />
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <FormControl isInvalid={!!errors.fullName}>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel fontWeight="medium">Full Name</FormLabel>
                 <Input
                   placeholder="Your full name"
+                  size="lg"
+                  focusBorderColor="teal.400"
                   {...register("fullName", {
                     required: "Full name is required",
                   })}
@@ -88,10 +126,12 @@ const Register = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.email}>
-                <FormLabel>Email</FormLabel>
+                <FormLabel fontWeight="medium">Email</FormLabel>
                 <Input
                   type="email"
                   placeholder="your.email@example.com"
+                  size="lg"
+                  focusBorderColor="teal.400"
                   {...register("email", {
                     required: "Email is required",
                     pattern: {
@@ -104,48 +144,82 @@ const Register = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel>Password</FormLabel>
-                <Input
-                  type="password"
-                  placeholder="********"
-                  {...register("password", {
-                    required: "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters",
-                    },
-                  })}
-                />
+                <FormLabel fontWeight="medium">Password</FormLabel>
+                <InputGroup>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    size="lg"
+                    focusBorderColor="teal.400"
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                    })}
+                  />
+                  <InputRightElement h="full">
+                    <IconButton
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      icon={showPassword ? <FaEyeSlash /> : <FaEye />}
+                      variant="ghost"
+                      onClick={togglePassword}
+                      size="sm"
+                    />
+                  </InputRightElement>
+                </InputGroup>
                 <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={!!errors.confirmPassword}>
-                <FormLabel>Confirm Password</FormLabel>
-                <Input
-                  type="password"
-                  placeholder="********"
-                  {...register("confirmPassword", {
-                    required: "Please confirm your password",
-                    validate: (value) =>
-                      value === password || "Passwords do not match",
-                  })}
-                />
+                <FormLabel fontWeight="medium">Confirm Password</FormLabel>
+                <InputGroup>
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="********"
+                    size="lg"
+                    focusBorderColor="teal.400"
+                    {...register("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === password || "Passwords do not match",
+                    })}
+                  />
+                  <InputRightElement h="full">
+                    <IconButton
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
+                      icon={showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      variant="ghost"
+                      onClick={toggleConfirmPassword}
+                      size="sm"
+                    />
+                  </InputRightElement>
+                </InputGroup>
                 <FormErrorMessage>
                   {errors.confirmPassword?.message}
                 </FormErrorMessage>
               </FormControl>
 
               <FormControl>
-                <FormLabel>I want to</FormLabel>
+                <FormLabel fontWeight="medium">I want to</FormLabel>
                 <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
                     <RadioGroup {...field}>
-                      <Stack direction="row">
-                        <Radio value="user">Attend events</Radio>
-                        <Radio value="organizer">Organize events</Radio>
-                      </Stack>
+                      <HStack spacing={6}>
+                        <Radio value="user" colorScheme="teal">
+                          Attend events
+                        </Radio>
+                        <Radio value="organizer" colorScheme="teal">
+                          Organize events
+                        </Radio>
+                      </HStack>
                     </RadioGroup>
                   )}
                 />
@@ -157,24 +231,28 @@ const Register = () => {
                 size="lg"
                 fontSize="md"
                 isLoading={isSubmitting}
-                mt={2}
+                mt={4}
+                w="full"
               >
-                Register
+                Create Account
               </Button>
             </Stack>
           </form>
 
-          <Text textAlign="center">
-            Already have an account?{" "}
-            <ChakraLink
-              as={Link}
-              to="/login"
-              color="teal.500"
-              sx={{ textDecoration: "none" }}
-            >
-              Login
-            </ChakraLink>
-          </Text>
+          <Flex justify="center" align="center">
+            <Text>
+              Already have an account?{" "}
+              <ChakraLink
+                as={Link}
+                to="/login"
+                color="teal.500"
+                fontWeight="medium"
+                _hover={{ textDecoration: "underline" }}
+              >
+                Login
+              </ChakraLink>
+            </Text>
+          </Flex>
         </Stack>
       </Box>
     </Container>
