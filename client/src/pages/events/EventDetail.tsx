@@ -124,8 +124,8 @@ const EventDetail = () => {
     if (isRegistered) {
       setIsRegistered(false);
       toast({
-        title: "Registration cancelled",
-        description: "You have cancelled your registration for this event.",
+        title: "Hủy đăng ký thành công",
+        description: "Bạn đã hủy đăng ký tham gia sự kiện này.",
         status: "info",
         duration: 3000,
         isClosable: true,
@@ -147,8 +147,8 @@ const EventDetail = () => {
     // DEMO: Luôn đăng ký thành công cho sự kiện miễn phí
     setIsRegistered(true);
     toast({
-      title: "Registration successful!",
-      description: "You have successfully registered for this event.",
+      title: "Đăng ký thành công!",
+      description: "Bạn đã đăng ký tham gia sự kiện này thành công.",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -159,7 +159,7 @@ const EventDetail = () => {
   const handleSaveEvent = () => {
     setIsSaved(!isSaved);
     toast({
-      title: isSaved ? "Removed from saved events" : "Event saved!",
+      title: isSaved ? "Đã xóa khỏi sự kiện đã lưu" : "Đã lưu sự kiện!",
       status: "success",
       duration: 2000,
       isClosable: true,
@@ -170,8 +170,8 @@ const EventDetail = () => {
   const handleShare = () => {
     // Logic chia sẻ sẽ được thêm sau khi có backend
     toast({
-      title: "Share link copied!",
-      description: "Event link has been copied to clipboard.",
+      title: "Đã sao chép liên kết!",
+      description: "Liên kết sự kiện đã được sao chép vào clipboard.",
       status: "success",
       duration: 2000,
       isClosable: true,
@@ -192,8 +192,8 @@ const EventDetail = () => {
     // DEMO: Chỉ chuyển hướng đến trang thanh toán giả lập
     navigate(`/events/${id}/checkout`);
     toast({
-      title: "Proceeding to checkout",
-      description: "Complete your payment to secure your registration.",
+      title: "Chuyển đến thanh toán",
+      description: "Hoàn tất thanh toán để đảm bảo đăng ký của bạn.",
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -231,7 +231,7 @@ const EventDetail = () => {
             py={1}
             borderRadius="md"
           >
-            {eventData.isPaid ? "Paid" : "Free"}
+            {eventData.isPaid ? "Có phí" : "Miễn phí"}
           </Badge>
         </HStack>
       </Box>
@@ -317,8 +317,7 @@ const EventDetail = () => {
               <Flex align="center" gap={2}>
                 <Box as={FiUsers} color={iconColor} />
                 <Text color={textColor}>
-                  {eventData.attendees} registered / {eventData.capacity}{" "}
-                  capacity
+                  {eventData.attendees} đã đăng ký / {eventData.capacity} chỗ
                 </Text>
               </Flex>
             </VStack>
@@ -328,7 +327,7 @@ const EventDetail = () => {
             {/* Mô tả sự kiện */}
             <Box>
               <Heading as="h3" size="md" mb={3} color={textColor}>
-                About This Event
+                Về Sự Kiện Này
               </Heading>
               <Text color={textColor}>{eventData.description}</Text>
             </Box>
@@ -343,10 +342,10 @@ const EventDetail = () => {
             >
               <TabList bg={tabBgColor} borderRadius="md" p={1}>
                 <Tab _selected={{ bg: cardBgColor, color: textColor }}>
-                  Details
+                  Chi Tiết
                 </Tab>
                 <Tab _selected={{ bg: cardBgColor, color: textColor }}>
-                  Reviews & Comments
+                  Đánh Giá & Bình Luận
                 </Tab>
               </TabList>
               <TabPanels mt={4}>
@@ -355,7 +354,7 @@ const EventDetail = () => {
                   <VStack align="start" spacing={4} color={textColor}>
                     <Flex align="center" gap={2} w="100%">
                       <Box as={FiUsers} color={iconColor} />
-                      <Text fontWeight="medium">Organizer:</Text>
+                      <Text fontWeight="medium">Tổ chức:</Text>
                       <Text>{eventData.organizer.name}</Text>
                     </Flex>
                   </VStack>
@@ -386,7 +385,7 @@ const EventDetail = () => {
         >
           <VStack spacing={5} align="stretch">
             <Heading size="md" color={textColor}>
-              Registration
+              Đăng Ký
             </Heading>
 
             <VStack align="start" spacing={3}>
@@ -407,10 +406,10 @@ const EventDetail = () => {
 
             <Box bg={infoBoxBgColor} p={3} borderRadius="md">
               <Text fontWeight="medium" color={textColor}>
-                {eventData.attendees} people have registered
+                {eventData.attendees} người đã đăng ký
               </Text>
               <Text fontSize="sm" color={infoBoxTextColor}>
-                {eventData.capacity - eventData.attendees} spots left
+                Còn {eventData.capacity - eventData.attendees} chỗ trống
               </Text>
             </Box>
 
@@ -442,12 +441,12 @@ const EventDetail = () => {
             <Box w="full" display="flex" flexDirection="column" gap={4} mt={6}>
               {/* 
                 TODO: Khi có backend, điều kiện hiển thị nút sẽ như sau:
-                - Nếu sự kiện miễn phí: Chỉ hiển thị nút "Register for Event"
-                - Nếu sự kiện có phí: Chỉ hiển thị nút "Buy Ticket"
+                - Nếu sự kiện miễn phí: Chỉ hiển thị nút "Đăng Ký Tham Gia"
+                - Nếu sự kiện có phí: Chỉ hiển thị nút "Mua Vé"
                 - Nếu người dùng đã đăng ký:
-                  + Nếu sự kiện miễn phí: Hiển thị nút "Cancel Registration"
-                  + Nếu sự kiện có phí: Hiển thị nút "View Ticket" 
-              
+                  + Nếu sự kiện miễn phí: Hiển thị nút "Hủy Đăng Ký"
+                  + Nếu sự kiện có phí: Hiển thị nút "Xem Vé" 
+                
                 DEMO: Hiện tại hiển thị cả hai nút để dễ demo
               */}
 
@@ -460,7 +459,7 @@ const EventDetail = () => {
                 leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
                 variant={isRegistered ? "solid" : "solid"}
               >
-                {isRegistered ? "Cancel Registration" : "Register for Event"}
+                {isRegistered ? "Hủy Đăng Ký" : "Đăng Ký Tham Gia"}
               </Button>
 
               {/* Nút mua vé - luôn hiển thị trong chế độ demo */}
@@ -471,11 +470,10 @@ const EventDetail = () => {
                 onClick={handleBuyTicket}
                 leftIcon={<FaShoppingCart />}
               >
-                Buy Ticket
+                Mua Vé
               </Button>
 
-              {/* 
-                Logic thông thường sẽ như sau:
+              {/* Logic thông thường sẽ như sau:
                 {!eventData.isPaid ? (
                   <Button
                     colorScheme={isRegistered ? "red" : "teal"}
@@ -484,7 +482,7 @@ const EventDetail = () => {
                     onClick={handleRegister}
                     leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
                   >
-                    {isRegistered ? "Cancel Registration" : "Register for Event"}
+                    {isRegistered ? "Hủy Đăng Ký" : "Đăng Ký Tham Gia"}
                   </Button>
                 ) : (
                   <Button
@@ -494,7 +492,7 @@ const EventDetail = () => {
                     onClick={handleBuyTicket}
                     leftIcon={<FaShoppingCart />}
                   >
-                    Buy Ticket
+                    Mua Vé
                   </Button>
                 )}
               */}
@@ -506,11 +504,11 @@ const EventDetail = () => {
       {/* Phần sự kiện liên quan */}
       <Box mt={10}>
         <Heading size="lg" mb={6} color={textColor}>
-          Similar Events
+          Sự Kiện Tương Tự
         </Heading>
         <Text color={secondaryTextColor}>
-          Coming soon... Similar events will be available when backend is
-          connected.
+          Sắp ra mắt... Sự kiện tương tự sẽ được hiển thị khi kết nối với
+          backend.
         </Text>
       </Box>
     </Container>
