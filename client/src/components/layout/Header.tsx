@@ -195,8 +195,17 @@ export default function Header() {
                   variant={"link"}
                   cursor={"pointer"}
                   minW={0}
+                  _hover={{ boxShadow: "none" }}
+                  _focus={{ boxShadow: "none" }}
                 >
-                  <Avatar size={"sm"} src={user?.avatar} />
+                  <Avatar
+                    size={"sm"}
+                    src={user?.avatar}
+                    _hover={{
+                      transform: "scale(1.05)",
+                      transition: "all 0.2s ease",
+                    }}
+                  />
                 </MenuButton>
                 <MenuList>
                   <Text px={3} py={2} fontWeight="bold">

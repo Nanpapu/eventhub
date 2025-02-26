@@ -119,22 +119,30 @@ const NotificationBell = () => {
 
         {/* Số lượng thông báo chưa đọc */}
         {unreadCount > 0 && (
-          <Badge
+          <Box
             position="absolute"
             top="0"
             right="0"
-            transform="translate(25%, -25%)"
-            borderRadius="full"
-            bg={badgeBg}
-            color="white"
-            fontSize="xs"
-            fontWeight="bold"
-            px={2}
-            py={1}
-            zIndex={1}
+            transform="translate(30%, -30%)"
+            zIndex={2}
           >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </Badge>
+            <Badge
+              borderRadius="full"
+              bg={badgeBg}
+              color="white"
+              fontSize="0.8em"
+              fontWeight="bold"
+              minW="1.6em"
+              h="1.6em"
+              textAlign="center"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              boxShadow="0 0 0 2px var(--chakra-colors-white)"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </Badge>
+          </Box>
         )}
 
         {/* Popover hiển thị danh sách thông báo */}
@@ -166,8 +174,8 @@ const NotificationBell = () => {
       {hasNewNotifications && (
         <Box
           position="absolute"
-          top="0"
-          right="0"
+          top="-1px"
+          right="-1px"
           width="10px"
           height="10px"
           borderRadius="full"
