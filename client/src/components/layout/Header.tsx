@@ -32,6 +32,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { NotificationBell } from "../notification";
+import ColorModeToggle from "../common/ColorModeToggle";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 
 // Giả lập trạng thái đăng nhập (sẽ được thay thế bằng context/redux sau này)
 const useAuth = () => {
@@ -168,7 +170,11 @@ export default function Header() {
           justify={"flex-end"}
           direction={"row"}
           spacing={6}
+          align="center"
         >
+          <LanguageSwitcher />
+          <ColorModeToggle />
+
           {isAuthenticated ? (
             <>
               <Button
