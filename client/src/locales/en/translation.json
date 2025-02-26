@@ -56,8 +56,8 @@
     "backToEvents": "Back to events"
   },
   "auth": {
-    "login": "Login",
-    "register": "Register",
+    "loginButton": "Login",
+    "registerButton": "Register",
     "logout": "Logout",
     "email": "Email",
     "password": "Password",
@@ -71,7 +71,9 @@
     "loginSuccess": "Logged in successfully",
     "logoutSuccess": "Logged out successfully",
     "loginFailed": "Login failed",
-    "login": {
+    "demoLoginUser": "Login (User)",
+    "demoLoginOrganizer": "Login (Organizer)",
+    "loginPage": {
       "title": "Login to EventHub",
       "emailPlaceholder": "Enter your email",
       "passwordPlaceholder": "Enter your password",

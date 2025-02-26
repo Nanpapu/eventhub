@@ -3,11 +3,6 @@ import {
   Box,
   Heading,
   Text,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
   SimpleGrid,
   VStack,
   HStack,
@@ -216,7 +211,7 @@ export default function MyTickets() {
 
     // Lọc theo thời gian
     const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
+    // const todayStr = today.toISOString().split("T")[0];
 
     if (filterDate === "upcoming") {
       result = result.filter((ticket) => {

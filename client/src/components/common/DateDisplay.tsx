@@ -11,9 +11,9 @@ import {
   formatTime,
   formatDateTime,
   formatRelativeTime,
-} from "@/utils/formatters";
+} from "../../utils/formatters";
 import { useTranslation } from "react-i18next";
-import { FiCalendar, FiClock, FiCalendarPlus } from "react-icons/fi";
+import { FiCalendar, FiClock, FiAlertCircle } from "react-icons/fi";
 
 export interface DateDisplayProps extends FlexProps {
   /**
@@ -67,12 +67,12 @@ const DateDisplay = ({
 
   // Kiểm tra nếu ngày không hợp lệ
   if (isNaN(dateObj.getTime())) {
-    return <Text color="red.500">Invalid date</Text>;
+    return <Text color="red.500">{t("errors.invalidDate")}</Text>;
   }
 
   // Định dạng hiển thị dựa trên mode
   let displayValue = "";
-  let tooltipValue = formatDateTime(dateObj);
+  const tooltipValue = formatDateTime(dateObj);
   let icon = <FiCalendar />;
 
   switch (mode) {
@@ -86,11 +86,11 @@ const DateDisplay = ({
       break;
     case "dateTime":
       displayValue = formatDateTime(dateObj);
-      icon = <FiCalendarPlus />;
+      icon = <FiCalendar />;
       break;
     case "relative":
       displayValue = formatRelativeTime(dateObj);
-      icon = <FiCalendarPlus />;
+      icon = <FiAlertCircle />;
       break;
     case "compact":
       displayValue = formatDate(dateObj, {

@@ -265,7 +265,7 @@ export default function Header() {
                 variant={"link"}
                 to={"/login"}
               >
-                {t("auth.login")}
+                {t("auth.loginButton")}
               </Button>
               <Button
                 as={Link}
@@ -275,7 +275,7 @@ export default function Header() {
                 to={"/register"}
                 colorScheme="teal"
               >
-                {t("auth.register")}
+                {t("auth.registerButton")}
               </Button>
 
               {/* UI Demo: Nút đăng nhập nhanh - Chỉ để test, sẽ bị xóa khi tích hợp auth thực tế */}
@@ -290,10 +290,10 @@ export default function Header() {
                 </MenuButton>
                 <MenuList>
                   <MenuItem onClick={quickLogin}>
-                    {t("auth.login")} (User)
+                    {t("auth.demoLoginUser")}
                   </MenuItem>
                   <MenuItem onClick={quickLoginAsOrganizer}>
-                    {t("auth.login")} (Organizer)
+                    {t("auth.demoLoginOrganizer")}
                   </MenuItem>
                 </MenuList>
               </Menu>

@@ -31,6 +31,10 @@
     "add": "Thêm",
     "remove": "Xóa bỏ",
     "viewDetails": "Xem chi tiết",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
     "next": "Tiếp theo",
     "previous": "Trước đó",
     "home": "Trang chủ",
@@ -44,16 +48,15 @@
     "toggleDarkMode": "Chuyển đổi chế độ tối",
     "changeLanguage": "Thay đổi ngôn ngữ",
     "optional": "Tùy chọn",
-    "name": "Tên",
-    "email": "Email",
-    "phone": "Số điện thoại",
-    "address": "Địa chỉ",
+    "search": "Tìm kiếm",
     "apply": "Áp dụng",
+    "free": "Miễn phí",
+    "paid": "Trả phí",
     "backToEvents": "Quay lại danh sách sự kiện"
   },
   "auth": {
-    "login": "Đăng nhập",
-    "register": "Đăng ký",
+    "loginButton": "Đăng nhập",
+    "registerButton": "Đăng ký",
     "logout": "Đăng xuất",
     "email": "Email",
     "password": "Mật khẩu",
@@ -67,11 +70,14 @@
     "loginSuccess": "Đăng nhập thành công",
     "logoutSuccess": "Đăng xuất thành công",
     "loginFailed": "Đăng nhập thất bại",
-    "login": {
+    "demoLoginUser": "Đăng nhập (Người dùng)",
+    "demoLoginOrganizer": "Đăng nhập (Nhà tổ chức)",
+    "loginPage": {
       "title": "Đăng nhập vào EventHub",
       "emailPlaceholder": "Nhập email của bạn",
       "passwordPlaceholder": "Nhập mật khẩu của bạn",
       "rememberMe": "Ghi nhớ đăng nhập",
+      "forgotPassword": "Quên mật khẩu?",
       "noAccount": "Chưa có tài khoản?",
       "signUp": "Đăng ký",
       "loginSuccess": "Đăng nhập thành công",
@@ -167,9 +173,9 @@
     "joinEvent": "Tham gia sự kiện",
     "leaveEvent": "Rời khỏi sự kiện",
     "checkIn": {
-      "title": "Đăng ký tham dự sự kiện",
-      "manualCheckIn": "Đăng ký thủ công",
-      "checkInByTicketId": "Đăng ký bằng mã vé",
+      "title": "Điểm danh sự kiện",
+      "manualCheckIn": "Điểm danh thủ công",
+      "checkInByTicketId": "Điểm danh bằng mã vé",
       "enterTicketId": "Nhập mã vé",
       "ticketIdPlaceholder": "Nhập mã vé (ví dụ: TIX-ABC123)",
       "attendeeList": "Danh sách người tham dự",
@@ -179,9 +185,9 @@
       "recentCheckIns": "Điểm danh gần đây",
       "noCheckInsYet": "Chưa có ai điểm danh",
       "searchAttendees": "Tìm kiếm theo tên, email hoặc mã vé",
-      "checkInSuccess": "Đăng ký thành công",
-      "checkInFailed": "Đăng ký thất bại",
-      "alreadyCheckedIn": "Đã đăng ký trước đó",
+      "checkInSuccess": "Điểm danh thành công",
+      "checkInFailed": "Điểm danh thất bại",
+      "alreadyCheckedIn": "Đã điểm danh trước đó",
       "totalAttendees": "Tổng số người tham dự",
       "checkedIn": "Đã điểm danh",
       "attendanceRate": "Tỷ lệ tham dự",
@@ -191,7 +197,7 @@
       },
       "ticketNotFound": "Không tìm thấy vé",
       "invalidTicket": "Vé không hợp lệ",
-      "checkInTime": "Thời gian đăng ký"
+      "checkInTime": "Thời gian điểm danh"
     },
     "title": "Sự kiện",
     "updateEvent": "Cập nhật sự kiện",
@@ -210,6 +216,7 @@
     "filterEvents": "Lọc sự kiện",
     "sortEvents": "Sắp xếp sự kiện",
     "categories": {
+      "all": "Tất cả thể loại",
       "conference": "Hội nghị",
       "workshop": "Hội thảo",
       "music": "Âm nhạc",
@@ -222,7 +229,10 @@
       "education": "Giáo dục",
       "health": "Sức khỏe",
       "arts": "Nghệ thuật",
-      "other": "Khác"
+      "other": "Khác",
+      "meetup": "Gặp gỡ",
+      "networking": "Networking",
+      "food": "Ẩm thực"
     },
     "filterType": {
       "upcoming": "Sắp diễn ra",
@@ -249,21 +259,6 @@
       "canceled": "Đã hủy",
       "postponed": "Đã hoãn"
     },
-    "checkIn": {
-      "title": "Điểm danh sự kiện",
-      "manualCheckIn": "Điểm danh thủ công",
-      "checkInByTicketId": "Điểm danh bằng mã vé",
-      "enterTicketId": "Nhập mã vé",
-      "ticketIdPlaceholder": "Nhập mã vé (ví dụ: TIX-ABC123)",
-      "attendeeList": "Danh sách người tham dự",
-      "qrScanner": "Quét mã QR",
-      "checkInSuccess": "Điểm danh thành công",
-      "checkInFailed": "Điểm danh thất bại",
-      "alreadyCheckedIn": "Đã điểm danh",
-      "ticketNotFound": "Không tìm thấy vé",
-      "invalidTicket": "Vé không hợp lệ",
-      "checkInTime": "Thời gian điểm danh"
-    },
     "searchResults": "Kết quả tìm kiếm sự kiện",
     "allLocations": "Tất cả địa điểm",
     "resetFilters": "Đặt lại bộ lọc",
@@ -273,17 +268,6 @@
     "filterType": {
       "free": "Sự kiện miễn phí",
       "paid": "Sự kiện có phí"
-    },
-    "categories": {
-      "all": "Tất cả thể loại",
-      "conference": "Hội nghị",
-      "workshop": "Hội thảo",
-      "meetup": "Gặp gỡ",
-      "networking": "Networking",
-      "music": "Âm nhạc",
-      "exhibition": "Triển lãm",
-      "food": "Ẩm thực",
-      "other": "Khác"
     },
     "time": "Thời gian",
     "ticketPrice": "Giá vé",
