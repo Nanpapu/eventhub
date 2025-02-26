@@ -23,10 +23,13 @@ import {
   VStack,
   useColorModeValue,
   useToast,
+  Switch,
+  Select,
+  Flex,
 } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaCamera, FaGlobe, FaBell } from "react-icons/fa";
 
 // Interface cho thông tin cá nhân
 interface ProfileFormData {
@@ -42,6 +45,17 @@ interface PasswordFormData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+// Interface cho cài đặt (đã đơn giản hóa)
+interface PreferencesFormData {
+  // Thông báo
+  emailNotifications: boolean;
+  eventReminders: boolean;
+
+  // Ngôn ngữ và định dạng
+  language: string;
+  dateFormat: string;
 }
 
 const Profile = () => {
@@ -69,6 +83,14 @@ const Profile = () => {
     reset: resetPasswordForm,
   } = useForm<PasswordFormData>();
 
+  // Form cho tùy chọn
+  const {
+    register: registerPreferences,
+    handleSubmit: handleSubmitPreferences,
+    formState: { isSubmitting: isPreferencesSubmitting },
+    reset: resetPreferencesForm,
+  } = useForm<PreferencesFormData>();
+
   // Theo dõi mật khẩu mới để xác thực confirm password
   const newPassword = watchPassword("newPassword");
 
@@ -89,6 +111,17 @@ const Profile = () => {
     avatar: "https://bit.ly/3Q3eQvj",
   };
 
+  // Giả lập dữ liệu tùy chọn người dùng
+  const mockPreferencesData = {
+    // Thông báo
+    emailNotifications: true,
+    eventReminders: true,
+
+    // Ngôn ngữ và định dạng
+    language: "en",
+    dateFormat: "DD/MM/YYYY",
+  };
+
   // Cập nhật form với dữ liệu người dùng khi component được mount
   useEffect(() => {
     // Trong thực tế, đây sẽ là một API call để lấy thông tin người dùng
@@ -100,9 +133,13 @@ const Profile = () => {
       bio: mockUserData.bio,
     });
 
+    // Cập nhật form cài đặt
+    resetPreferencesForm(mockPreferencesData);
+
     setAvatarPreview(mockUserData.avatar);
   }, [
     resetProfileForm,
+    resetPreferencesForm,
     mockUserData.fullName,
     mockUserData.email,
     mockUserData.phone,
@@ -194,6 +231,33 @@ const Profile = () => {
     }
   };
 
+  // Xử lý cập nhật tùy chọn
+  const onPreferencesSubmit = async (data: PreferencesFormData) => {
+    try {
+      // Giả lập cập nhật tùy chọn (sẽ thay thế bằng API call)
+      console.log("Preferences data to update:", data);
+
+      // Hiển thị thông báo thành công
+      toast({
+        title: "Preferences updated",
+        description: "Your preferences have been updated successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      // Xử lý lỗi
+      console.error("Error updating preferences:", err);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your preferences",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Màu sắc dựa trên chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("lg", "dark-lg");
@@ -243,13 +307,14 @@ const Profile = () => {
           </Box>
         </GridItem>
 
-        {/* Tabs cho thông tin cá nhân và đổi mật khẩu */}
+        {/* Tabs cho thông tin cá nhân, đổi mật khẩu và cài đặt */}
         <GridItem>
           <Box bg={bgColor} p={6} borderRadius="xl" boxShadow={boxShadow}>
             <Tabs colorScheme="teal" isFitted>
               <TabList mb={4}>
                 <Tab fontWeight="medium">Profile Information</Tab>
                 <Tab fontWeight="medium">Change Password</Tab>
+                <Tab fontWeight="medium">Preferences</Tab>
               </TabList>
 
               <TabPanels>
@@ -477,6 +542,116 @@ const Profile = () => {
                         alignSelf="flex-end"
                       >
                         Update Password
+                      </Button>
+                    </VStack>
+                  </form>
+                </TabPanel>
+
+                {/* Tab tùy chọn (đơn giản hóa từ Settings) */}
+                <TabPanel>
+                  <form onSubmit={handleSubmitPreferences(onPreferencesSubmit)}>
+                    <VStack spacing={6} align="start">
+                      {/* Phần tùy chọn ngôn ngữ và định dạng */}
+                      <Box w="full">
+                        <Flex align="center" mb={4}>
+                          <Box
+                            bg="purple.50"
+                            p={2}
+                            borderRadius="md"
+                            color="purple.600"
+                            mr={2}
+                          >
+                            <FaGlobe size={20} />
+                          </Box>
+                          <Heading size="md">Language & Format</Heading>
+                        </Flex>
+
+                        <VStack spacing={4} align="start" pl={10}>
+                          <FormControl>
+                            <FormLabel fontWeight="medium">Language</FormLabel>
+                            <Select
+                              {...registerPreferences("language")}
+                              focusBorderColor="purple.400"
+                            >
+                              <option value="en">English</option>
+                              <option value="vi">Tiếng Việt</option>
+                              <option value="fr">Français</option>
+                              <option value="es">Español</option>
+                              <option value="zh">中文</option>
+                            </Select>
+                          </FormControl>
+
+                          <FormControl>
+                            <FormLabel fontWeight="medium">
+                              Date Format
+                            </FormLabel>
+                            <Select
+                              {...registerPreferences("dateFormat")}
+                              focusBorderColor="purple.400"
+                            >
+                              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                            </Select>
+                          </FormControl>
+                        </VStack>
+                      </Box>
+
+                      <Divider />
+
+                      {/* Phần tùy chọn thông báo */}
+                      <Box w="full">
+                        <Flex align="center" mb={4}>
+                          <Box
+                            bg="blue.50"
+                            p={2}
+                            borderRadius="md"
+                            color="blue.600"
+                            mr={2}
+                          >
+                            <FaBell size={20} />
+                          </Box>
+                          <Heading size="md">Notifications</Heading>
+                        </Flex>
+
+                        <VStack spacing={4} align="start" pl={10}>
+                          <FormControl display="flex" alignItems="center">
+                            <FormLabel htmlFor="email-notifications" mb="0">
+                              Email notifications
+                            </FormLabel>
+                            <Switch
+                              id="email-notifications"
+                              colorScheme="blue"
+                              {...registerPreferences("emailNotifications")}
+                            />
+                          </FormControl>
+
+                          <FormControl display="flex" alignItems="center">
+                            <FormLabel htmlFor="event-reminders" mb="0">
+                              Event reminders
+                            </FormLabel>
+                            <Switch
+                              id="event-reminders"
+                              colorScheme="blue"
+                              {...registerPreferences("eventReminders")}
+                            />
+                          </FormControl>
+
+                          <Text fontSize="sm" color="gray.500" mt={2}>
+                            Event reminders will be sent 24 hours before your
+                            registered events.
+                          </Text>
+                        </VStack>
+                      </Box>
+
+                      <Button
+                        mt={4}
+                        colorScheme="teal"
+                        isLoading={isPreferencesSubmitting}
+                        type="submit"
+                        alignSelf="flex-end"
+                      >
+                        Save Preferences
                       </Button>
                     </VStack>
                   </form>
