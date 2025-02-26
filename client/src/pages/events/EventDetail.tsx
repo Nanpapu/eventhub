@@ -22,16 +22,16 @@ import {
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  FiCalendar,
   FiMapPin,
-  FiUser,
+  FiCalendar,
+  FiClock,
+  FiUsers,
+  FiDollarSign,
   FiShare2,
   FiHeart,
-  FiClock,
-  FiDollarSign,
-  FiShoppingCart,
 } from "react-icons/fi";
 import { EventReview } from "../../components/events";
+import { FaTimes, FaCalendarCheck, FaShoppingCart } from "react-icons/fa";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
@@ -120,15 +120,36 @@ const EventDetail = () => {
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
-    setIsRegistered(!isRegistered);
+    // Nếu đã đăng ký, hủy đăng ký
+    if (isRegistered) {
+      setIsRegistered(false);
+      toast({
+        title: "Registration cancelled",
+        description: "You have cancelled your registration for this event.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    /* 
+      TODO: Khi có backend, cần thực hiện các bước:
+      1. Gọi API để đăng ký sự kiện (POST /api/events/:id/register)
+      2. Kiểm tra nếu sự kiện có phí:
+         - Lưu trạng thái đăng ký là "pending"
+         - Chuyển người dùng đến trang thanh toán
+      3. Nếu sự kiện miễn phí:
+         - Lưu trạng thái đăng ký là "confirmed"
+         - Hiển thị thông báo thành công
+    */
+
+    // DEMO: Luôn đăng ký thành công cho sự kiện miễn phí
+    setIsRegistered(true);
     toast({
-      title: isRegistered
-        ? "Registration cancelled"
-        : "Registration successful!",
-      description: isRegistered
-        ? "You have cancelled your registration for this event."
-        : "You have successfully registered for this event.",
-      status: isRegistered ? "info" : "success",
+      title: "Registration successful!",
+      description: "You have successfully registered for this event.",
+      status: "success",
       duration: 3000,
       isClosable: true,
     });
@@ -159,9 +180,20 @@ const EventDetail = () => {
 
   // Xử lý chuyển tới trang thanh toán
   const handleBuyTicket = () => {
+    /*
+      TODO: Khi có backend, logic sẽ như sau:
+      1. Gọi API để tạo đơn hàng (POST /api/events/:id/checkout)
+      2. API trả về thông tin đơn hàng bao gồm paymentUrl
+      3. Chuyển người dùng đến trang thanh toán (paymentUrl)
+      4. Sau khi thanh toán, webhook sẽ cập nhật trạng thái đăng ký thành "confirmed"
+      5. Chuyển người dùng trở lại trang chi tiết sự kiện với trạng thái đã đăng ký
+    */
+
+    // DEMO: Chỉ chuyển hướng đến trang thanh toán giả lập
     navigate(`/events/${id}/checkout`);
     toast({
       title: "Proceeding to checkout",
+      description: "Complete your payment to secure your registration.",
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -283,7 +315,7 @@ const EventDetail = () => {
               )}
 
               <Flex align="center" gap={2}>
-                <Box as={FiUser} color={iconColor} />
+                <Box as={FiUsers} color={iconColor} />
                 <Text color={textColor}>
                   {eventData.attendees} registered / {eventData.capacity}{" "}
                   capacity
@@ -322,7 +354,7 @@ const EventDetail = () => {
                 <TabPanel p={0}>
                   <VStack align="start" spacing={4} color={textColor}>
                     <Flex align="center" gap={2} w="100%">
-                      <Box as={FiUser} color={iconColor} />
+                      <Box as={FiUsers} color={iconColor} />
                       <Text fontWeight="medium">Organizer:</Text>
                       <Text>{eventData.organizer.name}</Text>
                     </Flex>
@@ -382,33 +414,91 @@ const EventDetail = () => {
               </Text>
             </Box>
 
-            {/* Nút đăng ký và mua vé */}
-            <VStack spacing={3} width="100%">
+            {/* Hiển thị trạng thái đăng ký */}
+            {isRegistered && (
+              <Box
+                bg="green.50"
+                color="green.700"
+                p={3}
+                borderRadius="md"
+                borderLeft="4px solid"
+                borderColor="green.400"
+                _dark={{
+                  bg: "green.900",
+                  color: "green.200",
+                  borderColor: "green.500",
+                }}
+              >
+                <Flex align="center" gap={2}>
+                  <Box as={FaCalendarCheck} />
+                  <Text fontWeight="medium">
+                    Bạn đã đăng ký tham gia sự kiện này
+                  </Text>
+                </Flex>
+              </Box>
+            )}
+
+            {/* Phần điều khiển: đăng ký và mua vé */}
+            <Box w="full" display="flex" flexDirection="column" gap={4} mt={6}>
+              {/* 
+                TODO: Khi có backend, điều kiện hiển thị nút sẽ như sau:
+                - Nếu sự kiện miễn phí: Chỉ hiển thị nút "Register for Event"
+                - Nếu sự kiện có phí: Chỉ hiển thị nút "Buy Ticket"
+                - Nếu người dùng đã đăng ký:
+                  + Nếu sự kiện miễn phí: Hiển thị nút "Cancel Registration"
+                  + Nếu sự kiện có phí: Hiển thị nút "View Ticket" 
+              
+                DEMO: Hiện tại hiển thị cả hai nút để dễ demo
+              */}
+
+              {/* Nút đăng ký - luôn hiển thị trong chế độ demo */}
               <Button
                 colorScheme={isRegistered ? "red" : "teal"}
                 size="lg"
+                width="full"
                 onClick={handleRegister}
-                width="100%"
+                leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
+                variant={isRegistered ? "solid" : "solid"}
               >
                 {isRegistered ? "Cancel Registration" : "Register for Event"}
               </Button>
 
-              {eventData.isPaid && eventData.price && (
-                <Button
-                  colorScheme="purple"
-                  size="lg"
-                  width="100%"
-                  leftIcon={<FiShoppingCart />}
-                  onClick={handleBuyTicket}
-                >
-                  Buy Ticket - ${eventData.price.toFixed(2)}
-                </Button>
-              )}
+              {/* Nút mua vé - luôn hiển thị trong chế độ demo */}
+              <Button
+                colorScheme="blue"
+                size="lg"
+                width="full"
+                onClick={handleBuyTicket}
+                leftIcon={<FaShoppingCart />}
+              >
+                Buy Ticket
+              </Button>
 
-              <Text fontSize="sm" color={infoBoxTextColor} textAlign="center">
-                Registration closes 24 hours before event starts
-              </Text>
-            </VStack>
+              {/* 
+                Logic thông thường sẽ như sau:
+                {!eventData.isPaid ? (
+                  <Button
+                    colorScheme={isRegistered ? "red" : "teal"}
+                    size="lg"
+                    width="full"
+                    onClick={handleRegister}
+                    leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
+                  >
+                    {isRegistered ? "Cancel Registration" : "Register for Event"}
+                  </Button>
+                ) : (
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    width="full"
+                    onClick={handleBuyTicket}
+                    leftIcon={<FaShoppingCart />}
+                  >
+                    Buy Ticket
+                  </Button>
+                )}
+              */}
+            </Box>
           </VStack>
         </Box>
       </Flex>
