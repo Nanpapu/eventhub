@@ -1,550 +1,190 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Box,
   Container,
+  Box,
   Heading,
-  Text,
-  VStack,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
   HStack,
-  Flex,
-  Divider,
   Button,
+  useColorModeValue,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  useColorModeValue,
-  Badge,
-  useToast,
   IconButton,
-  Tag,
-  TagLabel,
-  TagCloseButton,
+  Text,
+  Flex,
+  Divider,
+  useToast,
+  Badge,
 } from "@chakra-ui/react";
-import {
-  FaFilter,
-  FaCheck,
-  FaTrash,
-  FaSortAmountDown,
-  FaSortAmountUp,
-} from "react-icons/fa";
-import { Notification } from "../../components/notifications/NotificationCenter";
-import { NotificationItem } from "../../components/notifications/NotificationList";
+import { FiFilter, FiCheck, FiTrash2, FiMoreVertical } from "react-icons/fi";
+import NotificationList from "../../components/notification/NotificationList";
 
 /**
  * Trang hiển thị tất cả thông báo của người dùng
- * Cho phép lọc, sắp xếp, đánh dấu đã đọc và xóa thông báo
+ * Cho phép người dùng xem, lọc, đánh dấu và xóa các thông báo
  */
-export default function Notifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [filteredNotifications, setFilteredNotifications] = useState<
-    Notification[]
-  >([]);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [sortNewest, setSortNewest] = useState(true);
+const Notifications = () => {
+  const [activeTab, setActiveTab] = useState<string>("all");
   const toast = useToast();
-  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Giả lập dữ liệu thông báo
-  useEffect(() => {
-    // Trong thực tế, sẽ fetch dữ liệu từ API
-    const mockNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "event_reminder",
-        title: "Sự kiện sắp diễn ra",
-        message:
-          "Tech Conference 2023 sẽ diễn ra trong 2 ngày nữa. Đừng quên chuẩn bị!",
-        dateTime: new Date(Date.now() - 30 * 60 * 1000), // 30 phút trước
-        read: false,
-        actionLink: "/my-events",
-        relatedEventId: "1",
-        relatedEventTitle: "Tech Conference 2023",
-      },
-      {
-        id: "2",
-        type: "comment_reply",
-        title: "Phản hồi bình luận mới",
-        message:
-          'Jane Doe đã trả lời bình luận của bạn: "Cảm ơn về thông tin!"',
-        dateTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 giờ trước
-        read: false,
-        actionLink: "/events/3#comments",
-        relatedUserId: "user123",
-        relatedUserName: "Jane Doe",
-        relatedUserAvatar:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-        relatedEventId: "3",
-        relatedEventTitle: "Music Festival",
-      },
-      {
-        id: "3",
-        type: "registration_confirmed",
-        title: "Đăng ký thành công",
-        message: "Đăng ký của bạn cho JavaScript Workshop đã được xác nhận.",
-        dateTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 ngày trước
-        read: true,
-        actionLink: "/my-events",
-        relatedEventId: "2",
-        relatedEventTitle: "JavaScript Workshop",
-      },
-      {
-        id: "4",
-        type: "payment_confirmation",
-        title: "Thanh toán thành công",
-        message:
-          "Thanh toán của bạn cho Business Networking Event đã được xác nhận.",
-        dateTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 ngày trước
-        read: true,
-        actionLink: "/my-events",
-        relatedEventId: "5",
-        relatedEventTitle: "Business Networking Event",
-      },
-      {
-        id: "5",
-        type: "event_update",
-        title: "Sự kiện cập nhật",
-        message:
-          "Music Festival đã cập nhật thời gian và địa điểm. Vui lòng kiểm tra thông tin mới.",
-        dateTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 ngày trước
-        read: false,
-        actionLink: "/events/3",
-        relatedEventId: "3",
-        relatedEventTitle: "Music Festival",
-      },
-      {
-        id: "6",
-        type: "event_cancelled",
-        title: "Sự kiện đã bị hủy",
-        message:
-          "Chúng tôi rất tiếc phải thông báo rằng Data Science Meetup đã bị hủy.",
-        dateTime: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 ngày trước
-        read: true,
-        actionLink: "/events/4",
-        relatedEventId: "4",
-        relatedEventTitle: "Data Science Meetup",
-      },
-      {
-        id: "7",
-        type: "event_liked",
-        title: "Có người thích sự kiện của bạn",
-        message: "John Smith đã thích sự kiện Tech Conference 2023 của bạn",
-        dateTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 ngày trước
-        read: true,
-        relatedUserId: "user456",
-        relatedUserName: "John Smith",
-        relatedEventId: "1",
-        relatedEventTitle: "Tech Conference 2023",
-      },
-      {
-        id: "8",
-        type: "friend_activity",
-        title: "Bạn bè đăng ký sự kiện",
-        message: "Emma Wilson vừa đăng ký tham gia Tech Conference 2023",
-        dateTime: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 ngày trước
-        read: false,
-        actionLink: "/events/1",
-        relatedUserId: "user789",
-        relatedUserName: "Emma Wilson",
-        relatedEventId: "1",
-        relatedEventTitle: "Tech Conference 2023",
-      },
-    ];
-
-    setNotifications(mockNotifications);
-    applyFilters(mockNotifications, activeFilters);
-  }, []);
-
-  // Cập nhật các thông báo đã lọc mỗi khi filter thay đổi
-  useEffect(() => {
-    applyFilters(notifications, activeFilters);
-  }, [activeFilters, sortNewest]);
-
-  // Lọc thông báo theo loại và sắp xếp
-  const applyFilters = (data: Notification[], filters: string[]) => {
-    let result = [...data];
-
-    // Lọc theo loại nếu có filter
-    if (filters.length > 0) {
-      result = result.filter((notification) =>
-        filters.includes(notification.type)
-      );
-    }
-
-    // Sắp xếp theo thời gian
-    result.sort((a, b) => {
-      if (sortNewest) {
-        return b.dateTime.getTime() - a.dateTime.getTime();
-      } else {
-        return a.dateTime.getTime() - b.dateTime.getTime();
-      }
-    });
-
-    setFilteredNotifications(result);
-  };
-
-  // Xử lý thêm filter
-  const handleAddFilter = (filterType: Notification["type"]) => {
-    if (!activeFilters.includes(filterType)) {
-      const newFilters = [...activeFilters, filterType];
-      setActiveFilters(newFilters);
-    }
-  };
-
-  // Xử lý xóa filter
-  const handleRemoveFilter = (filterType: string) => {
-    const newFilters = activeFilters.filter((type) => type !== filterType);
-    setActiveFilters(newFilters);
-  };
-
-  // Xử lý xóa tất cả filter
-  const handleClearFilters = () => {
-    setActiveFilters([]);
-  };
-
-  // Đánh dấu thông báo là đã đọc
-  const handleMarkAsRead = (id: string) => {
-    const updatedNotifications = notifications.map((notification) =>
-      notification.id === id ? { ...notification, read: true } : notification
-    );
-
-    setNotifications(updatedNotifications);
-    applyFilters(updatedNotifications, activeFilters);
-
-    toast({
-      title: "Đã đánh dấu đã đọc",
-      status: "success",
-      duration: 2000,
-      isClosable: true,
-    });
-  };
-
-  // Đánh dấu tất cả thông báo là đã đọc
+  // Xử lý đánh dấu tất cả là đã đọc
   const handleMarkAllAsRead = () => {
-    const updatedNotifications = notifications.map((notification) => ({
-      ...notification,
-      read: true,
-    }));
-
-    setNotifications(updatedNotifications);
-    applyFilters(updatedNotifications, activeFilters);
-
     toast({
-      title: "Đã đánh dấu tất cả là đã đọc",
+      title: "All notifications marked as read",
       status: "success",
-      duration: 2000,
-      isClosable: true,
-    });
-  };
-
-  // Xử lý xóa thông báo
-  const handleDelete = (id: string) => {
-    const updatedNotifications = notifications.filter(
-      (notification) => notification.id !== id
-    );
-
-    setNotifications(updatedNotifications);
-    applyFilters(updatedNotifications, activeFilters);
-
-    toast({
-      title: "Đã xóa thông báo",
-      status: "info",
       duration: 2000,
       isClosable: true,
     });
   };
 
   // Xử lý xóa tất cả thông báo
-  const handleDeleteAll = () => {
-    setNotifications([]);
-    setFilteredNotifications([]);
-
+  const handleClearAll = () => {
     toast({
-      title: "Đã xóa tất cả thông báo",
-      status: "info",
+      title: "All notifications cleared",
+      status: "success",
       duration: 2000,
       isClosable: true,
     });
   };
 
-  // Chuyển đổi tên loại thông báo thành văn bản thân thiện
-  const getFilterDisplayName = (filterType: string) => {
-    switch (filterType) {
-      case "event_reminder":
-        return "Nhắc nhở sự kiện";
-      case "event_update":
-        return "Cập nhật sự kiện";
-      case "event_cancelled":
-        return "Sự kiện đã hủy";
-      case "comment_reply":
-        return "Phản hồi bình luận";
-      case "registration_confirmed":
-        return "Xác nhận đăng ký";
-      case "event_liked":
-        return "Thích sự kiện";
-      case "payment_confirmation":
-        return "Xác nhận thanh toán";
-      case "friend_activity":
-        return "Hoạt động bạn bè";
-      default:
-        return filterType;
-    }
-  };
-
-  // Lấy màu cho loại thông báo
-  const getFilterColor = (filterType: string) => {
-    switch (filterType) {
-      case "event_reminder":
-        return "blue";
-      case "event_update":
-        return "orange";
-      case "event_cancelled":
-        return "red";
-      case "comment_reply":
-        return "purple";
-      case "registration_confirmed":
-        return "green";
-      case "event_liked":
-        return "pink";
-      case "payment_confirmation":
-        return "green";
-      case "friend_activity":
-        return "teal";
-      default:
-        return "gray";
-    }
-  };
-
-  // Số lượng thông báo chưa đọc
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   return (
-    <Container maxW="6xl" py={8}>
-      <VStack spacing={6} align="stretch">
-        <Flex
-          justifyContent="space-between"
-          alignItems="center"
-          wrap="wrap"
-          gap={4}
-        >
-          <Heading size="xl">Thông báo</Heading>
+    <Container maxW="container.lg" py={8}>
+      <Box mb={6}>
+        <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+          <Box>
+            <Heading as="h1" size="xl" mb={2}>
+              Notifications
+            </Heading>
+            <Text color="gray.500">
+              Stay updated with all your event activities
+            </Text>
+          </Box>
 
-          <HStack spacing={4}>
+          <HStack spacing={2}>
             <Button
-              leftIcon={<FaCheck />}
-              colorScheme="teal"
+              leftIcon={<FiCheck />}
               variant="outline"
-              isDisabled={unreadCount === 0}
               onClick={handleMarkAllAsRead}
             >
-              Đánh dấu tất cả đã đọc
+              Mark all as read
             </Button>
 
             <Menu>
               <MenuButton
-                as={Button}
-                rightIcon={<FaFilter />}
+                as={IconButton}
+                aria-label="Options"
+                icon={<FiMoreVertical />}
                 variant="outline"
-              >
-                Lọc
-              </MenuButton>
+              />
               <MenuList>
-                <MenuItem
-                  onClick={() => handleAddFilter("event_reminder")}
-                  isDisabled={activeFilters.includes("event_reminder")}
-                >
-                  Nhắc nhở sự kiện
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("event_update")}
-                  isDisabled={activeFilters.includes("event_update")}
-                >
-                  Cập nhật sự kiện
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("event_cancelled")}
-                  isDisabled={activeFilters.includes("event_cancelled")}
-                >
-                  Sự kiện đã hủy
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("comment_reply")}
-                  isDisabled={activeFilters.includes("comment_reply")}
-                >
-                  Phản hồi bình luận
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("registration_confirmed")}
-                  isDisabled={activeFilters.includes("registration_confirmed")}
-                >
-                  Xác nhận đăng ký
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("payment_confirmation")}
-                  isDisabled={activeFilters.includes("payment_confirmation")}
-                >
-                  Xác nhận thanh toán
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("event_liked")}
-                  isDisabled={activeFilters.includes("event_liked")}
-                >
-                  Thích sự kiện
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleAddFilter("friend_activity")}
-                  isDisabled={activeFilters.includes("friend_activity")}
-                >
-                  Hoạt động bạn bè
-                </MenuItem>
-                <Divider my={2} />
-                <MenuItem
-                  onClick={handleClearFilters}
-                  isDisabled={activeFilters.length === 0}
-                >
-                  Xóa tất cả bộ lọc
+                <MenuItem icon={<FiTrash2 />} onClick={handleClearAll}>
+                  Clear all notifications
                 </MenuItem>
               </MenuList>
             </Menu>
-
-            <IconButton
-              aria-label={
-                sortNewest ? "Sắp xếp cũ nhất trước" : "Sắp xếp mới nhất trước"
-              }
-              icon={sortNewest ? <FaSortAmountDown /> : <FaSortAmountUp />}
-              onClick={() => setSortNewest(!sortNewest)}
-              variant="outline"
-            />
           </HStack>
         </Flex>
+      </Box>
 
-        {activeFilters.length > 0 && (
-          <Box>
-            <Text mb={2} fontWeight="medium">
-              Bộ lọc đang áp dụng:
-            </Text>
-            <Flex gap={2} flexWrap="wrap">
-              {activeFilters.map((filter) => (
-                <Tag
-                  size="md"
-                  key={filter}
-                  borderRadius="full"
-                  variant="solid"
-                  colorScheme={getFilterColor(filter)}
+      <Box
+        bg={bgColor}
+        borderRadius="lg"
+        boxShadow="md"
+        borderWidth="1px"
+        borderColor={borderColor}
+        overflow="hidden"
+      >
+        <Tabs
+          colorScheme="teal"
+          onChange={(index) => {
+            const tabValues = ["all", "unread", "read"];
+            setActiveTab(tabValues[index]);
+          }}
+          isLazy
+        >
+          <TabList px={4} pt={4}>
+            <Tab>
+              <HStack>
+                <Text>All</Text>
+                <Badge borderRadius="full" px={2} colorScheme="gray">
+                  6
+                </Badge>
+              </HStack>
+            </Tab>
+            <Tab>
+              <HStack>
+                <Text>Unread</Text>
+                <Badge borderRadius="full" px={2} colorScheme="teal">
+                  3
+                </Badge>
+              </HStack>
+            </Tab>
+            <Tab>
+              <HStack>
+                <Text>Read</Text>
+                <Badge borderRadius="full" px={2} colorScheme="gray">
+                  3
+                </Badge>
+              </HStack>
+            </Tab>
+
+            <Box ml="auto">
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<FiFilter />}
+                  variant="ghost"
+                  size="sm"
                 >
-                  <TagLabel>{getFilterDisplayName(filter)}</TagLabel>
-                  <TagCloseButton onClick={() => handleRemoveFilter(filter)} />
-                </Tag>
-              ))}
-              <Button size="sm" variant="ghost" onClick={handleClearFilters}>
-                Xóa tất cả
-              </Button>
-            </Flex>
-          </Box>
-        )}
-
-        {unreadCount > 0 && (
-          <Text>
-            Bạn có <Badge colorScheme="red">{unreadCount}</Badge> thông báo chưa
-            đọc
-          </Text>
-        )}
-
-        <Tabs variant="enclosed" colorScheme="teal">
-          <TabList>
-            <Tab>Tất cả ({notifications.length})</Tab>
-            <Tab>Chưa đọc ({unreadCount})</Tab>
-            <Tab>Đã đọc ({notifications.length - unreadCount})</Tab>
+                  Filter
+                </MenuButton>
+                <MenuList>
+                  <MenuItem>Event Reminders</MenuItem>
+                  <MenuItem>Ticket Confirmations</MenuItem>
+                  <MenuItem>Event Updates</MenuItem>
+                  <MenuItem>System Messages</MenuItem>
+                  <MenuItem>Event Invitations</MenuItem>
+                </MenuList>
+              </Menu>
+            </Box>
           </TabList>
 
+          <Divider mt={4} />
+
           <TabPanels>
-            <TabPanel px={0}>
-              {filteredNotifications.length === 0 ? (
-                <Box p={8} textAlign="center" borderRadius="md" bg={bgColor}>
-                  {activeFilters.length > 0
-                    ? "Không có thông báo nào phù hợp với bộ lọc"
-                    : "Không có thông báo nào"}
-                </Box>
-              ) : (
-                <VStack spacing={3} align="stretch">
-                  {filteredNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={handleMarkAsRead}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </VStack>
-              )}
+            <TabPanel p={0}>
+              <NotificationList
+                showViewAllButton={false}
+                isHeaderVisible={false}
+              />
             </TabPanel>
-
-            <TabPanel px={0}>
-              {filteredNotifications.filter((n) => !n.read).length === 0 ? (
-                <Box p={8} textAlign="center" borderRadius="md" bg={bgColor}>
-                  {activeFilters.length > 0
-                    ? "Không có thông báo chưa đọc nào phù hợp với bộ lọc"
-                    : "Không có thông báo chưa đọc nào"}
-                </Box>
-              ) : (
-                <VStack spacing={3} align="stretch">
-                  {filteredNotifications
-                    .filter((n) => !n.read)
-                    .map((notification) => (
-                      <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={handleMarkAsRead}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                </VStack>
-              )}
+            <TabPanel p={0}>
+              {/* Thông báo chưa đọc - trong thực tế FilterNofications sẽ được triển khai */}
+              <NotificationList
+                showViewAllButton={false}
+                isHeaderVisible={false}
+              />
             </TabPanel>
-
-            <TabPanel px={0}>
-              {filteredNotifications.filter((n) => n.read).length === 0 ? (
-                <Box p={8} textAlign="center" borderRadius="md" bg={bgColor}>
-                  {activeFilters.length > 0
-                    ? "Không có thông báo đã đọc nào phù hợp với bộ lọc"
-                    : "Không có thông báo đã đọc nào"}
-                </Box>
-              ) : (
-                <VStack spacing={3} align="stretch">
-                  {filteredNotifications
-                    .filter((n) => n.read)
-                    .map((notification) => (
-                      <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={handleMarkAsRead}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                </VStack>
-              )}
+            <TabPanel p={0}>
+              {/* Thông báo đã đọc - trong thực tế FilterNofications sẽ được triển khai */}
+              <NotificationList
+                showViewAllButton={false}
+                isHeaderVisible={false}
+              />
             </TabPanel>
           </TabPanels>
         </Tabs>
-
-        {notifications.length > 0 && (
-          <Flex justifyContent="center" my={4}>
-            <Button
-              leftIcon={<FaTrash />}
-              colorScheme="red"
-              variant="outline"
-              onClick={handleDeleteAll}
-            >
-              Xóa tất cả thông báo
-            </Button>
-          </Flex>
-        )}
-      </VStack>
+      </Box>
     </Container>
   );
-}
+};
+
+export default Notifications;
