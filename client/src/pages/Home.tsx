@@ -19,67 +19,69 @@ import { FiSearch, FiMapPin, FiCalendar } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 // Sample event data
 const events = [
   {
     id: 1,
-    title: "UI/UX Design Workshop",
-    description: "Workshop on modern user interface design principles",
+    title: "Hội thảo thiết kế UI/UX",
+    description:
+      "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
     date: "15/08/2023",
-    location: "Ho Chi Minh City",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3IZUfQd",
     category: "workshop",
     isPaid: false,
   },
   {
     id: 2,
-    title: "Blockchain Technology Conference",
-    description:
-      "Explore the potential and applications of blockchain technology",
+    title: "Hội nghị công nghệ Blockchain",
+    description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
     date: "20/08/2023",
-    location: "Hanoi",
+    location: "Hà Nội",
     image: "https://bit.ly/3wIlKgh",
     category: "conference",
     isPaid: true,
   },
   {
     id: 3,
-    title: "Music Festival 2023",
-    description: "The biggest music event of the year featuring top artists",
+    title: "Lễ hội âm nhạc 2023",
+    description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
     date: "10/09/2023",
-    location: "Da Nang",
+    location: "Đà Nẵng",
     image: "https://bit.ly/3IfO5Fh",
     category: "music",
     isPaid: true,
   },
   {
     id: 4,
-    title: "Startup Networking Night",
-    description: "Connect with founders, investors, and startup enthusiasts",
+    title: "Đêm giao lưu startup",
+    description:
+      "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
     date: "25/08/2023",
-    location: "Ho Chi Minh City",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3kpPKS5",
     category: "networking",
     isPaid: false,
   },
   {
     id: 5,
-    title: "Food & Culture Festival",
-    description: "Explore diverse cuisines and cultural performances",
+    title: "Lễ hội ẩm thực & văn hóa",
+    description:
+      "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
     date: "05/09/2023",
-    location: "Hanoi",
+    location: "Hà Nội",
     image: "https://bit.ly/3SVagzv",
     category: "food",
     isPaid: false,
   },
   {
     id: 6,
-    title: "AI in Business Conference",
-    description: "Learn how AI is transforming businesses and industries",
+    title: "Hội nghị AI trong kinh doanh",
+    description:
+      "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
     date: "12/09/2023",
-    location: "Ho Chi Minh City",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3kD02Jq",
     category: "conference",
     isPaid: true,
@@ -100,7 +102,6 @@ interface EventCardProps {
 }
 
 const EventCard = ({ event }: EventCardProps) => {
-  const { t } = useTranslation();
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const metaColor = useColorModeValue("gray.500", "gray.400");
@@ -137,8 +138,18 @@ const EventCard = ({ event }: EventCardProps) => {
             fontSize="xs"
             textTransform="uppercase"
           >
-            {event.isPaid ? t("common.paid") : t("common.free")} &bull;{" "}
-            {t(`events.categories.${event.category.toLowerCase()}`)}
+            {event.isPaid ? "Trả phí" : "Miễn phí"} &bull;{" "}
+            {event.category === "workshop"
+              ? "Hội thảo"
+              : event.category === "conference"
+              ? "Hội nghị"
+              : event.category === "music"
+              ? "Âm nhạc"
+              : event.category === "networking"
+              ? "Giao lưu"
+              : event.category === "food"
+              ? "Ẩm thực"
+              : event.category}
           </Box>
         </Box>
 
@@ -167,7 +178,7 @@ const EventCard = ({ event }: EventCardProps) => {
           width="full"
           sx={{ textDecoration: "none" }}
         >
-          {t("common.viewDetails")}
+          Xem chi tiết
         </Button>
       </Box>
     </Box>
@@ -180,7 +191,6 @@ const Home = () => {
   const [searchLocation, setSearchLocation] = useState("");
   const [searchCategory, setSearchCategory] = useState("");
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
@@ -232,17 +242,18 @@ const Home = () => {
             maxW="container.md"
           >
             <Heading as="h1" size="2xl">
-              {t("home.hero.title")}
+              Tìm và tham gia sự kiện hấp dẫn
             </Heading>
             <Text fontSize="xl" maxW="container.sm">
-              {t("home.hero.subtitle")}
+              Khám phá các sự kiện thú vị đang diễn ra gần bạn và đặt vé ngay
+              hôm nay!
             </Text>
             <Button
               size="lg"
               colorScheme="teal"
               onClick={() => navigate("/events")}
             >
-              {t("home.hero.exploreEvents")}
+              Khám phá sự kiện
             </Button>
           </VStack>
         </Box>
@@ -251,7 +262,7 @@ const Home = () => {
         <Container maxW="container.xl" mb={12}>
           <VStack spacing={5} align="stretch" w="100%">
             <Heading size="lg" color={textColor}>
-              {t("home.search.title")}
+              Tìm kiếm sự kiện
             </Heading>
             <Stack
               direction={{ base: "column", md: "row" }}
@@ -269,7 +280,7 @@ const Home = () => {
                 </InputLeftElement>
                 <Input
                   type="text"
-                  placeholder={t("home.search.keywordPlaceholder")}
+                  placeholder="Tên sự kiện, chủ đề..."
                   bg={inputBg}
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
@@ -283,7 +294,7 @@ const Home = () => {
                   <FiMapPin color={iconColor} />
                 </InputLeftElement>
                 <Input
-                  placeholder={t("home.search.locationPlaceholder")}
+                  placeholder="Địa điểm"
                   bg={inputBg}
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
@@ -293,27 +304,21 @@ const Home = () => {
 
               {/* Category Select */}
               <Select
-                placeholder={t("home.search.categoryPlaceholder")}
+                placeholder="Chọn danh mục"
                 bg={inputBg}
                 value={searchCategory}
                 onChange={(e) => setSearchCategory(e.target.value)}
                 borderColor={borderColor}
               >
-                <option value="workshop">
-                  {t("events.categories.workshop")}
-                </option>
-                <option value="conference">
-                  {t("events.categories.conference")}
-                </option>
-                <option value="music">{t("events.categories.music")}</option>
-                <option value="networking">
-                  {t("events.categories.networking")}
-                </option>
-                <option value="food">{t("events.categories.food")}</option>
+                <option value="workshop">Hội thảo</option>
+                <option value="conference">Hội nghị</option>
+                <option value="music">Âm nhạc</option>
+                <option value="networking">Giao lưu</option>
+                <option value="food">Ẩm thực</option>
               </Select>
 
               <Button colorScheme="teal" onClick={handleSearch}>
-                {t("common.search")}
+                Tìm kiếm
               </Button>
             </Stack>
           </VStack>
@@ -323,10 +328,11 @@ const Home = () => {
         <Container maxW="container.xl" mb={16}>
           <VStack spacing={5} align="flex-start" w="100%" mb={6}>
             <Heading size="lg" color={textColor}>
-              {t("home.featuredEvents.title")}
+              Sự kiện nổi bật
             </Heading>
             <Text fontSize="lg" color={textColor}>
-              {t("home.featuredEvents.subtitle")}
+              Khám phá những sự kiện được quan tâm nhiều nhất trong thời gian
+              gần đây
             </Text>
           </VStack>
 
@@ -350,7 +356,7 @@ const Home = () => {
               to="/events"
               sx={{ textDecoration: "none" }}
             >
-              {t("home.featuredEvents.viewAll")}
+              Xem tất cả sự kiện
             </Button>
           </Flex>
         </Container>
@@ -377,10 +383,12 @@ const Home = () => {
                 mb={{ base: 6, md: 0 }}
               >
                 <Heading as="h2" size="xl">
-                  {t("home.organizer.title")}
+                  Trở thành nhà tổ chức sự kiện
                 </Heading>
                 <Text fontSize="lg" maxW="container.md">
-                  {t("home.organizer.subtitle")}
+                  Bạn có ý tưởng cho một sự kiện tuyệt vời? Hãy đăng ký trở
+                  thành nhà tổ chức và bắt đầu tạo các sự kiện của riêng bạn
+                  ngay hôm nay!
                 </Text>
                 <Button
                   size="lg"
@@ -391,7 +399,7 @@ const Home = () => {
                   to="/become-organizer"
                   sx={{ textDecoration: "none" }}
                 >
-                  {t("home.organizer.getStarted")}
+                  Bắt đầu ngay
                 </Button>
               </VStack>
 
