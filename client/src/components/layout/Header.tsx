@@ -34,7 +34,6 @@ import { useState } from "react";
 import { NotificationBell } from "../notification";
 import ColorModeToggle from "../common/ColorModeToggle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
-import { useTranslation } from "react-i18next";
 
 // Giả lập trạng thái đăng nhập (sẽ được thay thế bằng context/redux sau này)
 const useAuth = () => {
@@ -82,7 +81,6 @@ export default function Header() {
   const { isAuthenticated, user, login, loginAsOrganizer, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
-  const { t } = useTranslation();
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
@@ -95,7 +93,7 @@ export default function Header() {
   const handleLogout = () => {
     logout();
     toast({
-      title: t("auth.logoutSuccess"),
+      title: "Đăng xuất thành công",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -107,8 +105,8 @@ export default function Header() {
   const quickLogin = () => {
     login();
     toast({
-      title: t("auth.loginSuccess") + " (Demo)",
-      description: t("common.welcome"),
+      title: "Đăng nhập thành công (Demo)",
+      description: "Chào mừng đến với EventHub",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -119,12 +117,8 @@ export default function Header() {
   const quickLoginAsOrganizer = () => {
     loginAsOrganizer();
     toast({
-      title:
-        t("auth.loginSuccess") +
-        " - " +
-        t("user.organizerDashboard") +
-        " (Demo)",
-      description: t("common.welcome"),
+      title: "Đăng nhập thành công - Bảng điều khiển tổ chức (Demo)",
+      description: "Chào mừng đến với EventHub",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -170,7 +164,7 @@ export default function Header() {
               textDecoration: "none",
             }}
           >
-            {t("common.appName")}
+            EventHub
           </ChakraLink>
 
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
@@ -200,7 +194,7 @@ export default function Header() {
                 colorScheme="teal"
                 variant="outline"
               >
-                {t("events.createEvent")}
+                Tạo sự kiện
               </Button>
 
               <Box display={{ base: "none", md: "flex" }}>
@@ -235,24 +229,24 @@ export default function Header() {
                   </Text>
                   <MenuDivider />
                   <MenuItem as={Link} to="/profile">
-                    {t("user.profile")}
+                    Hồ sơ
                   </MenuItem>
                   {user?.role === "organizer" && (
                     <MenuItem as={Link} to="/dashboard">
-                      {t("user.organizerDashboard")}
+                      Bảng điều khiển tổ chức
                     </MenuItem>
                   )}
                   <MenuItem as={Link} to="/my-events">
-                    {t("events.myEvents")}
+                    Sự kiện của tôi
                   </MenuItem>
                   <MenuItem as={Link} to="/my-tickets">
-                    {t("user.myRegistrations")}
+                    Vé của tôi
                   </MenuItem>
                   <MenuItem as={Link} to="/notifications">
-                    {t("notifications.notifications")}
+                    Thông báo
                   </MenuItem>
                   <MenuDivider />
-                  <MenuItem onClick={handleLogout}>{t("auth.logout")}</MenuItem>
+                  <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
                 </MenuList>
               </Menu>
             </>
@@ -265,7 +259,7 @@ export default function Header() {
                 variant={"link"}
                 to={"/login"}
               >
-                {t("auth.loginButton")}
+                Đăng nhập
               </Button>
               <Button
                 as={Link}
@@ -275,7 +269,7 @@ export default function Header() {
                 to={"/register"}
                 colorScheme="teal"
               >
-                {t("auth.registerButton")}
+                Đăng ký
               </Button>
 
               {/* UI Demo: Nút đăng nhập nhanh - Chỉ để test, sẽ bị xóa khi tích hợp auth thực tế */}
@@ -286,14 +280,14 @@ export default function Header() {
                   colorScheme="gray"
                   variant="ghost"
                 >
-                  Demo Login
+                  Đăng nhập Demo
                 </MenuButton>
                 <MenuList>
                   <MenuItem onClick={quickLogin}>
-                    {t("auth.demoLoginUser")}
+                    Đăng nhập dưới dạng người dùng
                   </MenuItem>
                   <MenuItem onClick={quickLoginAsOrganizer}>
-                    {t("auth.demoLoginOrganizer")}
+                    Đăng nhập dưới dạng nhà tổ chức
                   </MenuItem>
                 </MenuList>
               </Menu>
@@ -310,7 +304,7 @@ export default function Header() {
 }
 
 const DesktopNav = () => {
-  const { t } = useTranslation();
+  // Màu sắc theo theme
   const linkColor = useColorModeValue("gray.800", "gray.100");
   const linkHoverColor = useColorModeValue("teal.600", "teal.300");
   const popoverContentBgColor = useColorModeValue("white", "gray.800");
@@ -319,10 +313,8 @@ const DesktopNav = () => {
   return (
     <Stack direction={"row"} spacing={4}>
       {NAV_ITEMS.map((navItem) => {
-        // Lấy tên item theo i18n nếu tồn tại key
-        const displayLabel = navItem.labelKey
-          ? t(navItem.labelKey)
-          : navItem.label;
+        // Sử dụng tên Tiếng Việt trực tiếp
+        const displayLabel = navItem.label;
 
         return (
           <Box key={navItem.label}>
@@ -357,10 +349,8 @@ const DesktopNav = () => {
                 >
                   <Stack>
                     {navItem.children.map((child) => {
-                      // Lấy tên child item theo i18n nếu tồn tại key
-                      const childDisplayLabel = child.labelKey
-                        ? t(child.labelKey)
-                        : child.label;
+                      // Sử dụng tên Tiếng Việt trực tiếp
+                      const childDisplayLabel = child.label;
 
                       return (
                         <DesktopSubNav
@@ -381,7 +371,8 @@ const DesktopNav = () => {
   );
 };
 
-interface DesktopSubNavProps extends Omit<NavItem, "label"> {
+interface DesktopSubNavProps
+  extends Omit<NavItem, "label" | "labelKey" | "subLabelKey"> {
   displayLabel: string;
 }
 
@@ -389,11 +380,10 @@ const DesktopSubNav = ({
   displayLabel,
   href,
   subLabel,
-  subLabelKey,
 }: DesktopSubNavProps) => {
-  const { t } = useTranslation();
+  // Sử dụng subLabel trực tiếp thay vì qua i18n
   const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const subLabelText = subLabelKey ? t(subLabelKey) : subLabel;
+  const subLabelText = subLabel;
 
   return (
     <ChakraLink
@@ -452,10 +442,14 @@ const MobileNav = () => {
   );
 };
 
-const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
-  const { t } = useTranslation();
+const MobileNavItem = ({
+  label,
+  children,
+  href,
+}: Omit<NavItem, "labelKey" | "subLabel" | "subLabelKey">) => {
   const { isOpen, onToggle } = useDisclosure();
-  const itemLabel = labelKey ? t(labelKey) : label;
+  // Sử dụng label trực tiếp thay vì qua i18n
+  const itemLabel = label;
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.800", "gray.100");
 
@@ -497,9 +491,7 @@ const MobileNavItem = ({ label, labelKey, children, href }: NavItem) => {
         >
           {children &&
             children.map((child) => {
-              const childLabel = child.labelKey
-                ? t(child.labelKey)
-                : child.label;
+              const childLabel = child.label;
               return (
                 <ChakraLink
                   key={child.label}
@@ -532,36 +524,36 @@ interface NavItem {
 
 const NAV_ITEMS: Array<NavItem> = [
   {
-    label: "Events",
+    label: "Sự kiện",
     labelKey: "events.events",
     children: [
       {
-        label: "All Events",
+        label: "Tất cả sự kiện",
         labelKey: "common.all",
-        subLabel: "Find events near you",
+        subLabel: "Tìm sự kiện gần bạn",
         subLabelKey: "events.searchEvents",
         href: "/events",
       },
       {
-        label: "Categories",
+        label: "Danh mục",
         labelKey: "events.category",
-        subLabel: "Browse events by category",
+        subLabel: "Duyệt sự kiện theo danh mục",
         href: "/categories",
       },
     ],
   },
   {
-    label: "Create Event",
+    label: "Tạo sự kiện",
     labelKey: "events.createEvent",
     href: "/create-event",
   },
   {
-    label: "About",
+    label: "Về chúng tôi",
     labelKey: "footer.about",
     href: "/about",
   },
   {
-    label: "Help",
+    label: "Trợ giúp",
     labelKey: "footer.faq",
     href: "/help",
   },

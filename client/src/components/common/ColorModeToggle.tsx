@@ -12,7 +12,9 @@ const ColorModeToggle = () => {
   // Xác định icon và hover text dựa trên chế độ màu hiện tại
   const isDark = colorMode === "dark";
   const SwitchIcon = isDark ? MdLightMode : MdDarkMode;
-  const ariaLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
+  const ariaLabel = isDark
+    ? "Chuyển sang chế độ sáng"
+    : "Chuyển sang chế độ tối";
 
   // Màu sắc thay đổi theo chế độ màu
   const iconColor = useColorModeValue("gray.600", "yellow.400");

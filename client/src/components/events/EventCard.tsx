@@ -72,7 +72,7 @@ export const EventCard = ({ event }: EventCardProps) => {
             px={2}
             py={1}
           >
-            {event.isPaid ? "Paid" : "Free"}
+            {event.isPaid ? "Có phí" : "Miễn phí"}
           </Badge>
         </Box>
       </Box>
@@ -112,7 +112,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           size="sm"
           sx={{ textDecoration: "none" }}
         >
-          View Details
+          Xem Chi Tiết
         </Button>
       </Box>
     </Box>

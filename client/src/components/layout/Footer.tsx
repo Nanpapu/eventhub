@@ -15,15 +15,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
-import {
-  FaTwitter,
-  FaYoutube,
-  FaInstagram,
-  FaArrowRight,
-  FaFacebookF,
-} from "react-icons/fa";
+import { FaTwitter, FaYoutube, FaInstagram, FaFacebookF } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { BiMailSend } from "react-icons/bi";
 // Trong thực tế, bạn sẽ import useAuth từ context
 // import { useAuth } from "../../contexts/AuthContext";
 
@@ -72,13 +66,7 @@ const SocialButton = ({
 export default function Footer() {
   // State cho form đăng ký email
   const [email, setEmail] = useState("");
-  const [isSubscribing, setIsSubscribing] = useState(false);
   const toast = useToast();
-  const { t } = useTranslation();
-
-  // Sẽ sử dụng context auth trong thực tế
-  // const { isAuthenticated, user } = useAuth();
-  // const isOrganizer = isAuthenticated && user?.role === "organizer";
 
   // Tạm thời để false, trong thực tế sẽ lấy từ context
   const isOrganizer = false;
@@ -91,16 +79,13 @@ export default function Footer() {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const formBg = useColorModeValue("gray.50", "gray.700");
 
-  // Kiểm tra email hợp lệ
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   // Xử lý đăng ký nhận thông báo
-  const handleSubscribe = () => {
+  const handleSubscribe = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!email) {
       toast({
-        title: t("errors.required"),
+        title: "Lỗi",
+        description: "Vui lòng nhập địa chỉ email của bạn",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -108,9 +93,12 @@ export default function Footer() {
       return;
     }
 
-    if (!isValidEmail(email)) {
+    // Kiểm tra định dạng email đơn giản
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast({
-        title: t("errors.invalidEmail"),
+        title: "Lỗi",
+        description: "Vui lòng nhập một địa chỉ email hợp lệ",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -118,19 +106,15 @@ export default function Footer() {
       return;
     }
 
-    // Giả lập gửi đăng ký
-    setIsSubscribing(true);
-    setTimeout(() => {
-      setIsSubscribing(false);
-      setEmail("");
-      toast({
-        title: t("common.success"),
-        description: t("common.welcome"),
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-    }, 1000);
+    // Mô phỏng thành công
+    toast({
+      title: "Đăng ký thành công!",
+      description: "Cảm ơn bạn đã đăng ký nhận bản tin của chúng tôi",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    setEmail("");
   };
 
   return (
@@ -153,11 +137,11 @@ export default function Footer() {
                 color={logoColor}
                 sx={{ textDecoration: "none" }}
               >
-                {t("common.appName")}
+                EventHub
               </Heading>
             </Flex>
             <Text fontSize={"sm"} color={secondaryTextColor}>
-              © 2024 EventHub Vietnam. {t("footer.copyright")}
+              © 2025 EventHub Việt Nam. Đã đăng ký bản quyền
             </Text>
             <Stack direction={"row"} spacing={6}>
               <SocialButton
@@ -187,71 +171,73 @@ export default function Footer() {
             </Stack>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>{t("footer.about")}</ListHeader>
+            <ListHeader>Về chúng tôi</ListHeader>
             <ChakraLink as={Link} to={"/about"}>
-              {t("footer.about")}
+              Về chúng tôi
             </ChakraLink>
             <ChakraLink as={Link} to={"/contact"}>
-              {t("footer.contactUs")}
+              Liên hệ
             </ChakraLink>
             <ChakraLink as={Link} to={"/press"}>
-              {t("footer.pressKit")}
+              Bộ hồ sơ báo chí
             </ChakraLink>
             <ChakraLink as={Link} to={"/privacy"}>
-              {t("footer.privacyPolicy")}
+              Chính sách bảo mật
             </ChakraLink>
             <ChakraLink as={Link} to={"/terms"}>
-              {t("footer.termsOfService")}
+              Điều khoản dịch vụ
             </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>{t("footer.support")}</ListHeader>
+            <ListHeader>Hỗ trợ</ListHeader>
             <ChakraLink as={Link} to={"/help"}>
-              {t("footer.faq")}
+              Câu hỏi thường gặp
             </ChakraLink>
             <ChakraLink as={Link} to={"/faq"}>
-              {t("footer.helpCenter")}
+              Trung tâm trợ giúp
             </ChakraLink>
             {isOrganizer ? (
               <ChakraLink as={Link} to={"/dashboard"}>
-                {t("user.organizerDashboard")}
+                Bảng điều khiển tổ chức
               </ChakraLink>
             ) : (
               <ChakraLink as={Link} to={"/become-organizer"}>
-                {t("footer.becomeOrganizer")}
+                Trở thành nhà tổ chức
               </ChakraLink>
             )}
             <ChakraLink as={Link} to={"/community"}>
-              {t("footer.community")}
+              Cộng đồng
             </ChakraLink>
           </Stack>
           <Stack align={"flex-start"}>
-            <ListHeader>{t("footer.stayUpdated")}</ListHeader>
+            <ListHeader>Luôn cập nhật</ListHeader>
             <Stack direction={"row"}>
-              <Input
-                placeholder={t("footer.emailPlaceholder")}
-                bg={formBg}
-                border={1}
-                borderStyle={"solid"}
-                borderColor={borderColor}
-                _focus={{
-                  bg: useColorModeValue("gray.100", "gray.600"),
-                }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                isDisabled={isSubscribing}
-              />
-              <IconButton
-                bg={"teal.500"}
-                color={useColorModeValue("white", "gray.800")}
-                _hover={{
-                  bg: "teal.600",
-                }}
-                aria-label={t("footer.subscribe")}
-                icon={<FaArrowRight />}
-                onClick={handleSubscribe}
-                isLoading={isSubscribing}
-              />
+              <form onSubmit={handleSubscribe}>
+                <Stack direction={"row"}>
+                  <Input
+                    placeholder="Địa chỉ email của bạn"
+                    bg={formBg}
+                    border={1}
+                    borderStyle={"solid"}
+                    borderColor={borderColor}
+                    _focus={{
+                      bg: useColorModeValue("gray.100", "gray.600"),
+                    }}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <IconButton
+                    bg={"teal.500"}
+                    color={useColorModeValue("white", "gray.800")}
+                    _hover={{
+                      bg: "teal.600",
+                    }}
+                    aria-label="Đăng ký"
+                    type="submit"
+                    icon={<BiMailSend />}
+                  />
+                </Stack>
+              </form>
             </Stack>
           </Stack>
         </SimpleGrid>
