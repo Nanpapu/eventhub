@@ -51,8 +51,8 @@ const Login = () => {
     try {
       console.log("Login data:", data);
       toast({
-        title: "Login successful!",
-        description: "Welcome back to EventHub!",
+        title: "Đăng nhập thành công!",
+        description: "Chào mừng bạn trở lại với EventHub!",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -62,8 +62,8 @@ const Login = () => {
       setTimeout(() => navigate("/"), 1500);
     } catch (error) {
       toast({
-        title: "Login failed!",
-        description: "Please check your email and password.",
+        title: "Đăng nhập thất bại!",
+        description: "Vui lòng kiểm tra email và mật khẩu của bạn.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -86,15 +86,15 @@ const Login = () => {
             size="sm"
             onClick={() => navigate("/")}
           >
-            Back to Home
+            Quay lại Trang chủ
           </Button>
 
           <Heading textAlign="center" size="xl">
-            Welcome Back
+            Chào mừng quay lại
           </Heading>
 
           <Text textAlign="center" color="gray.500" fontSize="md">
-            Log in to continue your journey with EventHub
+            Đăng nhập để tiếp tục hành trình với EventHub
           </Text>
 
           <Divider />
@@ -105,14 +105,14 @@ const Login = () => {
                 <FormLabel fontWeight="medium">Email</FormLabel>
                 <Input
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="email.cua.ban@example.com"
                   size="lg"
                   focusBorderColor="teal.400"
                   {...register("email", {
-                    required: "Email is required",
+                    required: "Email là bắt buộc",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
+                      message: "Địa chỉ email không hợp lệ",
                     },
                   })}
                 />
@@ -120,7 +120,7 @@ const Login = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel fontWeight="medium">Password</FormLabel>
+                <FormLabel fontWeight="medium">Mật khẩu</FormLabel>
                 <InputGroup>
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -128,17 +128,17 @@ const Login = () => {
                     size="lg"
                     focusBorderColor="teal.400"
                     {...register("password", {
-                      required: "Password is required",
+                      required: "Mật khẩu là bắt buộc",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters",
+                        message: "Mật khẩu phải có ít nhất 6 ký tự",
                       },
                     })}
                   />
                   <InputRightElement h="full">
                     <IconButton
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
                       icon={showPassword ? <FaEyeSlash /> : <FaEye />}
                       variant="ghost"
@@ -152,7 +152,7 @@ const Login = () => {
 
               <Flex justify="space-between" align="center">
                 <Checkbox colorScheme="teal" {...register("rememberMe")}>
-                  Remember me
+                  Ghi nhớ đăng nhập
                 </Checkbox>
                 <ChakraLink
                   color="teal.500"
@@ -160,7 +160,7 @@ const Login = () => {
                   fontWeight="medium"
                   _hover={{ textDecoration: "underline" }}
                 >
-                  Forgot password?
+                  Quên mật khẩu?
                 </ChakraLink>
               </Flex>
 
@@ -173,14 +173,14 @@ const Login = () => {
                 mt={4}
                 w="full"
               >
-                Sign In
+                Đăng nhập
               </Button>
             </Stack>
           </form>
 
           <Flex justify="center" align="center">
             <Text>
-              Don't have an account?{" "}
+              Chưa có tài khoản?{" "}
               <ChakraLink
                 as={Link}
                 to="/register"
@@ -188,7 +188,7 @@ const Login = () => {
                 fontWeight="medium"
                 _hover={{ textDecoration: "underline" }}
               >
-                Register now
+                Đăng ký ngay
               </ChakraLink>
             </Text>
           </Flex>

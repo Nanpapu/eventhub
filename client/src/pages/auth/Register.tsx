@@ -62,8 +62,8 @@ const Register = () => {
     try {
       console.log("Register data:", data);
       toast({
-        title: "Registration successful!",
-        description: "Your account has been created.",
+        title: "Đăng ký thành công!",
+        description: "Tài khoản của bạn đã được tạo.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -73,8 +73,8 @@ const Register = () => {
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
       toast({
-        title: "Registration failed!",
-        description: "An error occurred during registration.",
+        title: "Đăng ký thất bại!",
+        description: "Đã xảy ra lỗi trong quá trình đăng ký.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -97,15 +97,15 @@ const Register = () => {
             size="sm"
             onClick={() => navigate("/")}
           >
-            Back to Home
+            Quay lại Trang chủ
           </Button>
 
           <Heading textAlign="center" size="xl">
-            Create Account
+            Tạo tài khoản
           </Heading>
 
           <Text textAlign="center" color="gray.500" fontSize="md">
-            Create an account to experience all features of EventHub
+            Tạo tài khoản để trải nghiệm tất cả tính năng của EventHub
           </Text>
 
           <Divider />
@@ -113,13 +113,13 @@ const Register = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <FormControl isInvalid={!!errors.fullName}>
-                <FormLabel fontWeight="medium">Full Name</FormLabel>
+                <FormLabel fontWeight="medium">Họ và tên</FormLabel>
                 <Input
-                  placeholder="Your full name"
+                  placeholder="Họ tên đầy đủ của bạn"
                   size="lg"
                   focusBorderColor="teal.400"
                   {...register("fullName", {
-                    required: "Full name is required",
+                    required: "Họ tên là bắt buộc",
                   })}
                 />
                 <FormErrorMessage>{errors.fullName?.message}</FormErrorMessage>
@@ -129,14 +129,14 @@ const Register = () => {
                 <FormLabel fontWeight="medium">Email</FormLabel>
                 <Input
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="email.cua.ban@example.com"
                   size="lg"
                   focusBorderColor="teal.400"
                   {...register("email", {
-                    required: "Email is required",
+                    required: "Email là bắt buộc",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
+                      message: "Địa chỉ email không hợp lệ",
                     },
                   })}
                 />
@@ -144,7 +144,7 @@ const Register = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel fontWeight="medium">Password</FormLabel>
+                <FormLabel fontWeight="medium">Mật khẩu</FormLabel>
                 <InputGroup>
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -152,17 +152,17 @@ const Register = () => {
                     size="lg"
                     focusBorderColor="teal.400"
                     {...register("password", {
-                      required: "Password is required",
+                      required: "Mật khẩu là bắt buộc",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters",
+                        message: "Mật khẩu phải có ít nhất 6 ký tự",
                       },
                     })}
                   />
                   <InputRightElement h="full">
                     <IconButton
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
                       icon={showPassword ? <FaEyeSlash /> : <FaEye />}
                       variant="ghost"
@@ -175,7 +175,7 @@ const Register = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.confirmPassword}>
-                <FormLabel fontWeight="medium">Confirm Password</FormLabel>
+                <FormLabel fontWeight="medium">Xác nhận mật khẩu</FormLabel>
                 <InputGroup>
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
@@ -183,15 +183,15 @@ const Register = () => {
                     size="lg"
                     focusBorderColor="teal.400"
                     {...register("confirmPassword", {
-                      required: "Please confirm your password",
+                      required: "Vui lòng xác nhận mật khẩu của bạn",
                       validate: (value) =>
-                        value === password || "Passwords do not match",
+                        value === password || "Mật khẩu không khớp",
                     })}
                   />
                   <InputRightElement h="full">
                     <IconButton
                       aria-label={
-                        showConfirmPassword ? "Hide password" : "Show password"
+                        showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
                       icon={showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                       variant="ghost"
@@ -206,7 +206,7 @@ const Register = () => {
               </FormControl>
 
               <FormControl>
-                <FormLabel fontWeight="medium">I want to</FormLabel>
+                <FormLabel fontWeight="medium">Tôi muốn</FormLabel>
                 <Controller
                   name="role"
                   control={control}
@@ -214,10 +214,10 @@ const Register = () => {
                     <RadioGroup {...field}>
                       <HStack spacing={6}>
                         <Radio value="user" colorScheme="teal">
-                          Attend events
+                          Tham gia sự kiện
                         </Radio>
                         <Radio value="organizer" colorScheme="teal">
-                          Organize events
+                          Tổ chức sự kiện
                         </Radio>
                       </HStack>
                     </RadioGroup>
@@ -234,14 +234,14 @@ const Register = () => {
                 mt={4}
                 w="full"
               >
-                Create Account
+                Tạo tài khoản
               </Button>
             </Stack>
           </form>
 
           <Flex justify="center" align="center">
             <Text>
-              Already have an account?{" "}
+              Đã có tài khoản?{" "}
               <ChakraLink
                 as={Link}
                 to="/login"
@@ -249,7 +249,7 @@ const Register = () => {
                 fontWeight="medium"
                 _hover={{ textDecoration: "underline" }}
               >
-                Login
+                Đăng nhập
               </ChakraLink>
             </Text>
           </Flex>

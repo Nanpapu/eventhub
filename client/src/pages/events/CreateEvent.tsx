@@ -18,7 +18,6 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Checkbox,
   Switch,
   FormErrorMessage,
   VStack,
@@ -50,10 +49,7 @@ import {
   FiMapPin,
   FiClock,
   FiDollarSign,
-  FiImage,
-  FiTag,
   FiUsers,
-  FiInfo,
   FiX,
   FiPlus,
   FiUpload,
@@ -90,15 +86,15 @@ interface EventFormData {
 
 // Dữ liệu cho các lựa chọn form
 const categoryOptions = [
-  "Conference",
-  "Workshop",
-  "Seminar",
-  "Meetup",
-  "Concert",
-  "Exhibition",
-  "Sport",
-  "Party",
-  "Other",
+  "Hội nghị",
+  "Hội thảo",
+  "Buổi thuyết trình",
+  "Gặp gỡ",
+  "Hòa nhạc",
+  "Triển lãm",
+  "Thể thao",
+  "Tiệc",
+  "Khác",
 ];
 
 // Component tạo và chỉnh sửa sự kiện
@@ -187,16 +183,16 @@ const CreateEvent = () => {
           setIsDataLoaded(true);
 
           toast({
-            title: "Event data loaded",
-            description: "You can now edit the event details",
+            title: "Đã tải dữ liệu sự kiện",
+            description: "Bạn có thể chỉnh sửa thông tin sự kiện",
             status: "success",
             duration: 3000,
             isClosable: true,
           });
         } catch (error) {
           toast({
-            title: "Error loading event",
-            description: "Could not load event data for editing",
+            title: "Lỗi khi tải sự kiện",
+            description: "Không thể tải dữ liệu sự kiện để chỉnh sửa",
             status: "error",
             duration: 4000,
             isClosable: true,
@@ -300,8 +296,8 @@ const CreateEvent = () => {
   const removeTicketType = (id: string) => {
     if (formData.ticketTypes.length <= 1) {
       toast({
-        title: "Cannot remove",
-        description: "Event must have at least one ticket type",
+        title: "Không thể xóa",
+        description: "Sự kiện phải có ít nhất một loại vé",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -338,8 +334,8 @@ const CreateEvent = () => {
   const handleDeleteEvent = () => {
     // Trong thực tế, sẽ gọi API để xóa sự kiện
     toast({
-      title: "Event deleted",
-      description: "The event has been permanently deleted",
+      title: "Sự kiện đã xóa",
+      description: "Sự kiện đã bị xóa vĩnh viễn",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -353,30 +349,31 @@ const CreateEvent = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) newErrors.title = "Title is required";
+    if (!formData.title.trim()) newErrors.title = "Tiêu đề là bắt buộc";
     if (!formData.description.trim())
-      newErrors.description = "Description is required";
-    if (!formData.category) newErrors.category = "Category is required";
-    if (!formData.date) newErrors.date = "Date is required";
-    if (!formData.startTime) newErrors.startTime = "Start time is required";
-    if (!formData.endTime) newErrors.endTime = "End time is required";
+      newErrors.description = "Mô tả là bắt buộc";
+    if (!formData.category) newErrors.category = "Danh mục là bắt buộc";
+    if (!formData.date) newErrors.date = "Ngày là bắt buộc";
+    if (!formData.startTime)
+      newErrors.startTime = "Thời gian bắt đầu là bắt buộc";
+    if (!formData.endTime) newErrors.endTime = "Thời gian kết thúc là bắt buộc";
 
     if (!formData.isOnline && !formData.location.trim()) {
-      newErrors.location = "Location is required for in-person events";
+      newErrors.location = "Địa điểm là bắt buộc cho sự kiện trực tiếp";
     }
 
     if (formData.isOnline && !formData.onlineUrl?.trim()) {
-      newErrors.onlineUrl = "Online URL is required for virtual events";
+      newErrors.onlineUrl = "URL trực tuyến là bắt buộc cho sự kiện ảo";
     }
 
     if (formData.isPaid && (!formData.price || formData.price <= 0)) {
-      newErrors.price = "Valid price is required for paid events";
+      newErrors.price = "Giá hợp lệ là bắt buộc cho sự kiện có phí";
     }
 
     // Validate if all ticket types have names
     formData.ticketTypes.forEach((ticket, index) => {
       if (!ticket.name.trim()) {
-        newErrors[`ticketName-${index}`] = "Ticket name is required";
+        newErrors[`ticketName-${index}`] = "Tên vé là bắt buộc";
       }
     });
 
@@ -390,8 +387,8 @@ const CreateEvent = () => {
 
     if (!validateForm()) {
       toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
+        title: "Lỗi xác thực",
+        description: "Vui lòng sửa các lỗi trong biểu mẫu",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -407,10 +404,10 @@ const CreateEvent = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast({
-        title: editMode ? "Event updated" : "Event created",
+        title: editMode ? "Sự kiện đã cập nhật" : "Sự kiện đã tạo",
         description: editMode
-          ? "Your event has been updated successfully"
-          : "Your event has been created successfully",
+          ? "Sự kiện của bạn đã được cập nhật thành công"
+          : "Sự kiện của bạn đã được tạo thành công",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -420,8 +417,8 @@ const CreateEvent = () => {
       navigate("/dashboard");
     } catch (error) {
       toast({
-        title: "Error",
-        description: "There was an error saving your event",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi khi lưu sự kiện của bạn",
         status: "error",
         duration: 4000,
         isClosable: true,
@@ -442,10 +439,10 @@ const CreateEvent = () => {
             alignSelf="flex-start"
             onClick={() => navigate(-1)}
           >
-            Back to Dashboard
+            Quay lại Bảng điều khiển
           </Button>
           <Heading>
-            {editMode ? "Loading Event..." : "Create New Event"}
+            {editMode ? "Đang tải sự kiện..." : "Tạo sự kiện mới"}
           </Heading>
           <Text>Please wait while we load the event data...</Text>
         </VStack>
@@ -460,19 +457,21 @@ const CreateEvent = () => {
         <Breadcrumb fontSize="sm">
           <BreadcrumbItem>
             <BreadcrumbLink onClick={() => navigate("/dashboard")}>
-              Dashboard
+              Bảng điều khiển
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>
             <BreadcrumbLink>
-              {editMode ? "Edit Event" : "Create Event"}
+              {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện"}
             </BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
 
         {/* Header */}
         <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-          <Heading>{editMode ? "Edit Event" : "Create New Event"}</Heading>
+          <Heading>
+            {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
+          </Heading>
 
           <HStack spacing={4}>
             {editMode && (
@@ -482,7 +481,7 @@ const CreateEvent = () => {
                 leftIcon={<FiTrash2 />}
                 onClick={confirmDeleteEvent}
               >
-                Delete Event
+                Xóa sự kiện
               </Button>
             )}
             <Button
@@ -491,7 +490,7 @@ const CreateEvent = () => {
               isLoading={isSubmitting}
               onClick={handleSubmit}
             >
-              {editMode ? "Save Changes" : "Create Event"}
+              {editMode ? "Lưu thay đổi" : "Tạo sự kiện"}
             </Button>
           </HStack>
         </Flex>

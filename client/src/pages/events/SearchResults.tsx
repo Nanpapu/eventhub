@@ -30,7 +30,6 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiSearch, FiMapPin, FiCalendar, FiFilter, FiX } from "react-icons/fi";
-import { useTranslation } from "react-i18next";
 
 // Định nghĩa kiểu dữ liệu cho sự kiện
 interface EventType {
@@ -48,8 +47,6 @@ interface EventType {
 // Component EventCard nhỏ gọn nhúng trực tiếp trong trang này
 // (Trong dự án thực tế nên tách thành component riêng)
 const EventCard = ({ event }: { event: EventType }) => {
-  const { t } = useTranslation();
-
   // Màu sắc theo theme
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
@@ -86,7 +83,7 @@ const EventCard = ({ event }: { event: EventType }) => {
             px={2}
             py={1}
           >
-            {t(`events.categories.${event.category}`)}
+            {event.category}
           </Badge>
           <Badge
             colorScheme={event.isPaid ? "purple" : "green"}
@@ -95,7 +92,7 @@ const EventCard = ({ event }: { event: EventType }) => {
             px={2}
             py={1}
           >
-            {event.isPaid ? t("common.paid") : t("common.free")}
+            {event.isPaid ? "Có phí" : "Miễn phí"}
           </Badge>
         </Box>
       </Box>
@@ -129,7 +126,7 @@ const EventCard = ({ event }: { event: EventType }) => {
           size="sm"
           sx={{ textDecoration: "none" }}
         >
-          {t("common.viewDetails")}
+          Xem Chi Tiết
         </Button>
       </Box>
     </Box>
@@ -224,8 +221,6 @@ const categories = [
 ];
 
 const SearchResults = () => {
-  const { t } = useTranslation();
-
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
   const boxBg = useColorModeValue("white", "gray.800");
@@ -331,7 +326,7 @@ const SearchResults = () => {
       <Container maxW="container.xl" py={8}>
         {/* Tiêu đề trang */}
         <Heading as="h1" size="xl" mb={6} color={textColor}>
-          {t("events.searchResults")}
+          Kết quả tìm kiếm
         </Heading>
 
         {/* Desktop: Search & Filter Bar */}
@@ -351,7 +346,7 @@ const SearchResults = () => {
                 <FiSearch color={iconColor} />
               </InputLeftElement>
               <Input
-                placeholder={t("events.searchEvents")}
+                placeholder="Tìm kiếm sự kiện..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 borderColor={borderColor}
@@ -363,7 +358,7 @@ const SearchResults = () => {
                 <FiMapPin color={iconColor} />
               </InputLeftElement>
               <Select
-                placeholder={t("events.allLocations")}
+                placeholder="Tất cả địa điểm"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 borderColor={borderColor}
@@ -377,7 +372,7 @@ const SearchResults = () => {
             </InputGroup>
 
             <Select
-              placeholder={t("events.categories.all")}
+              placeholder="Tất cả danh mục"
               size="md"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
@@ -385,13 +380,27 @@ const SearchResults = () => {
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
-                  {t(`events.categories.${cat}`)}
+                  {cat === "conference"
+                    ? "Hội nghị"
+                    : cat === "workshop"
+                    ? "Hội thảo"
+                    : cat === "meetup"
+                    ? "Gặp gỡ"
+                    : cat === "networking"
+                    ? "Kết nối"
+                    : cat === "music"
+                    ? "Âm nhạc"
+                    : cat === "exhibition"
+                    ? "Triển lãm"
+                    : cat === "food"
+                    ? "Ẩm thực"
+                    : "Khác"}
                 </option>
               ))}
             </Select>
 
             <Button colorScheme="teal" onClick={handleSearch}>
-              {t("common.search")}
+              Áp dụng
             </Button>
           </Flex>
 
@@ -404,7 +413,7 @@ const SearchResults = () => {
                   if (e.target.checked) setShowPaidOnly(false);
                 }}
               >
-                {t("events.filterType.free")}
+                Miễn phí
               </Checkbox>
               <Checkbox
                 isChecked={showPaidOnly}
@@ -413,7 +422,7 @@ const SearchResults = () => {
                   if (e.target.checked) setShowFreeOnly(false);
                 }}
               >
-                {t("events.filterType.paid")}
+                Có phí
               </Checkbox>
             </HStack>
 
@@ -424,7 +433,7 @@ const SearchResults = () => {
               leftIcon={<FiX />}
               onClick={resetFilters}
             >
-              {t("events.resetFilters")}
+              Xóa bộ lọc
             </Button>
           </Flex>
         </Box>
@@ -437,7 +446,7 @@ const SearchResults = () => {
                 <FiSearch color={iconColor} />
               </InputLeftElement>
               <Input
-                placeholder={t("events.searchEvents")}
+                placeholder="Tìm kiếm sự kiện..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 borderColor={borderColor}
@@ -445,7 +454,7 @@ const SearchResults = () => {
             </InputGroup>
 
             <IconButton
-              aria-label={t("common.filter")}
+              aria-label="Lọc"
               icon={<FiFilter />}
               colorScheme="teal"
               onClick={onOpen}
@@ -482,7 +491,21 @@ const SearchResults = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  {t(`events.categories.${category}`)}
+                  {category === "conference"
+                    ? "Hội nghị"
+                    : category === "workshop"
+                    ? "Hội thảo"
+                    : category === "meetup"
+                    ? "Gặp gỡ"
+                    : category === "networking"
+                    ? "Kết nối"
+                    : category === "music"
+                    ? "Âm nhạc"
+                    : category === "exhibition"
+                    ? "Triển lãm"
+                    : category === "food"
+                    ? "Ẩm thực"
+                    : "Khác"}
                   <Box
                     as={FiX}
                     ml={1}
@@ -500,7 +523,7 @@ const SearchResults = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  {t("events.filterType.free")}
+                  Miễn phí
                   <Box
                     as={FiX}
                     ml={1}
@@ -518,7 +541,7 @@ const SearchResults = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  {t("events.filterType.paid")}
+                  Có phí
                   <Box
                     as={FiX}
                     ml={1}
@@ -536,18 +559,16 @@ const SearchResults = () => {
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth="1px">
-              {t("common.filter")}
-            </DrawerHeader>
+            <DrawerHeader borderBottomWidth="1px">Bộ lọc</DrawerHeader>
 
             <DrawerBody>
               <VStack spacing={4} align="stretch" py={4}>
                 <Box>
                   <Text fontWeight="medium" mb={2}>
-                    {t("events.location")}
+                    Địa điểm
                   </Text>
                   <Select
-                    placeholder={t("events.allLocations")}
+                    placeholder="Tất cả địa điểm"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   >
@@ -561,16 +582,30 @@ const SearchResults = () => {
 
                 <Box>
                   <Text fontWeight="medium" mb={2}>
-                    {t("events.category")}
+                    Danh mục
                   </Text>
                   <Select
-                    placeholder={t("events.categories.all")}
+                    placeholder="Tất cả danh mục"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                   >
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>
-                        {t(`events.categories.${cat}`)}
+                        {cat === "conference"
+                          ? "Hội nghị"
+                          : cat === "workshop"
+                          ? "Hội thảo"
+                          : cat === "meetup"
+                          ? "Gặp gỡ"
+                          : cat === "networking"
+                          ? "Kết nối"
+                          : cat === "music"
+                          ? "Âm nhạc"
+                          : cat === "exhibition"
+                          ? "Triển lãm"
+                          : cat === "food"
+                          ? "Ẩm thực"
+                          : "Khác"}
                       </option>
                     ))}
                   </Select>
@@ -578,7 +613,7 @@ const SearchResults = () => {
 
                 <Box>
                   <Text fontWeight="medium" mb={2}>
-                    {t("events.price")}
+                    Giá
                   </Text>
                   <Stack spacing={2}>
                     <Checkbox
@@ -588,7 +623,7 @@ const SearchResults = () => {
                         if (e.target.checked) setShowPaidOnly(false);
                       }}
                     >
-                      {t("events.filterType.free")}
+                      Miễn phí
                     </Checkbox>
                     <Checkbox
                       isChecked={showPaidOnly}
@@ -597,7 +632,7 @@ const SearchResults = () => {
                         if (e.target.checked) setShowFreeOnly(false);
                       }}
                     >
-                      {t("events.filterType.paid")}
+                      Có phí
                     </Checkbox>
                   </Stack>
                 </Box>
@@ -605,10 +640,10 @@ const SearchResults = () => {
                 <Divider />
 
                 <Button colorScheme="teal" onClick={handleSearch}>
-                  {t("common.apply")}
+                  Áp dụng
                 </Button>
                 <Button variant="outline" onClick={resetFilters}>
-                  {t("events.resetFilters")}
+                  Xóa bộ lọc
                 </Button>
               </VStack>
             </DrawerBody>
@@ -619,7 +654,7 @@ const SearchResults = () => {
         {filteredEvents.length > 0 ? (
           <>
             <Text mb={6} color={textColor}>
-              {filteredEvents.length} {t("events.eventsFound")}
+              {filteredEvents.length} sự kiện được tìm thấy
             </Text>
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={10}>
               {filteredEvents.map((event) => (
@@ -630,13 +665,13 @@ const SearchResults = () => {
         ) : (
           <Box textAlign="center" py={10}>
             <Heading size="md" mb={4} color={textColor}>
-              {t("events.noEventsFound")}
+              Không tìm thấy sự kiện
             </Heading>
             <Text mb={6} color={textColor}>
-              {t("events.tryAdjustingFilters")}
+              Hãy thử điều chỉnh bộ lọc của bạn
             </Text>
             <Button colorScheme="teal" onClick={resetFilters}>
-              {t("events.resetFilters")}
+              Xóa bộ lọc
             </Button>
           </Box>
         )}

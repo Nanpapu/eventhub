@@ -137,16 +137,16 @@ export default function Checkout() {
   // Các bước trong quy trình thanh toán
   const steps = [
     {
-      title: t("checkout.steps.selectTickets"),
-      description: t("checkout.steps.ticketQuantity"),
+      title: "Chọn vé",
+      description: "Số lượng vé",
     },
     {
-      title: t("checkout.steps.payment"),
-      description: t("checkout.steps.paymentInfo"),
+      title: "Thanh toán",
+      description: "Thông tin thanh toán",
     },
     {
-      title: t("checkout.steps.confirmation"),
-      description: t("checkout.steps.confirmTickets"),
+      title: "Xác nhận",
+      description: "Xác nhận vé",
     },
   ];
 
@@ -177,8 +177,8 @@ export default function Checkout() {
   const handleContinueToPayment = () => {
     if (ticketQuantity < 1) {
       toast({
-        title: t("errors.error"),
-        description: t("checkout.errors.minimumTicket"),
+        title: "Lỗi",
+        description: "Vui lòng chọn ít nhất 1 vé",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -188,10 +188,8 @@ export default function Checkout() {
 
     if (event && ticketQuantity > event.availableTickets) {
       toast({
-        title: t("errors.error"),
-        description: t("checkout.errors.notEnoughTickets", {
-          available: event.availableTickets,
-        }),
+        title: "Lỗi",
+        description: `Không đủ vé (chỉ còn ${event.availableTickets} vé)`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -201,10 +199,8 @@ export default function Checkout() {
 
     if (event && ticketQuantity > event.maxPerOrder) {
       toast({
-        title: t("checkout.errors.ticketLimit"),
-        description: t("checkout.errors.maxPerOrder", {
-          max: event.maxPerOrder,
-        }),
+        title: "Vượt quá giới hạn vé",
+        description: `Tối đa ${event.maxPerOrder} vé mỗi đơn hàng`,
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -229,8 +225,8 @@ export default function Checkout() {
   // Xử lý khi hoàn tất thanh toán
   const handleFinish = () => {
     toast({
-      title: t("checkout.success.title"),
-      description: t("checkout.success.emailSent"),
+      title: "Thanh toán thành công",
+      description: "Email xác nhận đã được gửi đến hòm thư của bạn",
       status: "success",
       duration: 5000,
       isClosable: true,
@@ -246,7 +242,7 @@ export default function Checkout() {
   if (isLoading) {
     return (
       <Container maxW="4xl" py={8} centerContent>
-        <Text color={textColor}>{t("common.loading")}</Text>
+        <Text color={textColor}>Đang tải...</Text>
       </Container>
     );
   }
@@ -256,11 +252,13 @@ export default function Checkout() {
       <Container maxW="4xl" py={8}>
         <Alert status="error" borderRadius="md">
           <AlertIcon />
-          <AlertTitle>{t("errors.eventNotFound")}</AlertTitle>
-          <AlertDescription>{t("errors.eventNotFoundDesc")}</AlertDescription>
+          <AlertTitle>Không tìm thấy sự kiện</AlertTitle>
+          <AlertDescription>
+            Sự kiện này không tồn tại hoặc đã bị xóa
+          </AlertDescription>
         </Alert>
         <Button mt={4} onClick={() => navigate("/events")}>
-          {t("common.backToEvents")}
+          Quay lại danh sách sự kiện
         </Button>
       </Container>
     );
@@ -270,7 +268,7 @@ export default function Checkout() {
     <Container maxW="4xl" py={8}>
       <VStack spacing={8} align="stretch">
         <Heading size="xl" textAlign="center" color={textColor}>
-          {t("checkout.title")}
+          Thanh toán
         </Heading>
 
         <Stepper
@@ -312,19 +310,19 @@ export default function Checkout() {
               boxShadow="md"
             >
               <Heading size="md" color={textColor}>
-                {t("checkout.selectQuantity")}
+                Chọn số lượng vé
               </Heading>
 
               <HStack spacing={4} py={4}>
                 <Text fontWeight="medium" color={textColor}>
-                  {t("events.event")}:
+                  Sự kiện:
                 </Text>
                 <Text color={textColor}>{event.title}</Text>
               </HStack>
 
               <HStack spacing={4}>
                 <Text fontWeight="medium" color={textColor}>
-                  {t("events.time")}:
+                  Thời gian:
                 </Text>
                 <Text color={textColor}>
                   {event.date} • {event.time}
@@ -333,18 +331,18 @@ export default function Checkout() {
 
               <HStack spacing={4}>
                 <Text fontWeight="medium" color={textColor}>
-                  {t("events.location")}:
+                  Địa điểm:
                 </Text>
                 <Text color={textColor}>{event.location}</Text>
               </HStack>
 
               <HStack spacing={4}>
                 <Text fontWeight="medium" color={textColor}>
-                  {t("events.ticketPrice")}:
+                  Giá vé:
                 </Text>
                 <Text color={textColor}>
                   {event.price === 0 ? (
-                    t("common.free")
+                    "Miễn phí"
                   ) : (
                     <CurrencyDisplay amount={event.price} />
                   )}
@@ -353,7 +351,7 @@ export default function Checkout() {
 
               <HStack spacing={4}>
                 <Text fontWeight="medium" color={textColor}>
-                  {t("events.ticketsLeft")}:
+                  Số vé còn lại:
                 </Text>
                 <Text color={textColor}>{event.availableTickets}</Text>
               </HStack>
@@ -456,7 +454,7 @@ export default function Checkout() {
                 <VStack spacing={3} align="stretch">
                   <HStack>
                     <Text fontWeight="medium" width="40%" color={textColor}>
-                      {t("events.event")}:
+                      Sự kiện:
                     </Text>
                     <Text color={textColor}>{event.title}</Text>
                   </HStack>
@@ -477,7 +475,7 @@ export default function Checkout() {
 
                   <HStack>
                     <Text fontWeight="medium" width="40%" color={textColor}>
-                      {t("events.time")}:
+                      Thời gian:
                     </Text>
                     <Text color={textColor}>
                       {event.date} • {event.time}
@@ -486,7 +484,7 @@ export default function Checkout() {
 
                   <HStack>
                     <Text fontWeight="medium" width="40%" color={textColor}>
-                      {t("events.location")}:
+                      Địa điểm:
                     </Text>
                     <Text color={textColor}>{event.location}</Text>
                   </HStack>
