@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import {
   Box,
@@ -23,7 +23,6 @@ import {
   Select,
   Badge,
   Button,
-  Divider,
   Table,
   Thead,
   Tbody,
@@ -32,7 +31,6 @@ import {
   Td,
   useColorModeValue,
   IconButton,
-  Link,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -42,7 +40,6 @@ import {
   MenuItem,
 } from "@chakra-ui/react";
 import {
-  FaChartPie,
   FaChartLine,
   FaChartBar,
   FaTicketAlt,
@@ -126,14 +123,33 @@ const EventAnalytics = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const statBg = useColorModeValue("gray.50", "gray.700");
 
-  const COLORS = [
-    "#0088FE",
-    "#00C49F",
-    "#FFBB28",
-    "#FF8042",
-    "#8884D8",
-    "#D88489",
-  ];
+  // UI color values for hooks that were being called conditionally
+  const tooltipBg = useColorModeValue("white", "gray.800");
+  const tooltipBorderColor = useColorModeValue("gray.200", "gray.700");
+  const tooltipTextColor = useColorModeValue("gray.800", "gray.100");
+  const tooltipTextShadow = useColorModeValue(
+    "none",
+    "0 0 1px rgba(255,255,255,0.3)"
+  );
+  const dateColor = useColorModeValue("gray.500", "gray.400");
+  const chartGridColor = useColorModeValue("#e0e0e0", "#4a5568");
+  const chartAxisColor = useColorModeValue("#666", "#cbd5e0");
+  const pieStrokeColor = useColorModeValue("white", "gray.800");
+  const blueBoxBg = useColorModeValue("blue.50", "rgba(49, 130, 206, 0.1)");
+  const blueTextColor = useColorModeValue("blue.700", "blue.300");
+  const greenBoxBg = useColorModeValue("green.50", "rgba(56, 161, 105, 0.1)");
+  const greenTextColor = useColorModeValue("green.700", "green.300");
+  const redBoxBg = useColorModeValue("red.50", "rgba(229, 62, 62, 0.1)");
+  const redTextColor = useColorModeValue("red.700", "red.300");
+
+  // const COLORS = [
+  //   "#0088FE",
+  //   "#00C49F",
+  //   "#FFBB28",
+  //   "#FF8042",
+  //   "#8884D8",
+  //   "#D88489",
+  // ];
 
   // Giả lập dữ liệu phân tích (trong thực tế sẽ được lấy từ API)
   useEffect(() => {
@@ -215,33 +231,38 @@ const EventAnalytics = () => {
     }, 800);
   }, [eventId, timeRange]);
 
+  // Define TypeScript types for CustomTooltip props
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      name: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }
+
   // Render custom tooltip cho biểu đồ
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <Box
-          bg={useColorModeValue("white", "gray.800")}
+          bg={tooltipBg}
           p={3}
           boxShadow="md"
           borderRadius="md"
           border="1px solid"
-          borderColor={useColorModeValue("gray.200", "gray.700")}
+          borderColor={tooltipBorderColor}
         >
-          <Text
-            fontWeight="bold"
-            color={useColorModeValue("gray.800", "gray.100")}
-          >
+          <Text fontWeight="bold" color={tooltipTextColor}>
             {label}
           </Text>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <Text
               key={`tooltip-${index}`}
               color={entry.color}
               fontWeight="medium"
-              textShadow={useColorModeValue(
-                "none",
-                "0 0 1px rgba(255,255,255,0.3)"
-              )}
+              textShadow={tooltipTextShadow}
             >
               {entry.name}: {entry.value}
             </Text>
@@ -304,9 +325,7 @@ const EventAnalytics = () => {
                   {analytics.eventStatus.charAt(0).toUpperCase() +
                     analytics.eventStatus.slice(1)}
                 </Badge>
-                <Text color={useColorModeValue("gray.500", "gray.400")}>
-                  {analytics.date}
-                </Text>
+                <Text color={dateColor}>{analytics.date}</Text>
               </HStack>
             </Box>
 
@@ -522,13 +541,10 @@ const EventAnalytics = () => {
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
-                          stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                          stroke={chartGridColor}
                         />
-                        <XAxis
-                          dataKey="date"
-                          stroke={useColorModeValue("#666", "#cbd5e0")}
-                        />
-                        <YAxis stroke={useColorModeValue("#666", "#cbd5e0")} />
+                        <XAxis dataKey="date" stroke={chartAxisColor} />
+                        <YAxis stroke={chartAxisColor} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Area
@@ -578,10 +594,7 @@ const EventAnalytics = () => {
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={entry.color}
-                                    stroke={useColorModeValue(
-                                      "white",
-                                      "gray.800"
-                                    )}
+                                    stroke={pieStrokeColor}
                                     strokeWidth={1}
                                   />
                                 )
@@ -614,15 +627,10 @@ const EventAnalytics = () => {
                           >
                             <CartesianGrid
                               strokeDasharray="3 3"
-                              stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                              stroke={chartGridColor}
                             />
-                            <XAxis
-                              dataKey="date"
-                              stroke={useColorModeValue("#666", "#cbd5e0")}
-                            />
-                            <YAxis
-                              stroke={useColorModeValue("#666", "#cbd5e0")}
-                            />
+                            <XAxis dataKey="date" stroke={chartAxisColor} />
+                            <YAxis stroke={chartAxisColor} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             <Line
@@ -678,10 +686,7 @@ const EventAnalytics = () => {
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={entry.color}
-                                    stroke={useColorModeValue(
-                                      "white",
-                                      "gray.800"
-                                    )}
+                                    stroke={pieStrokeColor}
                                     strokeWidth={1}
                                   />
                                 )
@@ -714,15 +719,10 @@ const EventAnalytics = () => {
                           >
                             <CartesianGrid
                               strokeDasharray="3 3"
-                              stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                              stroke={chartGridColor}
                             />
-                            <XAxis
-                              dataKey="hour"
-                              stroke={useColorModeValue("#666", "#cbd5e0")}
-                            />
-                            <YAxis
-                              stroke={useColorModeValue("#666", "#cbd5e0")}
-                            />
+                            <XAxis dataKey="hour" stroke={chartAxisColor} />
+                            <YAxis stroke={chartAxisColor} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             <Bar
@@ -757,16 +757,10 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg={useColorModeValue(
-                          "blue.50",
-                          "rgba(49, 130, 206, 0.1)"
-                        )}
+                        bg={blueBoxBg}
                         borderRadius="md"
                       >
-                        <Text
-                          fontSize="sm"
-                          color={useColorModeValue("blue.700", "blue.300")}
-                        >
+                        <Text fontSize="sm" color={blueTextColor}>
                           Tổng số đăng ký
                         </Text>
                         <Heading>{analytics.totalAttendees}</Heading>
@@ -776,16 +770,10 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg={useColorModeValue(
-                          "green.50",
-                          "rgba(56, 161, 105, 0.1)"
-                        )}
+                        bg={greenBoxBg}
                         borderRadius="md"
                       >
-                        <Text
-                          fontSize="sm"
-                          color={useColorModeValue("green.700", "green.300")}
-                        >
+                        <Text fontSize="sm" color={greenTextColor}>
                           Đã check-in
                         </Text>
                         <Heading>{analytics.checkedInAttendees}</Heading>
@@ -795,16 +783,10 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg={useColorModeValue(
-                          "red.50",
-                          "rgba(229, 62, 62, 0.1)"
-                        )}
+                        bg={redBoxBg}
                         borderRadius="md"
                       >
-                        <Text
-                          fontSize="sm"
-                          color={useColorModeValue("red.700", "red.300")}
-                        >
+                        <Text fontSize="sm" color={redTextColor}>
                           Không tham dự
                         </Text>
                         <Heading>
@@ -889,13 +871,10 @@ const EventAnalytics = () => {
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
-                          stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                          stroke={chartGridColor}
                         />
-                        <XAxis
-                          dataKey="source"
-                          stroke={useColorModeValue("#666", "#cbd5e0")}
-                        />
-                        <YAxis stroke={useColorModeValue("#666", "#cbd5e0")} />
+                        <XAxis dataKey="source" stroke={chartAxisColor} />
+                        <YAxis stroke={chartAxisColor} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Bar
