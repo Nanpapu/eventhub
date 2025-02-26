@@ -61,6 +61,7 @@ import {
 } from "react-icons/fa";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useParams, useNavigate } from "react-router-dom";
+import { DateDisplay } from "../../components/common";
 
 /**
  * Các thiết lập cho quy trình check-in
@@ -143,22 +144,22 @@ const EventCheckIn = () => {
   useEffect(() => {
     // Trong thực tế, sẽ fetch dữ liệu từ API
     const mockEventDetails = {
-      title: "Tech Conference 2023",
-      date: "15 Dec 2023",
-      location: "Convention Center, New York",
+      title: "Hội nghị công nghệ 2023",
+      date: "15/12/2023",
+      location: "Trung tâm hội nghị, TP.HCM",
       totalAttendees: 150,
     };
 
     // Mock attendees data
     const mockAttendees: Attendee[] = Array.from({ length: 20 }, (_, i) => ({
       id: `user-${i + 1}`,
-      name: `Attendee ${i + 1}`,
+      name: `Người tham dự ${i + 1}`,
       email: `attendee${i + 1}@example.com`,
       ticketId: `TIX-${Math.random()
         .toString(36)
         .substring(2, 10)
         .toUpperCase()}`,
-      ticketType: i % 3 === 0 ? "VIP" : i % 3 === 1 ? "Standard" : "Early Bird",
+      ticketType: i % 3 === 0 ? "VIP" : i % 3 === 1 ? "Thường" : "Ưu đãi sớm",
       checkInTime:
         i < 8
           ? new Date(Date.now() - Math.random() * 3600000).toISOString()

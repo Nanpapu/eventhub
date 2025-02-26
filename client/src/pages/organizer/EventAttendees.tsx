@@ -265,11 +265,20 @@ const EventAttendees = () => {
     return matchesSearch && matchesStatus && matchesTicketType;
   });
 
+  // Màu cho UI
+  const cardBg = useColorModeValue("white", "gray.800");
+  const statBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.200");
+  const secondaryTextColor = useColorModeValue("gray.500", "gray.400");
+  const tableBorderColor = useColorModeValue("gray.200", "gray.700");
+  const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
+  const tableHoverBg = useColorModeValue("gray.50", "gray.700");
+
   // Xử lý gửi email
   const handleSendEmail = () => {
     toast({
-      title: "Email sent",
-      description: "Notification has been sent to selected attendees.",
+      title: "Email đã gửi",
+      description: "Thông báo đã được gửi đến những người tham dự đã chọn.",
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -279,8 +288,8 @@ const EventAttendees = () => {
   // Xử lý xuất danh sách
   const handleExportList = () => {
     toast({
-      title: "Export started",
-      description: "Attendee list is being exported to CSV.",
+      title: "Bắt đầu xuất",
+      description: "Danh sách người tham dự đang được xuất ra CSV.",
       status: "info",
       duration: 3000,
       isClosable: true,
@@ -301,8 +310,8 @@ const EventAttendees = () => {
     setAttendees(updatedAttendees);
 
     toast({
-      title: "Registration cancelled",
-      description: `${selectedAttendee.name}'s registration has been cancelled.`,
+      title: "Đã hủy đăng ký",
+      description: `Đăng ký của ${selectedAttendee.name} đã bị hủy.`,
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -329,8 +338,8 @@ const EventAttendees = () => {
     const attendee = attendees.find((a) => a.id === attendeeId);
 
     toast({
-      title: "Check-in successful",
-      description: `${attendee?.name} has been checked in.`,
+      title: "Check-in thành công",
+      description: `${attendee?.name} đã được check-in.`,
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -342,10 +351,6 @@ const EventAttendees = () => {
     setSelectedAttendee(attendee);
     onOpen();
   };
-
-  // Màu cho UI
-  const cardBg = useColorModeValue("white", "gray.800");
-  const statBg = useColorModeValue("gray.50", "gray.700");
 
   if (isLoading) {
     return (
@@ -391,8 +396,8 @@ const EventAttendees = () => {
         <Heading as="h1" size="xl" mb={2}>
           {eventData.title} - Quản lý người tham dự
         </Heading>
-        <Text color="gray.500">
-          {eventData.date.toLocaleDateString("en-US", {
+        <Text color={secondaryTextColor}>
+          {eventData.date.toLocaleDateString("vi-VN", {
             weekday: "long",
             year: "numeric",
             month: "long",
@@ -454,7 +459,14 @@ const EventAttendees = () => {
       </SimpleGrid>
 
       {/* Main content */}
-      <Box bg={cardBg} borderRadius="lg" boxShadow="md" mb={6}>
+      <Box
+        bg={cardBg}
+        borderRadius="lg"
+        boxShadow="md"
+        mb={6}
+        borderWidth="1px"
+        borderColor={tableBorderColor}
+      >
         <Tabs colorScheme="teal" isFitted variant="enclosed">
           <TabList>
             <Tab fontWeight="medium">Tất cả người tham dự</Tab>
@@ -532,7 +544,7 @@ const EventAttendees = () => {
               <Box overflowX="auto">
                 <Table variant="simple">
                   <Thead>
-                    <Tr>
+                    <Tr bg={tableHeaderBg}>
                       <Th>Tên</Th>
                       <Th>Email</Th>
                       <Th>Vé</Th>
@@ -551,9 +563,11 @@ const EventAttendees = () => {
                       </Tr>
                     ) : (
                       filteredAttendees.map((attendee) => (
-                        <Tr key={attendee.id}>
-                          <Td fontWeight="medium">{attendee.name}</Td>
-                          <Td>{attendee.email}</Td>
+                        <Tr key={attendee.id} _hover={{ bg: tableHoverBg }}>
+                          <Td fontWeight="medium" color={textColor}>
+                            {attendee.name}
+                          </Td>
+                          <Td color={textColor}>{attendee.email}</Td>
                           <Td>
                             <HStack>
                               <Badge
@@ -624,35 +638,35 @@ const EventAttendees = () => {
                                       icon={<FaCheckCircle />}
                                       onClick={() => handleCheckIn(attendee.id)}
                                     >
-                                      Check In
+                                      Check-in
                                     </MenuItem>
                                   )}
                                 <MenuItem
                                   icon={<FaDownload />}
                                   onClick={() =>
                                     toast({
-                                      title: "Ticket downloaded",
+                                      title: "Đã tải vé",
                                       status: "success",
                                       duration: 3000,
                                       isClosable: true,
                                     })
                                   }
                                 >
-                                  Download Ticket
+                                  Tải vé
                                 </MenuItem>
                                 <MenuItem
                                   icon={<FaEnvelope />}
                                   onClick={() =>
                                     toast({
-                                      title: "Email sent",
-                                      description: `Email sent to ${attendee.name}`,
+                                      title: "Email đã gửi",
+                                      description: `Email đã gửi đến ${attendee.name}`,
                                       status: "success",
                                       duration: 3000,
                                       isClosable: true,
                                     })
                                   }
                                 >
-                                  Send Email
+                                  Gửi email
                                 </MenuItem>
                                 {attendee.status !== "cancelled" && (
                                   <MenuItem
@@ -679,28 +693,30 @@ const EventAttendees = () => {
               <Box overflowX="auto">
                 <Table variant="simple">
                   <Thead>
-                    <Tr>
-                      <Th>Name</Th>
+                    <Tr bg={tableHeaderBg}>
+                      <Th>Tên</Th>
                       <Th>Email</Th>
-                      <Th>Ticket</Th>
-                      <Th>Check-in Time</Th>
-                      <Th>Actions</Th>
+                      <Th>Vé</Th>
+                      <Th>Thời gian check-in</Th>
+                      <Th>Thao tác</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {attendees.filter((a) => a.checkInStatus).length === 0 ? (
                       <Tr>
                         <Td colSpan={5} textAlign="center" py={4}>
-                          No attendees have checked in yet
+                          Chưa có người tham dự nào check-in
                         </Td>
                       </Tr>
                     ) : (
                       attendees
                         .filter((a) => a.checkInStatus)
                         .map((attendee) => (
-                          <Tr key={attendee.id}>
-                            <Td fontWeight="medium">{attendee.name}</Td>
-                            <Td>{attendee.email}</Td>
+                          <Tr key={attendee.id} _hover={{ bg: tableHoverBg }}>
+                            <Td fontWeight="medium" color={textColor}>
+                              {attendee.name}
+                            </Td>
+                            <Td color={textColor}>{attendee.email}</Td>
                             <Td>
                               <Badge
                                 colorScheme={
@@ -727,15 +743,15 @@ const EventAttendees = () => {
                                 variant="outline"
                                 onClick={() =>
                                   toast({
-                                    title: "Email sent",
-                                    description: `Email sent to ${attendee.name}`,
+                                    title: "Email đã gửi",
+                                    description: `Email đã gửi đến ${attendee.name}`,
                                     status: "success",
                                     duration: 3000,
                                     isClosable: true,
                                   })
                                 }
                               >
-                                Send Email
+                                Gửi email
                               </Button>
                             </Td>
                           </Tr>
@@ -751,12 +767,12 @@ const EventAttendees = () => {
               <Box overflowX="auto">
                 <Table variant="simple">
                   <Thead>
-                    <Tr>
-                      <Th>Name</Th>
+                    <Tr bg={tableHeaderBg}>
+                      <Th>Tên</Th>
                       <Th>Email</Th>
-                      <Th>Ticket</Th>
-                      <Th>Status</Th>
-                      <Th>Actions</Th>
+                      <Th>Vé</Th>
+                      <Th>Trạng thái</Th>
+                      <Th>Thao tác</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -765,7 +781,7 @@ const EventAttendees = () => {
                     ).length === 0 ? (
                       <Tr>
                         <Td colSpan={5} textAlign="center" py={4}>
-                          All confirmed attendees have checked in
+                          Tất cả người tham dự đã xác nhận đã check-in
                         </Td>
                       </Tr>
                     ) : (
@@ -774,9 +790,11 @@ const EventAttendees = () => {
                           (a) => !a.checkInStatus && a.status === "confirmed"
                         )
                         .map((attendee) => (
-                          <Tr key={attendee.id}>
-                            <Td fontWeight="medium">{attendee.name}</Td>
-                            <Td>{attendee.email}</Td>
+                          <Tr key={attendee.id} _hover={{ bg: tableHoverBg }}>
+                            <Td fontWeight="medium" color={textColor}>
+                              {attendee.name}
+                            </Td>
+                            <Td color={textColor}>{attendee.email}</Td>
                             <Td>
                               <Badge
                                 colorScheme={
@@ -807,7 +825,7 @@ const EventAttendees = () => {
                                   colorScheme="green"
                                   onClick={() => handleCheckIn(attendee.id)}
                                 >
-                                  Check In
+                                  Check-in
                                 </Button>
                                 <Button
                                   size="sm"
@@ -815,15 +833,15 @@ const EventAttendees = () => {
                                   variant="outline"
                                   onClick={() =>
                                     toast({
-                                      title: "Email sent",
-                                      description: `Email sent to ${attendee.name}`,
+                                      title: "Email đã gửi",
+                                      description: `Email đã gửi đến ${attendee.name}`,
                                       status: "success",
                                       duration: 3000,
                                       isClosable: true,
                                     })
                                   }
                                 >
-                                  Send Reminder
+                                  Gửi nhắc nhở
                                 </Button>
                               </HStack>
                             </Td>
@@ -845,26 +863,30 @@ const EventAttendees = () => {
         onClose={onClose}
       >
         <AlertDialogOverlay>
-          <AlertDialogContent>
+          <AlertDialogContent
+            bg={cardBg}
+            borderColor={tableBorderColor}
+            borderWidth="1px"
+          >
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Cancel Registration
+              Hủy đăng ký
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              Are you sure you want to cancel the registration for{" "}
-              {selectedAttendee?.name}? This action cannot be undone.
+              Bạn có chắc chắn muốn hủy đăng ký của {selectedAttendee?.name}?
+              Hành động này không thể hoàn tác.
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
-                No, Keep Registration
+                Không, giữ đăng ký
               </Button>
               <Button
                 colorScheme="red"
                 onClick={handleCancelRegistration}
                 ml={3}
               >
-                Yes, Cancel Registration
+                Có, hủy đăng ký
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

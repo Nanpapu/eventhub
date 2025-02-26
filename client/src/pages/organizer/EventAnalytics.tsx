@@ -220,16 +220,29 @@ const EventAnalytics = () => {
     if (active && payload && payload.length) {
       return (
         <Box
-          bg="white"
+          bg={useColorModeValue("white", "gray.800")}
           p={3}
           boxShadow="md"
           borderRadius="md"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor={useColorModeValue("gray.200", "gray.700")}
         >
-          <Text fontWeight="bold">{label}</Text>
+          <Text
+            fontWeight="bold"
+            color={useColorModeValue("gray.800", "gray.100")}
+          >
+            {label}
+          </Text>
           {payload.map((entry: any, index: number) => (
-            <Text key={`tooltip-${index}`} color={entry.color}>
+            <Text
+              key={`tooltip-${index}`}
+              color={entry.color}
+              fontWeight="medium"
+              textShadow={useColorModeValue(
+                "none",
+                "0 0 1px rgba(255,255,255,0.3)"
+              )}
+            >
               {entry.name}: {entry.value}
             </Text>
           ))}
@@ -291,7 +304,9 @@ const EventAnalytics = () => {
                   {analytics.eventStatus.charAt(0).toUpperCase() +
                     analytics.eventStatus.slice(1)}
                 </Badge>
-                <Text color="gray.500">{analytics.date}</Text>
+                <Text color={useColorModeValue("gray.500", "gray.400")}>
+                  {analytics.date}
+                </Text>
               </HStack>
             </Box>
 
@@ -505,10 +520,16 @@ const EventAnalytics = () => {
                         data={analytics.salesOverTime}
                         margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                        />
+                        <XAxis
+                          dataKey="date"
+                          stroke={useColorModeValue("#666", "#cbd5e0")}
+                        />
+                        <YAxis stroke={useColorModeValue("#666", "#cbd5e0")} />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Area
                           type="monotone"
@@ -516,7 +537,7 @@ const EventAnalytics = () => {
                           stroke="#8884d8"
                           fill="#8884d8"
                           fillOpacity={0.3}
-                          name="Revenue ($)"
+                          name="Doanh thu ($)"
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -557,6 +578,11 @@ const EventAnalytics = () => {
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={entry.color}
+                                    stroke={useColorModeValue(
+                                      "white",
+                                      "gray.800"
+                                    )}
+                                    strokeWidth={1}
                                   />
                                 )
                               )}
@@ -586,17 +612,25 @@ const EventAnalytics = () => {
                             data={analytics.salesOverTime}
                             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                           >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis />
-                            <Tooltip />
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                            />
+                            <XAxis
+                              dataKey="date"
+                              stroke={useColorModeValue("#666", "#cbd5e0")}
+                            />
+                            <YAxis
+                              stroke={useColorModeValue("#666", "#cbd5e0")}
+                            />
+                            <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             <Line
                               type="monotone"
                               dataKey="tickets"
                               stroke="#82ca9d"
                               activeDot={{ r: 8 }}
-                              name="Tickets Sold"
+                              name="Vé đã bán"
                             />
                           </LineChart>
                         </ResponsiveContainer>
@@ -644,6 +678,11 @@ const EventAnalytics = () => {
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={entry.color}
+                                    stroke={useColorModeValue(
+                                      "white",
+                                      "gray.800"
+                                    )}
+                                    strokeWidth={1}
                                   />
                                 )
                               )}
@@ -673,14 +712,22 @@ const EventAnalytics = () => {
                             data={analytics.attendanceByHour}
                             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                           >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="hour" />
-                            <YAxis />
-                            <Tooltip />
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                            />
+                            <XAxis
+                              dataKey="hour"
+                              stroke={useColorModeValue("#666", "#cbd5e0")}
+                            />
+                            <YAxis
+                              stroke={useColorModeValue("#666", "#cbd5e0")}
+                            />
+                            <Tooltip content={<CustomTooltip />} />
                             <Legend />
                             <Bar
                               dataKey="count"
-                              name="Attendees"
+                              name="Người tham dự"
                               fill="#8884d8"
                             />
                           </BarChart>
@@ -710,10 +757,16 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg="blue.50"
+                        bg={useColorModeValue(
+                          "blue.50",
+                          "rgba(49, 130, 206, 0.1)"
+                        )}
                         borderRadius="md"
                       >
-                        <Text fontSize="sm" color="blue.700">
+                        <Text
+                          fontSize="sm"
+                          color={useColorModeValue("blue.700", "blue.300")}
+                        >
                           Tổng số đăng ký
                         </Text>
                         <Heading>{analytics.totalAttendees}</Heading>
@@ -723,10 +776,16 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg="green.50"
+                        bg={useColorModeValue(
+                          "green.50",
+                          "rgba(56, 161, 105, 0.1)"
+                        )}
                         borderRadius="md"
                       >
-                        <Text fontSize="sm" color="green.700">
+                        <Text
+                          fontSize="sm"
+                          color={useColorModeValue("green.700", "green.300")}
+                        >
                           Đã check-in
                         </Text>
                         <Heading>{analytics.checkedInAttendees}</Heading>
@@ -736,10 +795,16 @@ const EventAnalytics = () => {
                       <VStack
                         align="center"
                         p={4}
-                        bg="red.50"
+                        bg={useColorModeValue(
+                          "red.50",
+                          "rgba(229, 62, 62, 0.1)"
+                        )}
                         borderRadius="md"
                       >
-                        <Text fontSize="sm" color="red.700">
+                        <Text
+                          fontSize="sm"
+                          color={useColorModeValue("red.700", "red.300")}
+                        >
                           Không tham dự
                         </Text>
                         <Heading>
@@ -822,19 +887,25 @@ const EventAnalytics = () => {
                         data={analytics.marketingStats}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="source" />
-                        <YAxis />
-                        <Tooltip />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={useColorModeValue("#e0e0e0", "#4a5568")}
+                        />
+                        <XAxis
+                          dataKey="source"
+                          stroke={useColorModeValue("#666", "#cbd5e0")}
+                        />
+                        <YAxis stroke={useColorModeValue("#666", "#cbd5e0")} />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Bar
                           dataKey="visitors"
-                          name="Visitors"
+                          name="Lượt truy cập"
                           fill="#8884d8"
                         />
                         <Bar
                           dataKey="conversions"
-                          name="Conversions"
+                          name="Chuyển đổi"
                           fill="#82ca9d"
                         />
                       </BarChart>
