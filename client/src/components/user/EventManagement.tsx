@@ -38,6 +38,8 @@ import {
   FiX,
   FiTag,
   FiFilter,
+  FiGrid,
+  FiBookmark,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
@@ -255,21 +257,45 @@ const EventManagement = () => {
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
             mr={2}
+            px={5}
+            py={3}
           >
-            Tất cả sự kiện
+            <Flex align="center">
+              <Icon as={FiGrid} fontSize="18px" mr={2} />
+              <Text>Tất cả sự kiện</Text>
+              <Badge ml={2} colorScheme="blue" borderRadius="full">
+                {filteredMyEvents.length + filteredSavedEvents.length}
+              </Badge>
+            </Flex>
           </Tab>
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
             mr={2}
+            px={5}
+            py={3}
           >
-            Sự kiện của tôi
+            <Flex align="center">
+              <Icon as={FiCalendar} fontSize="18px" mr={2} />
+              <Text>Sự kiện của tôi</Text>
+              <Badge ml={2} colorScheme="green" borderRadius="full">
+                {filteredMyEvents.length}
+              </Badge>
+            </Flex>
           </Tab>
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
+            px={5}
+            py={3}
           >
-            Sự kiện đã lưu
+            <Flex align="center">
+              <Icon as={FiBookmark} fontSize="18px" mr={2} />
+              <Text>Sự kiện đã lưu</Text>
+              <Badge ml={2} colorScheme="purple" borderRadius="full">
+                {filteredSavedEvents.length}
+              </Badge>
+            </Flex>
           </Tab>
         </TabList>
 

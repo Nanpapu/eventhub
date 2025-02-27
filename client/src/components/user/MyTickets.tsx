@@ -36,6 +36,10 @@ import {
   FiClock,
   FiSearch,
   FiFilter,
+  FiList,
+  FiCheck,
+  FiClock as FiHistory,
+  FiX,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
@@ -204,28 +208,60 @@ const MyTickets = () => {
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
             mr={2}
+            px={5}
+            py={3}
           >
-            Tất cả vé
+            <Flex align="center">
+              <Icon as={FiList} fontSize="18px" mr={2} />
+              <Text>Tất cả vé</Text>
+              <Badge ml={2} colorScheme="blue" borderRadius="full">
+                {tickets.length}
+              </Badge>
+            </Flex>
           </Tab>
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
             mr={2}
+            px={5}
+            py={3}
           >
-            Sắp diễn ra
+            <Flex align="center">
+              <Icon as={FiCalendar} fontSize="18px" mr={2} />
+              <Text>Sắp diễn ra</Text>
+              <Badge ml={2} colorScheme="green" borderRadius="full">
+                {tickets.filter((t) => t.status === "upcoming").length}
+              </Badge>
+            </Flex>
           </Tab>
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
             mr={2}
+            px={5}
+            py={3}
           >
-            Đã qua
+            <Flex align="center">
+              <Icon as={FiHistory} fontSize="18px" mr={2} />
+              <Text>Đã qua</Text>
+              <Badge ml={2} colorScheme="gray" borderRadius="full">
+                {tickets.filter((t) => t.status === "past").length}
+              </Badge>
+            </Flex>
           </Tab>
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
+            px={5}
+            py={3}
           >
-            Đã hủy
+            <Flex align="center">
+              <Icon as={FiX} fontSize="18px" mr={2} />
+              <Text>Đã hủy</Text>
+              <Badge ml={2} colorScheme="red" borderRadius="full">
+                {tickets.filter((t) => t.status === "canceled").length}
+              </Badge>
+            </Flex>
           </Tab>
         </TabList>
 
