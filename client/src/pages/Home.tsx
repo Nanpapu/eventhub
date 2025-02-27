@@ -9,14 +9,28 @@ import {
   Text,
   VStack,
   useColorModeValue,
+  Tag,
+  Icon,
+  Badge,
 } from "@chakra-ui/react";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiCalendar, FiMapPin, FiTag } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import EventCard from "../components/events/EventCard";
+
+// Tạo interface cho event để có type checking
+interface EventData {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  image: string;
+  category: string;
+  isPaid: boolean;
+}
 
 // Sample event data
-const events = [
+const events: EventData[] = [
   {
     id: 1,
     title: "Hội thảo thiết kế UI/UX",
@@ -24,7 +38,8 @@ const events = [
       "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
     date: "15/08/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3IZUfQd",
+    image:
+      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "workshop",
     isPaid: false,
   },
@@ -34,7 +49,8 @@ const events = [
     description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
     date: "20/08/2023",
     location: "Hà Nội",
-    image: "https://bit.ly/3wIlKgh",
+    image:
+      "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80",
     category: "conference",
     isPaid: true,
   },
@@ -44,7 +60,8 @@ const events = [
     description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
     date: "10/09/2023",
     location: "Đà Nẵng",
-    image: "https://bit.ly/3IfO5Fh",
+    image:
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "music",
     isPaid: true,
   },
@@ -55,7 +72,8 @@ const events = [
       "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
     date: "25/08/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3kpPKS5",
+    image:
+      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
     category: "networking",
     isPaid: false,
   },
@@ -66,7 +84,8 @@ const events = [
       "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
     date: "05/09/2023",
     location: "Hà Nội",
-    image: "https://bit.ly/3SVagzv",
+    image:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "food",
     isPaid: false,
   },
@@ -77,14 +96,22 @@ const events = [
       "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
     date: "12/09/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3kD02Jq",
+    image:
+      "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "conference",
     isPaid: true,
   },
 ];
 
+// Interface cho danh mục
+interface CategoryData {
+  id: string;
+  name: string;
+  image: string;
+}
+
 // Danh mục phổ biến
-const popularCategories = [
+const popularCategories: CategoryData[] = [
   {
     id: "workshop",
     name: "Hội thảo",
@@ -109,6 +136,54 @@ const popularCategories = [
     image:
       "https://images.unsplash.com/photo-1528605248644-14dd04022da1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
   },
+  {
+    id: "food",
+    name: "Ẩm thực",
+    image:
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+  },
+  {
+    id: "exhibition",
+    name: "Triển lãm",
+    image:
+      "https://images.unsplash.com/photo-1531058020387-3be344556be6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "sports",
+    name: "Thể thao",
+    image:
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "tech",
+    name: "Công nghệ",
+    image:
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "education",
+    name: "Giáo dục",
+    image:
+      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "health",
+    name: "Sức khỏe",
+    image:
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "art",
+    name: "Nghệ thuật",
+    image:
+      "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "business",
+    name: "Kinh doanh",
+    image:
+      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
 ];
 
 const Home = () => {
@@ -119,6 +194,10 @@ const Home = () => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+  const tagBg = useColorModeValue("teal.50", "teal.900");
+  const tagColor = useColorModeValue("teal.600", "teal.200");
 
   // Handler cho nút "Tạo sự kiện"
   const handleCreateEvent = () => {
@@ -134,6 +213,78 @@ const Home = () => {
 
     // Tạm thời, chỉ điều hướng đến trang đăng ký organizer khi chưa có backend
     navigate("/become-organizer");
+  };
+
+  // Tùy chỉnh EventCard component
+  const CustomEventCard = ({ event }: { event: EventData }) => {
+    const locationColor = useColorModeValue("gray.600", "gray.400");
+
+    return (
+      <Box
+        borderRadius="lg"
+        overflow="hidden"
+        bg={cardBg}
+        borderWidth="1px"
+        borderColor={borderColor}
+        _hover={{
+          transform: "translateY(-5px)",
+          boxShadow: "lg",
+          bg: cardHoverBg,
+        }}
+        transition="all 0.3s"
+      >
+        <Box position="relative">
+          <Image
+            src={event.image}
+            alt={event.title}
+            width="100%"
+            height="180px"
+            objectFit="cover"
+            fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
+          />
+          <Box position="absolute" top={2} right={2}>
+            {event.isPaid ? (
+              <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
+                Trả phí
+              </Badge>
+            ) : (
+              <Badge colorScheme="green" py={1} px={2} borderRadius="md">
+                Miễn phí
+              </Badge>
+            )}
+          </Box>
+        </Box>
+
+        <Box p={4}>
+          <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
+            <Icon as={FiTag} mr={1} />
+            {event.category === "workshop" && "Hội thảo"}
+            {event.category === "conference" && "Hội nghị"}
+            {event.category === "music" && "Âm nhạc"}
+            {event.category === "networking" && "Giao lưu"}
+            {event.category === "food" && "Ẩm thực"}
+          </Tag>
+
+          <Heading as="h3" size="md" mb={2} noOfLines={2}>
+            {event.title}
+          </Heading>
+
+          <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
+            {event.description}
+          </Text>
+
+          <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
+            <Icon as={FiCalendar} mr={2} />
+            <Text>{event.date}</Text>
+          </Flex>
+
+          <Flex fontSize="sm" color={locationColor} align="center">
+            <Icon as={FiMapPin} mr={2} />
+            <Text>{event.location}</Text>
+          </Flex>
+        </Box>
+      </Box>
+    );
   };
 
   return (
@@ -243,8 +394,8 @@ const Home = () => {
                 spacing={8}
                 w="100%"
               >
-                {events.slice(0, 6).map((event) => (
-                  <EventCard key={event.id} event={event} />
+                {events.map((event) => (
+                  <CustomEventCard key={event.id} event={event} />
                 ))}
               </SimpleGrid>
             </Box>
@@ -263,7 +414,7 @@ const Home = () => {
               </Text>
             </Box>
 
-            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={6}>
               {popularCategories.map((category) => (
                 <Box
                   key={category.id}
