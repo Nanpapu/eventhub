@@ -17,6 +17,30 @@ import { FiArrowRight, FiCalendar, FiMapPin, FiTag } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+// Danh sách categories
+const categories = [
+  { id: "workshop", name: "Hội thảo" },
+  { id: "conference", name: "Hội nghị" },
+  { id: "meetup", name: "Gặp gỡ" },
+  { id: "networking", name: "Kết nối" },
+  { id: "music", name: "Âm nhạc" },
+  { id: "exhibition", name: "Triển lãm" },
+  { id: "food", name: "Ẩm thực" },
+  { id: "sports", name: "Thể thao" },
+  { id: "tech", name: "Công nghệ" },
+  { id: "education", name: "Giáo dục" },
+  { id: "health", name: "Sức khỏe" },
+  { id: "art", name: "Nghệ thuật" },
+  { id: "business", name: "Kinh doanh" },
+  { id: "other", name: "Khác" },
+];
+
+// Function để lấy tên category từ id
+const getCategoryName = (categoryId: string): string => {
+  const category = categories.find((cat) => cat.id === categoryId);
+  return category ? category.name : "Khác";
+};
+
 // Tạo interface cho event để có type checking
 interface EventData {
   id: number;
@@ -221,6 +245,8 @@ const Home = () => {
 
     return (
       <Box
+        as={Link}
+        to={`/events/${event.id}`}
         borderRadius="lg"
         overflow="hidden"
         bg={cardBg}
@@ -232,6 +258,7 @@ const Home = () => {
           bg: cardHoverBg,
         }}
         transition="all 0.3s"
+        sx={{ textDecoration: "none" }}
       >
         <Box position="relative">
           <Image
@@ -258,11 +285,7 @@ const Home = () => {
         <Box p={4}>
           <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
             <Icon as={FiTag} mr={1} />
-            {event.category === "workshop" && "Hội thảo"}
-            {event.category === "conference" && "Hội nghị"}
-            {event.category === "music" && "Âm nhạc"}
-            {event.category === "networking" && "Giao lưu"}
-            {event.category === "food" && "Ẩm thực"}
+            {getCategoryName(event.category)}
           </Tag>
 
           <Heading as="h3" size="md" mb={2} noOfLines={2}>

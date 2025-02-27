@@ -25,14 +25,35 @@ import {
   DrawerCloseButton,
   IconButton,
   useColorModeValue,
+  Image,
+  Tag,
+  Icon,
 } from "@chakra-ui/react";
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
-import { FiSearch, FiMapPin, FiFilter, FiX } from "react-icons/fi";
-import EventCard from "../../components/events/EventCard";
+import { useSearchParams, Link } from "react-router-dom";
+import {
+  FiSearch,
+  FiMapPin,
+  FiFilter,
+  FiX,
+  FiCalendar,
+  FiTag,
+} from "react-icons/fi";
+
+// Định nghĩa interface cho event để có type checking
+interface EventData {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  image: string;
+  category: string;
+  isPaid: boolean;
+}
 
 // Dữ liệu mẫu cho sự kiện
-const eventsData = [
+const eventsData: EventData[] = [
   {
     id: 1,
     title: "Hội thảo thiết kế UI/UX",
@@ -40,7 +61,8 @@ const eventsData = [
       "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
     date: "15/08/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3IZUfQd",
+    image:
+      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "workshop",
     isPaid: false,
   },
@@ -50,7 +72,8 @@ const eventsData = [
     description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
     date: "20/08/2023",
     location: "Hà Nội",
-    image: "https://bit.ly/3wIlKgh",
+    image:
+      "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80",
     category: "conference",
     isPaid: true,
   },
@@ -60,7 +83,8 @@ const eventsData = [
     description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
     date: "10/09/2023",
     location: "Đà Nẵng",
-    image: "https://bit.ly/3IfO5Fh",
+    image:
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "music",
     isPaid: true,
   },
@@ -71,7 +95,8 @@ const eventsData = [
       "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
     date: "25/08/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3kpPKS5",
+    image:
+      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
     category: "networking",
     isPaid: false,
   },
@@ -82,7 +107,8 @@ const eventsData = [
       "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
     date: "05/09/2023",
     location: "Hà Nội",
-    image: "https://bit.ly/3SVagzv",
+    image:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "food",
     isPaid: false,
   },
@@ -93,7 +119,8 @@ const eventsData = [
       "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
     date: "12/09/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3kD02Jq",
+    image:
+      "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "conference",
     isPaid: true,
   },
@@ -104,7 +131,8 @@ const eventsData = [
       "Chiêm ngưỡng các tác phẩm độc đáo từ các nghệ sĩ trong nước và quốc tế",
     date: "18/09/2023",
     location: "Hà Nội",
-    image: "https://bit.ly/3SVcGVu",
+    image:
+      "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "exhibition",
     isPaid: true,
   },
@@ -115,7 +143,8 @@ const eventsData = [
       "Học các kỹ thuật nhiếp ảnh cơ bản và cách chỉnh sửa hình ảnh chuyên nghiệp",
     date: "22/08/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3SXgDVw",
+    image:
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1164&q=80",
     category: "workshop",
     isPaid: true,
   },
@@ -126,7 +155,8 @@ const eventsData = [
       "Giải đấu lập trình trong 48 giờ với nhiều giải thưởng giá trị",
     date: "30/08/2023",
     location: "Đà Nẵng",
-    image: "https://bit.ly/3SWdGXz",
+    image:
+      "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "networking",
     isPaid: false,
   },
@@ -137,7 +167,8 @@ const eventsData = [
       "Trưng bày và giới thiệu các sản phẩm công nghệ mới nhất trên thị trường",
     date: "15/09/2023",
     location: "TP. Hồ Chí Minh",
-    image: "https://bit.ly/3SVfHVy",
+    image:
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "exhibition",
     isPaid: false,
   },
@@ -148,7 +179,8 @@ const eventsData = [
       "Chia sẻ kinh nghiệm và định hướng cho sinh viên muốn bắt đầu khởi nghiệp",
     date: "05/10/2023",
     location: "Cần Thơ",
-    image: "https://bit.ly/3SXiEVz",
+    image:
+      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "workshop",
     isPaid: false,
   },
@@ -159,7 +191,8 @@ const eventsData = [
       "Thưởng thức các tiết mục âm nhạc dân tộc do các nghệ sĩ tài năng biểu diễn",
     date: "10/10/2023",
     location: "Huế",
-    image: "https://bit.ly/3SVjFVa",
+    image:
+      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     category: "music",
     isPaid: false,
   },
@@ -171,20 +204,33 @@ const locations = [
   "Hà Nội",
   "Đà Nẵng",
   "Cần Thơ",
+  "Huế",
   "Nha Trang",
 ];
 
 // Danh sách categories
 const categories = [
-  "conference",
-  "workshop",
-  "meetup",
-  "networking",
-  "music",
-  "exhibition",
-  "food",
-  "other",
+  { id: "conference", name: "Hội nghị" },
+  { id: "workshop", name: "Hội thảo" },
+  { id: "meetup", name: "Gặp gỡ" },
+  { id: "networking", name: "Kết nối" },
+  { id: "music", name: "Âm nhạc" },
+  { id: "exhibition", name: "Triển lãm" },
+  { id: "food", name: "Ẩm thực" },
+  { id: "sports", name: "Thể thao" },
+  { id: "tech", name: "Công nghệ" },
+  { id: "education", name: "Giáo dục" },
+  { id: "health", name: "Sức khỏe" },
+  { id: "art", name: "Nghệ thuật" },
+  { id: "business", name: "Kinh doanh" },
+  { id: "other", name: "Khác" },
 ];
+
+// Function để lấy tên category từ id
+const getCategoryName = (categoryId: string): string => {
+  const category = categories.find((cat) => cat.id === categoryId);
+  return category ? category.name : "Khác";
+};
 
 const SearchResults = () => {
   // Màu sắc theo theme
@@ -194,6 +240,11 @@ const SearchResults = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const iconColor = useColorModeValue("gray.400", "gray.500");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+  const tagBg = useColorModeValue("teal.50", "teal.900");
+  const tagColor = useColorModeValue("teal.600", "teal.200");
+  const locationColor = useColorModeValue("gray.600", "gray.400");
 
   // Lấy query params từ URL
   const [searchParams, setSearchParams] = useSearchParams();
@@ -314,6 +365,75 @@ const SearchResults = () => {
     filterEvents,
   ]);
 
+  // Custom EventCard component tương tự như ở trang Home
+  const CustomEventCard = ({ event }: { event: EventData }) => {
+    return (
+      <Box
+        as={Link}
+        to={`/events/${event.id}`}
+        borderRadius="lg"
+        overflow="hidden"
+        bg={cardBg}
+        borderWidth="1px"
+        borderColor={borderColor}
+        _hover={{
+          transform: "translateY(-5px)",
+          boxShadow: "lg",
+          bg: cardHoverBg,
+        }}
+        transition="all 0.3s"
+        sx={{ textDecoration: "none" }}
+      >
+        <Box position="relative">
+          <Image
+            src={event.image}
+            alt={event.title}
+            width="100%"
+            height="180px"
+            objectFit="cover"
+            fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
+          />
+          <Box position="absolute" top={2} right={2}>
+            {event.isPaid ? (
+              <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
+                Trả phí
+              </Badge>
+            ) : (
+              <Badge colorScheme="green" py={1} px={2} borderRadius="md">
+                Miễn phí
+              </Badge>
+            )}
+          </Box>
+        </Box>
+
+        <Box p={4}>
+          <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
+            <Icon as={FiTag} mr={1} />
+            {getCategoryName(event.category)}
+          </Tag>
+
+          <Heading as="h3" size="md" mb={2} noOfLines={2}>
+            {event.title}
+          </Heading>
+
+          <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
+            {event.description}
+          </Text>
+
+          <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
+            <Icon as={FiCalendar} mr={2} />
+            <Text>{event.date}</Text>
+          </Flex>
+
+          <Flex fontSize="sm" color={locationColor} align="center">
+            <Icon as={FiMapPin} mr={2} />
+            <Text>{event.location}</Text>
+          </Flex>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box bg={bgColor}>
       <Container maxW="container.xl" py={8}>
@@ -375,6 +495,7 @@ const SearchResults = () => {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   borderColor={borderColor}
+                  pl={10}
                 >
                   {locations.map((loc) => (
                     <option key={loc} value={loc}>
@@ -384,34 +505,25 @@ const SearchResults = () => {
                 </Select>
               </InputGroup>
 
-              <Select
-                placeholder="Tất cả danh mục"
-                size="md"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                borderColor={borderColor}
-                flex={1}
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat === "conference"
-                      ? "Hội nghị"
-                      : cat === "workshop"
-                      ? "Hội thảo"
-                      : cat === "meetup"
-                      ? "Gặp gỡ"
-                      : cat === "networking"
-                      ? "Kết nối"
-                      : cat === "music"
-                      ? "Âm nhạc"
-                      : cat === "exhibition"
-                      ? "Triển lãm"
-                      : cat === "food"
-                      ? "Ẩm thực"
-                      : "Khác"}
-                  </option>
-                ))}
-              </Select>
+              <InputGroup size="md" flex={1}>
+                <InputLeftElement pointerEvents="none">
+                  <FiTag color={iconColor} />
+                </InputLeftElement>
+                <Select
+                  placeholder="Tất cả danh mục"
+                  size="md"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  borderColor={borderColor}
+                  pl={10}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </Select>
+              </InputGroup>
 
               <HStack spacing={4}>
                 <Checkbox
@@ -500,21 +612,7 @@ const SearchResults = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  {category === "conference"
-                    ? "Hội nghị"
-                    : category === "workshop"
-                    ? "Hội thảo"
-                    : category === "meetup"
-                    ? "Gặp gỡ"
-                    : category === "networking"
-                    ? "Kết nối"
-                    : category === "music"
-                    ? "Âm nhạc"
-                    : category === "exhibition"
-                    ? "Triển lãm"
-                    : category === "food"
-                    ? "Ẩm thực"
-                    : "Khác"}
+                  {getCategoryName(category)}
                   <Box
                     as={FiX}
                     ml={1}
@@ -576,48 +674,46 @@ const SearchResults = () => {
                   <Text fontWeight="medium" mb={2}>
                     Địa điểm
                   </Text>
-                  <Select
-                    placeholder="Tất cả địa điểm"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  >
-                    {locations.map((loc) => (
-                      <option key={loc} value={loc}>
-                        {loc}
-                      </option>
-                    ))}
-                  </Select>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <FiMapPin color={iconColor} />
+                    </InputLeftElement>
+                    <Select
+                      placeholder="Tất cả địa điểm"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      pl={10}
+                    >
+                      {locations.map((loc) => (
+                        <option key={loc} value={loc}>
+                          {loc}
+                        </option>
+                      ))}
+                    </Select>
+                  </InputGroup>
                 </Box>
 
                 <Box>
                   <Text fontWeight="medium" mb={2}>
                     Danh mục
                   </Text>
-                  <Select
-                    placeholder="Tất cả danh mục"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat === "conference"
-                          ? "Hội nghị"
-                          : cat === "workshop"
-                          ? "Hội thảo"
-                          : cat === "meetup"
-                          ? "Gặp gỡ"
-                          : cat === "networking"
-                          ? "Kết nối"
-                          : cat === "music"
-                          ? "Âm nhạc"
-                          : cat === "exhibition"
-                          ? "Triển lãm"
-                          : cat === "food"
-                          ? "Ẩm thực"
-                          : "Khác"}
-                      </option>
-                    ))}
-                  </Select>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <FiTag color={iconColor} />
+                    </InputLeftElement>
+                    <Select
+                      placeholder="Tất cả danh mục"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      pl={10}
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </InputGroup>
                 </Box>
 
                 <Box>
@@ -693,7 +789,7 @@ const SearchResults = () => {
                 mb={8}
               >
                 {currentEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <CustomEventCard key={event.id} event={event} />
                 ))}
               </SimpleGrid>
 
