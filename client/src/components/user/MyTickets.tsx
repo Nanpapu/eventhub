@@ -18,9 +18,6 @@ import {
   Image,
   Icon,
   Divider,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Alert,
   AlertIcon,
   AlertTitle,
@@ -34,14 +31,13 @@ import {
   FiDownload,
   FiShare2,
   FiClock,
-  FiSearch,
-  FiFilter,
   FiList,
   FiCheck,
   FiClock as FiHistory,
   FiX,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { SearchBar } from "../../components/common";
 
 // Interface cho dữ liệu vé
 interface Ticket {
@@ -147,6 +143,10 @@ const MyTickets = () => {
 
   // State lọc và tìm kiếm
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [showFreeOnly, setShowFreeOnly] = useState(false);
+  const [showPaidOnly, setShowPaidOnly] = useState(false);
 
   // State lưu dữ liệu vé
   const [tickets, setTickets] = useState<Ticket[]>(ticketsData);
@@ -156,7 +156,6 @@ const MyTickets = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
-  const iconColor = useColorModeValue("gray.500", "gray.400");
   const activeBg = useColorModeValue("teal.50", "teal.900");
   const activeColor = useColorModeValue("teal.600", "teal.200");
   const cardBg = useColorModeValue("white", "gray.800");
@@ -167,19 +166,24 @@ const MyTickets = () => {
     const matchesSearch = ticket.eventTitle
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+    const matchesLocation =
+      locationFilter === "" ||
+      ticket.location.toLowerCase().includes(locationFilter.toLowerCase());
+    // Không thực sự lọc theo danh mục và giá vì vé không có các thuộc tính này
+    // Nhưng vẫn giữ code để đồng bộ với các trang khác
 
     if (tabIndex === 0) {
       // Tất cả vé
-      return matchesSearch;
+      return matchesSearch && matchesLocation;
     } else if (tabIndex === 1) {
       // Vé sắp tới
-      return matchesSearch && ticket.status === "upcoming";
+      return matchesSearch && matchesLocation && ticket.status === "upcoming";
     } else if (tabIndex === 2) {
       // Vé đã qua
-      return matchesSearch && ticket.status === "past";
+      return matchesSearch && matchesLocation && ticket.status === "past";
     } else {
       // Vé đã hủy
-      return matchesSearch && ticket.status === "canceled";
+      return matchesSearch && matchesLocation && ticket.status === "canceled";
     }
   });
 
@@ -191,6 +195,48 @@ const MyTickets = () => {
       )
     );
     // Trong thực tế sẽ gọi API để hủy vé
+  };
+
+  // Xử lý tìm kiếm
+  const handleSearch = () => {
+    // Đã được xử lý thông qua state
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchQuery("");
+    setLocationFilter("");
+    setCategoryFilter("");
+    setShowFreeOnly(false);
+    setShowPaidOnly(false);
+  };
+
+  // Tạo locationOptions cho SearchBar
+  const locationOptions = tickets
+    .map((ticket) => ticket.location)
+    .filter((location, index, self) => self.indexOf(location) === index) // Loại bỏ trùng lặp
+    .map((location) => ({ name: location }));
+
+  // Tạo danh mục (dummy) cho SearchBar
+  const categoryOptions = [
+    { id: "all", name: "Tất cả loại vé" },
+    { id: "standard", name: "Vé thường" },
+    { id: "vip", name: "Vé VIP" },
+    { id: "premium", name: "Vé Premium" },
+  ];
+
+  // Function getCategoryName cho SearchBar
+  const getCategoryName = (id: string): string => {
+    const category = categoryOptions.find((cat) => cat.id === id);
+    return category ? category.name : id;
+  };
+
+  // Tạo appliedFilters để hiển thị badges khi có filter
+  const appliedFilters = {
+    location: locationFilter,
+    category: categoryFilter,
+    showFreeOnly,
+    showPaidOnly,
   };
 
   return (
@@ -265,21 +311,32 @@ const MyTickets = () => {
           </Tab>
         </TabList>
 
-        {/* Search bar */}
-        <Box mb={6}>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color={iconColor} />
-            </InputLeftElement>
-            <Input
-              placeholder="Tìm kiếm vé theo tên sự kiện..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              bg={bgColor}
-              borderColor={borderColor}
-            />
-          </InputGroup>
-        </Box>
+        {/* SearchBar Component */}
+        <SearchBar
+          keyword={searchQuery}
+          setKeyword={setSearchQuery}
+          location={locationFilter}
+          setLocation={setLocationFilter}
+          category={categoryFilter}
+          setCategory={setCategoryFilter}
+          showFreeOnly={showFreeOnly}
+          setShowFreeOnly={setShowFreeOnly}
+          showPaidOnly={showPaidOnly}
+          setShowPaidOnly={setShowPaidOnly}
+          onSearch={handleSearch}
+          onReset={resetFilters}
+          locations={locationOptions}
+          categories={categoryOptions}
+          showLocationFilter={true}
+          showCategoryFilter={true}
+          showPriceFilter={true}
+          appliedFilters={appliedFilters}
+          getCategoryName={getCategoryName}
+          mb={6}
+          borderWidth="1px"
+          borderColor={borderColor}
+          bg={bgColor}
+        />
 
         {/* Tab nội dung */}
         <TabPanels>

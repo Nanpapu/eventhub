@@ -13,10 +13,6 @@ import {
   SimpleGrid,
   Badge,
   VStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
   Alert,
   AlertIcon,
   AlertTitle,
@@ -34,14 +30,13 @@ import {
   FiTrash2,
   FiEye,
   FiPlus,
-  FiSearch,
   FiX,
   FiTag,
-  FiFilter,
   FiGrid,
   FiBookmark,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { SearchBar } from "../../components/common";
 
 // Interface cho dữ liệu sự kiện
 interface Event {
@@ -182,6 +177,8 @@ const EventManagement = () => {
   // State cho tìm kiếm và lọc
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [showFreeOnly, setShowFreeOnly] = useState(false);
+  const [showPaidOnly, setShowPaidOnly] = useState(false);
 
   // State lưu dữ liệu sự kiện
   const [myEvents, setMyEvents] = useState<Event[]>(myEventsData);
@@ -207,7 +204,11 @@ const EventManagement = () => {
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
       categoryFilter === "" || event.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesPrice =
+      (showFreeOnly && !event.isPaid) ||
+      (showPaidOnly && event.isPaid) ||
+      (!showFreeOnly && !showPaidOnly);
+    return matchesSearch && matchesCategory && matchesPrice;
   });
 
   const filteredSavedEvents = savedEvents.filter((event) => {
@@ -216,7 +217,11 @@ const EventManagement = () => {
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
       categoryFilter === "" || event.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesPrice =
+      (showFreeOnly && !event.isPaid) ||
+      (showPaidOnly && event.isPaid) ||
+      (!showFreeOnly && !showPaidOnly);
+    return matchesSearch && matchesCategory && matchesPrice;
   });
 
   // Xử lý tìm kiếm
@@ -228,6 +233,8 @@ const EventManagement = () => {
   const resetFilters = () => {
     setSearchQuery("");
     setCategoryFilter("");
+    setShowFreeOnly(false);
+    setShowPaidOnly(false);
   };
 
   // Xóa sự kiện
@@ -240,6 +247,22 @@ const EventManagement = () => {
   const handleUnsaveEvent = (eventId: number) => {
     setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
     // Trong thực tế sẽ gọi API để hủy lưu sự kiện
+  };
+
+  // Format categories cho SearchBar
+  const categoryOptions = categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+  }));
+
+  // Tạo locationOptions empty để hiển thị đồng nhất với SearchResults
+  const locationOptions = [];
+
+  // Tạo appliedFilters để hiển thị badges khi có filter
+  const appliedFilters = {
+    category: categoryFilter,
+    showFreeOnly,
+    showPaidOnly,
   };
 
   return (
@@ -299,62 +322,30 @@ const EventManagement = () => {
           </Tab>
         </TabList>
 
-        {/* Search bar chung cho tất cả tabs */}
-        <Box
+        {/* SearchBar Component */}
+        <SearchBar
+          keyword={searchQuery}
+          setKeyword={setSearchQuery}
+          category={categoryFilter}
+          setCategory={setCategoryFilter}
+          showFreeOnly={showFreeOnly}
+          setShowFreeOnly={setShowFreeOnly}
+          showPaidOnly={showPaidOnly}
+          setShowPaidOnly={setShowPaidOnly}
+          onSearch={handleSearch}
+          onReset={resetFilters}
+          categories={categoryOptions}
+          locations={locationOptions}
+          showLocationFilter={true}
+          showCategoryFilter={true}
+          showPriceFilter={true}
+          appliedFilters={appliedFilters}
+          getCategoryName={getCategoryName}
           mb={6}
-          p={6}
-          borderRadius="lg"
           borderWidth="1px"
           borderColor={borderColor}
           bg={tabBg}
-        >
-          <Flex direction="column" gap={4}>
-            <Flex gap={4}>
-              <InputGroup size="md" flexGrow={1}>
-                <InputLeftElement pointerEvents="none">
-                  <FiSearch color={iconColor} />
-                </InputLeftElement>
-                <Input
-                  placeholder="Tìm kiếm sự kiện..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </InputGroup>
-
-              <Button colorScheme="teal" onClick={handleSearch} px={8}>
-                Tìm kiếm
-              </Button>
-            </Flex>
-
-            <Flex gap={4}>
-              <InputGroup size="md" flex={1}>
-                <InputLeftElement pointerEvents="none">
-                  <FiTag color={iconColor} />
-                </InputLeftElement>
-                <Select
-                  placeholder="Tất cả danh mục"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  pl={10}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </Select>
-              </InputGroup>
-
-              <Button
-                variant="outline"
-                leftIcon={<FiX />}
-                onClick={resetFilters}
-              >
-                Xóa bộ lọc
-              </Button>
-            </Flex>
-          </Flex>
-        </Box>
+        />
 
         <TabPanels>
           {/* Tab: Tất cả sự kiện */}

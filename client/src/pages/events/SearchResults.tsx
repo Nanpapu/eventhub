@@ -6,24 +6,8 @@ import {
   Heading,
   SimpleGrid,
   Text,
-  VStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
   HStack,
   Badge,
-  Divider,
-  Checkbox,
-  Stack,
-  useDisclosure,
-  Drawer,
-  DrawerBody,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-  IconButton,
   useColorModeValue,
   Image,
   Tag,
@@ -31,14 +15,8 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import {
-  FiSearch,
-  FiMapPin,
-  FiFilter,
-  FiX,
-  FiCalendar,
-  FiTag,
-} from "react-icons/fi";
+import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
+import { SearchBar } from "../../components/common";
 
 // Định nghĩa interface cho event để có type checking
 interface EventData {
@@ -235,10 +213,8 @@ const getCategoryName = (categoryId: string): string => {
 const SearchResults = () => {
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
-  const boxBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const iconColor = useColorModeValue("gray.400", "gray.500");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
   const cardBg = useColorModeValue("white", "gray.800");
   const cardHoverBg = useColorModeValue("gray.50", "gray.700");
@@ -263,9 +239,6 @@ const SearchResults = () => {
   const [showPaidOnly, setShowPaidOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const eventsPerPage = 6;
-
-  // Drawer cho filter trên mobile
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Xử lý tìm kiếm
   const handleSearch = () => {
@@ -365,6 +338,15 @@ const SearchResults = () => {
     filterEvents,
   ]);
 
+  // Format địa điểm cho SearchBar
+  const locationOptions = locations.map((loc) => ({ name: loc }));
+
+  // Format danh mục cho SearchBar
+  const categoryOptions = categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+  }));
+
   // Custom EventCard component tương tự như ở trang Home
   const CustomEventCard = ({ event }: { event: EventData }) => {
     return (
@@ -455,305 +437,34 @@ const SearchResults = () => {
           </Box>
         )}
 
-        {/* Desktop: Search & Filter Bar */}
-        <Box
-          display={{ base: "none", md: "block" }}
-          mb={8}
-          p={6}
-          bg={boxBg}
-          borderRadius="lg"
-          boxShadow="md"
-          borderColor={borderColor}
-          borderWidth="1px"
-        >
-          <Flex direction="column" gap={4}>
-            <Flex gap={4}>
-              <InputGroup size="md" flexGrow={1}>
-                <InputLeftElement pointerEvents="none">
-                  <FiSearch color={iconColor} />
-                </InputLeftElement>
-                <Input
-                  placeholder="Tìm kiếm sự kiện..."
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  borderColor={borderColor}
-                />
-              </InputGroup>
-
-              <Button colorScheme="teal" onClick={handleSearch} px={8}>
-                Tìm kiếm
-              </Button>
-            </Flex>
-
-            <Flex gap={4} align="center">
-              <InputGroup size="md" flex={1}>
-                <InputLeftElement pointerEvents="none">
-                  <FiMapPin color={iconColor} />
-                </InputLeftElement>
-                <Select
-                  placeholder="Tất cả địa điểm"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  borderColor={borderColor}
-                  pl={10}
-                >
-                  {locations.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </Select>
-              </InputGroup>
-
-              <InputGroup size="md" flex={1}>
-                <InputLeftElement pointerEvents="none">
-                  <FiTag color={iconColor} />
-                </InputLeftElement>
-                <Select
-                  placeholder="Tất cả danh mục"
-                  size="md"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  borderColor={borderColor}
-                  pl={10}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </Select>
-              </InputGroup>
-
-              <HStack spacing={4}>
-                <Checkbox
-                  isChecked={showFreeOnly}
-                  onChange={(e) => {
-                    setShowFreeOnly(e.target.checked);
-                    if (e.target.checked) setShowPaidOnly(false);
-                  }}
-                >
-                  Miễn phí
-                </Checkbox>
-                <Checkbox
-                  isChecked={showPaidOnly}
-                  onChange={(e) => {
-                    setShowPaidOnly(e.target.checked);
-                    if (e.target.checked) setShowFreeOnly(false);
-                  }}
-                >
-                  Có phí
-                </Checkbox>
-              </HStack>
-
-              <Button
-                variant="outline"
-                colorScheme="teal"
-                size="md"
-                leftIcon={<FiX />}
-                onClick={resetFilters}
-              >
-                Xóa bộ lọc
-              </Button>
-            </Flex>
-          </Flex>
-        </Box>
-
-        {/* Mobile: Compact Search & Filter */}
-        <Box display={{ base: "block", md: "none" }} mb={6}>
-          <Flex gap={2} mb={4}>
-            <InputGroup size="md" flex={1}>
-              <InputLeftElement pointerEvents="none">
-                <FiSearch color={iconColor} />
-              </InputLeftElement>
-              <Input
-                placeholder="Tìm kiếm sự kiện..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                borderColor={borderColor}
-              />
-            </InputGroup>
-
-            <IconButton
-              aria-label="Lọc"
-              icon={<FiFilter />}
-              colorScheme="teal"
-              onClick={onOpen}
-            />
-          </Flex>
-
-          {/* Filter Badges (hiển thị bộ lọc đã chọn) */}
-          {(location || category || showFreeOnly || showPaidOnly) && (
-            <Flex gap={2} mb={4} flexWrap="wrap">
-              {location && (
-                <Badge
-                  colorScheme="teal"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  {location}
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => setLocation("")}
-                  />
-                </Badge>
-              )}
-              {category && (
-                <Badge
-                  colorScheme="purple"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  {getCategoryName(category)}
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => setCategory("")}
-                  />
-                </Badge>
-              )}
-              {showFreeOnly && (
-                <Badge
-                  colorScheme="green"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  Miễn phí
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => setShowFreeOnly(false)}
-                  />
-                </Badge>
-              )}
-              {showPaidOnly && (
-                <Badge
-                  colorScheme="orange"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  Có phí
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => setShowPaidOnly(false)}
-                  />
-                </Badge>
-              )}
-            </Flex>
-          )}
-        </Box>
-
-        {/* Mobile Drawer Filter */}
-        <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
-          <DrawerOverlay />
-          <DrawerContent>
-            <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth="1px">Bộ lọc</DrawerHeader>
-
-            <DrawerBody>
-              <VStack spacing={4} align="stretch" py={4}>
-                <Box>
-                  <Text fontWeight="medium" mb={2}>
-                    Địa điểm
-                  </Text>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <FiMapPin color={iconColor} />
-                    </InputLeftElement>
-                    <Select
-                      placeholder="Tất cả địa điểm"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      pl={10}
-                    >
-                      {locations.map((loc) => (
-                        <option key={loc} value={loc}>
-                          {loc}
-                        </option>
-                      ))}
-                    </Select>
-                  </InputGroup>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="medium" mb={2}>
-                    Danh mục
-                  </Text>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <FiTag color={iconColor} />
-                    </InputLeftElement>
-                    <Select
-                      placeholder="Tất cả danh mục"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      pl={10}
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </InputGroup>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="medium" mb={2}>
-                    Giá
-                  </Text>
-                  <Stack spacing={2}>
-                    <Checkbox
-                      isChecked={showFreeOnly}
-                      onChange={(e) => {
-                        setShowFreeOnly(e.target.checked);
-                        if (e.target.checked) setShowPaidOnly(false);
-                      }}
-                    >
-                      Miễn phí
-                    </Checkbox>
-                    <Checkbox
-                      isChecked={showPaidOnly}
-                      onChange={(e) => {
-                        setShowPaidOnly(e.target.checked);
-                        if (e.target.checked) setShowFreeOnly(false);
-                      }}
-                    >
-                      Có phí
-                    </Checkbox>
-                  </Stack>
-                </Box>
-
-                <Divider />
-
-                <Button colorScheme="teal" onClick={handleSearch}>
-                  Áp dụng
-                </Button>
-                <Button variant="outline" onClick={resetFilters}>
-                  Xóa bộ lọc
-                </Button>
-              </VStack>
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
+        {/* SearchBar Component */}
+        <SearchBar
+          keyword={keyword}
+          setKeyword={setKeyword}
+          location={location}
+          setLocation={setLocation}
+          category={category}
+          setCategory={setCategory}
+          showFreeOnly={showFreeOnly}
+          setShowFreeOnly={setShowFreeOnly}
+          showPaidOnly={showPaidOnly}
+          setShowPaidOnly={setShowPaidOnly}
+          onSearch={handleSearch}
+          onReset={resetFilters}
+          categories={categoryOptions}
+          locations={locationOptions}
+          showLocationFilter={true}
+          showCategoryFilter={true}
+          showPriceFilter={true}
+          appliedFilters={{
+            location,
+            category,
+            showFreeOnly,
+            showPaidOnly,
+          }}
+          getCategoryName={getCategoryName}
+          mb={6}
+        />
 
         {/* Kết quả tìm kiếm */}
         {filteredEvents.length > 0 ? (
