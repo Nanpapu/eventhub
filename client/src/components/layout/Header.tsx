@@ -23,11 +23,19 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import {
-  MdAdd as AddIcon,
+  MdAdd,
   MdMenu as HamburgerIcon,
   MdClose as CloseIcon,
   MdKeyboardArrowDown as ChevronDownIcon,
   MdKeyboardArrowRight as ChevronRightIcon,
+  MdPerson,
+  MdDashboard,
+  MdEvent,
+  MdConfirmationNumber,
+  MdBookmark,
+  MdStars,
+  MdNotifications,
+  MdExitToApp,
 } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -190,7 +198,7 @@ export default function Header() {
                 display={{ base: "none", md: "inline-flex" }}
                 fontSize="sm"
                 fontWeight={600}
-                leftIcon={<AddIcon />}
+                leftIcon={<MdAdd />}
                 colorScheme="teal"
                 variant="outline"
               >
@@ -228,28 +236,78 @@ export default function Header() {
                     {user?.email}
                   </Text>
                   <MenuDivider />
-                  <MenuItem as={Link} to="/user/profile">
-                    Hồ sơ
+                  <MenuItem
+                    as={Link}
+                    to="/user"
+                    icon={<Icon as={MdPerson} mr={2} />}
+                  >
+                    Quản lý tài khoản
                   </MenuItem>
-                  {user?.role === "organizer" && (
-                    <MenuItem as={Link} to="/dashboard">
-                      Bảng điều khiển tổ chức
-                    </MenuItem>
+
+                  {user?.role === "organizer" ? (
+                    <>
+                      <MenuItem
+                        as={Link}
+                        to="/dashboard"
+                        icon={<Icon as={MdDashboard} mr={2} />}
+                      >
+                        Bảng điều khiển tổ chức
+                      </MenuItem>
+                      <MenuItem
+                        as={Link}
+                        to="/my-events"
+                        icon={<Icon as={MdEvent} mr={2} />}
+                      >
+                        Sự kiện đã tạo
+                      </MenuItem>
+                      <MenuItem
+                        as={Link}
+                        to="/create-event"
+                        icon={<Icon as={MdAdd} mr={2} />}
+                      >
+                        Tạo sự kiện mới
+                      </MenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <MenuItem
+                        as={Link}
+                        to="/user/tickets"
+                        icon={<Icon as={MdConfirmationNumber} mr={2} />}
+                      >
+                        Vé của tôi
+                      </MenuItem>
+                      <MenuItem
+                        as={Link}
+                        to="/user/events"
+                        icon={<Icon as={MdBookmark} mr={2} />}
+                      >
+                        Sự kiện đã lưu
+                      </MenuItem>
+                      <MenuItem
+                        as={Link}
+                        to="/become-organizer"
+                        icon={<Icon as={MdStars} mr={2} />}
+                      >
+                        Trở thành nhà tổ chức
+                      </MenuItem>
+                    </>
                   )}
-                  <MenuItem as={Link} to="/user/events">
-                    Sự kiện của tôi
-                  </MenuItem>
-                  <MenuItem as={Link} to="/user/events">
-                    Sự kiện đã lưu
-                  </MenuItem>
-                  <MenuItem as={Link} to="/user/tickets">
-                    Vé của tôi
-                  </MenuItem>
-                  <MenuItem as={Link} to="/notifications">
+
+                  <MenuItem
+                    as={Link}
+                    to="/notifications"
+                    icon={<Icon as={MdNotifications} mr={2} />}
+                  >
                     Thông báo
                   </MenuItem>
                   <MenuDivider />
-                  <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+                  <MenuItem
+                    onClick={handleLogout}
+                    icon={<Icon as={MdExitToApp} mr={2} />}
+                  >
+                    Đăng xuất
+                  </MenuItem>
                 </MenuList>
               </Menu>
             </>
