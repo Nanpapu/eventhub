@@ -228,7 +228,7 @@ export default function Header() {
                     {user?.email}
                   </Text>
                   <MenuDivider />
-                  <MenuItem as={Link} to="/profile">
+                  <MenuItem as={Link} to="/user/profile">
                     Hồ sơ
                   </MenuItem>
                   {user?.role === "organizer" && (
@@ -236,13 +236,13 @@ export default function Header() {
                       Bảng điều khiển tổ chức
                     </MenuItem>
                   )}
-                  <MenuItem as={Link} to="/my-events">
+                  <MenuItem as={Link} to="/user/events">
                     Sự kiện của tôi
                   </MenuItem>
-                  <MenuItem as={Link} to="/saved-events">
+                  <MenuItem as={Link} to="/user/events">
                     Sự kiện đã lưu
                   </MenuItem>
-                  <MenuItem as={Link} to="/my-tickets">
+                  <MenuItem as={Link} to="/user/tickets">
                     Vé của tôi
                   </MenuItem>
                   <MenuItem as={Link} to="/notifications">
