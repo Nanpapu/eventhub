@@ -1,1128 +1,521 @@
 import {
   Box,
   Container,
+  Flex,
   Heading,
   Text,
   SimpleGrid,
   VStack,
   HStack,
-  Icon,
   Button,
-  Flex,
+  Image,
+  Link as ChakraLink,
+  Divider,
   useColorModeValue,
+  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-  Link as ChakraLink,
-  Image,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Divider,
-  AspectRatio,
-  Badge,
-  Link,
-  Alert,
-  AlertIcon,
+  Icon,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Center,
 } from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   FaDownload,
-  FaFileAlt,
+  FaFileDownload,
   FaEnvelope,
-  FaFilePdf,
-  FaFileWord,
-  FaImages,
-  FaQuoteLeft,
+  FaFileAlt,
 } from "react-icons/fa";
-import { IconType } from "react-icons";
 
-// Brand Assets Data Structures
-interface ColorInfo {
-  name: string;
-  value: string;
-  textColor: string;
-  description: string;
-}
-
-interface LogoAsset {
-  id: string;
-  name: string;
-  description: string;
-  preview: string;
-  formats: string[];
-  downloadLink: string;
-}
-
-interface MediaKit {
-  id: string;
-  title: string;
-  description: string;
-  fileType: string;
-  icon: IconType;
-  size: string;
-  downloadLink: string;
-}
-
-interface PressRelease {
-  id: string;
-  title: string;
-  date: string;
-  summary: string;
-  downloadLink: string;
-}
-
+// Tinh gọn trang PressKit
 const PressKit = () => {
-  // Colors
-  const bgColor = useColorModeValue("white", "gray.800");
+  // Các giá trị màu cần thiết
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const headingColor = useColorModeValue("blue.600", "blue.300");
+  const cardBg = useColorModeValue("white", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const secondaryBg = useColorModeValue("gray.50", "gray.700");
-  const textColorSecondary = useColorModeValue("gray.600", "gray.400");
-  const hoverBgColor = useColorModeValue("gray.50", "gray.900");
-  const grayBgColor = useColorModeValue("gray.800", "white");
-  const blueHighlightBg = useColorModeValue("blue.50", "blue.900");
-  const blueTextColor = useColorModeValue("blue.600", "blue.300");
-  const blueDarkTextColor = useColorModeValue("blue.700", "blue.300");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
+  const buttonColorScheme = "blue";
+  const sectionBg = useColorModeValue("gray.50", "gray.800");
+  const boxAccentBg = useColorModeValue("blue.50", "blue.900");
 
-  // Color palette data
-  const brandColors: ColorInfo[] = [
+  // Thông tin thương hiệu rút gọn
+  const brandColors = [
     {
-      name: "Primary",
-      value: "#319795", // teal.500
-      textColor: "white",
-      description: "Main brand color, used for primary actions and navigation",
+      name: "Chính",
+      hex: "#3182CE", // Blue.500
+      rgb: "49, 130, 206",
     },
     {
-      name: "Secondary",
-      value: "#3182CE", // blue.500
-      textColor: "white",
-      description: "Used for secondary actions and supporting elements",
+      name: "Đậm",
+      hex: "#2C5282", // Blue.800
+      rgb: "44, 82, 130",
     },
     {
-      name: "Accent",
-      value: "#DD6B20", // orange.500
-      textColor: "white",
-      description:
-        "Used for highlighting important elements or calls to action",
-    },
-    {
-      name: "Success",
-      value: "#38A169", // green.500
-      textColor: "white",
-      description: "Indicates successful actions or positive statuses",
-    },
-    {
-      name: "Warning",
-      value: "#ECC94B", // yellow.400
-      textColor: "black",
-      description: "Used for warnings or drawing attention",
-    },
-    {
-      name: "Error",
-      value: "#E53E3E", // red.500
-      textColor: "white",
-      description: "Indicates errors or critical issues",
-    },
-    {
-      name: "Dark",
-      value: "#1A202C", // gray.800
-      textColor: "white",
-      description: "Used for text and dark mode backgrounds",
-    },
-    {
-      name: "Light",
-      value: "#F7FAFC", // gray.50
-      textColor: "black",
-      description: "Used for backgrounds in light mode",
+      name: "Nhạt",
+      hex: "#63B3ED", // Blue.300
+      rgb: "99, 179, 237",
     },
   ];
 
-  // Logo assets data
-  const logoAssets: LogoAsset[] = [
+  // Logo được đơn giản hóa
+  const logos = [
     {
-      id: "primary-logo",
-      name: "Primary Logo",
-      description: "Full color logo on transparent background",
-      preview: "/assets/brand/eventhub-logo-color.png",
-      formats: ["PNG", "SVG", "EPS"],
-      downloadLink: "/downloads/eventhub-primary-logo-package.zip",
+      name: "Logo chính",
+      type: "PNG",
+      path: "/assets/img/logo-primary.png",
+      bg: "transparent",
     },
     {
-      id: "logo-dark",
-      name: "Logo - Dark Background",
-      description: "White logo for use on dark backgrounds",
-      preview: "/assets/brand/eventhub-logo-white.png",
-      formats: ["PNG", "SVG", "EPS"],
-      downloadLink: "/downloads/eventhub-dark-logo-package.zip",
-    },
-    {
-      id: "logo-light",
-      name: "Logo - Light Background",
-      description: "Full color logo for use on light backgrounds",
-      preview: "/assets/brand/eventhub-logo-dark.png",
-      formats: ["PNG", "SVG", "EPS"],
-      downloadLink: "/downloads/eventhub-light-logo-package.zip",
-    },
-    {
-      id: "icon-only",
-      name: "Icon Only",
-      description: "Brand icon without text",
-      preview: "/assets/brand/eventhub-icon.png",
-      formats: ["PNG", "SVG", "EPS"],
-      downloadLink: "/downloads/eventhub-icon-package.zip",
+      name: "Logo đơn sắc",
+      type: "PNG",
+      path: "/assets/img/logo-mono.png",
+      bg: "white",
     },
   ];
 
-  // Media kits data
-  const mediaKits: MediaKit[] = [
+  // Bộ truyền thông đơn giản hóa
+  const mediaKits = [
     {
-      id: "brand-guidelines",
-      title: "Brand Guidelines",
-      description:
-        "Complete brand guidelines including logo usage, typography, and color palette",
-      fileType: "PDF",
-      icon: FaFilePdf,
-      size: "3.2 MB",
-      downloadLink: "/downloads/eventhub-brand-guidelines.pdf",
+      title: "Bộ truyền thông cơ bản",
+      description: "Bao gồm logo, hình ảnh, và thông tin cơ bản về EventHub",
+      fileSize: "5.2 MB",
+      format: "ZIP",
+      downloadLink: "#",
     },
     {
-      id: "media-kit",
-      title: "Press Media Kit",
-      description:
-        "Comprehensive media kit with company information, product screenshots, and press releases",
-      fileType: "ZIP",
-      icon: FaFileAlt,
-      size: "24.6 MB",
-      downloadLink: "/downloads/eventhub-media-kit.zip",
-    },
-    {
-      id: "product-images",
-      title: "Product Images",
-      description: "High-resolution product screenshots and images",
-      fileType: "ZIP",
-      icon: FaImages,
-      size: "18.3 MB",
-      downloadLink: "/downloads/eventhub-product-images.zip",
-    },
-    {
-      id: "fact-sheet",
-      title: "Company Fact Sheet",
-      description:
-        "Key information about EventHub company, history, and product",
-      fileType: "DOCX/PDF",
-      icon: FaFileWord,
-      size: "1.5 MB",
-      downloadLink: "/downloads/eventhub-fact-sheet.zip",
+      title: "Bộ hình ảnh sự kiện",
+      description: "Hình ảnh chất lượng cao về các sự kiện nổi bật",
+      fileSize: "12 MB",
+      format: "ZIP",
+      downloadLink: "#",
     },
   ];
 
-  // Press releases data
-  const pressReleases: PressRelease[] = [
+  // Thông cáo báo chí đơn giản hóa
+  const pressReleases = [
     {
-      id: "press-1",
-      title:
-        "EventHub Secures $5M in Series A Funding to Expand Event Management Platform",
-      date: "July 15, 2023",
+      title: "EventHub ra mắt nền tảng tổ chức sự kiện trực tuyến",
+      date: "20/05/2023",
       summary:
-        "EventHub announces completion of Series A funding led by Acme Ventures to accelerate product development and market expansion.",
-      downloadLink: "/downloads/press/eventhub-series-a-funding.pdf",
+        "EventHub, nền tảng tổ chức sự kiện do sinh viên UIT phát triển, chính thức ra mắt với mục tiêu kết nối người tổ chức sự kiện và người tham gia một cách dễ dàng.",
+      downloadLink: "#",
     },
     {
-      id: "press-2",
-      title:
-        "EventHub Launches Revolutionary AI-Powered Event Planning Assistant",
-      date: "May 22, 2023",
+      title: "EventHub giành giải nhất cuộc thi Khởi nghiệp Sinh viên",
+      date: "15/06/2023",
       summary:
-        "New AI features help event planners save time and optimize event performance with smart recommendations and automations.",
-      downloadLink: "/downloads/press/eventhub-ai-assistant-launch.pdf",
-    },
-    {
-      id: "press-3",
-      title: "EventHub Reaches 1 Million Users Milestone",
-      date: "February 8, 2023",
-      summary:
-        "EventHub celebrates reaching 1 million users globally, with events organized in over 120 countries.",
-      downloadLink: "/downloads/press/eventhub-1m-users.pdf",
-    },
-    {
-      id: "press-4",
-      title:
-        "EventHub Partners with Global Payment Providers to Expand International Reach",
-      date: "November 30, 2022",
-      summary:
-        "New partnerships with leading payment providers allow EventHub to offer localized payment options in 45 new countries.",
-      downloadLink: "/downloads/press/eventhub-payment-partnerships.pdf",
+        "Dự án EventHub của sinh viên UIT đã xuất sắc giành giải nhất cuộc thi Khởi nghiệp Sinh viên 2023 với ý tưởng nền tảng tổ chức sự kiện thông minh.",
+      downloadLink: "#",
     },
   ];
 
   return (
-    <Container maxW="6xl" py={12}>
+    <Container maxW="6xl" py={10}>
       {/* Breadcrumb */}
-      <Breadcrumb mb={8} color={textColorSecondary}>
+      <Breadcrumb mb={8} fontSize="sm" separator="/">
         <BreadcrumbItem>
-          <BreadcrumbLink as={RouterLink} to="/">
-            Home
+          <BreadcrumbLink as={Link} to="/">
+            Trang chủ
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Press Kit</BreadcrumbLink>
+          <BreadcrumbLink>Bộ Công cụ Truyền thông</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
-      {/* Hero Section */}
-      <Box
-        py={10}
-        px={8}
-        borderRadius="lg"
-        bg={blueHighlightBg}
-        mb={12}
-        textAlign="center"
-      >
-        <Heading
-          as="h1"
-          size="2xl"
-          fontWeight="bold"
-          color={blueTextColor}
-          mb={4}
+      {/* Phần Giới thiệu */}
+      <Box mb={16} textAlign="center">
+        <Badge
+          colorScheme={buttonColorScheme}
+          fontSize="sm"
+          px={3}
+          py={1}
+          mb={3}
+          borderRadius="full"
         >
-          EventHub Press Kit
+          Đồ án sinh viên UIT
+        </Badge>
+        <Heading as="h1" size="2xl" mb={6} color={headingColor}>
+          Bộ Công cụ Truyền thông EventHub
         </Heading>
-        <Text
-          fontSize="xl"
-          color={textColorSecondary}
-          maxW="3xl"
-          mx="auto"
-          mb={8}
-        >
-          Everything you need to accurately represent the EventHub brand in your
-          articles, publications, and media.
+        <Text fontSize="xl" maxW="3xl" mx="auto" color={textColor}>
+          Chào mừng đến với bộ công cụ truyền thông của EventHub - nền tảng kết
+          nối người tổ chức sự kiện và người tham gia. Dưới đây là các tài
+          nguyên cần thiết để sử dụng thương hiệu của chúng tôi.
         </Text>
-
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          gap={4}
-          justify="center"
-        >
-          <Button
-            colorScheme="blue"
-            size="lg"
-            leftIcon={<FaDownload />}
-            as={ChakraLink}
-            href="/downloads/eventhub-complete-press-kit.zip"
-            download
-          >
-            Download Complete Press Kit
-          </Button>
-          <Button
-            variant="outline"
-            colorScheme="blue"
-            size="lg"
-            leftIcon={<FaEnvelope />}
-            as={ChakraLink}
-            href="mailto:press@eventhub.com"
-          >
-            Contact Press Team
-          </Button>
-        </Flex>
       </Box>
 
-      {/* Quick Facts */}
-      <Box mb={12}>
-        <Heading
-          as="h2"
-          size="xl"
-          mb={6}
-          color={useColorModeValue("gray.700", "white")}
-        >
-          Quick Facts
+      {/* Về chúng tôi */}
+      <Box mb={16} bg={sectionBg} p={8} borderRadius="lg">
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Về EventHub
         </Heading>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
-          <Box
-            p={6}
-            borderRadius="lg"
-            bg={bgColor}
-            borderWidth="1px"
-            borderColor={borderColor}
-          >
-            <Heading as="h3" size="md" mb={4} color="blue.500">
-              Company Information
-            </Heading>
-            <VStack align="start" spacing={3}>
-              <HStack>
-                <Text fontWeight="bold" minW="120px">
-                  Founded:
-                </Text>
-                <Text>2019</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="120px">
-                  Headquarters:
-                </Text>
-                <Text>San Francisco, California</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="120px">
-                  Employees:
-                </Text>
-                <Text>150+</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="120px">
-                  Funding:
-                </Text>
-                <Text>$12M (Series A)</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="120px">
-                  Leadership:
-                </Text>
-                <Text>
-                  Sophia Rodriguez (CEO & Co-founder), David Chen (CTO &
-                  Co-founder)
-                </Text>
-              </HStack>
-            </VStack>
-          </Box>
+        <Text fontSize="lg" mb={4} color={textColor}>
+          EventHub là nền tảng kết nối người tổ chức sự kiện và người tham gia
+          được phát triển bởi sinh viên Đại học Công nghệ Thông tin (UIT), Đại
+          học Quốc gia TP.HCM. Dự án được thực hiện như một phần của học phần
+          IE213 - Kỹ thuật phát triển hệ thống web.
+        </Text>
+        <Text fontSize="lg" mb={4} color={textColor}>
+          Nền tảng của chúng tôi cung cấp giải pháp toàn diện giúp người dùng dễ
+          dàng tạo, quản lý và tham gia các sự kiện. Sứ mệnh của chúng tôi là
+          kết nối cộng đồng thông qua các sự kiện ý nghĩa và trải nghiệm tương
+          tác.
+        </Text>
 
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mt={8}>
           <Box
-            p={6}
-            borderRadius="lg"
-            bg={bgColor}
+            p={5}
+            bg={cardBg}
+            borderRadius="md"
             borderWidth="1px"
             borderColor={borderColor}
           >
-            <Heading as="h3" size="md" mb={4} color="blue.500">
-              Platform Statistics
+            <Heading as="h3" size="md" mb={2} color={headingColor}>
+              Sứ mệnh
             </Heading>
-            <VStack align="start" spacing={3}>
-              <HStack>
-                <Text fontWeight="bold" minW="150px">
-                  Active Users:
-                </Text>
-                <Text>1.2 million+</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="150px">
-                  Events Hosted:
-                </Text>
-                <Text>250,000+ annually</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="150px">
-                  Countries:
-                </Text>
-                <Text>Available in 120+ countries</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="150px">
-                  Ticket Transactions:
-                </Text>
-                <Text>$500M+ processed (2022)</Text>
-              </HStack>
-              <HStack>
-                <Text fontWeight="bold" minW="150px">
-                  Customer Satisfaction:
-                </Text>
-                <Text>4.8/5 average rating</Text>
-              </HStack>
-            </VStack>
+            <Text color={textColor}>
+              Kết nối cộng đồng thông qua những sự kiện có ý nghĩa, tạo ra các
+              cơ hội gặp gỡ và giao lưu.
+            </Text>
+          </Box>
+          <Box
+            p={5}
+            bg={cardBg}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <Heading as="h3" size="md" mb={2} color={headingColor}>
+              Tầm nhìn
+            </Heading>
+            <Text color={textColor}>
+              Trở thành nền tảng tổ chức sự kiện hàng đầu cho sinh viên và các
+              tổ chức giáo dục.
+            </Text>
+          </Box>
+          <Box
+            p={5}
+            bg={cardBg}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <Heading as="h3" size="md" mb={2} color={headingColor}>
+              Giá trị cốt lõi
+            </Heading>
+            <Text color={textColor}>
+              Sáng tạo, Cộng đồng, Hợp tác, và Trao quyền cho người dùng.
+            </Text>
           </Box>
         </SimpleGrid>
       </Box>
 
-      {/* Main Content - Tabs */}
-      <Tabs variant="enclosed" colorScheme="blue" mb={16}>
-        <TabList mb={6}>
-          <Tab fontWeight="medium">Brand Assets</Tab>
-          <Tab fontWeight="medium">Press Releases</Tab>
-          <Tab fontWeight="medium">Media Resources</Tab>
-        </TabList>
-
-        <TabPanels>
-          {/* Brand Assets Tab */}
-          <TabPanel p={0}>
-            {/* Logo Section */}
-            <Box mb={10}>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Logo Assets
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                Download official EventHub logos in various formats. Please
-                refer to our brand guidelines for proper usage instructions.
-              </Text>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                {logoAssets.map((logo) => (
-                  <Box
-                    key={logo.id}
-                    p={5}
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    borderColor={borderColor}
-                    bg={bgColor}
-                    _hover={{ boxShadow: "md" }}
-                  >
-                    <Flex direction={{ base: "column", sm: "row" }} gap={5}>
-                      <Box
-                        minW={{ base: "100%", sm: "150px" }}
-                        maxW={{ base: "100%", sm: "150px" }}
-                        height="150px"
-                        bg={logo.id.includes("dark") ? "gray.800" : "gray.100"}
-                        borderRadius="md"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        p={4}
-                        mb={{ base: 4, sm: 0 }}
-                      >
-                        <Image
-                          src={logo.preview}
-                          alt={logo.name}
-                          objectFit="contain"
-                          maxH="120px"
-                        />
-                      </Box>
-                      <Box flex="1">
-                        <Heading as="h4" size="md" mb={2}>
-                          {logo.name}
-                        </Heading>
-                        <Text color={textColorSecondary} mb={3} fontSize="sm">
-                          {logo.description}
-                        </Text>
-                        <Flex gap={2} mb={4} flexWrap="wrap">
-                          {logo.formats.map((format) => (
-                            <Badge key={format} colorScheme="blue">
-                              {format}
-                            </Badge>
-                          ))}
-                        </Flex>
-                        <Button
-                          leftIcon={<FaDownload />}
-                          size="sm"
-                          colorScheme="blue"
-                          variant="outline"
-                          as={ChakraLink}
-                          href={logo.downloadLink}
-                          download
-                        >
-                          Download All Formats
-                        </Button>
-                      </Box>
-                    </Flex>
-                  </Box>
-                ))}
-              </SimpleGrid>
-            </Box>
-
-            {/* Color Palette Section */}
-            <Box mb={10}>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Color Palette
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                EventHub brand colors. Use these hex values to accurately
-                represent our brand in your publications.
-              </Text>
-
-              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
-                {brandColors.map((color) => (
-                  <Box
-                    key={color.name}
-                    p={5}
-                    borderRadius="md"
-                    bg={color.value}
-                    color={color.textColor}
-                    _hover={{ transform: "translateY(-2px)" }}
-                    transition="transform 0.2s"
-                  >
-                    <Heading as="h4" size="md" mb={2}>
-                      {color.name}
-                    </Heading>
-                    <Text fontSize="sm" mb={3}>
-                      {color.value}
-                    </Text>
-                    <Text fontSize="xs" opacity={0.8}>
-                      {color.description}
-                    </Text>
-                  </Box>
-                ))}
-              </SimpleGrid>
-
-              <Alert status="info" mt={6} borderRadius="md">
-                <AlertIcon />
-                <Text fontSize="sm">
-                  For a complete color guide including secondary and accent
-                  colors, please refer to our brand guidelines document.
-                </Text>
-              </Alert>
-            </Box>
-
-            {/* Typography Section */}
-            <Box>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Typography
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                EventHub uses the following fonts across our product and
-                marketing materials.
-              </Text>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
-                <Box
-                  p={6}
-                  borderRadius="lg"
-                  bg={bgColor}
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <Heading as="h4" size="md" mb={4} color="blue.500">
-                    Inter
-                  </Heading>
-                  <Text mb={2} fontFamily="Inter, sans-serif">
-                    Primary font for interface elements and body text
-                  </Text>
-                  <Box mt={6}>
-                    <Text
-                      fontWeight="900"
-                      fontSize="2xl"
-                      mb={3}
-                      fontFamily="Inter, sans-serif"
-                    >
-                      Inter Black (900)
-                    </Text>
-                    <Text
-                      fontWeight="700"
-                      fontSize="xl"
-                      mb={3}
-                      fontFamily="Inter, sans-serif"
-                    >
-                      Inter Bold (700)
-                    </Text>
-                    <Text
-                      fontWeight="500"
-                      fontSize="lg"
-                      mb={3}
-                      fontFamily="Inter, sans-serif"
-                    >
-                      Inter Medium (500)
-                    </Text>
-                    <Text
-                      fontWeight="400"
-                      fontSize="md"
-                      mb={3}
-                      fontFamily="Inter, sans-serif"
-                    >
-                      Inter Regular (400)
-                    </Text>
-                  </Box>
-                </Box>
-
-                <Box
-                  p={6}
-                  borderRadius="lg"
-                  bg={bgColor}
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <Heading as="h4" size="md" mb={4} color="blue.500">
-                    Montserrat
-                  </Heading>
-                  <Text mb={2} fontFamily="Montserrat, sans-serif">
-                    Used for headings and important titles
-                  </Text>
-                  <Box mt={6}>
-                    <Text
-                      fontWeight="900"
-                      fontSize="2xl"
-                      mb={3}
-                      fontFamily="Montserrat, sans-serif"
-                    >
-                      Montserrat Black (900)
-                    </Text>
-                    <Text
-                      fontWeight="700"
-                      fontSize="xl"
-                      mb={3}
-                      fontFamily="Montserrat, sans-serif"
-                    >
-                      Montserrat Bold (700)
-                    </Text>
-                    <Text
-                      fontWeight="500"
-                      fontSize="lg"
-                      mb={3}
-                      fontFamily="Montserrat, sans-serif"
-                    >
-                      Montserrat Medium (500)
-                    </Text>
-                    <Text
-                      fontWeight="400"
-                      fontSize="md"
-                      mb={3}
-                      fontFamily="Montserrat, sans-serif"
-                    >
-                      Montserrat Regular (400)
-                    </Text>
-                  </Box>
-                </Box>
-              </SimpleGrid>
-            </Box>
-          </TabPanel>
-
-          {/* Press Releases Tab */}
-          <TabPanel p={0}>
-            <VStack spacing={0} align="stretch" divider={<Divider />}>
-              {pressReleases.map((release) => (
-                <Box
-                  key={release.id}
-                  py={6}
-                  _hover={{ bg: hoverBgColor }}
-                  borderRadius="md"
-                  transition="background 0.2s"
-                >
-                  <Flex
-                    gap={6}
-                    direction={{ base: "column", md: "row" }}
-                    align={{ base: "flex-start", md: "center" }}
-                    justify="space-between"
-                  >
-                    <Box>
-                      <Text
-                        color="blue.500"
-                        fontSize="sm"
-                        fontWeight="medium"
-                        mb={2}
-                      >
-                        {release.date}
-                      </Text>
-                      <Heading as="h3" size="md" mb={2} color={grayBgColor}>
-                        {release.title}
-                      </Heading>
-                      <Text color={textColorSecondary} noOfLines={2}>
-                        {release.summary}
-                      </Text>
-                    </Box>
-
-                    <Box minW={{ md: "125px" }} pt={{ base: 2, md: 0 }}>
-                      <Button
-                        as={ChakraLink}
-                        href={release.downloadLink}
-                        download
-                        leftIcon={<FaFilePdf />}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="sm"
-                        w={{ base: "full", md: "auto" }}
-                      >
-                        Download PDF
-                      </Button>
-                    </Box>
-                  </Flex>
-                </Box>
-              ))}
-            </VStack>
-
-            <Box mt={10} p={6} borderRadius="lg" bg={blueHighlightBg}>
-              <Flex
-                direction={{ base: "column", md: "row" }}
-                align="center"
-                justify="space-between"
-                gap={4}
-              >
-                <Box>
-                  <Heading as="h3" size="md" mb={2} color={blueDarkTextColor}>
-                    Need Additional Press Information?
-                  </Heading>
-                  <Text color={textColorSecondary}>
-                    Contact our press team for inquiries, interviews, or
-                    additional materials.
-                  </Text>
-                </Box>
-                <HStack>
-                  <Button
-                    as={ChakraLink}
-                    href="mailto:press@eventhub.com"
-                    leftIcon={<FaEnvelope />}
-                    colorScheme="blue"
-                  >
-                    Email Press Team
-                  </Button>
-                </HStack>
-              </Flex>
-            </Box>
-          </TabPanel>
-
-          {/* Media Resources Tab */}
-          <TabPanel p={0}>
-            {/* Download Kits */}
-            <Box mb={10}>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Media Kits
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                Comprehensive resources for media coverage, including brand
-                materials, product imagery, and company information.
-              </Text>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                {mediaKits.map((kit) => (
-                  <Flex
-                    key={kit.id}
-                    p={5}
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    borderColor={borderColor}
-                    bg={bgColor}
-                    _hover={{ boxShadow: "md" }}
-                    direction="row"
-                    gap={4}
-                  >
-                    <Box
-                      p={3}
-                      borderRadius="md"
-                      bg={blueHighlightBg}
-                      color="blue.500"
-                      height="fit-content"
-                    >
-                      <Icon as={kit.icon} boxSize={8} />
-                    </Box>
-                    <Box flex="1">
-                      <Heading as="h4" size="md" mb={1}>
-                        {kit.title}
-                      </Heading>
-                      <Text color={textColorSecondary} fontSize="sm" mb={3}>
-                        {kit.description}
-                      </Text>
-                      <Flex
-                        justify="space-between"
-                        align="center"
-                        wrap={{ base: "wrap", md: "nowrap" }}
-                        gap={2}
-                      >
-                        <HStack>
-                          <Badge colorScheme="blue">{kit.fileType}</Badge>
-                          <Text fontSize="xs" color={textColorSecondary}>
-                            {kit.size}
-                          </Text>
-                        </HStack>
-                        <Button
-                          leftIcon={<FaDownload />}
-                          size="sm"
-                          colorScheme="blue"
-                          variant="outline"
-                          as={ChakraLink}
-                          href={kit.downloadLink}
-                          download
-                        >
-                          Download
-                        </Button>
-                      </Flex>
-                    </Box>
-                  </Flex>
-                ))}
-              </SimpleGrid>
-            </Box>
-
-            {/* Product Screenshots */}
-            <Box mb={10}>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Product Screenshots
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                High-resolution screenshots of the EventHub platform. All images
-                may be used with proper attribution.
-              </Text>
-
-              <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6}>
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                  <Box
-                    key={item}
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    borderColor={borderColor}
-                    overflow="hidden"
-                    bg={bgColor}
-                    _hover={{ boxShadow: "md" }}
-                  >
-                    <Box position="relative">
-                      <AspectRatio ratio={16 / 9}>
-                        <Image
-                          src={`/assets/press/product-screenshot-${item}.jpg`}
-                          alt={`EventHub product screenshot ${item}`}
-                          objectFit="cover"
-                        />
-                      </AspectRatio>
-                      <Button
-                        position="absolute"
-                        bottom={2}
-                        right={2}
-                        leftIcon={<FaDownload />}
-                        size="xs"
-                        colorScheme="blue"
-                        as={ChakraLink}
-                        href={`/downloads/screenshots/product-screenshot-${item}-full.jpg`}
-                        download
-                      >
-                        Download
-                      </Button>
-                    </Box>
-                    <Box p={3}>
-                      <Text fontSize="sm" fontWeight="medium">
-                        Screenshot {item}:{" "}
-                        {item === 1
-                          ? "Dashboard"
-                          : item === 2
-                          ? "Event Creation"
-                          : item === 3
-                          ? "Attendee Management"
-                          : item === 4
-                          ? "Analytics"
-                          : item === 5
-                          ? "Mobile View"
-                          : "Registration"}
-                      </Text>
-                      <HStack fontSize="xs" color={textColorSecondary} mt={1}>
-                        <Text>JPG + PNG</Text>
-                        <Text>•</Text>
-                        <Text>3840 × 2160px</Text>
-                      </HStack>
-                    </Box>
-                  </Box>
-                ))}
-              </SimpleGrid>
-
-              <Button
-                leftIcon={<FaDownload />}
-                mt={6}
-                colorScheme="blue"
-                as={ChakraLink}
-                href="/downloads/eventhub-all-screenshots.zip"
-                download
-              >
-                Download All Screenshots
-              </Button>
-            </Box>
-
-            {/* Company Information */}
-            <Box>
-              <Heading
-                as="h3"
-                size="lg"
-                mb={5}
-                color={useColorModeValue("gray.700", "white")}
-              >
-                Company Information
-              </Heading>
-              <Text mb={6} color={textColorSecondary}>
-                Official boilerplate and information for media coverage.
-              </Text>
-
-              <Box
-                p={6}
-                borderRadius="lg"
-                bg={bgColor}
-                borderWidth="1px"
-                borderColor={borderColor}
-                mb={6}
-              >
-                <Heading as="h4" size="md" mb={4} color="blue.500">
-                  Company Boilerplate
-                </Heading>
-                <Box
-                  position="relative"
-                  p={6}
-                  bg={secondaryBg}
-                  borderRadius="md"
-                  borderLeftWidth="4px"
-                  borderLeftColor="blue.500"
-                >
-                  <Icon
-                    as={FaQuoteLeft}
-                    position="absolute"
-                    top={3}
-                    left={3}
-                    color="blue.200"
-                    boxSize={6}
-                    opacity={0.3}
-                  />
-                  <Text lineHeight="tall" pl={6}>
-                    EventHub is a leading event management platform that helps
-                    organizers create, promote, and manage virtual, in-person,
-                    and hybrid events. Founded in 2019 and headquartered in San
-                    Francisco, EventHub serves over 1 million users across 120+
-                    countries. The company's all-in-one platform offers tools
-                    for registration, ticketing, attendee engagement, analytics,
-                    and more, empowering businesses and creators to deliver
-                    exceptional event experiences. EventHub is backed by
-                    prominent investors including Acme Ventures, Horizon
-                    Capital, and FutureForge Partners, with $12 million in total
-                    funding to date.
-                  </Text>
-                </Box>
-                <Button
-                  leftIcon={<FaFileAlt />}
-                  mt={4}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="outline"
-                  as={ChakraLink}
-                  href="/downloads/eventhub-company-boilerplate.docx"
-                  download
-                >
-                  Download Boilerplate Text
-                </Button>
-              </Box>
-
-              <Box
-                p={6}
-                borderRadius="lg"
-                bg={bgColor}
-                borderWidth="1px"
-                borderColor={borderColor}
-              >
-                <Heading as="h4" size="md" mb={4} color="blue.500">
-                  Executive Team
-                </Heading>
-
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                  <Flex gap={4}>
-                    <Image
-                      src="/assets/press/sophia-rodriguez.jpg"
-                      alt="Sophia Rodriguez"
-                      borderRadius="md"
-                      width="80px"
-                      height="80px"
-                      objectFit="cover"
-                    />
-                    <Box>
-                      <Heading as="h5" size="sm" mb={1}>
-                        Sophia Rodriguez
-                      </Heading>
-                      <Text fontSize="sm" color="blue.500" mb={2}>
-                        CEO & Co-founder
-                      </Text>
-                      <Button
-                        as={ChakraLink}
-                        href="/downloads/bios/sophia-rodriguez-bio.pdf"
-                        download
-                        leftIcon={<FaFileAlt />}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="xs"
-                      >
-                        Download Bio
-                      </Button>
-                    </Box>
-                  </Flex>
-
-                  <Flex gap={4}>
-                    <Image
-                      src="/assets/press/david-chen.jpg"
-                      alt="David Chen"
-                      borderRadius="md"
-                      width="80px"
-                      height="80px"
-                      objectFit="cover"
-                    />
-                    <Box>
-                      <Heading as="h5" size="sm" mb={1}>
-                        David Chen
-                      </Heading>
-                      <Text fontSize="sm" color="blue.500" mb={2}>
-                        CTO & Co-founder
-                      </Text>
-                      <Button
-                        as={ChakraLink}
-                        href="/downloads/bios/david-chen-bio.pdf"
-                        download
-                        leftIcon={<FaFileAlt />}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="xs"
-                      >
-                        Download Bio
-                      </Button>
-                    </Box>
-                  </Flex>
-                </SimpleGrid>
-
-                <Button
-                  mt={6}
-                  colorScheme="blue"
-                  variant="outline"
-                  leftIcon={<FaFileAlt />}
-                  as={ChakraLink}
-                  href="/downloads/eventhub-executive-team-bios.zip"
-                  download
-                >
-                  Download All Executive Bios
-                </Button>
-              </Box>
-            </Box>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-
-      {/* Contact Information */}
-      <Box p={8} borderRadius="lg" bg={blueHighlightBg} textAlign="center">
-        <Heading as="h2" size="xl" mb={4} color="blue.500">
-          Press Contact
+      {/* Bảng màu thương hiệu */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Bảng màu thương hiệu
         </Heading>
-        <Text
-          fontSize="lg"
-          color={textColorSecondary}
-          maxW="2xl"
-          mx="auto"
-          mb={6}
-        >
-          For press inquiries, interview requests, or additional information,
-          please contact our media relations team.
+        <Text fontSize="lg" mb={8} color={textColor}>
+          Màu sắc thương hiệu của EventHub phản ánh sự chuyên nghiệp, đáng tin
+          cậy và thân thiện. Vui lòng sử dụng các mã màu dưới đây để đảm bảo
+          tính nhất quán.
         </Text>
-        <VStack spacing={2} mb={6}>
-          <Text fontSize="lg" fontWeight="bold">
-            Media Relations
-          </Text>
-          <Link
-            href="mailto:press@eventhub.com"
-            color="blue.500"
-            fontWeight="medium"
-          >
-            press@eventhub.com
-          </Link>
-          <Text>+1 (555) 123-4567</Text>
-        </VStack>
 
-        <Text fontSize="sm" color={textColorSecondary} mt={4}>
-          Our press team typically responds within 24 hours on business days.
-        </Text>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+          {brandColors.map((color) => (
+            <Box
+              key={color.name}
+              borderRadius="md"
+              overflow="hidden"
+              borderWidth="1px"
+              borderColor={borderColor}
+            >
+              <Box
+                h="120px"
+                bg={color.hex}
+                display="flex"
+                alignItems="flex-end"
+                p={4}
+              >
+                <Text
+                  color="white"
+                  fontWeight="bold"
+                  textShadow="0px 0px 8px rgba(0,0,0,0.3)"
+                >
+                  {color.name}
+                </Text>
+              </Box>
+              <Box p={4} bg={cardBg}>
+                <Text fontWeight="bold" mb={1}>
+                  {color.name}
+                </Text>
+                <Text fontSize="sm" mb={1}>
+                  HEX: {color.hex}
+                </Text>
+                <Text fontSize="sm">RGB: {color.rgb}</Text>
+              </Box>
+            </Box>
+          ))}
+        </SimpleGrid>
       </Box>
+
+      {/* Logo */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Logo
+        </Heading>
+        <Text fontSize="lg" mb={8} color={textColor}>
+          Logo của EventHub có thể được sử dụng trong các ứng dụng khác nhau.
+          Vui lòng không thay đổi tỷ lệ, màu sắc, hoặc bóp méo logo.
+        </Text>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
+          {logos.map((logo) => (
+            <Box
+              key={logo.name}
+              borderWidth="1px"
+              borderColor={borderColor}
+              borderRadius="md"
+              overflow="hidden"
+            >
+              <Box
+                h="200px"
+                bg={logo.bg}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                p={6}
+              >
+                <Image
+                  src={logo.path}
+                  alt={`EventHub ${logo.name}`}
+                  maxH="150px"
+                  fallbackSrc="https://via.placeholder.com/300x150?text=EventHub+Logo"
+                />
+              </Box>
+              <Box p={4} bg={cardBg}>
+                <Flex justify="space-between" align="center">
+                  <VStack align="start" spacing={0}>
+                    <Text fontWeight="bold">{logo.name}</Text>
+                    <Text fontSize="sm" color={textColor}>
+                      Format: {logo.type}
+                    </Text>
+                  </VStack>
+                  <Button
+                    rightIcon={<FaDownload />}
+                    size="sm"
+                    colorScheme={buttonColorScheme}
+                    variant="outline"
+                  >
+                    Tải xuống
+                  </Button>
+                </Flex>
+              </Box>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Box>
+
+      {/* Bộ truyền thông */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Bộ truyền thông
+        </Heading>
+        <Text fontSize="lg" mb={8} color={textColor}>
+          Tài nguyên truyền thông bổ sung để hỗ trợ các hoạt động tiếp thị và
+          truyền thông về EventHub.
+        </Text>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+          {mediaKits.map((kit, idx) => (
+            <Box
+              key={idx}
+              borderWidth="1px"
+              borderColor={borderColor}
+              borderRadius="md"
+              p={6}
+              bg={cardBg}
+            >
+              <HStack spacing={4} align="start">
+                <Box
+                  p={3}
+                  bg={boxAccentBg}
+                  borderRadius="md"
+                  color={accentColor}
+                >
+                  <Icon as={FaFileDownload} boxSize={6} />
+                </Box>
+                <VStack align="start" spacing={2} flex="1">
+                  <Heading as="h3" size="md">
+                    {kit.title}
+                  </Heading>
+                  <Text fontSize="sm" color={textColor}>
+                    {kit.description}
+                  </Text>
+                  <HStack>
+                    <Badge>{kit.format}</Badge>
+                    <Text fontSize="xs" color={textColor}>
+                      {kit.fileSize}
+                    </Text>
+                  </HStack>
+                  <Button
+                    rightIcon={<FaDownload />}
+                    size="sm"
+                    colorScheme={buttonColorScheme}
+                    mt={2}
+                  >
+                    Tải xuống
+                  </Button>
+                </VStack>
+              </HStack>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Box>
+
+      {/* Thông cáo báo chí */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Thông cáo báo chí
+        </Heading>
+        <Text fontSize="lg" mb={8} color={textColor}>
+          Các thông cáo báo chí mới nhất về EventHub và hoạt động của chúng tôi.
+        </Text>
+
+        <VStack spacing={6} align="stretch">
+          {pressReleases.map((release, idx) => (
+            <Box
+              key={idx}
+              borderWidth="1px"
+              borderColor={borderColor}
+              borderRadius="md"
+              p={6}
+              bg={cardBg}
+            >
+              <VStack align="start" spacing={3}>
+                <Text color={textColor} fontSize="sm">
+                  {release.date}
+                </Text>
+                <Heading as="h3" size="md">
+                  {release.title}
+                </Heading>
+                <Text color={textColor}>{release.summary}</Text>
+                <Button
+                  rightIcon={<FaFileAlt />}
+                  colorScheme={buttonColorScheme}
+                  variant="outline"
+                  size="sm"
+                >
+                  Tải xuống PDF
+                </Button>
+              </VStack>
+            </Box>
+          ))}
+        </VStack>
+      </Box>
+
+      {/* Câu hỏi thường gặp */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Câu hỏi thường gặp
+        </Heading>
+        <Accordion allowToggle>
+          <AccordionItem
+            borderWidth="1px"
+            mb={3}
+            borderRadius="md"
+            borderColor={borderColor}
+            overflow="hidden"
+          >
+            <h3>
+              <AccordionButton py={3} _expanded={{ bg: boxAccentBg }}>
+                <Box flex="1" textAlign="left" fontWeight="medium">
+                  Có thể sử dụng logo EventHub trong bài viết của tôi không?
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h3>
+            <AccordionPanel pb={4}>
+              <Text>
+                Có, bạn có thể sử dụng logo EventHub trong các bài viết hoặc nội
+                dung truyền thông về chúng tôi. Tuy nhiên, vui lòng không thay
+                đổi màu sắc, tỷ lệ, hoặc các yếu tố thiết kế của logo. Chúng tôi
+                cũng yêu cầu bạn không sử dụng logo để ngụ ý rằng chúng tôi tài
+                trợ hoặc ủng hộ sản phẩm/dịch vụ của bạn nếu không có sự chấp
+                thuận chính thức.
+              </Text>
+            </AccordionPanel>
+          </AccordionItem>
+
+          <AccordionItem
+            borderWidth="1px"
+            mb={3}
+            borderRadius="md"
+            borderColor={borderColor}
+            overflow="hidden"
+          >
+            <h3>
+              <AccordionButton py={3} _expanded={{ bg: boxAccentBg }}>
+                <Box flex="1" textAlign="left" fontWeight="medium">
+                  Tôi có thể liên hệ với ai để biết thêm thông tin?
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h3>
+            <AccordionPanel pb={4}>
+              <Text>
+                Nếu bạn cần thêm thông tin về EventHub hoặc có bất kỳ câu hỏi
+                nào về bộ công cụ truyền thông này, vui lòng liên hệ với chúng
+                tôi qua email: press@eventhub.example.com. Đội ngũ truyền thông
+                của chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+              </Text>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </Box>
+
+      {/* Liên hệ */}
+      <Box mb={12} p={8} borderRadius="lg" bg={sectionBg}>
+        <Heading
+          as="h2"
+          size="xl"
+          mb={6}
+          color={headingColor}
+          textAlign="center"
+        >
+          Liên hệ với đội ngũ truyền thông
+        </Heading>
+        <Text fontSize="lg" mb={8} textAlign="center" color={textColor}>
+          Bạn cần hỗ trợ thêm về truyền thông hoặc có yêu cầu đặc biệt? Hãy liên
+          hệ với chúng tôi.
+        </Text>
+
+        <Center>
+          <Button
+            leftIcon={<FaEnvelope />}
+            colorScheme={buttonColorScheme}
+            size="lg"
+            as={ChakraLink}
+            href="mailto:press@eventhub.example.com"
+          >
+            press@eventhub.example.com
+          </Button>
+        </Center>
+      </Box>
+
+      {/* Footer */}
+      <Divider my={6} />
+      <Text textAlign="center" fontSize="sm" color={textColor}>
+        © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
+        triển hệ thống web, UIT.
+      </Text>
     </Container>
   );
 };

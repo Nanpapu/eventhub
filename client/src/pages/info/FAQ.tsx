@@ -12,6 +12,8 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   SimpleGrid,
+  useColorModeValue,
+  Divider,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 
@@ -23,144 +25,234 @@ interface FAQItem {
 }
 
 const FAQ = () => {
+  // Colors
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const categoryBg = useColorModeValue("blue.50", "blue.900");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+
   // Danh sách các câu hỏi thường gặp theo danh mục
   const faqData: FAQItem[] = [
     // Tài khoản & Đăng ký
     {
-      question: "How do I create an account?",
+      question: "Làm thế nào để tạo tài khoản?",
       answer: (
         <Text>
-          Click on the "Sign Up" button in the top right corner of the website.
-          Enter your email address, create a password, and fill in your profile
-          information. Verify your email address by clicking the link sent to
-          your inbox.
+          Nhấp vào nút "Đăng ký" ở góc trên bên phải của trang web. Nhập địa chỉ
+          email, tạo mật khẩu và điền thông tin hồ sơ của bạn. Xác minh địa chỉ
+          email của bạn bằng cách nhấp vào liên kết được gửi đến hộp thư đến của
+          bạn.
         </Text>
       ),
-      category: "Account",
+      category: "Tài khoản",
     },
     {
-      question: "How do I reset my password?",
+      question: "Làm thế nào để đặt lại mật khẩu?",
       answer: (
         <Text>
-          To reset your password, click on the "Forgot Password" link on the
-          login page. Enter your email address, and we'll send you a password
-          reset link.
+          Để đặt lại mật khẩu, nhấp vào liên kết "Quên mật khẩu" trên trang đăng
+          nhập. Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn liên kết
+          đặt lại mật khẩu.
         </Text>
       ),
-      category: "Account",
+      category: "Tài khoản",
     },
-    // Events & Registration
+    // Sự kiện & Đăng ký
     {
-      question: "How do I register for an event?",
+      question: "Làm thế nào để đăng ký tham gia sự kiện?",
       answer: (
         <Text>
-          To register for an event, navigate to the event page and click the
-          "Register" or "Get Tickets" button. Follow the prompts to complete
-          your registration.
+          Để đăng ký tham gia sự kiện, hãy điều hướng đến trang sự kiện và nhấp
+          vào nút "Đăng ký" hoặc "Đặt vé". Làm theo hướng dẫn để hoàn tất đăng
+          ký của bạn.
         </Text>
       ),
-      category: "Events",
-    },
-    {
-      question: "Can I cancel my registration?",
-      answer: (
-        <Text>
-          Yes, you can cancel your registration by going to "My Events" in your
-          account dashboard and selecting "Cancel Registration" for the specific
-          event. Please check the event's refund policy before canceling.
-        </Text>
-      ),
-      category: "Events",
+      category: "Sự kiện",
     },
     {
-      question: "How do I create an event?",
+      question: "Tôi có thể hủy đăng ký không?",
       answer: (
         <Text>
-          To create an event, go to your dashboard and click on "Create Event"
-          button. Fill in the event details including title, description, date,
-          location, and upload an event image. You can also set ticket types and
-          prices if applicable.
+          Có, bạn có thể hủy đăng ký bằng cách vào mục "Sự kiện của tôi" trong
+          bảng điều khiển tài khoản và chọn "Hủy đăng ký" cho sự kiện cụ thể.
+          Vui lòng kiểm tra chính sách hoàn tiền của sự kiện trước khi hủy.
         </Text>
       ),
-      category: "Events",
-    },
-    // Payment & Ticketing
-    {
-      question: "What payment methods are accepted?",
-      answer: (
-        <Text>
-          Currently, we support credit/debit cards and PayPal for event
-          payments. More payment options will be added in future updates.
-        </Text>
-      ),
-      category: "Payment",
+      category: "Sự kiện",
     },
     {
-      question: "How do I access my tickets?",
+      question: "Làm thế nào để tạo sự kiện?",
       answer: (
         <Text>
-          Your tickets will be emailed to you after purchase. You can also
-          access them in the "My Tickets" section of your account dashboard.
-          Simply show the QR code at the event entrance.
+          Để tạo sự kiện, hãy vào bảng điều khiển và nhấp vào nút "Tạo sự kiện".
+          Điền thông tin sự kiện bao gồm tiêu đề, mô tả, ngày, địa điểm và tải
+          lên hình ảnh sự kiện. Bạn cũng có thể thiết lập loại vé và giá nếu áp
+          dụng.
         </Text>
       ),
-      category: "Payment",
+      category: "Sự kiện",
     },
-    // Technical Support
+    // Thanh toán & Vé
     {
-      question: "The website is not working properly. What should I do?",
+      question: "Những phương thức thanh toán nào được chấp nhận?",
       answer: (
         <Text>
-          Try refreshing the page or clearing your browser cache. If the issue
-          persists, please contact us at support@eventhub.example.com with
-          details of the problem.
+          Hiện tại, chúng tôi hỗ trợ thẻ tín dụng/ghi nợ, MoMo, ZaloPay và VNPay
+          cho các khoản thanh toán sự kiện. Thêm các phương thức thanh toán khác
+          sẽ được bổ sung trong các cập nhật tương lai.
         </Text>
       ),
-      category: "Support",
+      category: "Thanh toán",
+    },
+    {
+      question: "Làm thế nào để truy cập vé của tôi?",
+      answer: (
+        <Text>
+          Sau khi đăng ký, vé của bạn sẽ được gửi đến email và cũng có sẵn trong
+          phần "Vé của tôi" trên bảng điều khiển người dùng. Bạn có thể tải
+          xuống, in hoặc xuất trình vé trên thiết bị di động khi tham dự sự
+          kiện.
+        </Text>
+      ),
+      category: "Thanh toán",
+    },
+    // Chung
+    {
+      question: "Làm thế nào để liên hệ với đội hỗ trợ?",
+      answer: (
+        <Text>
+          Bạn có thể liên hệ với đội hỗ trợ của chúng tôi bằng cách gửi email
+          đến support@eventhub.example.com hoặc sử dụng biểu mẫu liên hệ trên
+          trang "Liên hệ với chúng tôi". Chúng tôi cố gắng phản hồi tất cả các
+          yêu cầu trong vòng 24 giờ.
+        </Text>
+      ),
+      category: "Chung",
+    },
+    {
+      question: "EventHub có ứng dụng di động không?",
+      answer: (
+        <Text>
+          Hiện tại, EventHub là một ứng dụng web đáp ứng hoạt động tốt trên mọi
+          thiết bị, bao gồm cả điện thoại di động. Chúng tôi đang phát triển ứng
+          dụng di động dành riêng cho Android và iOS, dự kiến ​​ra mắt trong
+          tương lai gần.
+        </Text>
+      ),
+      category: "Chung",
+    },
+    {
+      question: "Tôi có thể thêm đồng tổ chức cho sự kiện của mình không?",
+      answer: (
+        <Text>
+          Có, bạn có thể thêm đồng tổ chức cho sự kiện của mình. Trong trang
+          quản lý sự kiện, nhấp vào tab "Quản lý nhóm" và nhập địa chỉ email của
+          người dùng mà bạn muốn thêm làm đồng tổ chức. Họ sẽ nhận được lời mời
+          qua email để tham gia nhóm tổ chức sự kiện của bạn.
+        </Text>
+      ),
+      category: "Sự kiện",
+    },
+    {
+      question: "Làm thế nào để trở thành người tổ chức được xác minh?",
+      answer: (
+        <Text>
+          Để trở thành người tổ chức được xác minh, hãy truy cập trang "Trở
+          thành người tổ chức" từ menu tài khoản của bạn. Điền vào biểu mẫu với
+          thông tin cần thiết và tải lên các tài liệu xác minh được yêu cầu. Quy
+          trình xác minh thường mất 2-3 ngày làm việc để hoàn tất.
+        </Text>
+      ),
+      category: "Tài khoản",
     },
   ];
 
-  // Group FAQs by category
-  const faqsByCategory: { [key: string]: FAQItem[] } = {};
-  faqData.forEach((faq) => {
-    if (!faqsByCategory[faq.category]) {
-      faqsByCategory[faq.category] = [];
-    }
-    faqsByCategory[faq.category].push(faq);
-  });
+  // Lấy các danh mục duy nhất
+  const categories = [...new Set(faqData.map((item) => item.category))];
 
   return (
-    <Container maxW="container.lg" py={8}>
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb mb={6} fontSize="sm">
+    <Container maxW="4xl" py={10}>
+      {/* Breadcrumb */}
+      <Breadcrumb mb={8} fontSize="sm" separator="/">
         <BreadcrumbItem>
           <BreadcrumbLink as={Link} to="/">
-            Home
+            Trang chủ
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>FAQ</BreadcrumbLink>
+          <BreadcrumbLink>Câu hỏi thường gặp</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
-      {/* Page Title */}
-      <Heading as="h1" size="xl" mb={8} textAlign="center">
-        Frequently Asked Questions
-      </Heading>
+      {/* Header */}
+      <Box mb={10} textAlign="center">
+        <Heading as="h1" size="2xl" mb={4}>
+          Câu hỏi thường gặp
+        </Heading>
+        <Text fontSize="lg" color={textColor}>
+          Tìm câu trả lời nhanh chóng cho những câu hỏi phổ biến nhất
+        </Text>
+      </Box>
 
       {/* FAQ Categories */}
-      <SimpleGrid columns={{ base: 1, md: 1 }} spacing={10}>
-        {Object.keys(faqsByCategory).map((category) => (
-          <Box key={category} mb={8}>
-            <Heading as="h2" size="lg" mb={4}>
-              {category}
-            </Heading>
-            <Accordion allowMultiple>
-              {faqsByCategory[category].map((faq, index) => (
-                <AccordionItem key={index}>
+      <SimpleGrid
+        columns={{ base: 2, md: 4 }}
+        spacing={4}
+        mb={10}
+        display={{ base: "none", md: "grid" }}
+      >
+        {categories.map((category) => (
+          <Box
+            key={category}
+            p={4}
+            bg={categoryBg}
+            borderRadius="md"
+            textAlign="center"
+            fontWeight="medium"
+            cursor="pointer"
+            onClick={() => {
+              document
+                .getElementById(`category-${category}`)
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {category}
+          </Box>
+        ))}
+      </SimpleGrid>
+
+      {/* FAQ by Category */}
+      {categories.map((category) => (
+        <Box key={category} mb={10} id={`category-${category}`}>
+          <Heading
+            as="h2"
+            size="lg"
+            mb={6}
+            color={useColorModeValue("blue.600", "blue.300")}
+          >
+            {category}
+          </Heading>
+          <Accordion allowToggle>
+            {faqData
+              .filter((item) => item.category === category)
+              .map((faq, index) => (
+                <AccordionItem
+                  key={index}
+                  mb={3}
+                  border="1px"
+                  borderColor={borderColor}
+                  borderRadius="md"
+                  overflow="hidden"
+                >
                   <h3>
-                    <AccordionButton py={4}>
-                      <Box flex="1" textAlign="left" fontWeight="medium">
+                    <AccordionButton
+                      py={4}
+                      _expanded={{
+                        bg: useColorModeValue("blue.50", "blue.900"),
+                        fontWeight: "medium",
+                      }}
+                    >
+                      <Box flex="1" textAlign="left">
                         {faq.question}
                       </Box>
                       <AccordionIcon />
@@ -169,21 +261,16 @@ const FAQ = () => {
                   <AccordionPanel pb={4}>{faq.answer}</AccordionPanel>
                 </AccordionItem>
               ))}
-            </Accordion>
-          </Box>
-        ))}
-      </SimpleGrid>
+          </Accordion>
+        </Box>
+      ))}
 
-      {/* Contact Information */}
-      <Box textAlign="center" mt={12} p={6} bg="gray.50" borderRadius="md">
-        <Heading as="h3" size="md" mb={2}>
-          Still have questions?
-        </Heading>
-        <Text mb={4}>
-          Contact us at <strong>support@eventhub.example.com</strong> or call{" "}
-          <strong>0123-456-789</strong>
-        </Text>
-      </Box>
+      {/* Footer note */}
+      <Divider my={10} />
+      <Text fontSize="sm" textAlign="center" color={textColor}>
+        © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
+        triển hệ thống web, UIT.
+      </Text>
     </Container>
   );
 };

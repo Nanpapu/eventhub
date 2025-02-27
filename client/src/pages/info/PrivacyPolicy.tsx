@@ -33,8 +33,13 @@ const PolicySection = ({
   id?: string;
 }) => {
   return (
-    <Box mb={8} id={id}>
-      <Heading as="h2" size="lg" mb={4} color="teal.500">
+    <Box as="section" id={id} mb={8}>
+      <Heading
+        as="h2"
+        size="lg"
+        mb={4}
+        color={useColorModeValue("blue.600", "blue.300")}
+      >
         {title}
       </Heading>
       <Box>{children}</Box>
@@ -42,495 +47,404 @@ const PolicySection = ({
   );
 };
 
+// Tinh gọn trang Privacy Policy
 const PrivacyPolicy = () => {
-  const lastUpdated = "February 15, 2023";
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const lastUpdated = "20/05/2023";
 
   return (
-    <Container maxW="4xl" py={12}>
+    <Container maxW="4xl" py={10}>
       {/* Breadcrumb */}
-      <Breadcrumb mb={8} color={useColorModeValue("gray.600", "gray.400")}>
+      <Breadcrumb mb={8} fontSize="sm" separator="/">
         <BreadcrumbItem>
           <BreadcrumbLink as={Link} to="/">
-            Home
+            Trang chủ
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Privacy Policy</BreadcrumbLink>
+          <BreadcrumbLink>Chính sách Riêng tư</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
-      {/* Title */}
-      <Box textAlign="center" mb={12}>
-        <Heading
-          as="h1"
-          size="2xl"
-          fontWeight="bold"
-          color={useColorModeValue("teal.600", "teal.300")}
-          mb={4}
-        >
-          Privacy Policy
+      {/* Header */}
+      <Box mb={10}>
+        <Heading as="h1" size="2xl" mb={4}>
+          Chính sách Riêng tư
         </Heading>
-        <Text fontSize="md" color={useColorModeValue("gray.600", "gray.400")}>
-          Last Updated: {lastUpdated}
+        <Text color={textColor}>Cập nhật lần cuối: {lastUpdated}</Text>
+      </Box>
+
+      {/* Giới thiệu */}
+      <PolicySection title="1. Giới thiệu">
+        <Text mb={4}>
+          Chào mừng đến với Chính sách Riêng tư của EventHub. Chúng tôi tôn
+          trọng quyền riêng tư của bạn và cam kết bảo vệ thông tin cá nhân mà
+          bạn chia sẻ với chúng tôi.
         </Text>
-      </Box>
+        <Text mb={4}>
+          Chính sách này mô tả cách chúng tôi thu thập, sử dụng và bảo vệ thông
+          tin cá nhân khi bạn sử dụng dịch vụ của chúng tôi. Bằng việc sử dụng
+          EventHub, bạn đồng ý với các điều khoản được mô tả trong chính sách
+          này.
+        </Text>
+      </PolicySection>
 
-      {/* Table of Contents */}
-      <Box
-        mb={12}
-        p={6}
-        borderWidth="1px"
-        borderRadius="lg"
-        borderColor={useColorModeValue("gray.200", "gray.700")}
-        bg={useColorModeValue("gray.50", "gray.800")}
+      {/* Thông tin chúng tôi thu thập */}
+      <PolicySection
+        title="2. Thông tin chúng tôi thu thập"
+        id="information-collected"
       >
-        <Heading as="h2" size="md" mb={4}>
-          Table of Contents
-        </Heading>
-        <VStack align="start" spacing={2}>
-          <ChakraLink href="#introduction">1. Introduction</ChakraLink>
-          <ChakraLink href="#information-we-collect">
-            2. Information We Collect
-          </ChakraLink>
-          <ChakraLink href="#how-we-use-information">
-            3. How We Use Your Information
-          </ChakraLink>
-          <ChakraLink href="#information-sharing">
-            4. Information Sharing and Disclosure
-          </ChakraLink>
-          <ChakraLink href="#your-choices">5. Your Choices</ChakraLink>
-          <ChakraLink href="#data-security">6. Data Security</ChakraLink>
-          <ChakraLink href="#children-privacy">
-            7. Children's Privacy
-          </ChakraLink>
-          <ChakraLink href="#international-transfers">
-            8. International Data Transfers
-          </ChakraLink>
-          <ChakraLink href="#policy-changes">
-            9. Changes to This Privacy Policy
-          </ChakraLink>
-          <ChakraLink href="#contact-us">10. Contact Us</ChakraLink>
-        </VStack>
-      </Box>
-
-      {/* Policy Content */}
-      <VStack spacing={6} align="stretch">
-        <PolicySection title="1. Introduction" id="introduction">
-          <Text mb={4}>
-            Welcome to EventHub. At EventHub, we respect your privacy and are
-            committed to protecting your personal data. This Privacy Policy
-            explains how we collect, use, disclose, and safeguard your
-            information when you visit our website or use our services.
-          </Text>
-          <Text>
-            Please read this Privacy Policy carefully. If you do not agree with
-            the terms of this Privacy Policy, please do not access the site or
-            use our services.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection
-          title="2. Information We Collect"
-          id="information-we-collect"
-        >
-          <Text mb={4}>
-            We collect several types of information from and about users of our
-            platform, including:
-          </Text>
-          <UnorderedList spacing={2} pl={6} mb={4}>
-            <ListItem>
-              <Text fontWeight="bold">Personal Identifiers:</Text> Name, email
-              address, phone number, postal address, username, and password
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Profile Information:</Text> Profile
-              picture, bio, interests, and preferences
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Event Information:</Text> Events you
-              create, attend, or express interest in
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Payment Information:</Text> Credit card
-              details, billing address, and other financial information (note:
-              payment details are processed by our secure payment processors and
-              not stored on our servers)
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Communications:</Text> Messages, comments,
-              and feedback you send to us or other users
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Device Information:</Text> IP address,
-              browser type, operating system, device information, and browsing
-              patterns
-            </ListItem>
-          </UnorderedList>
-          <Text fontWeight="bold" mb={2}>
-            We collect this information:
-          </Text>
-          <UnorderedList spacing={2} pl={6}>
-            <ListItem>
-              Directly from you when you register or use our services
-            </ListItem>
-            <ListItem>
-              Automatically as you navigate through our website or use our app
-            </ListItem>
-            <ListItem>
-              From third parties, such as when you sign up or login through a
-              social media platform
-            </ListItem>
-          </UnorderedList>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection
-          title="3. How We Use Your Information"
-          id="how-we-use-information"
-        >
-          <Text mb={4}>
-            We use the information we collect about you for various purposes,
-            including:
-          </Text>
-          <UnorderedList spacing={2} pl={6}>
-            <ListItem>
-              Providing, maintaining, and improving our services
-            </ListItem>
-            <ListItem>
-              Processing event registrations and managing attendee information
-            </ListItem>
-            <ListItem>
-              Facilitating communication between event organizers and attendees
-            </ListItem>
-            <ListItem>
-              Personalizing your experience and delivering content and event
-              recommendations
-            </ListItem>
-            <ListItem>
-              Sending administrative notifications, updates, and promotional
-              messages
-            </ListItem>
-            <ListItem>
-              Analyzing usage patterns and optimizing our platform
-            </ListItem>
-            <ListItem>
-              Detecting, preventing, and addressing technical issues, fraud, or
-              other illegal activities
-            </ListItem>
-            <ListItem>
-              Complying with legal obligations and enforcing our terms of
-              service
-            </ListItem>
-          </UnorderedList>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection
-          title="4. Information Sharing and Disclosure"
-          id="information-sharing"
-        >
-          <Text mb={4}>
-            We may share your personal information in the following situations:
-          </Text>
-          <UnorderedList spacing={2} pl={6}>
-            <ListItem>
-              <Text fontWeight="bold">With Event Organizers:</Text> If you
-              register for an event, your registration information will be
-              shared with the event organizer.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">With Service Providers:</Text> We may
-              share your information with third-party vendors and service
-              providers that help us operate our business (e.g., payment
-              processors, cloud hosting providers).
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">For Legal Reasons:</Text> We may disclose
-              your information to comply with applicable laws and regulations,
-              respond to a subpoena, legal order, or government request.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Business Transfers:</Text> In the event of
-              a merger, acquisition, or asset sale, your personal information
-              may be transferred as a business asset.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">With Your Consent:</Text> We may share
-              your information with third parties when you have given us your
-              consent to do so.
-            </ListItem>
-          </UnorderedList>
-          <Text mt={4}>
-            We do not sell your personal information to third parties for their
-            marketing purposes.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection title="5. Your Choices" id="your-choices">
-          <Text mb={4}>
-            You have several choices regarding the use of your information on
-            our platform:
-          </Text>
-          <UnorderedList spacing={2} pl={6} mb={4}>
-            <ListItem>
-              <Text fontWeight="bold">Account Information:</Text> You can review
-              and update your account information through your profile settings.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Marketing Communications:</Text> You can
-              opt out of receiving promotional emails by following the
-              unsubscribe instructions in each email or by adjusting your
-              notification settings.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Cookie Preferences:</Text> You can manage
-              your cookie preferences through your browser settings.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Data Access and Portability:</Text> You
-              can request a copy of your personal data that we hold.
-            </ListItem>
-            <ListItem>
-              <Text fontWeight="bold">Data Deletion:</Text> You can request that
-              we delete your personal information, subject to certain
-              exceptions.
-            </ListItem>
-          </UnorderedList>
-          <Text>
-            To exercise these rights, please contact us at
-            <ChakraLink
-              href="mailto:privacy@eventhub.com.vn"
-              color="teal.500"
-              ml={1}
-            >
-              privacy@eventhub.com.vn
-            </ChakraLink>
-            .
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection title="6. Data Security" id="data-security">
-          <Text mb={4}>
-            We implement appropriate technical and organizational measures to
-            protect your personal information from unauthorized access,
-            disclosure, alteration, and destruction. These measures include:
-          </Text>
-          <UnorderedList spacing={2} pl={6}>
-            <ListItem>Encryption of sensitive data</ListItem>
-            <ListItem>Regular security assessments</ListItem>
-            <ListItem>Access controls and authentication procedures</ListItem>
-            <ListItem>Secure network architecture</ListItem>
-            <ListItem>Employee training on data security</ListItem>
-          </UnorderedList>
-          <Text mt={4}>
-            While we strive to protect your personal information, no method of
-            transmission over the Internet or electronic storage is 100% secure.
-            Therefore, we cannot guarantee absolute security.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection title="7. Children's Privacy" id="children-privacy">
-          <Text>
-            Our services are not intended for children under 13 years of age. We
-            do not knowingly collect personal information from children under
-            13. If you are a parent or guardian and believe that your child has
-            provided us with personal information, please contact us
-            immediately. If we become aware that we have collected personal
-            information from children without verification of parental consent,
-            we will take steps to remove that information from our servers.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection
-          title="8. International Data Transfers"
-          id="international-transfers"
-        >
-          <Text>
-            We may transfer, process, and store your information on servers
-            located outside of your country of residence, including in Vietnam,
-            Singapore and other countries where our servers are located. These
-            countries may have data protection laws that are different from
-            those in your country. By using our services, you consent to the
-            transfer of your information to these countries. We take steps to
-            ensure that your information receives an adequate level of
-            protection in the jurisdictions in which we process it.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection
-          title="9. Changes to This Privacy Policy"
-          id="policy-changes"
-        >
-          <Text>
-            We may update this Privacy Policy from time to time to reflect
-            changes in our practices or for other operational, legal, or
-            regulatory reasons. The updated policy will be posted on this page
-            with a revised "Last Updated" date. We encourage you to review this
-            Privacy Policy periodically to stay informed about how we are
-            protecting your information.
-          </Text>
-        </PolicySection>
-
-        <Divider />
-
-        <PolicySection title="10. Contact Us" id="contact-us">
-          <Text mb={4}>
-            If you have any questions, concerns, or requests regarding this
-            Privacy Policy or our privacy practices, please contact us at:
-          </Text>
-          <Box
-            p={6}
-            borderWidth="1px"
-            borderRadius="lg"
-            borderColor={useColorModeValue("gray.200", "gray.700")}
-            bg={useColorModeValue("gray.50", "gray.800")}
-            mb={4}
-          >
-            <Text mb={1}>
-              <strong>Email:</strong>{" "}
-              <ChakraLink
-                href="mailto:privacy@eventhub.com.vn"
-                color="teal.500"
-              >
-                privacy@eventhub.com.vn
-              </ChakraLink>
+        <Text mb={4}>
+          Chúng tôi thu thập các loại thông tin sau để cung cấp và cải thiện
+          dịch vụ của mình:
+        </Text>
+        <VStack align="start" spacing={4} mb={4}>
+          <Box>
+            <Heading as="h3" size="md" mb={2}>
+              2.1 Thông tin cá nhân
+            </Heading>
+            <Text mb={2}>
+              Khi bạn đăng ký tài khoản hoặc sử dụng dịch vụ của chúng tôi,
+              chúng tôi có thể thu thập:
             </Text>
-            <Text mb={1}>
-              <strong>Address:</strong> 268 Lý Thường Kiệt, Phường 14, Quận 10,
-              TP. Hồ Chí Minh, Việt Nam
+            <UnorderedList spacing={1} pl={5}>
+              <ListItem>
+                Thông tin cá nhân như tên, địa chỉ email, số điện thoại
+              </ListItem>
+              <ListItem>Thông tin hồ sơ như ảnh đại diện và tiểu sử</ListItem>
+              <ListItem>
+                Thông tin liên lạc khi bạn liên hệ với bộ phận hỗ trợ của chúng
+                tôi
+              </ListItem>
+            </UnorderedList>
+          </Box>
+          <Box>
+            <Heading as="h3" size="md" mb={2}>
+              2.2 Thông tin sử dụng
+            </Heading>
+            <Text mb={2}>
+              Chúng tôi cũng thu thập thông tin về cách bạn truy cập và sử dụng
+              dịch vụ của chúng tôi:
+            </Text>
+            <UnorderedList spacing={1} pl={5}>
+              <ListItem>
+                Dữ liệu tương tác như các sự kiện bạn xem hoặc tham gia
+              </ListItem>
+              <ListItem>
+                Thông tin thiết bị như địa chỉ IP, loại trình duyệt và thiết bị
+              </ListItem>
+              <ListItem>
+                Dữ liệu nhật ký như thời gian truy cập và các trang bạn đã xem
+              </ListItem>
+            </UnorderedList>
+          </Box>
+        </VStack>
+      </PolicySection>
+
+      {/* Cách chúng tôi sử dụng thông tin */}
+      <PolicySection
+        title="3. Cách chúng tôi sử dụng thông tin"
+        id="information-use"
+      >
+        <Text mb={4}>
+          Chúng tôi sử dụng thông tin thu thập được cho các mục đích sau:
+        </Text>
+        <UnorderedList spacing={2} pl={5} mb={4}>
+          <ListItem>
+            <Text fontWeight="medium">Cung cấp và duy trì dịch vụ:</Text>
+            <Text>
+              Quản lý tài khoản của bạn và cung cấp các tính năng của nền tảng
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text fontWeight="medium">
+              Cải thiện và cá nhân hóa trải nghiệm:
             </Text>
             <Text>
-              <strong>Phone:</strong> +84 28 3864 7256
+              Phân tích cách người dùng sử dụng dịch vụ để cải thiện nền tảng
             </Text>
-          </Box>
-          <Text>
-            We will respond to your inquiry as soon as possible, typically
-            within 30 days.
-          </Text>
-        </PolicySection>
-      </VStack>
+          </ListItem>
+          <ListItem>
+            <Text fontWeight="medium">Liên lạc với bạn:</Text>
+            <Text>
+              Gửi thông báo, cập nhật, và hỗ trợ liên quan đến dịch vụ
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text fontWeight="medium">Đảm bảo an toàn:</Text>
+            <Text>
+              Phát hiện, ngăn chặn và xử lý các hoạt động gian lận hoặc bất hợp
+              pháp
+            </Text>
+          </ListItem>
+        </UnorderedList>
+      </PolicySection>
 
-      {/* FAQ Section */}
-      <Box mt={16}>
-        <Heading as="h2" size="lg" mb={6} color="teal.500">
-          Frequently Asked Questions
+      {/* Chia sẻ thông tin */}
+      <PolicySection title="4. Chia sẻ thông tin" id="information-sharing">
+        <Text mb={4}>
+          Chúng tôi không bán thông tin cá nhân của bạn cho bên thứ ba. Chúng
+          tôi có thể chia sẻ thông tin trong các trường hợp sau:
+        </Text>
+        <UnorderedList spacing={2} pl={5} mb={4}>
+          <ListItem>
+            <Text fontWeight="medium">Với người tổ chức sự kiện:</Text>
+            <Text>
+              Khi bạn đăng ký tham gia sự kiện, thông tin cần thiết sẽ được chia
+              sẻ với người tổ chức
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text fontWeight="medium">Với nhà cung cấp dịch vụ:</Text>
+            <Text>
+              Chúng tôi làm việc với các công ty khác để cung cấp dịch vụ như
+              lưu trữ và xử lý thanh toán
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text fontWeight="medium">Theo yêu cầu pháp lý:</Text>
+            <Text>
+              Khi được yêu cầu bởi luật pháp hoặc để bảo vệ quyền lợi pháp lý
+              của chúng tôi
+            </Text>
+          </ListItem>
+        </UnorderedList>
+      </PolicySection>
+
+      {/* Bảo mật dữ liệu */}
+      <PolicySection title="5. Bảo mật dữ liệu" id="data-security">
+        <Text mb={4}>
+          Chúng tôi áp dụng các biện pháp bảo mật hợp lý để bảo vệ thông tin cá
+          nhân của bạn:
+        </Text>
+        <UnorderedList spacing={2} pl={5} mb={4}>
+          <ListItem>
+            Mã hóa dữ liệu nhạy cảm như mật khẩu và thông tin thanh toán
+          </ListItem>
+          <ListItem>
+            Hạn chế quyền truy cập vào thông tin cá nhân cho nhân viên được ủy
+            quyền
+          </ListItem>
+          <ListItem>
+            Đánh giá thường xuyên các biện pháp bảo mật để đảm bảo hiệu quả
+          </ListItem>
+        </UnorderedList>
+        <Text>
+          Tuy nhiên, không có phương thức truyền dữ liệu qua internet hoặc
+          phương thức lưu trữ điện tử nào là an toàn 100%. Chúng tôi không thể
+          đảm bảo bảo mật tuyệt đối cho thông tin của bạn.
+        </Text>
+      </PolicySection>
+
+      {/* Quyền của bạn */}
+      <PolicySection title="6. Quyền của bạn" id="your-rights">
+        <Text mb={4}>
+          Tùy thuộc vào khu vực bạn cư trú, bạn có thể có một số hoặc tất cả các
+          quyền sau đối với dữ liệu cá nhân của mình:
+        </Text>
+        <UnorderedList spacing={2} pl={5} mb={4}>
+          <ListItem>Quyền truy cập và xem thông tin cá nhân của bạn</ListItem>
+          <ListItem>Quyền yêu cầu chỉnh sửa thông tin không chính xác</ListItem>
+          <ListItem>
+            Quyền yêu cầu xóa thông tin trong một số trường hợp
+          </ListItem>
+          <ListItem>Quyền phản đối hoặc hạn chế việc xử lý thông tin</ListItem>
+          <ListItem>
+            Quyền rút lại sự đồng ý mà bạn đã cung cấp trước đó
+          </ListItem>
+        </UnorderedList>
+        <Text>
+          Để thực hiện quyền của mình, bạn có thể truy cập vào trang cài đặt tài
+          khoản của mình hoặc liên hệ với chúng tôi theo thông tin liên hệ được
+          cung cấp dưới đây.
+        </Text>
+      </PolicySection>
+
+      {/* Người dùng trẻ em */}
+      <PolicySection title="7. Người dùng trẻ em" id="children">
+        <Text mb={4}>
+          Dịch vụ của chúng tôi không dành cho người dưới 13 tuổi. Chúng tôi
+          không cố ý thu thập thông tin cá nhân từ trẻ em dưới 13 tuổi. Nếu bạn
+          là phụ huynh hoặc người giám hộ và biết rằng con bạn đã cung cấp cho
+          chúng tôi thông tin cá nhân, vui lòng liên hệ với chúng tôi để có thể
+          thực hiện các hành động cần thiết.
+        </Text>
+      </PolicySection>
+
+      {/* Thay đổi chính sách */}
+      <PolicySection title="8. Thay đổi chính sách" id="policy-changes">
+        <Text mb={4}>
+          Chúng tôi có thể cập nhật Chính sách Riêng tư này theo thời gian để
+          phản ánh các thay đổi về thực tiễn thông tin của chúng tôi. Chúng tôi
+          sẽ thông báo cho bạn về bất kỳ thay đổi quan trọng nào bằng cách đăng
+          thông báo nổi bật trên trang web của chúng tôi hoặc gửi email đến địa
+          chỉ email được liên kết với tài khoản của bạn.
+        </Text>
+        <Text>
+          Chúng tôi khuyến khích bạn xem xét Chính sách Riêng tư này định kỳ để
+          cập nhật về cách chúng tôi bảo vệ thông tin của bạn.
+        </Text>
+      </PolicySection>
+
+      {/* Liên hệ */}
+      <PolicySection title="9. Liên hệ với chúng tôi" id="contact-us">
+        <Text mb={4}>
+          Nếu bạn có bất kỳ câu hỏi nào về Chính sách Riêng tư này hoặc thực
+          tiễn bảo mật của chúng tôi, vui lòng liên hệ với chúng tôi:
+        </Text>
+        <Box
+          p={5}
+          bg={useColorModeValue("gray.50", "gray.700")}
+          borderRadius="md"
+          mb={4}
+        >
+          <VStack align="start" spacing={2}>
+            <Text>
+              <strong>Email:</strong>{" "}
+              <ChakraLink
+                href="mailto:privacy@eventhub.example.com"
+                color="blue.500"
+              >
+                privacy@eventhub.example.com
+              </ChakraLink>
+            </Text>
+            <Text>
+              <strong>Đơn vị phát triển:</strong> Nhóm Sinh viên UIT
+            </Text>
+            <Text>
+              <strong>Địa chỉ:</strong> Đại học Công nghệ Thông tin, Đại học
+              Quốc gia TP.HCM
+            </Text>
+          </VStack>
+        </Box>
+      </PolicySection>
+
+      {/* Điều hướng FAQ */}
+      <Box
+        mt={12}
+        p={6}
+        bg={useColorModeValue("gray.50", "gray.700")}
+        borderRadius="lg"
+      >
+        <Heading as="h2" size="lg" mb={4}>
+          Câu hỏi thường gặp về Quyền riêng tư
         </Heading>
         <Accordion allowToggle>
-          <AccordionItem>
-            <h2>
-              <AccordionButton py={4}>
+          <AccordionItem
+            borderWidth="1px"
+            mb={3}
+            borderRadius="md"
+            borderColor={borderColor}
+            overflow="hidden"
+          >
+            <h3>
+              <AccordionButton
+                py={3}
+                px={4}
+                _expanded={{ bg: useColorModeValue("blue.50", "blue.900") }}
+              >
                 <Box flex="1" textAlign="left" fontWeight="medium">
-                  How can I access or delete my personal data?
+                  EventHub lưu trữ dữ liệu cá nhân của tôi trong bao lâu?
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
-            </h2>
+            </h3>
             <AccordionPanel pb={4}>
-              You can access most of your personal data through your account
-              settings. To request a full copy of your data or to request
-              deletion, please email us at privacy@eventhub.com.vn with the
-              subject "Data Request" or "Data Deletion".
+              <Text>
+                Chúng tôi lưu trữ thông tin cá nhân của bạn chừng nào tài khoản
+                của bạn còn hoạt động hoặc cần thiết để cung cấp dịch vụ cho
+                bạn. Nếu bạn xóa tài khoản, chúng tôi sẽ xóa thông tin cá nhân
+                trong vòng 30 ngày, trừ khi có yêu cầu pháp lý để lưu giữ lâu
+                hơn.
+              </Text>
             </AccordionPanel>
           </AccordionItem>
 
-          <AccordionItem>
-            <h2>
-              <AccordionButton py={4}>
+          <AccordionItem
+            borderWidth="1px"
+            mb={3}
+            borderRadius="md"
+            borderColor={borderColor}
+            overflow="hidden"
+          >
+            <h3>
+              <AccordionButton
+                py={3}
+                px={4}
+                _expanded={{ bg: useColorModeValue("blue.50", "blue.900") }}
+              >
                 <Box flex="1" textAlign="left" fontWeight="medium">
-                  Do you use cookies on your website?
+                  Làm thế nào để tôi có thể kiểm soát thông báo email?
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
-            </h2>
+            </h3>
             <AccordionPanel pb={4}>
-              Yes, we use cookies and similar technologies to enhance your
-              experience, analyze usage, and assist in our marketing efforts.
-              You can control cookies through your browser settings.
+              <Text>
+                Bạn có thể cập nhật tùy chọn email trong phần "Cài đặt tài
+                khoản" sau khi đăng nhập. Tại đây, bạn có thể lựa chọn loại
+                thông báo bạn muốn nhận hoặc hủy đăng ký khỏi tất cả các email
+                tiếp thị. Lưu ý rằng chúng tôi vẫn có thể gửi email quan trọng
+                liên quan đến dịch vụ, như xác nhận đăng ký sự kiện.
+              </Text>
             </AccordionPanel>
           </AccordionItem>
 
-          <AccordionItem>
-            <h2>
-              <AccordionButton py={4}>
+          <AccordionItem
+            borderWidth="1px"
+            borderRadius="md"
+            borderColor={borderColor}
+            overflow="hidden"
+          >
+            <h3>
+              <AccordionButton
+                py={3}
+                px={4}
+                _expanded={{ bg: useColorModeValue("blue.50", "blue.900") }}
+              >
                 <Box flex="1" textAlign="left" fontWeight="medium">
-                  How long do you keep my personal information?
+                  EventHub có sử dụng cookie không?
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
-            </h2>
+            </h3>
             <AccordionPanel pb={4}>
-              We retain your personal information for as long as necessary to
-              fulfill the purposes for which we collected it, including for the
-              purposes of satisfying any legal, accounting, or reporting
-              requirements.
-            </AccordionPanel>
-          </AccordionItem>
-
-          <AccordionItem>
-            <h2>
-              <AccordionButton py={4}>
-                <Box flex="1" textAlign="left" fontWeight="medium">
-                  What are my privacy rights under Vietnamese Personal Data
-                  Protection Decree?
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              Under the Vietnamese Personal Data Protection Decree, you have
-              rights including access to your data, correction of inaccuracies,
-              deletion of personal information, data portability, and the right
-              to object to certain processing. Please contact us to exercise
-              these rights.
+              <Text>
+                Có, chúng tôi sử dụng cookie và các công nghệ tương tự để cung
+                cấp, bảo vệ và cải thiện dịch vụ của mình. Cookie giúp chúng tôi
+                nhớ đăng nhập của bạn, hiểu cách bạn sử dụng dịch vụ, cá nhân
+                hóa nội dung, và cung cấp tính năng bảo mật. Bạn có thể quản lý
+                cài đặt cookie trong trình duyệt của mình, nhưng việc vô hiệu
+                hóa cookie có thể ảnh hưởng đến chức năng của trang web.
+              </Text>
             </AccordionPanel>
           </AccordionItem>
         </Accordion>
       </Box>
 
-      {/* CTA */}
-      <Box
-        mt={12}
-        p={8}
-        borderRadius="lg"
-        bg={useColorModeValue("teal.50", "teal.900")}
-        textAlign="center"
-      >
-        <Heading as="h3" size="md" mb={4}>
-          Still have questions about your privacy?
-        </Heading>
-        <Text mb={4} maxW="2xl" mx="auto">
-          Our team is here to help address any concerns you may have about your
-          data and privacy on EventHub.
-        </Text>
-        <HStack spacing={4} justify="center">
-          <Button as={Link} to="/contact" colorScheme="teal" size="lg">
-            Contact Us
-          </Button>
-          <Button
-            as={Link}
-            to="/faq"
-            variant="outline"
-            colorScheme="teal"
-            size="lg"
-          >
-            Visit FAQ
-          </Button>
-        </HStack>
-      </Box>
+      {/* Hành động */}
+      <HStack justify="center" mt={10} mb={6} spacing={6}>
+        <Button
+          as={Link}
+          to="/info/terms-of-service"
+          colorScheme="blue"
+          variant="outline"
+        >
+          Xem Điều khoản Dịch vụ
+        </Button>
+        <Button as={Link} to="/info/contact-us" colorScheme="blue">
+          Liên hệ với chúng tôi
+        </Button>
+      </HStack>
+
+      {/* Footer */}
+      <Divider my={6} />
+      <Text textAlign="center" fontSize="sm" color={textColor}>
+        © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
+        triển hệ thống web, UIT.
+      </Text>
     </Container>
   );
 };
