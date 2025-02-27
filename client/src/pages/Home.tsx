@@ -6,19 +6,14 @@ import {
   Heading,
   Image,
   SimpleGrid,
-  Stack,
   Text,
   VStack,
-  Input,
-  Select,
-  InputGroup,
-  InputLeftElement,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { FiSearch, FiMapPin, FiCalendar } from "react-icons/fi";
+import { FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import EventCard from "../components/events/EventCard";
 
 // Sample event data
 const events = [
@@ -88,126 +83,57 @@ const events = [
   },
 ];
 
-interface EventCardProps {
-  event: {
-    id: number;
-    title: string;
-    description: string;
-    date: string;
-    location: string;
-    image: string;
-    category: string;
-    isPaid: boolean;
-  };
-}
-
-const EventCard = ({ event }: EventCardProps) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const metaColor = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-
-  return (
-    <Box
-      maxW="sm"
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
-      bg={cardBg}
-      borderColor={borderColor}
-      transition="all 0.3s"
-      _hover={{
-        transform: "translateY(-5px)",
-        boxShadow: "xl",
-      }}
-    >
-      <Image
-        src={event.image}
-        alt={event.title}
-        width="100%"
-        height="200px"
-        objectFit="cover"
-      />
-
-      <Box p={5}>
-        <Box display="flex" alignItems="baseline">
-          <Box
-            color={metaColor}
-            fontWeight="semibold"
-            letterSpacing="wide"
-            fontSize="xs"
-            textTransform="uppercase"
-          >
-            {event.isPaid ? "Trả phí" : "Miễn phí"} &bull;{" "}
-            {event.category === "workshop"
-              ? "Hội thảo"
-              : event.category === "conference"
-              ? "Hội nghị"
-              : event.category === "music"
-              ? "Âm nhạc"
-              : event.category === "networking"
-              ? "Giao lưu"
-              : event.category === "food"
-              ? "Ẩm thực"
-              : event.category}
-          </Box>
-        </Box>
-
-        <Heading size="md" my={2} isTruncated color={textColor}>
-          {event.title}
-        </Heading>
-
-        <Text noOfLines={2} mb={3} color={textColor}>
-          {event.description}
-        </Text>
-
-        <Flex align="center" color={metaColor} fontSize="sm" mb={2}>
-          <FiCalendar />
-          <Text ml={2}>{event.date}</Text>
-        </Flex>
-
-        <Flex align="center" color={metaColor} fontSize="sm" mb={4}>
-          <FiMapPin />
-          <Text ml={2}>{event.location}</Text>
-        </Flex>
-
-        <Button
-          as={Link}
-          to={`/events/${event.id}`}
-          colorScheme="teal"
-          width="full"
-          sx={{ textDecoration: "none" }}
-        >
-          Xem chi tiết
-        </Button>
-      </Box>
-    </Box>
-  );
-};
+// Danh mục phổ biến
+const popularCategories = [
+  {
+    id: "workshop",
+    name: "Hội thảo",
+    image:
+      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "conference",
+    name: "Hội nghị",
+    image:
+      "https://images.unsplash.com/photo-1509024644558-2f56ce76c490?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "music",
+    name: "Âm nhạc",
+    image:
+      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+  {
+    id: "networking",
+    name: "Giao lưu",
+    image:
+      "https://images.unsplash.com/photo-1528605248644-14dd04022da1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+  },
+];
 
 const Home = () => {
-  // Thêm state cho form tìm kiếm
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [searchLocation, setSearchLocation] = useState("");
-  const [searchCategory, setSearchCategory] = useState("");
   const navigate = useNavigate();
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const inputBg = useColorModeValue("white", "gray.700");
-  const iconColor = useColorModeValue("gray.400", "gray.500");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
 
-  // Xử lý submit form tìm kiếm
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (searchKeyword) params.append("keyword", searchKeyword);
-    if (searchLocation) params.append("location", searchLocation);
-    if (searchCategory) params.append("category", searchCategory);
+  // Handler cho nút "Tạo sự kiện"
+  const handleCreateEvent = () => {
+    // TODO: Khi có backend, thêm logic kiểm tra đăng nhập và quyền ở đây
+    // Ví dụ:
+    // if (!isLoggedIn) {
+    //   navigate("/login?redirect=/create-event");
+    // } else if (!hasOrganizerPermission) {
+    //   navigate("/become-organizer");
+    // } else {
+    //   navigate("/create-event");
+    // }
 
-    navigate(`/events?${params.toString()}`);
+    // Tạm thời, chỉ điều hướng đến trang đăng ký organizer khi chưa có backend
+    navigate("/become-organizer");
   };
 
   return (
@@ -217,7 +143,7 @@ const Home = () => {
         <Box
           bg="teal.500"
           color="white"
-          py={20}
+          py={{ base: 14, md: 20 }}
           px={8}
           borderRadius="lg"
           mb={10}
@@ -235,130 +161,159 @@ const Home = () => {
             bg="blackAlpha.600"
             borderRadius="lg"
           />
-          <VStack
-            spacing={5}
-            position="relative"
-            align="flex-start"
-            maxW="container.md"
-          >
-            <Heading as="h1" size="2xl">
-              Tìm và tham gia sự kiện hấp dẫn
-            </Heading>
-            <Text fontSize="xl" maxW="container.sm">
-              Khám phá các sự kiện thú vị đang diễn ra gần bạn và đặt vé ngay
-              hôm nay!
-            </Text>
-            <Button
-              size="lg"
-              colorScheme="teal"
-              onClick={() => navigate("/events")}
+          <Container maxW="container.xl" position="relative">
+            <VStack
+              spacing={5}
+              align={{ base: "center", md: "flex-start" }}
+              maxW="container.md"
+              textAlign={{ base: "center", md: "left" }}
             >
-              Khám phá sự kiện
-            </Button>
-          </VStack>
+              <Heading as="h1" size="2xl">
+                Tìm và tham gia sự kiện hấp dẫn
+              </Heading>
+              <Text fontSize="xl" maxW="container.sm">
+                Khám phá các sự kiện thú vị đang diễn ra gần bạn và đặt vé ngay
+                hôm nay!
+              </Text>
+              <Flex gap={4}>
+                <Button
+                  size="lg"
+                  colorScheme="teal"
+                  onClick={() => navigate("/events")}
+                  rightIcon={<FiArrowRight />}
+                >
+                  Khám phá sự kiện
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  bg="whiteAlpha.200"
+                  color="white"
+                  _hover={{ bg: "whiteAlpha.300" }}
+                  borderColor="whiteAlpha.400"
+                  onClick={handleCreateEvent}
+                  title="Tạo sự kiện mới (yêu cầu quyền nhà tổ chức)"
+                >
+                  Tạo sự kiện
+                </Button>
+              </Flex>
+            </VStack>
+          </Container>
         </Box>
 
-        {/* Search Section */}
-        <Container maxW="container.xl" mb={12}>
-          <VStack spacing={5} align="stretch" w="100%">
-            <Heading size="lg" color={textColor}>
-              Tìm kiếm sự kiện
-            </Heading>
-            <Stack
-              direction={{ base: "column", md: "row" }}
-              spacing={4}
+        {/* Featured Events Section */}
+        <Container maxW="container.xl" mb={16}>
+          <VStack spacing={8} align="stretch" w="100%">
+            <Flex
+              justify="space-between"
+              align="center"
+              flexWrap={{ base: "wrap", md: "nowrap" }}
+              gap={4}
+            >
+              <Box>
+                <Heading size="lg" color={textColor} mb={2}>
+                  Sự kiện nổi bật
+                </Heading>
+                <Text fontSize="lg" color={textColor}>
+                  Khám phá những sự kiện được quan tâm nhiều nhất
+                </Text>
+              </Box>
+              <Button
+                as={Link}
+                to="/events"
+                variant="outline"
+                colorScheme="teal"
+                rightIcon={<FiArrowRight />}
+                sx={{ textDecoration: "none" }}
+                size="md"
+              >
+                Xem tất cả sự kiện
+              </Button>
+            </Flex>
+
+            <Box
               bg={sectionBg}
               p={6}
               borderRadius="lg"
               borderWidth="1px"
               borderColor={borderColor}
             >
-              {/* Keyword Input */}
-              <InputGroup>
-                <InputLeftElement pointerEvents="none">
-                  <FiSearch color={iconColor} />
-                </InputLeftElement>
-                <Input
-                  type="text"
-                  placeholder="Tên sự kiện, chủ đề..."
-                  bg={inputBg}
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  borderColor={borderColor}
-                />
-              </InputGroup>
-
-              {/* Location Input */}
-              <InputGroup>
-                <InputLeftElement pointerEvents="none">
-                  <FiMapPin color={iconColor} />
-                </InputLeftElement>
-                <Input
-                  placeholder="Địa điểm"
-                  bg={inputBg}
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  borderColor={borderColor}
-                />
-              </InputGroup>
-
-              {/* Category Select */}
-              <Select
-                placeholder="Chọn danh mục"
-                bg={inputBg}
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                borderColor={borderColor}
+              <SimpleGrid
+                columns={{ base: 1, sm: 2, md: 3 }}
+                spacing={8}
+                w="100%"
               >
-                <option value="workshop">Hội thảo</option>
-                <option value="conference">Hội nghị</option>
-                <option value="music">Âm nhạc</option>
-                <option value="networking">Giao lưu</option>
-                <option value="food">Ẩm thực</option>
-              </Select>
-
-              <Button colorScheme="teal" onClick={handleSearch}>
-                Tìm kiếm
-              </Button>
-            </Stack>
+                {events.slice(0, 6).map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </SimpleGrid>
+            </Box>
           </VStack>
         </Container>
 
-        {/* Featured Events Section */}
+        {/* Popular Categories */}
         <Container maxW="container.xl" mb={16}>
-          <VStack spacing={5} align="flex-start" w="100%" mb={6}>
-            <Heading size="lg" color={textColor}>
-              Sự kiện nổi bật
-            </Heading>
-            <Text fontSize="lg" color={textColor}>
-              Khám phá những sự kiện được quan tâm nhiều nhất trong thời gian
-              gần đây
-            </Text>
+          <VStack spacing={8} align="stretch" w="100%">
+            <Box>
+              <Heading size="lg" color={textColor} mb={2}>
+                Danh mục phổ biến
+              </Heading>
+              <Text fontSize="lg" color={textColor}>
+                Tìm sự kiện theo danh mục yêu thích của bạn
+              </Text>
+            </Box>
+
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={6}>
+              {popularCategories.map((category) => (
+                <Box
+                  key={category.id}
+                  as={Link}
+                  to={`/events?category=${category.id}`}
+                  borderRadius="lg"
+                  overflow="hidden"
+                  position="relative"
+                  height="180px"
+                  _hover={{ transform: "translateY(-5px)" }}
+                  transition="all 0.3s"
+                  boxShadow="md"
+                >
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    backgroundImage={`url(${category.image})`}
+                    backgroundSize="cover"
+                    backgroundPosition="center"
+                    zIndex={0}
+                  />
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bg="blackAlpha.600"
+                    zIndex={1}
+                  />
+                  <Flex
+                    position="relative"
+                    zIndex={2}
+                    height="100%"
+                    align="center"
+                    justify="center"
+                    p={4}
+                    direction="column"
+                  >
+                    <Heading size="md" color="white" textAlign="center">
+                      {category.name}
+                    </Heading>
+                  </Flex>
+                </Box>
+              ))}
+            </SimpleGrid>
           </VStack>
-
-          <SimpleGrid
-            columns={{ base: 1, sm: 2, md: 3 }}
-            spacing={10}
-            mb={8}
-            w="100%"
-          >
-            {events.slice(0, 6).map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </SimpleGrid>
-
-          <Flex justify="center">
-            <Button
-              colorScheme="teal"
-              variant="outline"
-              size="lg"
-              as={Link}
-              to="/events"
-              sx={{ textDecoration: "none" }}
-            >
-              Xem tất cả sự kiện
-            </Button>
-          </Flex>
         </Container>
 
         {/* Join as Organizer Section */}

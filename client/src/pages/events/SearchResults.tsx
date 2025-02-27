@@ -24,187 +24,153 @@ import {
   DrawerContent,
   DrawerCloseButton,
   IconButton,
-  Image,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { FiSearch, FiMapPin, FiCalendar, FiFilter, FiX } from "react-icons/fi";
-
-// Định nghĩa kiểu dữ liệu cho sự kiện
-interface EventType {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  image: string;
-  category: string;
-  isPaid: boolean;
-  price?: number;
-}
-
-// Component EventCard nhỏ gọn nhúng trực tiếp trong trang này
-// (Trong dự án thực tế nên tách thành component riêng)
-const EventCard = ({ event }: { event: EventType }) => {
-  // Màu sắc theo theme
-  const cardBg = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const metaColor = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-
-  return (
-    <Box
-      maxW="sm"
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
-      boxShadow="md"
-      transition="transform 0.3s"
-      _hover={{ transform: "translateY(-5px)" }}
-      bg={cardBg}
-      borderColor={borderColor}
-    >
-      <Box position="relative">
-        <Image
-          src={event.image}
-          alt={event.title}
-          height="200px"
-          width="100%"
-          objectFit="cover"
-        />
-
-        <Box position="absolute" top={2} right={2} display="flex" gap={1}>
-          <Badge
-            colorScheme="teal"
-            fontSize="xs"
-            textTransform="capitalize"
-            borderRadius="md"
-            px={2}
-            py={1}
-          >
-            {event.category}
-          </Badge>
-          <Badge
-            colorScheme={event.isPaid ? "purple" : "green"}
-            fontSize="xs"
-            borderRadius="md"
-            px={2}
-            py={1}
-          >
-            {event.isPaid ? "Có phí" : "Miễn phí"}
-          </Badge>
-        </Box>
-      </Box>
-
-      <Box p={5}>
-        <Heading size="md" my={2} noOfLines={2} color={textColor}>
-          {event.title}
-        </Heading>
-
-        <Text noOfLines={2} mb={3} fontSize="sm" color={metaColor}>
-          {event.description}
-        </Text>
-
-        <Flex align="center" color={metaColor} fontSize="sm" mb={2}>
-          <FiCalendar />
-          <Text ml={2}>{event.date}</Text>
-        </Flex>
-
-        <Flex align="center" color={metaColor} fontSize="sm" mb={4}>
-          <FiMapPin />
-          <Text ml={2} noOfLines={1}>
-            {event.location}
-          </Text>
-        </Flex>
-
-        <Button
-          as={Link}
-          to={`/events/${event.id}`}
-          colorScheme="teal"
-          width="full"
-          size="sm"
-          sx={{ textDecoration: "none" }}
-        >
-          Xem Chi Tiết
-        </Button>
-      </Box>
-    </Box>
-  );
-};
+import { useSearchParams } from "react-router-dom";
+import { FiSearch, FiMapPin, FiFilter, FiX } from "react-icons/fi";
+import EventCard from "../../components/events/EventCard";
 
 // Dữ liệu mẫu cho sự kiện
-const eventsData: EventType[] = [
+const eventsData = [
   {
     id: 1,
-    title: "UI/UX Design Workshop",
-    description: "Workshop on modern user interface design principles",
+    title: "Hội thảo thiết kế UI/UX",
+    description:
+      "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
     date: "15/08/2023",
-    location: "Ho Chi Minh City",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3IZUfQd",
     category: "workshop",
     isPaid: false,
   },
   {
     id: 2,
-    title: "Blockchain Technology Conference",
-    description:
-      "Explore the potential and applications of blockchain technology",
+    title: "Hội nghị công nghệ Blockchain",
+    description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
     date: "20/08/2023",
-    location: "Hanoi",
+    location: "Hà Nội",
     image: "https://bit.ly/3wIlKgh",
     category: "conference",
     isPaid: true,
   },
   {
     id: 3,
-    title: "Music Festival 2023",
-    description: "The biggest music event of the year featuring top artists",
+    title: "Lễ hội âm nhạc 2023",
+    description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
     date: "10/09/2023",
-    location: "Da Nang",
+    location: "Đà Nẵng",
     image: "https://bit.ly/3IfO5Fh",
     category: "music",
     isPaid: true,
   },
   {
     id: 4,
-    title: "Startup Networking Night",
-    description: "Exhibition showcasing the latest technology products",
+    title: "Đêm giao lưu startup",
+    description:
+      "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
     date: "25/08/2023",
-    location: "Ho Chi Minh City",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3kpPKS5",
     category: "networking",
     isPaid: false,
   },
   {
     id: 5,
-    title: "JavaScript Developers Meetup",
+    title: "Lễ hội ẩm thực & văn hóa",
     description:
-      "Network with fellow JavaScript developers and share knowledge",
-    date: "05/08/2023",
-    location: "Ho Chi Minh City",
-    image: "https://bit.ly/3IZx4Xd",
-    category: "meetup",
+      "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
+    date: "05/09/2023",
+    location: "Hà Nội",
+    image: "https://bit.ly/3SVagzv",
+    category: "food",
     isPaid: false,
   },
   {
     id: 6,
-    title: "AI in Business Conference",
-    description: "Discussing the role of artificial intelligence in business",
+    title: "Hội nghị AI trong kinh doanh",
+    description:
+      "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
     date: "12/09/2023",
-    location: "Hanoi",
+    location: "TP. Hồ Chí Minh",
     image: "https://bit.ly/3kD02Jq",
     category: "conference",
     isPaid: true,
+  },
+  {
+    id: 7,
+    title: "Triển lãm nghệ thuật đương đại",
+    description:
+      "Chiêm ngưỡng các tác phẩm độc đáo từ các nghệ sĩ trong nước và quốc tế",
+    date: "18/09/2023",
+    location: "Hà Nội",
+    image: "https://bit.ly/3SVcGVu",
+    category: "exhibition",
+    isPaid: true,
+  },
+  {
+    id: 8,
+    title: "Workshop nhiếp ảnh cơ bản",
+    description:
+      "Học các kỹ thuật nhiếp ảnh cơ bản và cách chỉnh sửa hình ảnh chuyên nghiệp",
+    date: "22/08/2023",
+    location: "TP. Hồ Chí Minh",
+    image: "https://bit.ly/3SXgDVw",
+    category: "workshop",
+    isPaid: true,
+  },
+  {
+    id: 9,
+    title: "Cuộc thi lập trình Hackathon",
+    description:
+      "Giải đấu lập trình trong 48 giờ với nhiều giải thưởng giá trị",
+    date: "30/08/2023",
+    location: "Đà Nẵng",
+    image: "https://bit.ly/3SWdGXz",
+    category: "networking",
+    isPaid: false,
+  },
+  {
+    id: 10,
+    title: "Hội chợ công nghệ 2023",
+    description:
+      "Trưng bày và giới thiệu các sản phẩm công nghệ mới nhất trên thị trường",
+    date: "15/09/2023",
+    location: "TP. Hồ Chí Minh",
+    image: "https://bit.ly/3SVfHVy",
+    category: "exhibition",
+    isPaid: false,
+  },
+  {
+    id: 11,
+    title: "Hội thảo khởi nghiệp cho sinh viên",
+    description:
+      "Chia sẻ kinh nghiệm và định hướng cho sinh viên muốn bắt đầu khởi nghiệp",
+    date: "05/10/2023",
+    location: "Cần Thơ",
+    image: "https://bit.ly/3SXiEVz",
+    category: "workshop",
+    isPaid: false,
+  },
+  {
+    id: 12,
+    title: "Biểu diễn âm nhạc truyền thống",
+    description:
+      "Thưởng thức các tiết mục âm nhạc dân tộc do các nghệ sĩ tài năng biểu diễn",
+    date: "10/10/2023",
+    location: "Huế",
+    image: "https://bit.ly/3SVjFVa",
+    category: "music",
+    isPaid: false,
   },
 ];
 
 // Danh sách địa điểm mẫu
 const locations = [
-  "Ho Chi Minh City",
-  "Hanoi",
-  "Da Nang",
-  "Can Tho",
+  "TP. Hồ Chí Minh",
+  "Hà Nội",
+  "Đà Nẵng",
+  "Cần Thơ",
   "Nha Trang",
 ];
 
@@ -227,21 +193,25 @@ const SearchResults = () => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const iconColor = useColorModeValue("gray.400", "gray.500");
+  const sectionBg = useColorModeValue("gray.50", "gray.800");
 
   // Lấy query params từ URL
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("keyword") || "";
   const initialLocation = searchParams.get("location") || "";
   const initialCategory = searchParams.get("category") || "";
+  const initialPage = parseInt(searchParams.get("page") || "1", 10);
 
   // State cho trang tìm kiếm
   const [keyword, setKeyword] = useState(initialKeyword);
   const [location, setLocation] = useState(initialLocation);
   const [category, setCategory] = useState(initialCategory);
-  const [filteredEvents, setFilteredEvents] = useState<EventType[]>(eventsData);
+  const [filteredEvents, setFilteredEvents] = useState(eventsData);
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [showPaidOnly, setShowPaidOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const eventsPerPage = 6;
 
   // Drawer cho filter trên mobile
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -296,6 +266,28 @@ const SearchResults = () => {
     setFilteredEvents(results);
   }, [keyword, location, category, showFreeOnly, showPaidOnly]);
 
+  // Tính toán phân trang
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = filteredEvents.slice(
+    indexOfFirstEvent,
+    indexOfLastEvent
+  );
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+  // Chuyển trang
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+
+    // Cập nhật URL
+    const params: { [key: string]: string } = {};
+    if (keyword) params.keyword = keyword;
+    if (location) params.location = location;
+    if (category) params.category = category;
+    if (newPage > 1) params.page = newPage.toString();
+    setSearchParams(params);
+  };
+
   // Reset tất cả bộ lọc
   const resetFilters = () => {
     setKeyword("");
@@ -304,6 +296,7 @@ const SearchResults = () => {
     setShowFreeOnly(false);
     setShowPaidOnly(false);
     setPriceRange([0, 100]);
+    setCurrentPage(1);
     setSearchParams({});
     setFilteredEvents(eventsData);
   };
@@ -326,8 +319,21 @@ const SearchResults = () => {
       <Container maxW="container.xl" py={8}>
         {/* Tiêu đề trang */}
         <Heading as="h1" size="xl" mb={6} color={textColor}>
-          Kết quả tìm kiếm
+          {keyword || location || category
+            ? "Kết quả tìm kiếm"
+            : "Khám phá tất cả sự kiện"}
         </Heading>
+
+        {/* Giới thiệu trang - Chỉ hiển thị khi không có tìm kiếm */}
+        {!(keyword || location || category) && (
+          <Box mb={8}>
+            <Text fontSize="lg" color={textColor} mb={4}>
+              Khám phá và tham gia các sự kiện đa dạng từ hội thảo, hội nghị đến
+              các lễ hội âm nhạc và giao lưu. Tìm kiếm sự kiện phù hợp với sở
+              thích và lịch trình của bạn ngay hôm nay!
+            </Text>
+          </Box>
+        )}
 
         {/* Desktop: Search & Filter Bar */}
         <Box
@@ -340,101 +346,104 @@ const SearchResults = () => {
           borderColor={borderColor}
           borderWidth="1px"
         >
-          <Flex gap={4} mb={4}>
-            <InputGroup size="md">
-              <InputLeftElement pointerEvents="none">
-                <FiSearch color={iconColor} />
-              </InputLeftElement>
-              <Input
-                placeholder="Tìm kiếm sự kiện..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                borderColor={borderColor}
-              />
-            </InputGroup>
+          <Flex direction="column" gap={4}>
+            <Flex gap={4}>
+              <InputGroup size="md" flexGrow={1}>
+                <InputLeftElement pointerEvents="none">
+                  <FiSearch color={iconColor} />
+                </InputLeftElement>
+                <Input
+                  placeholder="Tìm kiếm sự kiện..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  borderColor={borderColor}
+                />
+              </InputGroup>
 
-            <InputGroup size="md">
-              <InputLeftElement pointerEvents="none">
-                <FiMapPin color={iconColor} />
-              </InputLeftElement>
+              <Button colorScheme="teal" onClick={handleSearch} px={8}>
+                Tìm kiếm
+              </Button>
+            </Flex>
+
+            <Flex gap={4} align="center">
+              <InputGroup size="md" flex={1}>
+                <InputLeftElement pointerEvents="none">
+                  <FiMapPin color={iconColor} />
+                </InputLeftElement>
+                <Select
+                  placeholder="Tất cả địa điểm"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  borderColor={borderColor}
+                >
+                  {locations.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </Select>
+              </InputGroup>
+
               <Select
-                placeholder="Tất cả địa điểm"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Tất cả danh mục"
+                size="md"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 borderColor={borderColor}
+                flex={1}
               >
-                {locations.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat === "conference"
+                      ? "Hội nghị"
+                      : cat === "workshop"
+                      ? "Hội thảo"
+                      : cat === "meetup"
+                      ? "Gặp gỡ"
+                      : cat === "networking"
+                      ? "Kết nối"
+                      : cat === "music"
+                      ? "Âm nhạc"
+                      : cat === "exhibition"
+                      ? "Triển lãm"
+                      : cat === "food"
+                      ? "Ẩm thực"
+                      : "Khác"}
                   </option>
                 ))}
               </Select>
-            </InputGroup>
 
-            <Select
-              placeholder="Tất cả danh mục"
-              size="md"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              borderColor={borderColor}
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat === "conference"
-                    ? "Hội nghị"
-                    : cat === "workshop"
-                    ? "Hội thảo"
-                    : cat === "meetup"
-                    ? "Gặp gỡ"
-                    : cat === "networking"
-                    ? "Kết nối"
-                    : cat === "music"
-                    ? "Âm nhạc"
-                    : cat === "exhibition"
-                    ? "Triển lãm"
-                    : cat === "food"
-                    ? "Ẩm thực"
-                    : "Khác"}
-                </option>
-              ))}
-            </Select>
+              <HStack spacing={4}>
+                <Checkbox
+                  isChecked={showFreeOnly}
+                  onChange={(e) => {
+                    setShowFreeOnly(e.target.checked);
+                    if (e.target.checked) setShowPaidOnly(false);
+                  }}
+                >
+                  Miễn phí
+                </Checkbox>
+                <Checkbox
+                  isChecked={showPaidOnly}
+                  onChange={(e) => {
+                    setShowPaidOnly(e.target.checked);
+                    if (e.target.checked) setShowFreeOnly(false);
+                  }}
+                >
+                  Có phí
+                </Checkbox>
+              </HStack>
 
-            <Button colorScheme="teal" onClick={handleSearch}>
-              Áp dụng
-            </Button>
-          </Flex>
-
-          <Flex justify="space-between" align="center">
-            <HStack spacing={4}>
-              <Checkbox
-                isChecked={showFreeOnly}
-                onChange={(e) => {
-                  setShowFreeOnly(e.target.checked);
-                  if (e.target.checked) setShowPaidOnly(false);
-                }}
+              <Button
+                variant="outline"
+                colorScheme="teal"
+                size="md"
+                leftIcon={<FiX />}
+                onClick={resetFilters}
               >
-                Miễn phí
-              </Checkbox>
-              <Checkbox
-                isChecked={showPaidOnly}
-                onChange={(e) => {
-                  setShowPaidOnly(e.target.checked);
-                  if (e.target.checked) setShowFreeOnly(false);
-                }}
-              >
-                Có phí
-              </Checkbox>
-            </HStack>
-
-            <Button
-              variant="ghost"
-              colorScheme="teal"
-              size="sm"
-              leftIcon={<FiX />}
-              onClick={resetFilters}
-            >
-              Xóa bộ lọc
-            </Button>
+                Xóa bộ lọc
+              </Button>
+            </Flex>
           </Flex>
         </Box>
 
@@ -653,17 +662,97 @@ const SearchResults = () => {
         {/* Kết quả tìm kiếm */}
         {filteredEvents.length > 0 ? (
           <>
-            <Text mb={6} color={textColor}>
-              {filteredEvents.length} sự kiện được tìm thấy
-            </Text>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={10}>
-              {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </SimpleGrid>
+            <Flex justify="space-between" align="center" mb={6}>
+              <Text color={textColor}>
+                {filteredEvents.length} sự kiện được tìm thấy
+              </Text>
+              {keyword || location || category ? (
+                <Button
+                  variant="outline"
+                  colorScheme="teal"
+                  size="sm"
+                  leftIcon={<FiX />}
+                  onClick={resetFilters}
+                >
+                  Xóa tất cả bộ lọc
+                </Button>
+              ) : null}
+            </Flex>
+
+            <Box
+              bg={sectionBg}
+              p={6}
+              borderRadius="lg"
+              mb={6}
+              borderWidth="1px"
+              borderColor={borderColor}
+            >
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3 }}
+                spacing={8}
+                mb={8}
+              >
+                {currentEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </SimpleGrid>
+
+              {/* Phân trang đơn giản */}
+              {totalPages > 1 && (
+                <Flex justify="center" mt={4}>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        handlePageChange(Math.max(1, currentPage - 1))
+                      }
+                      isDisabled={currentPage === 1}
+                      colorScheme="teal"
+                      variant="outline"
+                    >
+                      Trước
+                    </Button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <Button
+                          key={page}
+                          size="sm"
+                          colorScheme="teal"
+                          variant={currentPage === page ? "solid" : "ghost"}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    )}
+
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                      isDisabled={currentPage === totalPages}
+                      colorScheme="teal"
+                      variant="outline"
+                    >
+                      Sau
+                    </Button>
+                  </HStack>
+                </Flex>
+              )}
+            </Box>
           </>
         ) : (
-          <Box textAlign="center" py={10}>
+          <Box
+            textAlign="center"
+            py={10}
+            bg={sectionBg}
+            borderRadius="lg"
+            p={8}
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
             <Heading size="md" mb={4} color={textColor}>
               Không tìm thấy sự kiện
             </Heading>
