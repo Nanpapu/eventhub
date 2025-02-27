@@ -17,6 +17,7 @@ import MyEvents from "./user/MyEvents";
 import Notifications from "./user/Notifications";
 import MyTickets from "./user/MyTickets";
 import SavedEvents from "./user/SavedEvents";
+import UserDashboard from "./user/UserDashboard";
 
 // Organizer pages
 import Dashboard from "./organizer/Dashboard";
@@ -45,5 +46,6 @@ export {
   EventAnalytics,
   MyTickets,
   SavedEvents,
+  UserDashboard,
   // Demo,
 };
