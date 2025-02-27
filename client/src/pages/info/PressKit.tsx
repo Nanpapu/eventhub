@@ -9,7 +9,6 @@ import {
   HStack,
   Button,
   Image,
-  Link as ChakraLink,
   Divider,
   useColorModeValue,
   Badge,
@@ -22,7 +21,6 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Center,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import {
@@ -30,19 +28,26 @@ import {
   FaFileDownload,
   FaEnvelope,
   FaFileAlt,
+  FaUserTie,
+  FaPalette,
+  FaImages,
+  FaNewspaper,
 } from "react-icons/fa";
 
-// Tinh gọn trang PressKit
+/**
+ * Trang Bộ Công cụ Truyền thông (Press Kit)
+ * Cung cấp tài nguyên truyền thông cho đơn vị báo chí và đối tác
+ */
 const PressKit = () => {
-  // Các giá trị màu cần thiết
+  // Màu sắc đồng bộ với HelpCenter nhưng sử dụng tông màu blue
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.600", "gray.400");
   const headingColor = useColorModeValue("blue.600", "blue.300");
-  const cardBg = useColorModeValue("white", "gray.700");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
   const accentColor = useColorModeValue("blue.500", "blue.300");
-  const buttonColorScheme = "blue";
-  const sectionBg = useColorModeValue("gray.50", "gray.800");
+  const boxShadow = useColorModeValue("sm", "none");
   const boxAccentBg = useColorModeValue("blue.50", "blue.900");
+  const buttonColorScheme = "blue";
 
   // Thông tin thương hiệu rút gọn
   const brandColors = [
@@ -130,7 +135,7 @@ const PressKit = () => {
       </Breadcrumb>
 
       {/* Phần Giới thiệu */}
-      <Box mb={16} textAlign="center">
+      <Box mb={10} textAlign="center">
         <Badge
           colorScheme={buttonColorScheme}
           fontSize="sm"
@@ -141,18 +146,120 @@ const PressKit = () => {
         >
           Đồ án sinh viên UIT
         </Badge>
-        <Heading as="h1" size="2xl" mb={6} color={headingColor}>
+        <Heading as="h1" size="2xl" mb={4} color={headingColor}>
           Bộ Công cụ Truyền thông EventHub
         </Heading>
-        <Text fontSize="xl" maxW="3xl" mx="auto" color={textColor}>
+        <Text fontSize="lg" maxW="3xl" mx="auto" color={textColor}>
           Chào mừng đến với bộ công cụ truyền thông của EventHub - nền tảng kết
           nối người tổ chức sự kiện và người tham gia. Dưới đây là các tài
           nguyên cần thiết để sử dụng thương hiệu của chúng tôi.
         </Text>
       </Box>
 
+      {/* Highlights */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Flex
+            mb={4}
+            w={12}
+            h={12}
+            bg={boxAccentBg}
+            color={accentColor}
+            borderRadius="full"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Icon as={FaUserTie} boxSize={5} />
+          </Flex>
+          <Heading as="h3" size="md" mb={2} color={headingColor}>
+            Về chúng tôi
+          </Heading>
+          <Text color={textColor}>
+            Tìm hiểu về dự án EventHub, sứ mệnh, tầm nhìn và đội ngũ phát triển
+            đằng sau dự án này.
+          </Text>
+        </Box>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Flex
+            mb={4}
+            w={12}
+            h={12}
+            bg={boxAccentBg}
+            color={accentColor}
+            borderRadius="full"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Icon as={FaPalette} boxSize={5} />
+          </Flex>
+          <Heading as="h3" size="md" mb={2} color={headingColor}>
+            Thương hiệu
+          </Heading>
+          <Text color={textColor}>
+            Hướng dẫn sử dụng logo, bảng màu, và các yếu tố thương hiệu chính
+            thức của EventHub.
+          </Text>
+        </Box>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Flex
+            mb={4}
+            w={12}
+            h={12}
+            bg={boxAccentBg}
+            color={accentColor}
+            borderRadius="full"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Icon as={FaImages} boxSize={5} />
+          </Flex>
+          <Heading as="h3" size="md" mb={2} color={headingColor}>
+            Tài nguyên
+          </Heading>
+          <Text color={textColor}>
+            Truy cập và tải xuống hình ảnh, logo, và các tài liệu truyền thông
+            của EventHub.
+          </Text>
+        </Box>
+      </SimpleGrid>
+
       {/* Về chúng tôi */}
-      <Box mb={16} bg={sectionBg} p={8} borderRadius="lg">
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
         <Heading as="h2" size="xl" mb={6} color={headingColor}>
           Về EventHub
         </Heading>
@@ -172,10 +279,12 @@ const PressKit = () => {
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mt={8}>
           <Box
             p={5}
-            bg={cardBg}
+            bg={bgColor}
             borderRadius="md"
             borderWidth="1px"
             borderColor={borderColor}
+            transition="all 0.3s"
+            _hover={{ shadow: "md" }}
           >
             <Heading as="h3" size="md" mb={2} color={headingColor}>
               Sứ mệnh
@@ -187,10 +296,12 @@ const PressKit = () => {
           </Box>
           <Box
             p={5}
-            bg={cardBg}
+            bg={bgColor}
             borderRadius="md"
             borderWidth="1px"
             borderColor={borderColor}
+            transition="all 0.3s"
+            _hover={{ shadow: "md" }}
           >
             <Heading as="h3" size="md" mb={2} color={headingColor}>
               Tầm nhìn
@@ -202,10 +313,12 @@ const PressKit = () => {
           </Box>
           <Box
             p={5}
-            bg={cardBg}
+            bg={bgColor}
             borderRadius="md"
             borderWidth="1px"
             borderColor={borderColor}
+            transition="all 0.3s"
+            _hover={{ shadow: "md" }}
           >
             <Heading as="h3" size="md" mb={2} color={headingColor}>
               Giá trị cốt lõi
@@ -218,48 +331,45 @@ const PressKit = () => {
       </Box>
 
       {/* Bảng màu thương hiệu */}
-      <Box mb={16}>
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
         <Heading as="h2" size="xl" mb={6} color={headingColor}>
           Bảng màu thương hiệu
         </Heading>
         <Text fontSize="lg" mb={8} color={textColor}>
-          Màu sắc thương hiệu của EventHub phản ánh sự chuyên nghiệp, đáng tin
-          cậy và thân thiện. Vui lòng sử dụng các mã màu dưới đây để đảm bảo
-          tính nhất quán.
+          Màu sắc chính thức của EventHub. Sử dụng chúng để đảm bảo tính nhất
+          quán khi trình bày về thương hiệu của chúng tôi.
         </Text>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
           {brandColors.map((color) => (
             <Box
               key={color.name}
-              borderRadius="md"
-              overflow="hidden"
               borderWidth="1px"
               borderColor={borderColor}
+              borderRadius="md"
+              overflow="hidden"
+              transition="all 0.3s"
+              _hover={{ shadow: "md" }}
             >
-              <Box
-                h="120px"
-                bg={color.hex}
-                display="flex"
-                alignItems="flex-end"
-                p={4}
-              >
-                <Text
-                  color="white"
-                  fontWeight="bold"
-                  textShadow="0px 0px 8px rgba(0,0,0,0.3)"
-                >
-                  {color.name}
-                </Text>
-              </Box>
-              <Box p={4} bg={cardBg}>
+              <Box h="100px" bg={color.hex} />
+              <Box p={4} bg={bgColor}>
                 <Text fontWeight="bold" mb={1}>
                   {color.name}
                 </Text>
-                <Text fontSize="sm" mb={1}>
+                <Text fontSize="sm" color={textColor}>
                   HEX: {color.hex}
                 </Text>
-                <Text fontSize="sm">RGB: {color.rgb}</Text>
+                <Text fontSize="sm" color={textColor}>
+                  RGB: {color.rgb}
+                </Text>
               </Box>
             </Box>
           ))}
@@ -267,7 +377,15 @@ const PressKit = () => {
       </Box>
 
       {/* Logo */}
-      <Box mb={16}>
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
         <Heading as="h2" size="xl" mb={6} color={headingColor}>
           Logo
         </Heading>
@@ -284,6 +402,8 @@ const PressKit = () => {
               borderColor={borderColor}
               borderRadius="md"
               overflow="hidden"
+              transition="all 0.3s"
+              _hover={{ shadow: "md" }}
             >
               <Box
                 h="200px"
@@ -300,7 +420,7 @@ const PressKit = () => {
                   fallbackSrc="https://via.placeholder.com/300x150?text=EventHub+Logo"
                 />
               </Box>
-              <Box p={4} bg={cardBg}>
+              <Box p={4} bg={bgColor}>
                 <Flex justify="space-between" align="center">
                   <VStack align="start" spacing={0}>
                     <Text fontWeight="bold">{logo.name}</Text>
@@ -324,7 +444,15 @@ const PressKit = () => {
       </Box>
 
       {/* Bộ truyền thông */}
-      <Box mb={16}>
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
         <Heading as="h2" size="xl" mb={6} color={headingColor}>
           Bộ truyền thông
         </Heading>
@@ -341,7 +469,9 @@ const PressKit = () => {
               borderColor={borderColor}
               borderRadius="md"
               p={6}
-              bg={cardBg}
+              bg={bgColor}
+              transition="all 0.3s"
+              _hover={{ shadow: "md" }}
             >
               <HStack spacing={4} align="start">
                 <Box
@@ -360,7 +490,7 @@ const PressKit = () => {
                     {kit.description}
                   </Text>
                   <HStack>
-                    <Badge>{kit.format}</Badge>
+                    <Badge colorScheme={buttonColorScheme}>{kit.format}</Badge>
                     <Text fontSize="xs" color={textColor}>
                       {kit.fileSize}
                     </Text>
@@ -381,9 +511,26 @@ const PressKit = () => {
       </Box>
 
       {/* Thông cáo báo chí */}
-      <Box mb={16}>
-        <Heading as="h2" size="xl" mb={6} color={headingColor}>
-          Thông cáo báo chí
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
+        <Heading
+          as="h2"
+          size="xl"
+          mb={6}
+          color={headingColor}
+          id="press-releases"
+        >
+          <Flex align="center">
+            <Icon as={FaNewspaper} mr={3} color={accentColor} />
+            Thông cáo báo chí
+          </Flex>
         </Heading>
         <Text fontSize="lg" mb={8} color={textColor}>
           Các thông cáo báo chí mới nhất về EventHub và hoạt động của chúng tôi.
@@ -397,7 +544,9 @@ const PressKit = () => {
               borderColor={borderColor}
               borderRadius="md"
               p={6}
-              bg={cardBg}
+              bg={bgColor}
+              transition="all 0.3s"
+              _hover={{ shadow: "md" }}
             >
               <VStack align="start" spacing={3}>
                 <Text color={textColor} fontSize="sm">
@@ -422,97 +571,152 @@ const PressKit = () => {
       </Box>
 
       {/* Câu hỏi thường gặp */}
-      <Box mb={16}>
+      <Box
+        mb={10}
+        p={8}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
         <Heading as="h2" size="xl" mb={6} color={headingColor}>
           Câu hỏi thường gặp
         </Heading>
+        <Text fontSize="lg" mb={8} color={textColor}>
+          Các câu hỏi thường gặp về việc sử dụng thương hiệu và tài sản của
+          EventHub.
+        </Text>
+
         <Accordion allowToggle>
-          <AccordionItem
-            borderWidth="1px"
-            mb={3}
-            borderRadius="md"
-            borderColor={borderColor}
-            overflow="hidden"
-          >
-            <h3>
-              <AccordionButton py={3} _expanded={{ bg: boxAccentBg }}>
+          <AccordionItem borderTopWidth="0" borderBottomWidth="1px">
+            <h2>
+              <AccordionButton py={4}>
                 <Box flex="1" textAlign="left" fontWeight="medium">
-                  Có thể sử dụng logo EventHub trong bài viết của tôi không?
+                  Tôi có thể sử dụng logo EventHub trong bài báo của mình không?
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
-            </h3>
-            <AccordionPanel pb={4}>
-              <Text>
-                Có, bạn có thể sử dụng logo EventHub trong các bài viết hoặc nội
-                dung truyền thông về chúng tôi. Tuy nhiên, vui lòng không thay
-                đổi màu sắc, tỷ lệ, hoặc các yếu tố thiết kế của logo. Chúng tôi
-                cũng yêu cầu bạn không sử dụng logo để ngụ ý rằng chúng tôi tài
-                trợ hoặc ủng hộ sản phẩm/dịch vụ của bạn nếu không có sự chấp
-                thuận chính thức.
-              </Text>
+            </h2>
+            <AccordionPanel pb={4} color={textColor}>
+              Có, bạn có thể sử dụng logo EventHub trong các bài báo, bài viết
+              và bài đăng trên blog với điều kiện bạn tuân thủ hướng dẫn sử dụng
+              thương hiệu của chúng tôi. Vui lòng không thay đổi màu sắc, tỷ lệ
+              hoặc bố cục của logo.
             </AccordionPanel>
           </AccordionItem>
 
-          <AccordionItem
-            borderWidth="1px"
-            mb={3}
-            borderRadius="md"
-            borderColor={borderColor}
-            overflow="hidden"
-          >
-            <h3>
-              <AccordionButton py={3} _expanded={{ bg: boxAccentBg }}>
+          <AccordionItem borderBottomWidth="1px">
+            <h2>
+              <AccordionButton py={4}>
                 <Box flex="1" textAlign="left" fontWeight="medium">
-                  Tôi có thể liên hệ với ai để biết thêm thông tin?
+                  Tôi có cần xin phép trước khi sử dụng tài sản thương hiệu
+                  không?
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
-            </h3>
-            <AccordionPanel pb={4}>
-              <Text>
-                Nếu bạn cần thêm thông tin về EventHub hoặc có bất kỳ câu hỏi
-                nào về bộ công cụ truyền thông này, vui lòng liên hệ với chúng
-                tôi qua email: press@eventhub.example.com. Đội ngũ truyền thông
-                của chúng tôi sẽ phản hồi trong thời gian sớm nhất.
-              </Text>
+            </h2>
+            <AccordionPanel pb={4} color={textColor}>
+              Không cần xin phép trước nếu bạn sử dụng tài sản thương hiệu theo
+              đúng hướng dẫn của chúng tôi và cho mục đích báo chí, giáo dục
+              hoặc phi thương mại. Tuy nhiên, đối với các mục đích thương mại
+              hoặc quảng cáo, vui lòng liên hệ với chúng tôi để được chấp thuận.
+            </AccordionPanel>
+          </AccordionItem>
+
+          <AccordionItem borderBottomWidth="0">
+            <h2>
+              <AccordionButton py={4}>
+                <Box flex="1" textAlign="left" fontWeight="medium">
+                  Tôi có thể sử dụng lại nội dung từ trang web EventHub không?
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4} color={textColor}>
+              Bạn có thể trích dẫn thông tin từ trang web của chúng tôi miễn là
+              bạn cung cấp nguồn thích hợp và liên kết đến trang web của chúng
+              tôi. Việc sao chép hoặc sử dụng lại một lượng lớn nội dung có thể
+              yêu cầu sự cho phép rõ ràng.
             </AccordionPanel>
           </AccordionItem>
         </Accordion>
       </Box>
 
       {/* Liên hệ */}
-      <Box mb={12} p={8} borderRadius="lg" bg={sectionBg}>
-        <Heading
-          as="h2"
-          size="xl"
-          mb={6}
-          color={headingColor}
-          textAlign="center"
-        >
-          Liên hệ với đội ngũ truyền thông
+      <Box mb={10} p={8} bg={boxAccentBg} borderRadius="lg" textAlign="center">
+        <Heading as="h2" size="lg" mb={4} color={headingColor}>
+          Bạn cần thêm thông tin?
         </Heading>
-        <Text fontSize="lg" mb={8} textAlign="center" color={textColor}>
-          Bạn cần hỗ trợ thêm về truyền thông hoặc có yêu cầu đặc biệt? Hãy liên
-          hệ với chúng tôi.
+        <Text fontSize="lg" mb={6} color={textColor}>
+          Nếu bạn có câu hỏi thêm về bộ công cụ truyền thông hoặc cần hỗ trợ,
+          vui lòng liên hệ với bộ phận truyền thông của chúng tôi.
         </Text>
-
-        <Center>
-          <Button
-            leftIcon={<FaEnvelope />}
-            colorScheme={buttonColorScheme}
-            size="lg"
-            as={ChakraLink}
-            href="mailto:press@eventhub.example.com"
-          >
-            press@eventhub.example.com
-          </Button>
-        </Center>
+        <Button
+          colorScheme={buttonColorScheme}
+          size="lg"
+          leftIcon={<FaEnvelope />}
+          as={Link}
+          to="/contact-us"
+        >
+          Liên hệ với chúng tôi
+        </Button>
       </Box>
 
-      {/* Footer */}
-      <Divider my={6} />
-      <Text textAlign="center" fontSize="sm" color={textColor}>
+      {/* Tài liệu liên quan */}
+      <Box mb={16}>
+        <Heading as="h2" size="xl" mb={6} color={headingColor}>
+          Tài liệu liên quan
+        </Heading>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+          <VStack
+            as={Link}
+            to="/about-us"
+            p={5}
+            bg={bgColor}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+            transition="all 0.2s"
+            _hover={{ textDecor: "none", shadow: "md" }}
+          >
+            <Icon as={FaUserTie} boxSize={6} color={accentColor} />
+            <Text fontWeight="medium">Về chúng tôi</Text>
+          </VStack>
+          <VStack
+            as={Link}
+            to="/contact-us"
+            p={5}
+            bg={bgColor}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+            transition="all 0.2s"
+            _hover={{ textDecor: "none", shadow: "md" }}
+          >
+            <Icon as={FaEnvelope} boxSize={6} color={accentColor} />
+            <Text fontWeight="medium">Liên hệ</Text>
+          </VStack>
+          <VStack
+            as={Link}
+            to="/help-center"
+            p={5}
+            bg={bgColor}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={borderColor}
+            transition="all 0.2s"
+            _hover={{ textDecor: "none", shadow: "md" }}
+          >
+            <Icon as={FaFileAlt} boxSize={6} color={accentColor} />
+            <Text fontWeight="medium">Trung tâm trợ giúp</Text>
+          </VStack>
+        </SimpleGrid>
+      </Box>
+
+      {/* Footer note */}
+      <Divider my={10} />
+      <Text fontSize="sm" textAlign="center" color={textColor}>
         © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
         triển hệ thống web, UIT.
       </Text>
