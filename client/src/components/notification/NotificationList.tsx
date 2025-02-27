@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   VStack,
@@ -17,6 +17,15 @@ import {
   MenuItem,
   useToast,
   Tooltip,
+  Divider,
+  Center,
+  Image,
+  Skeleton,
+  SkeletonText,
+  SkeletonCircle,
+  Fade,
+  SlideFade,
+  ScaleFade,
 } from "@chakra-ui/react";
 import {
   FiCalendar,
@@ -28,8 +37,12 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiMessageCircle,
+  FiEye,
+  FiClock,
+  FiChevronRight,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 // Định nghĩa kiểu thông báo
 export type NotificationType =
@@ -64,6 +77,9 @@ interface NotificationListProps {
   isHeaderVisible?: boolean;
 }
 
+// Thành phần Animation cho mỗi phần tử thông báo
+const MotionBox = motion(Box);
+
 /**
  * Component hiển thị danh sách các thông báo của người dùng
  * Có thể hiển thị dưới dạng danh sách đầy đủ hoặc chỉ hiển thị số lượng giới hạn (cho dropdown)
@@ -78,12 +94,16 @@ const NotificationList = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const toast = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Style colors
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const hoverBgColor = useColorModeValue("gray.50", "gray.700");
   const unreadBadgeBg = useColorModeValue("teal.500", "teal.300");
+  const itemBgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const mutedTextColor = useColorModeValue("gray.500", "gray.400");
 
   // Lấy dữ liệu thông báo (giả lập - trong thực tế sẽ gọi API)
   useEffect(() => {
@@ -99,37 +119,37 @@ const NotificationList = ({
           {
             id: "1",
             type: "event_reminder",
-            title: "Event Reminder",
+            title: "Nhắc nhở sự kiện",
             message:
-              "Tech Conference 2023 starts in 2 days! Don't forget to check in at 9 AM.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+              "Hội nghị Công nghệ 2023 sẽ bắt đầu trong 2 ngày! Đừng quên check-in lúc 9 giờ sáng.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 giờ trước
             isRead: false,
             data: {
               eventId: "ev-123",
-              eventTitle: "Tech Conference 2023",
+              eventTitle: "Hội nghị Công nghệ 2023",
             },
           },
           {
             id: "2",
             type: "ticket_confirmation",
-            title: "Ticket Confirmed",
+            title: "Vé đã được xác nhận",
             message:
-              "Your ticket for React Workshop has been confirmed. You can view it in My Tickets.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+              "Vé tham dự Hội thảo React của bạn đã được xác nhận. Bạn có thể xem vé trong phần Vé của tôi.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 ngày trước
             isRead: true,
             data: {
               eventId: "ev-456",
-              eventTitle: "React Workshop",
-              ticketId: "TIX-7890",
+              eventTitle: "Hội thảo React",
+              ticketId: "VE-7890",
             },
           },
           {
             id: "3",
             type: "event_update",
-            title: "Event Updated",
+            title: "Thông tin sự kiện đã cập nhật",
             message:
-              "The venue for JavaScript Meetup has changed. Please check the event details.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36), // 1.5 days ago
+              "Địa điểm tổ chức JavaScript Meetup đã thay đổi. Vui lòng kiểm tra thông tin sự kiện.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36), // 1.5 ngày trước
             isRead: false,
             data: {
               eventId: "ev-789",
@@ -139,46 +159,46 @@ const NotificationList = ({
           {
             id: "4",
             type: "system_message",
-            title: "Profile Updated",
-            message: "Your profile information has been updated successfully.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 days ago
+            title: "Hồ sơ đã cập nhật",
+            message: "Thông tin hồ sơ của bạn đã được cập nhật thành công.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 ngày trước
             isRead: true,
           },
           {
             id: "5",
             type: "event_invite",
-            title: "Event Invitation",
+            title: "Lời mời tham dự sự kiện",
             message:
-              "You've been invited to Product Launch Party by John Smith.",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96), // 4 days ago
+              "Bạn đã được Nguyễn Văn A mời tham dự sự kiện Ra mắt sản phẩm.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96), // 4 ngày trước
             isRead: false,
             data: {
               eventId: "ev-101",
-              eventTitle: "Product Launch Party",
+              eventTitle: "Ra mắt sản phẩm",
               userId: "user-123",
             },
           },
           {
             id: "6",
             type: "event_reminder",
-            title: "Check-in Opens Soon",
+            title: "Check-in sắp mở",
             message:
-              "Check-in for UX Design Basics opens tomorrow at 8 AM. Be prepared!",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120), // 5 days ago
+              "Check-in cho khóa học Cơ bản về thiết kế UX sẽ mở vào ngày mai lúc 8 giờ sáng. Hãy chuẩn bị sẵn sàng!",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120), // 5 ngày trước
             isRead: true,
             data: {
               eventId: "ev-202",
-              eventTitle: "UX Design Basics",
+              eventTitle: "Cơ bản về thiết kế UX",
             },
           },
         ];
 
         setNotifications(mockNotifications);
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        console.error("Lỗi khi tải thông báo:", error);
         toast({
-          title: "Error",
-          description: "Could not load notifications",
+          title: "Lỗi",
+          description: "Không thể tải thông báo",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -200,10 +220,11 @@ const NotificationList = ({
     );
 
     toast({
-      title: "Notification marked as read",
+      title: "Đã đánh dấu là đã đọc",
       status: "success",
       duration: 2000,
       isClosable: true,
+      position: "top",
     });
   };
 
@@ -214,10 +235,11 @@ const NotificationList = ({
     setNotifications((prev) => prev.filter((item) => item.id !== id));
 
     toast({
-      title: "Notification deleted",
+      title: "Đã xóa thông báo",
       status: "success",
       duration: 2000,
       isClosable: true,
+      position: "top",
     });
   };
 
@@ -244,25 +266,30 @@ const NotificationList = ({
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return "Just now";
+      return "Vừa xong";
     }
 
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
-      return `${diffInMinutes} min ago`;
+      return `${diffInMinutes} phút trước`;
     }
 
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-      return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+      return `${diffInHours} giờ trước`;
     }
 
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) {
-      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+      return `${diffInDays} ngày trước`;
     }
 
-    return date.toLocaleDateString();
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    };
+    return date.toLocaleDateString("vi-VN", options);
   };
 
   // Hàm lấy icon dựa trên loại thông báo
@@ -332,10 +359,11 @@ const NotificationList = ({
     setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
 
     toast({
-      title: "All notifications marked as read",
+      title: "Đã đánh dấu tất cả là đã đọc",
       status: "success",
       duration: 2000,
       isClosable: true,
+      position: "top",
     });
 
     if (onMarkAllAsRead) {
@@ -346,13 +374,36 @@ const NotificationList = ({
   if (isLoading) {
     return (
       <Box padding={4} width="100%">
-        <Text>Loading notifications...</Text>
+        <Skeleton height="40px" width="200px" mb={4} />
+        <SkeletonText noOfLines={1} mb={2} />
+        {[1, 2, 3].map((index) => (
+          <Box
+            key={index}
+            p={4}
+            borderBottom="1px solid"
+            borderColor={borderColor}
+          >
+            <Flex>
+              <SkeletonCircle size="10" mr={3} />
+              <Box flex="1">
+                <SkeletonText noOfLines={2} mb={2} />
+                <Skeleton height="20px" width="120px" />
+              </Box>
+            </Flex>
+          </Box>
+        ))}
       </Box>
     );
   }
 
   return (
-    <Box width="100%">
+    <Box
+      width="100%"
+      bg={bgColor}
+      borderRadius="md"
+      overflow="hidden"
+      boxShadow="sm"
+    >
       {isHeaderVisible && (
         <Flex
           justify="space-between"
@@ -360,12 +411,14 @@ const NotificationList = ({
           p={4}
           borderBottom="1px solid"
           borderColor={borderColor}
+          bg={useColorModeValue("gray.50", "gray.900")}
         >
           <HStack>
-            <Heading size="md">Notifications</Heading>
+            <Icon as={FiBell} color="teal.500" fontSize="xl" mr={1} />
+            <Heading size="md">Thông báo</Heading>
             {unreadCount > 0 && (
               <Badge borderRadius="full" px="2" colorScheme="teal">
-                {unreadCount} new
+                {unreadCount} mới
               </Badge>
             )}
           </HStack>
@@ -377,8 +430,10 @@ const NotificationList = ({
                 variant="ghost"
                 onClick={handleMarkAllAsRead}
                 leftIcon={<FiCheck />}
+                color="teal.500"
+                _hover={{ bg: "teal.50", color: "teal.600" }}
               >
-                Mark all as read
+                Đánh dấu đã đọc
               </Button>
             )}
           </HStack>
@@ -386,111 +441,180 @@ const NotificationList = ({
       )}
 
       {displayedNotifications.length === 0 ? (
-        <Box p={4} textAlign="center">
-          <Icon as={FiBell} fontSize="2xl" mb={2} />
-          <Text>No notifications yet</Text>
+        <Box p={6} textAlign="center">
+          <Center flexDirection="column" p={4}>
+            <Icon as={FiBell} fontSize="3xl" mb={3} color="gray.400" />
+            <Text color={textColor} fontSize="md">
+              Chưa có thông báo nào
+            </Text>
+            <Text color={mutedTextColor} fontSize="sm" mt={1}>
+              Chúng tôi sẽ thông báo cho bạn khi có tin mới
+            </Text>
+          </Center>
         </Box>
       ) : (
-        <VStack spacing={0} align="stretch" maxH="400px" overflowY="auto">
-          {displayedNotifications.map((notification) => (
-            <Box
+        <VStack
+          spacing={0}
+          align="stretch"
+          maxH="400px"
+          overflowY="auto"
+          ref={scrollRef}
+          css={{
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "rgba(0, 0, 0, 0.1)",
+              borderRadius: "3px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              background: "rgba(0, 0, 0, 0.2)",
+            },
+          }}
+        >
+          {displayedNotifications.map((notification, index) => (
+            <SlideFade
+              in={true}
+              offsetY="10px"
               key={notification.id}
-              p={4}
-              borderBottom="1px solid"
-              borderColor={borderColor}
-              bg={notification.isRead ? "transparent" : hoverBgColor}
-              _hover={{ bg: hoverBgColor }}
-              cursor="pointer"
-              onClick={() => handleItemClick(notification)}
-              position="relative"
+              delay={index * 0.05}
             >
-              <HStack align="start" spacing={3}>
-                <Box
-                  bg={`${getNotificationColor(notification.type)}.100`}
-                  color={`${getNotificationColor(notification.type)}.500`}
-                  p={2}
-                  borderRadius="md"
-                >
-                  <Icon
-                    as={getNotificationIcon(notification.type)}
-                    fontSize="xl"
-                  />
-                </Box>
-
-                <Box flex="1">
-                  <HStack justify="space-between" align="start" mb={1}>
-                    <Text fontWeight="bold">{notification.title}</Text>
-                    <Menu isLazy>
-                      <MenuButton
-                        as={IconButton}
-                        aria-label="Notification options"
-                        icon={<FiMoreVertical />}
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <MenuList shadow="md">
-                        {!notification.isRead && (
-                          <MenuItem
-                            icon={<FiCheck />}
-                            onClick={(e) =>
-                              handleMarkAsRead(notification.id, e)
-                            }
-                          >
-                            Mark as read
-                          </MenuItem>
-                        )}
-                        <MenuItem
-                          icon={<FiTrash2 />}
-                          onClick={(e) => handleDelete(notification.id, e)}
-                        >
-                          Delete
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
-                  </HStack>
-
-                  <Text color="gray.600" fontSize="sm" mb={2}>
-                    {notification.message}
-                  </Text>
-
-                  <HStack
-                    justify="space-between"
-                    fontSize="xs"
-                    color="gray.500"
+              <MotionBox
+                p={4}
+                borderBottom="1px solid"
+                borderColor={borderColor}
+                bg={
+                  notification.isRead
+                    ? itemBgColor
+                    : useColorModeValue("teal.50", "rgba(129, 230, 217, 0.08)")
+                }
+                _hover={{ bg: hoverBgColor }}
+                cursor="pointer"
+                onClick={() => handleItemClick(notification)}
+                position="relative"
+                transition="all 0.2s"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                borderLeft={notification.isRead ? "none" : "4px solid"}
+                borderLeftColor={`${getNotificationColor(
+                  notification.type
+                )}.500`}
+              >
+                <HStack align="start" spacing={3}>
+                  <Box
+                    bg={`${getNotificationColor(notification.type)}.100`}
+                    color={`${getNotificationColor(notification.type)}.500`}
+                    p={2}
+                    borderRadius="lg"
+                    boxShadow="sm"
                   >
-                    <Text>{getRelativeTime(notification.timestamp)}</Text>
-
-                    {notification.data?.eventId && (
-                      <Button
-                        as={Link}
-                        to={getNotificationLink(notification)}
-                        variant="link"
-                        color="teal.500"
-                        size="xs"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        View details
-                      </Button>
-                    )}
-                  </HStack>
-                </Box>
-
-                {!notification.isRead && (
-                  <Tooltip label="Unread notification">
-                    <Box
-                      position="absolute"
-                      top="4"
-                      right="4"
-                      width="10px"
-                      height="10px"
-                      borderRadius="full"
-                      bg={unreadBadgeBg}
+                    <Icon
+                      as={getNotificationIcon(notification.type)}
+                      fontSize="xl"
                     />
-                  </Tooltip>
-                )}
-              </HStack>
-            </Box>
+                  </Box>
+
+                  <Box flex="1">
+                    <HStack justify="space-between" align="start" mb={1}>
+                      <Text
+                        fontWeight={notification.isRead ? "medium" : "bold"}
+                        fontSize="md"
+                        color={textColor}
+                      >
+                        {notification.title}
+                      </Text>
+                      <Menu isLazy>
+                        <MenuButton
+                          as={IconButton}
+                          aria-label="Tùy chọn thông báo"
+                          icon={<FiMoreVertical />}
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          _hover={{ bg: "transparent", color: "teal.500" }}
+                        />
+                        <MenuList shadow="lg" rounded="md">
+                          {!notification.isRead && (
+                            <MenuItem
+                              icon={<FiCheck color="green.500" />}
+                              onClick={(e) =>
+                                handleMarkAsRead(notification.id, e)
+                              }
+                            >
+                              Đánh dấu đã đọc
+                            </MenuItem>
+                          )}
+                          <MenuItem
+                            icon={<FiTrash2 color="red.500" />}
+                            onClick={(e) => handleDelete(notification.id, e)}
+                          >
+                            Xóa thông báo
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
+                    </HStack>
+
+                    <Text
+                      color={useColorModeValue("gray.600", "gray.300")}
+                      fontSize="sm"
+                      mb={2}
+                      fontWeight={notification.isRead ? "normal" : "medium"}
+                    >
+                      {notification.message}
+                    </Text>
+
+                    <HStack
+                      justify="space-between"
+                      fontSize="xs"
+                      color={mutedTextColor}
+                      mt={2}
+                    >
+                      <HStack spacing={1} opacity={0.9}>
+                        <Icon as={FiClock} fontSize="xs" />
+                        <Text>{getRelativeTime(notification.timestamp)}</Text>
+                      </HStack>
+
+                      {notification.data?.eventId && (
+                        <Button
+                          as={Link}
+                          to={getNotificationLink(notification)}
+                          variant="ghost"
+                          color="teal.500"
+                          size="xs"
+                          height="auto"
+                          rightIcon={<FiChevronRight />}
+                          fontWeight="medium"
+                          onClick={(e) => e.stopPropagation()}
+                          _hover={{
+                            bg: "transparent",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                      )}
+                    </HStack>
+                  </Box>
+
+                  {!notification.isRead && (
+                    <Tooltip label="Thông báo chưa đọc" placement="left">
+                      <Box
+                        position="absolute"
+                        top="4"
+                        right="4"
+                        width="8px"
+                        height="8px"
+                        borderRadius="full"
+                        bg={unreadBadgeBg}
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
+              </MotionBox>
+            </SlideFade>
           ))}
         </VStack>
       )}
@@ -501,6 +625,7 @@ const NotificationList = ({
           p={3}
           borderTop="1px solid"
           borderColor={borderColor}
+          bg={useColorModeValue("gray.50", "gray.900")}
         >
           <Button
             as={Link}
@@ -508,8 +633,11 @@ const NotificationList = ({
             variant="ghost"
             size="sm"
             width="100%"
+            rightIcon={<FiChevronRight />}
+            color="teal.500"
+            _hover={{ bg: "teal.50", color: "teal.600" }}
           >
-            View all ({notifications.length})
+            Xem tất cả ({notifications.length})
           </Button>
         </Flex>
       )}
