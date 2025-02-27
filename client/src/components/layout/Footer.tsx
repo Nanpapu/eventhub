@@ -191,9 +191,6 @@ export default function Footer() {
           <Stack align={"flex-start"}>
             <ListHeader>Hỗ trợ</ListHeader>
             <ChakraLink as={Link} to={"/help"}>
-              Câu hỏi thường gặp
-            </ChakraLink>
-            <ChakraLink as={Link} to={"/faq"}>
               Trung tâm trợ giúp
             </ChakraLink>
             {isOrganizer ? (

@@ -472,15 +472,10 @@ const TermsOfService = () => {
 
       {/* Hành động */}
       <HStack justify="center" mt={10} mb={6} spacing={6}>
-        <Button
-          as={Link}
-          to="/info/privacy-policy"
-          colorScheme="blue"
-          variant="outline"
-        >
+        <Button as={Link} to="/privacy" colorScheme="blue" variant="outline">
           Xem Chính sách Riêng tư
         </Button>
-        <Button as={Link} to="/info/contact-us" colorScheme="blue">
+        <Button as={Link} to="/contact" colorScheme="blue">
           Liên hệ với chúng tôi
         </Button>
       </HStack>

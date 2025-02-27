@@ -24,7 +24,6 @@ import {
 } from "./pages/index";
 import {
   AboutUs,
-  FAQ,
   PrivacyPolicy,
   TermsOfService,
   HelpCenter,
@@ -71,7 +70,6 @@ export const router = createBrowserRouter(
         <Route path="/about" element={<AboutUs />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
-        <Route path="/faq" element={<FAQ />} />
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/community" element={<Community />} />
         <Route path="/press" element={<PressKit />} />

@@ -1,6 +1,5 @@
 // Export components from info directory
 import AboutUs from "./AboutUs";
-import FAQ from "./FAQ";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsOfService from "./TermsOfService";
 import HelpCenter from "./HelpCenter";
@@ -11,7 +10,6 @@ import BecomeOrganizer from "./BecomeOrganizer";
 
 export {
   AboutUs,
-  FAQ,
   PrivacyPolicy,
   TermsOfService,
   HelpCenter,

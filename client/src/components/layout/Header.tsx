@@ -594,16 +594,10 @@ const NAV_ITEMS: Array<NavItem> = [
     labelKey: "footer.faq",
     children: [
       {
-        label: "Câu hỏi thường gặp",
+        label: "Trung tâm trợ giúp",
         labelKey: "footer.help",
         subLabel: "Giải đáp các câu hỏi phổ biến",
         href: "/help",
-      },
-      {
-        label: "Trung tâm trợ giúp",
-        labelKey: "footer.faq",
-        subLabel: "Hướng dẫn chi tiết về EventHub",
-        href: "/faq",
       },
       {
         label: "Trở thành nhà tổ chức",
