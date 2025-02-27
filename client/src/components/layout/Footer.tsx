@@ -13,6 +13,8 @@ import {
   Input,
   IconButton,
   useToast,
+  Divider,
+  HStack,
 } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
 import { FaTwitter, FaYoutube, FaInstagram, FaFacebookF } from "react-icons/fa";
@@ -23,7 +25,7 @@ import { BiMailSend } from "react-icons/bi";
 
 const ListHeader = ({ children }: { children: ReactNode }) => {
   return (
-    <Text fontWeight={"500"} fontSize={"lg"} mb={2}>
+    <Text fontWeight={"600"} fontSize={"md"} mb={3} color="teal.500">
       {children}
     </Text>
   );
@@ -72,12 +74,13 @@ export default function Footer() {
   const isOrganizer = false;
 
   // Thiết lập màu sắc theo theme
-  const bgColor = useColorModeValue("white", "gray.900");
+  const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const logoColor = useColorModeValue("teal.600", "teal.300");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const formBg = useColorModeValue("gray.50", "gray.700");
+  const formBg = useColorModeValue("white", "gray.700");
+  const linkHoverColor = useColorModeValue("teal.600", "teal.300");
 
   // Xử lý đăng ký nhận thông báo
   const handleSubscribe = (e: React.FormEvent<HTMLFormElement>) => {
@@ -122,10 +125,12 @@ export default function Footer() {
       bg={bgColor}
       color={textColor}
       mt="auto" // Giúp footer luôn ở dưới cùng nếu nội dung trang không đủ cao
+      borderTopWidth="1px"
+      borderColor={borderColor}
     >
       <Container as={Stack} maxW={"6xl"} py={10}>
         <SimpleGrid
-          templateColumns={{ sm: "1fr 1fr", md: "2fr 1fr 1fr 2fr" }}
+          templateColumns={{ sm: "1fr 1fr", md: "1.5fr 1fr 1fr" }}
           spacing={8}
         >
           <Stack spacing={6}>
@@ -140,10 +145,16 @@ export default function Footer() {
                 EventHub
               </Heading>
             </Flex>
-            <Text fontSize={"sm"} color={secondaryTextColor}>
-              © 2025 EventHub Việt Nam. Đã đăng ký bản quyền
+            <Text
+              fontSize={"sm"}
+              color={secondaryTextColor}
+              maxW="320px"
+              lineHeight="1.6"
+            >
+              EventHub là nền tảng quản lý sự kiện hàng đầu tại Việt Nam, giúp
+              kết nối người tổ chức với người tham gia.
             </Text>
-            <Stack direction={"row"} spacing={6}>
+            <Stack direction={"row"} spacing={4}>
               <SocialButton
                 label={"Facebook"}
                 href={"https://facebook.com/eventhubvn"}
@@ -170,80 +181,129 @@ export default function Footer() {
               </SocialButton>
             </Stack>
           </Stack>
-          <Stack align={"flex-start"}>
-            <ListHeader>Về chúng tôi</ListHeader>
-            <ChakraLink as={Link} to={"/about"}>
+
+          <Stack align={"flex-start"} spacing={4}>
+            <ListHeader>Thông tin</ListHeader>
+            <ChakraLink
+              as={Link}
+              to={"/about"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
               Về chúng tôi
             </ChakraLink>
-            <ChakraLink as={Link} to={"/contact"}>
+            <ChakraLink
+              as={Link}
+              to={"/contact"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
               Liên hệ
             </ChakraLink>
-            <ChakraLink as={Link} to={"/press"}>
-              Bộ hồ sơ báo chí
+            <ChakraLink
+              as={Link}
+              to={"/press"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
+              Hồ sơ báo chí
             </ChakraLink>
-            <ChakraLink as={Link} to={"/privacy"}>
-              Chính sách bảo mật
-            </ChakraLink>
-            <ChakraLink as={Link} to={"/terms"}>
-              Điều khoản dịch vụ
-            </ChakraLink>
-          </Stack>
-          <Stack align={"flex-start"}>
-            <ListHeader>Hỗ trợ</ListHeader>
-            <ChakraLink as={Link} to={"/help"}>
+            <ChakraLink
+              as={Link}
+              to={"/help"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
               Trung tâm trợ giúp
             </ChakraLink>
+          </Stack>
+
+          <Stack align={"flex-start"} spacing={4}>
+            <ListHeader>Pháp lý & Hỗ trợ</ListHeader>
+            <ChakraLink
+              as={Link}
+              to={"/privacy"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
+              Chính sách riêng tư
+            </ChakraLink>
+            <ChakraLink
+              as={Link}
+              to={"/terms"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
+              Điều khoản dịch vụ
+            </ChakraLink>
             {isOrganizer ? (
-              <ChakraLink as={Link} to={"/dashboard"}>
+              <ChakraLink
+                as={Link}
+                to={"/dashboard"}
+                _hover={{ color: linkHoverColor, textDecoration: "none" }}
+              >
                 Bảng điều khiển tổ chức
               </ChakraLink>
             ) : (
-              <ChakraLink as={Link} to={"/become-organizer"}>
+              <ChakraLink
+                as={Link}
+                to={"/become-organizer"}
+                _hover={{ color: linkHoverColor, textDecoration: "none" }}
+              >
                 Trở thành nhà tổ chức
               </ChakraLink>
             )}
-            <ChakraLink as={Link} to={"/community"}>
-              Cộng đồng
-            </ChakraLink>
-            <ChakraLink as={Link} to={"/events/categories"}>
+            <ChakraLink
+              as={Link}
+              to={"/events/categories"}
+              _hover={{ color: linkHoverColor, textDecoration: "none" }}
+            >
               Khám phá danh mục
             </ChakraLink>
-            <ChakraLink as={Link} to={"/resources"}>
-              Tài nguyên
-            </ChakraLink>
-          </Stack>
-          <Stack align={"flex-start"}>
-            <ListHeader>Luôn cập nhật</ListHeader>
-            <Stack direction={"row"}>
-              <form onSubmit={handleSubscribe}>
-                <Stack direction={"row"}>
-                  <Input
-                    placeholder="Địa chỉ email của bạn"
-                    bg={formBg}
-                    border={1}
-                    borderStyle={"solid"}
-                    borderColor={borderColor}
-                    _focus={{
-                      bg: useColorModeValue("gray.100", "gray.600"),
-                    }}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <IconButton
-                    bg={"teal.500"}
-                    color={useColorModeValue("white", "gray.800")}
-                    _hover={{
-                      bg: "teal.600",
-                    }}
-                    aria-label="Đăng ký"
-                    type="submit"
-                    icon={<BiMailSend />}
-                  />
-                </Stack>
-              </form>
-            </Stack>
           </Stack>
         </SimpleGrid>
+
+        <Divider my={8} borderColor={borderColor} />
+
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems={{ base: "center", md: "flex-end" }}
+          gap={4}
+        >
+          <Box>
+            <Text fontSize={"sm"} color={secondaryTextColor}>
+              © {new Date().getFullYear()} EventHub Việt Nam | IE213 - Kỹ thuật
+              phát triển hệ thống web, UIT
+            </Text>
+          </Box>
+          <HStack spacing={3}>
+            <form onSubmit={handleSubscribe}>
+              <Stack direction={"row"}>
+                <Input
+                  placeholder="Đăng ký nhận tin mới"
+                  bg={formBg}
+                  size="sm"
+                  width="200px"
+                  borderRadius="md"
+                  border={1}
+                  borderStyle={"solid"}
+                  borderColor={borderColor}
+                  _focus={{
+                    borderColor: "teal.400",
+                  }}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <IconButton
+                  size="sm"
+                  bg={"teal.500"}
+                  color={useColorModeValue("white", "gray.800")}
+                  _hover={{
+                    bg: "teal.600",
+                  }}
+                  aria-label="Đăng ký"
+                  type="submit"
+                  icon={<BiMailSend />}
+                />
+              </Stack>
+            </form>
+          </HStack>
+        </Flex>
       </Container>
     </Box>
   );

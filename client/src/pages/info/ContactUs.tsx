@@ -17,9 +17,17 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  useColorModeValue,
+  Flex,
+  Divider,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+  FaQuestion,
+} from "react-icons/fa";
 import { IconType } from "react-icons";
 import { Link } from "react-router-dom";
 
@@ -47,30 +55,45 @@ const ContactInfo = ({
   title: string;
   content: string | React.ReactNode;
 }) => {
+  const accentColor = useColorModeValue("teal.500", "teal.300");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const bgColor = useColorModeValue("white", "gray.800");
+  const boxShadow = useColorModeValue("sm", "none");
+
   return (
-    <HStack spacing={4} align="flex-start">
-      <Box
-        p={3}
-        bg="teal.500"
-        borderRadius="full"
-        color="white"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Icon as={icon} w={5} h={5} />
-      </Box>
-      <Box>
-        <Text fontWeight="bold" fontSize="lg">
+    <Box
+      p={6}
+      bg={bgColor}
+      borderRadius="lg"
+      borderWidth="1px"
+      borderColor={borderColor}
+      boxShadow={boxShadow}
+      transition="all 0.3s"
+      _hover={{ shadow: "md" }}
+    >
+      <Flex justifyContent="start" alignItems="center" mb={4}>
+        <Box borderRadius="full" bg={accentColor} p={3} mr={4} color="white">
+          <Icon as={icon} boxSize={5} />
+        </Box>
+        <Heading as="h3" size="md">
           {title}
-        </Text>
-        <Text color="gray.600">{content}</Text>
-      </Box>
-    </HStack>
+        </Heading>
+      </Flex>
+      <Text>{content}</Text>
+    </Box>
   );
 };
 
 const ContactUs = () => {
+  // Colors cho dark/light mode - đồng bộ theo HelpCenter
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const accentColor = useColorModeValue("teal.500", "teal.300");
+  const hoverBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const headingColor = useColorModeValue("teal.600", "teal.300");
+  const boxShadow = useColorModeValue("sm", "none");
+
   const [formValues, setFormValues] = useState<FormValues>({
     name: "",
     email: "",
@@ -78,12 +101,10 @@ const ContactUs = () => {
     message: "",
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const toast = useToast();
 
-  // Xử lý thay đổi input
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -96,59 +117,58 @@ const ContactUs = () => {
     }));
 
     // Xóa lỗi khi người dùng bắt đầu nhập
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
+    if (formErrors[name as keyof FormErrors]) {
+      setFormErrors((prev) => ({
         ...prev,
         [name]: undefined,
       }));
     }
   };
 
-  // Xác thực form
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const errors: FormErrors = {};
+    let isValid = true;
 
     if (!formValues.name.trim()) {
-      newErrors.name = "Name is required";
+      errors.name = "Vui lòng nhập tên của bạn";
+      isValid = false;
     }
 
     if (!formValues.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(formValues.email)) {
-      newErrors.email = "Invalid email format";
+      errors.email = "Vui lòng nhập địa chỉ email";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
+      errors.email = "Địa chỉ email không hợp lệ";
+      isValid = false;
     }
 
     if (!formValues.subject.trim()) {
-      newErrors.subject = "Subject is required";
+      errors.subject = "Vui lòng nhập tiêu đề";
+      isValid = false;
     }
 
     if (!formValues.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formValues.message.trim().length < 10) {
-      newErrors.message = "Message must be at least 10 characters";
+      errors.message = "Vui lòng nhập nội dung tin nhắn";
+      isValid = false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFormErrors(errors);
+    return isValid;
   };
 
-  // Xử lý submit form
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (validateForm()) {
       setIsSubmitting(true);
 
-      // Giả lập gửi form
+      // Mô phỏng việc gửi form
       setTimeout(() => {
-        setIsSubmitting(false);
         toast({
-          title: "Message sent!",
-          description: "We'll get back to you as soon as possible.",
+          title: "Gửi tin nhắn thành công!",
+          description: "Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
           status: "success",
           duration: 5000,
           isClosable: true,
-          position: "top",
         });
 
         // Reset form
@@ -158,132 +178,215 @@ const ContactUs = () => {
           subject: "",
           message: "",
         });
+
+        setIsSubmitting(false);
       }, 1500);
     }
   };
 
   return (
-    <Container maxW="container.lg" py={8}>
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb mb={6} fontSize="sm">
+    <Container maxW="6xl" py={10}>
+      {/* Breadcrumb */}
+      <Breadcrumb mb={8} fontSize="sm" separator="/">
         <BreadcrumbItem>
           <BreadcrumbLink as={Link} to="/">
-            Home
+            Trang chủ
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Contact Us</BreadcrumbLink>
+          <BreadcrumbLink>Liên hệ</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
-      {/* Heading */}
-      <Heading as="h1" size="xl" mb={8} textAlign="center">
-        Contact Us
-      </Heading>
+      {/* Header */}
+      <Box mb={10} textAlign="center">
+        <Heading as="h1" size="2xl" mb={4} color={headingColor}>
+          Liên hệ với Chúng tôi
+        </Heading>
+        <Text fontSize="lg" maxW="2xl" mx="auto" color={textColor}>
+          Hãy cho chúng tôi biết bạn cần gì. Đội ngũ của chúng tôi sẽ phản hồi
+          sớm nhất có thể.
+        </Text>
+      </Box>
 
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
-        {/* Contact Form */}
-        <Box bg="white" p={6} boxShadow="md" borderRadius="lg">
-          <Heading as="h2" size="lg" mb={6}>
-            Send us a message
+      {/* Contact Information */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} mb={16}>
+        <ContactInfo
+          icon={FaMapMarkerAlt}
+          title="Địa chỉ"
+          content={
+            <>
+              Khu phố 6, Phường Linh Trung, TP.Thủ Đức,
+              <br />
+              TP.Hồ Chí Minh, Việt Nam
+            </>
+          }
+        />
+        <ContactInfo
+          icon={FaPhone}
+          title="Điện thoại"
+          content={
+            <>
+              +84 123 456 789
+              <br />
+              +84 987 654 321
+            </>
+          }
+        />
+        <ContactInfo
+          icon={FaEnvelope}
+          title="Email"
+          content={
+            <>
+              support@eventhub.example.com
+              <br />
+              info@eventhub.example.com
+            </>
+          }
+        />
+      </SimpleGrid>
+
+      {/* Contact Form */}
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} mb={16}>
+        <Box>
+          <Heading as="h2" size="xl" mb={4} color={headingColor}>
+            Gửi Tin nhắn
           </Heading>
-          <form onSubmit={handleSubmit}>
-            <VStack spacing={4}>
-              <FormControl isInvalid={!!errors.name}>
-                <FormLabel>Name</FormLabel>
-                <Input
-                  type="text"
-                  name="name"
-                  value={formValues.name}
-                  onChange={handleChange}
-                />
-                <FormErrorMessage>{errors.name}</FormErrorMessage>
-              </FormControl>
+          <Text mb={6} color={textColor}>
+            Vui lòng điền đầy đủ thông tin bên dưới và chúng tôi sẽ liên hệ lại
+            với bạn trong thời gian sớm nhất.
+          </Text>
 
-              <FormControl isInvalid={!!errors.email}>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formValues.email}
-                  onChange={handleChange}
-                />
-                <FormErrorMessage>{errors.email}</FormErrorMessage>
-              </FormControl>
+          <VStack as="form" spacing={6} onSubmit={handleSubmit} align="stretch">
+            <FormControl isRequired isInvalid={Boolean(formErrors.name)}>
+              <FormLabel>Tên của bạn</FormLabel>
+              <Input
+                type="text"
+                name="name"
+                placeholder="Nhập tên của bạn"
+                value={formValues.name}
+                onChange={handleChange}
+                focusBorderColor={accentColor}
+              />
+              <FormErrorMessage>{formErrors.name}</FormErrorMessage>
+            </FormControl>
 
-              <FormControl isInvalid={!!errors.subject}>
-                <FormLabel>Subject</FormLabel>
-                <Input
-                  type="text"
-                  name="subject"
-                  value={formValues.subject}
-                  onChange={handleChange}
-                />
-                <FormErrorMessage>{errors.subject}</FormErrorMessage>
-              </FormControl>
+            <FormControl isRequired isInvalid={Boolean(formErrors.email)}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                type="email"
+                name="email"
+                placeholder="Nhập địa chỉ email"
+                value={formValues.email}
+                onChange={handleChange}
+                focusBorderColor={accentColor}
+              />
+              <FormErrorMessage>{formErrors.email}</FormErrorMessage>
+            </FormControl>
 
-              <FormControl isInvalid={!!errors.message}>
-                <FormLabel>Message</FormLabel>
-                <Textarea
-                  name="message"
-                  value={formValues.message}
-                  onChange={handleChange}
-                  rows={5}
-                />
-                <FormErrorMessage>{errors.message}</FormErrorMessage>
-              </FormControl>
+            <FormControl isRequired isInvalid={Boolean(formErrors.subject)}>
+              <FormLabel>Tiêu đề</FormLabel>
+              <Input
+                type="text"
+                name="subject"
+                placeholder="Nhập tiêu đề tin nhắn"
+                value={formValues.subject}
+                onChange={handleChange}
+                focusBorderColor={accentColor}
+              />
+              <FormErrorMessage>{formErrors.subject}</FormErrorMessage>
+            </FormControl>
 
-              <Button
-                type="submit"
-                colorScheme="teal"
-                width="full"
-                isLoading={isSubmitting}
-                loadingText="Sending..."
-              >
-                Send Message
-              </Button>
-            </VStack>
-          </form>
+            <FormControl isRequired isInvalid={Boolean(formErrors.message)}>
+              <FormLabel>Tin nhắn</FormLabel>
+              <Textarea
+                name="message"
+                placeholder="Nhập nội dung tin nhắn"
+                value={formValues.message}
+                onChange={handleChange}
+                rows={6}
+                focusBorderColor={accentColor}
+              />
+              <FormErrorMessage>{formErrors.message}</FormErrorMessage>
+            </FormControl>
+
+            <Button
+              colorScheme="teal"
+              size="lg"
+              type="submit"
+              isLoading={isSubmitting}
+              loadingText="Đang gửi..."
+            >
+              Gửi Tin nhắn
+            </Button>
+          </VStack>
         </Box>
 
-        {/* Contact Information */}
         <Box>
-          <Heading as="h2" size="lg" mb={6}>
-            Contact Information
+          <Heading as="h2" size="xl" mb={4} color={headingColor}>
+            Câu hỏi Thường gặp
           </Heading>
-          <VStack spacing={6} align="stretch">
-            <ContactInfo
-              icon={FaMapMarkerAlt}
-              title="Address"
-              content="Khu phố 6, Linh Trung, Thủ Đức, Thành phố Hồ Chí Minh, Việt Nam"
-            />
-            <ContactInfo
-              icon={FaPhone}
-              title="Phone"
-              content="+84 28 3725 2002"
-            />
-            <ContactInfo
-              icon={FaEnvelope}
-              title="Email"
-              content="info@eventhub.example.com"
-            />
-          </VStack>
-
-          {/* Google Maps */}
-          <Box mt={8} h="300px" borderRadius="md" overflow="hidden">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.2311711962147!2d106.80086541546364!3d10.87001776040235!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317527587e9ad5bf%3A0xafa66f9c8be3c91!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBDw7RuZyBuZ2jhu4cgVGjDtG5nIHRpbiAtIMSQSFFHIFRQLkhDTQ!5e0!3m2!1svi!2s!4v1676447624261!5m2!1svi!2s"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="UIT Map"
-            />
+          <Text mb={6} color={textColor}>
+            Trước khi liên hệ, bạn có thể tìm thấy câu trả lời cho các câu hỏi
+            phổ biến trong Trung tâm trợ giúp của chúng tôi.
+          </Text>
+          <Box p={6} bg={hoverBg} borderRadius="lg" mb={8}>
+            <VStack align="start" spacing={4}>
+              <HStack>
+                <Icon as={FaQuestion} color={accentColor} />
+                <Text fontWeight="bold">Làm thế nào để tạo sự kiện?</Text>
+              </HStack>
+              <Text color={textColor}>
+                Để tạo sự kiện, đăng nhập vào tài khoản của bạn, nhấp vào "Tạo
+                sự kiện" và làm theo hướng dẫn.
+              </Text>
+            </VStack>
           </Box>
+          <Box p={6} bg={hoverBg} borderRadius="lg" mb={8}>
+            <VStack align="start" spacing={4}>
+              <HStack>
+                <Icon as={FaQuestion} color={accentColor} />
+                <Text fontWeight="bold">
+                  Làm thế nào để trở thành nhà tổ chức?
+                </Text>
+              </HStack>
+              <Text color={textColor}>
+                Để trở thành nhà tổ chức, hãy truy cập trang "Trở thành nhà tổ
+                chức" và hoàn tất quy trình đăng ký.
+              </Text>
+            </VStack>
+          </Box>
+          <Button
+            as={Link}
+            to="/help"
+            size="lg"
+            variant="outline"
+            colorScheme="teal"
+            width="100%"
+          >
+            Xem tất cả các câu hỏi
+          </Button>
         </Box>
       </SimpleGrid>
+
+      {/* Call to Action */}
+      <Box mt={16} p={8} bg={hoverBg} borderRadius="lg" textAlign="center">
+        <Heading as="h3" size="lg" mb={4} color={headingColor}>
+          Cần trợ giúp khẩn cấp?
+        </Heading>
+        <Text mb={6} color={textColor} maxW="2xl" mx="auto">
+          Đối với các vấn đề khẩn cấp hoặc hỗ trợ ngay lập tức, hãy gọi cho
+          chúng tôi theo số +84 123 456 789 trong giờ làm việc (8:00 - 17:00,
+          Thứ 2 - Thứ 6).
+        </Text>
+      </Box>
+
+      {/* Footer note */}
+      <Divider my={10} />
+      <Text fontSize="sm" textAlign="center" color={textColor}>
+        © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
+        triển hệ thống web, UIT.
+      </Text>
     </Container>
   );
 };

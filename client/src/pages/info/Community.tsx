@@ -28,6 +28,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
+  Divider,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import {
@@ -48,10 +49,9 @@ import {
   FaQuestion,
   FaClipboardList,
   FaThumbsUp,
-  FaShareAlt,
 } from "react-icons/fa";
-import { useState } from "react";
 import { IconType } from "react-icons";
+import { useState } from "react";
 
 // Định nghĩa cấu trúc dữ liệu
 interface CategoryData {
@@ -293,541 +293,406 @@ const Community = () => {
     },
   ];
 
-  // Colors
+  // Các màu sắc đồng bộ với HelpCenter
   const bgColor = useColorModeValue("white", "gray.800");
+  const hoverBg = useColorModeValue("gray.50", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const secondaryBg = useColorModeValue("gray.50", "gray.700");
-  const textColorSecondary = useColorModeValue("gray.600", "gray.400");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+  const headingColor = useColorModeValue("teal.600", "teal.300");
+  const accentColor = useColorModeValue("teal.500", "teal.300");
+  const boxShadow = useColorModeValue("sm", "none");
 
   return (
-    <Container maxW="6xl" py={12}>
+    <Container maxW="6xl" py={10}>
       {/* Breadcrumb */}
-      <Breadcrumb mb={8} color={textColorSecondary}>
+      <Breadcrumb mb={8} fontSize="sm" separator="/">
         <BreadcrumbItem>
           <BreadcrumbLink as={Link} to="/">
-            Home
+            Trang chủ
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Community</BreadcrumbLink>
+          <BreadcrumbLink>Cộng đồng</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
-      {/* Hero Section */}
-      <Box
-        py={10}
-        px={8}
-        borderRadius="lg"
-        bg={useColorModeValue("teal.50", "teal.900")}
-        mb={12}
-        textAlign="center"
-      >
-        <Heading
-          as="h1"
-          size="2xl"
-          fontWeight="bold"
-          color={useColorModeValue("teal.600", "teal.300")}
-          mb={4}
-        >
-          EventHub Community
+      {/* Header */}
+      <Box mb={10} textAlign="center">
+        <Heading as="h1" size="2xl" mb={4} color={headingColor}>
+          Cộng đồng EventHub
         </Heading>
-        <Text
-          fontSize="xl"
-          color={textColorSecondary}
-          maxW="3xl"
-          mx="auto"
-          mb={8}
-        >
-          Connect with fellow event enthusiasts, share knowledge, and get help
-          from our community of creators and attendees
+        <Text fontSize="lg" color={textColor} maxW="2xl" mx="auto">
+          Tham gia cộng đồng EventHub để kết nối với những người đam mê sự kiện,
+          chia sẻ ý tưởng và học hỏi từ những người tổ chức sự kiện chuyên
+          nghiệp.
         </Text>
+      </Box>
 
-        {/* Quick Stats */}
-        <SimpleGrid
-          columns={{ base: 2, md: 4 }}
-          spacing={6}
-          mb={8}
-          maxW="4xl"
-          mx="auto"
-        >
-          <Stat
-            textAlign="center"
-            p={4}
-            bg={bgColor}
-            borderRadius="md"
-            boxShadow="sm"
-          >
-            <StatLabel fontSize="sm" color={textColorSecondary}>
-              Members
-            </StatLabel>
-            <StatNumber fontSize="2xl" fontWeight="bold" color="teal.500">
-              10,240
-            </StatNumber>
-          </Stat>
-          <Stat
-            textAlign="center"
-            p={4}
-            bg={bgColor}
-            borderRadius="md"
-            boxShadow="sm"
-          >
-            <StatLabel fontSize="sm" color={textColorSecondary}>
-              Discussions
-            </StatLabel>
-            <StatNumber fontSize="2xl" fontWeight="bold" color="teal.500">
-              3,758
-            </StatNumber>
-          </Stat>
-          <Stat
-            textAlign="center"
-            p={4}
-            bg={bgColor}
-            borderRadius="md"
-            boxShadow="sm"
-          >
-            <StatLabel fontSize="sm" color={textColorSecondary}>
-              Topics
-            </StatLabel>
-            <StatNumber fontSize="2xl" fontWeight="bold" color="teal.500">
-              748
-            </StatNumber>
-          </Stat>
-          <Stat
-            textAlign="center"
-            p={4}
-            bg={bgColor}
-            borderRadius="md"
-            boxShadow="sm"
-          >
-            <StatLabel fontSize="sm" color={textColorSecondary}>
-              Online Now
-            </StatLabel>
-            <StatNumber fontSize="2xl" fontWeight="bold" color="teal.500">
-              234
-            </StatNumber>
-          </Stat>
-        </SimpleGrid>
-
-        {/* Search and New Topic Buttons */}
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          gap={4}
-          justify="center"
-          maxW="3xl"
-          mx="auto"
-        >
-          <InputGroup size="lg" flex="1">
+      {/* Tìm kiếm */}
+      <Box
+        mb={10}
+        p={6}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
+        <VStack spacing={4}>
+          <Text fontSize="lg" fontWeight="bold">
+            Tìm kiếm trong cộng đồng
+          </Text>
+          <InputGroup size="lg" maxW="container.md" mx="auto">
             <InputLeftElement pointerEvents="none">
               <Icon as={FaSearch} color="gray.400" />
             </InputLeftElement>
             <Input
-              placeholder="Search discussions..."
-              bg={bgColor}
-              borderColor={borderColor}
-              _hover={{ borderColor: "teal.300" }}
-              _focus={{
-                borderColor: "teal.500",
-                boxShadow: "0 0 0 1px teal.500",
-              }}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm kiếm chủ đề, câu hỏi, hoặc thành viên..."
+              borderRadius="full"
+              focusBorderColor={accentColor}
             />
+            <Button ml={2} borderRadius="full" colorScheme="teal" px={8}>
+              Tìm kiếm
+            </Button>
           </InputGroup>
-          <Button
-            colorScheme="teal"
-            size="lg"
-            leftIcon={<FaComment />}
-            minW={{ md: "170px" }}
-          >
-            New Discussion
-          </Button>
-        </Flex>
+        </VStack>
       </Box>
 
-      {/* Main Content - Tabs */}
-      <Tabs variant="enclosed" colorScheme="teal" mb={16}>
-        <TabList mb={6}>
-          <Tab fontWeight="medium">Categories</Tab>
-          <Tab fontWeight="medium">Recent Discussions</Tab>
-          <Tab fontWeight="medium">Top Members</Tab>
-        </TabList>
+      {/* Stats */}
+      <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6} mb={10}>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          textAlign="center"
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Icon as={FaUsers} fontSize="3xl" color={accentColor} mb={3} />
+          <Stat>
+            <StatLabel fontSize="md" color={textColor}>
+              Thành viên
+            </StatLabel>
+            <StatNumber color={headingColor}>5,280</StatNumber>
+          </Stat>
+        </Box>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          textAlign="center"
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Icon
+            as={FaClipboardList}
+            fontSize="3xl"
+            color={accentColor}
+            mb={3}
+          />
+          <Stat>
+            <StatLabel fontSize="md" color={textColor}>
+              Chủ đề
+            </StatLabel>
+            <StatNumber color={headingColor}>1,423</StatNumber>
+          </Stat>
+        </Box>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          textAlign="center"
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Icon
+            as={FaRegCommentDots}
+            fontSize="3xl"
+            color={accentColor}
+            mb={3}
+          />
+          <Stat>
+            <StatLabel fontSize="md" color={textColor}>
+              Bài viết
+            </StatLabel>
+            <StatNumber color={headingColor}>8,719</StatNumber>
+          </Stat>
+        </Box>
+        <Box
+          p={6}
+          bg={bgColor}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor={borderColor}
+          boxShadow={boxShadow}
+          textAlign="center"
+          transition="all 0.3s"
+          _hover={{ shadow: "md" }}
+        >
+          <Icon as={FaCalendarAlt} fontSize="3xl" color={accentColor} mb={3} />
+          <Stat>
+            <StatLabel fontSize="md" color={textColor}>
+              Sự kiện được chia sẻ
+            </StatLabel>
+            <StatNumber color={headingColor}>924</StatNumber>
+          </Stat>
+        </Box>
+      </SimpleGrid>
 
-        <TabPanels>
-          {/* Categories Tab */}
-          <TabPanel p={0}>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              {categories.map((category) => (
-                <Box
-                  key={category.id}
-                  p={6}
-                  borderWidth="1px"
-                  borderRadius="lg"
-                  borderColor={borderColor}
-                  bg={bgColor}
-                  _hover={{ boxShadow: "md", borderColor: "teal.300" }}
-                  transition="all 0.3s"
-                >
-                  <Flex mb={4}>
-                    <Box
-                      p={3}
-                      borderRadius="md"
-                      bg={`${category.color}.50`}
-                      color={`${category.color}.500`}
-                      mr={4}
-                    >
-                      <Icon as={category.icon} boxSize={6} />
-                    </Box>
-                    <Box>
-                      <Heading as="h3" size="md" mb={1}>
+      {/* Tabs */}
+      <Box
+        mb={10}
+        p={6}
+        bg={bgColor}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+      >
+        <Tabs colorScheme="teal" isLazy>
+          <TabList mb={6}>
+            <Tab fontWeight="semibold">Danh mục</Tab>
+            <Tab fontWeight="semibold">Chủ đề gần đây</Tab>
+            <Tab fontWeight="semibold">Thành viên tích cực</Tab>
+          </TabList>
+
+          <TabPanels>
+            {/* Danh mục Tab */}
+            <TabPanel px={0}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                {categories.map((category) => (
+                  <Box
+                    key={category.id}
+                    p={6}
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    bg={bgColor}
+                    transition="all 0.3s"
+                    _hover={{ shadow: "md", borderColor: accentColor }}
+                  >
+                    <HStack spacing={4} mb={3}>
+                      <Flex
+                        p={3}
+                        bg={`${category.color}.100`}
+                        color={`${category.color}.500`}
+                        borderRadius="full"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        <Icon as={category.icon} fontSize="xl" />
+                      </Flex>
+                      <VStack align="start" spacing={0}>
                         <ChakraLink
-                          as={Link}
-                          to={`/community/category/${category.id}`}
-                          _hover={{ color: "teal.500", textDecoration: "none" }}
+                          fontSize="lg"
+                          fontWeight="bold"
+                          _hover={{ color: accentColor }}
                         >
                           {category.name}
                         </ChakraLink>
-                      </Heading>
-                      <Text color={textColorSecondary} fontSize="sm">
-                        {category.description}
-                      </Text>
-                    </Box>
-                  </Flex>
-                  <Flex
-                    justify="space-between"
-                    fontSize="sm"
-                    color={textColorSecondary}
+                        <HStack spacing={4} color={textColor} fontSize="sm">
+                          <Text>{category.topics} chủ đề</Text>
+                          <Text>{category.posts} bài viết</Text>
+                        </HStack>
+                      </VStack>
+                    </HStack>
+                    <Text color={textColor}>{category.description}</Text>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </TabPanel>
+
+            {/* Chủ đề gần đây Tab */}
+            <TabPanel px={0}>
+              <VStack spacing={4} align="stretch">
+                {discussions.map((topic) => (
+                  <Box
+                    key={topic.id}
+                    p={4}
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    bg={bgColor}
+                    transition="all 0.3s"
+                    _hover={{ shadow: "md", borderColor: accentColor }}
                   >
-                    <Text>{category.topics} topics</Text>
-                    <Text>{category.posts} posts</Text>
-                  </Flex>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </TabPanel>
-
-          {/* Recent Discussions Tab */}
-          <TabPanel p={0}>
-            <VStack spacing={4} align="stretch">
-              {discussions.map((topic) => (
-                <Box
-                  key={topic.id}
-                  p={5}
-                  borderWidth="1px"
-                  borderRadius="lg"
-                  borderColor={borderColor}
-                  bg={bgColor}
-                  _hover={{ boxShadow: "sm" }}
-                  position="relative"
+                    <Flex justify="space-between" align="start">
+                      <HStack spacing={4} flex="1">
+                        <Avatar size="md" src={topic.author.avatar} />
+                        <VStack align="start" spacing={1}>
+                          <HStack>
+                            <ChakraLink
+                              fontWeight="bold"
+                              fontSize="md"
+                              _hover={{ color: accentColor }}
+                            >
+                              {topic.title}
+                            </ChakraLink>
+                            {topic.isHot && (
+                              <Tag size="sm" colorScheme="red" variant="solid">
+                                Hot
+                              </Tag>
+                            )}
+                            {topic.isSticky && (
+                              <Tag size="sm" colorScheme="blue" variant="solid">
+                                Ghim
+                              </Tag>
+                            )}
+                          </HStack>
+                          <HStack spacing={2} fontSize="sm" color={textColor}>
+                            <Text>
+                              bởi{" "}
+                              <ChakraLink color={accentColor}>
+                                {topic.author.name}
+                              </ChakraLink>
+                            </Text>
+                            <Badge colorScheme={topic.categoryColor}>
+                              {topic.category}
+                            </Badge>
+                            {topic.tags &&
+                              topic.tags.map((tag, index) => (
+                                <Tag key={index} size="sm" variant="subtle">
+                                  {tag}
+                                </Tag>
+                              ))}
+                          </HStack>
+                        </VStack>
+                      </HStack>
+                      <VStack
+                        align="end"
+                        spacing={1}
+                        fontSize="sm"
+                        color={textColor}
+                      >
+                        <Text>{topic.lastActivity}</Text>
+                        <HStack spacing={3}>
+                          <HStack spacing={1}>
+                            <Icon as={FaComment} />
+                            <Text>{topic.replies}</Text>
+                          </HStack>
+                          <HStack spacing={1}>
+                            <Icon as={FaEye} />
+                            <Text>{topic.views}</Text>
+                          </HStack>
+                          <HStack spacing={1}>
+                            <Icon as={FaHeart} />
+                            <Text>{topic.likes}</Text>
+                          </HStack>
+                        </HStack>
+                      </VStack>
+                    </Flex>
+                  </Box>
+                ))}
+                <Button
+                  colorScheme="teal"
+                  variant="outline"
+                  size="lg"
+                  width="100%"
                 >
-                  {/* Badges */}
-                  <Flex position="absolute" top={2} right={4} gap={2}>
-                    {topic.isSticky && (
-                      <Badge
-                        colorScheme="purple"
-                        variant="subtle"
-                        px={2}
-                        py={0.5}
-                      >
-                        <Flex align="center">
-                          <Icon as={FaCrown} mr={1} boxSize={3} />
-                          Pinned
-                        </Flex>
-                      </Badge>
-                    )}
-                    {topic.isHot && (
-                      <Badge
-                        colorScheme="orange"
-                        variant="subtle"
-                        px={2}
-                        py={0.5}
-                      >
-                        <Flex align="center">
-                          <Icon as={FaFire} mr={1} boxSize={3} />
-                          Hot
-                        </Flex>
-                      </Badge>
-                    )}
-                  </Flex>
+                  Xem tất cả chủ đề
+                </Button>
+              </VStack>
+            </TabPanel>
 
-                  {/* Title and Category */}
-                  <Box mb={4} pr={topic.isSticky || topic.isHot ? 24 : 0}>
-                    <Heading as="h3" size="md" mb={2}>
-                      <ChakraLink
-                        as={Link}
-                        to={`/community/discussion/${topic.id}`}
-                        _hover={{ color: "teal.500", textDecoration: "none" }}
-                      >
-                        {topic.title}
-                      </ChakraLink>
+            {/* Thành viên tích cực Tab */}
+            <TabPanel px={0}>
+              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+                {topMembers.map((member) => (
+                  <Box
+                    key={member.id}
+                    p={6}
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    bg={bgColor}
+                    textAlign="center"
+                    transition="all 0.3s"
+                    _hover={{ shadow: "md", borderColor: accentColor }}
+                  >
+                    <Avatar size="xl" src={member.avatar} mb={4} />
+                    <Heading size="md" mb={1}>
+                      {member.name}
                     </Heading>
-                    <Flex align="center" mb={2}>
-                      <Badge
-                        px={2}
-                        py={0.5}
-                        borderRadius="full"
-                        colorScheme={
-                          topic.category === "General Discussion"
-                            ? "blue"
-                            : topic.category === "Tips & Tricks"
-                            ? "yellow"
-                            : topic.category === "Troubleshooting"
-                            ? "red"
-                            : topic.category === "Event Planning"
-                            ? "green"
-                            : topic.category === "Feature Requests"
-                            ? "purple"
-                            : "teal"
-                        }
-                      >
-                        {topic.category}
-                      </Badge>
-                      <Text fontSize="sm" color={textColorSecondary} ml={4}>
-                        Last activity: {topic.lastActivity}
-                      </Text>
-                    </Flex>
-                    <Flex wrap="wrap" gap={2}>
-                      {topic.tags?.map((tag, index) => (
-                        <Tag
-                          key={index}
-                          size="sm"
-                          colorScheme="teal"
-                          variant="subtle"
-                        >
-                          <Icon as={FaHashtag} boxSize={2.5} mr={1} />
-                          {tag}
-                        </Tag>
-                      ))}
-                    </Flex>
-                  </Box>
-
-                  {/* Author and Stats */}
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    wrap={{ base: "wrap", md: "nowrap" }}
-                    gap={4}
-                  >
-                    <HStack>
-                      <Avatar
-                        size="sm"
-                        src={topic.author.avatar}
-                        name={topic.author.name}
-                      />
-                      <Box>
-                        <Text fontWeight="medium" fontSize="sm">
-                          {topic.author.name}
-                        </Text>
-                        {topic.author.role && (
-                          <Badge size="sm" colorScheme="teal" variant="subtle">
-                            {topic.author.role}
-                          </Badge>
-                        )}
-                      </Box>
-                    </HStack>
-
-                    <HStack
-                      spacing={6}
-                      fontSize="sm"
-                      color={textColorSecondary}
+                    <Badge
+                      colorScheme={member.isContributor ? "purple" : "gray"}
+                      mb={3}
                     >
-                      <HStack>
-                        <Icon as={FaComment} />
-                        <Text>{topic.replies}</Text>
-                      </HStack>
-                      <HStack>
-                        <Icon as={FaEye} />
-                        <Text>{topic.views}</Text>
-                      </HStack>
-                      <HStack>
-                        <Icon as={FaHeart} />
-                        <Text>{topic.likes}</Text>
-                      </HStack>
+                      {member.role}
+                    </Badge>
+                    <HStack justify="center" spacing={4} mb={3}>
+                      <VStack spacing={0}>
+                        <Text fontWeight="bold">{member.posts}</Text>
+                        <Text fontSize="sm" color={textColor}>
+                          Bài viết
+                        </Text>
+                      </VStack>
+                      <VStack spacing={0}>
+                        <Text fontWeight="bold">{member.joined}</Text>
+                        <Text fontSize="sm" color={textColor}>
+                          Tham gia
+                        </Text>
+                      </VStack>
                     </HStack>
-                  </Flex>
-                </Box>
-              ))}
-
-              {/* View More Button */}
-              <Button
-                alignSelf="center"
-                mt={4}
-                variant="outline"
-                colorScheme="teal"
-                rightIcon={<FaChevronRight />}
-                as={Link}
-                to="/community/discussions"
-              >
-                View More Discussions
-              </Button>
-            </VStack>
-          </TabPanel>
-
-          {/* Top Members Tab */}
-          <TabPanel p={0}>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
-              {topMembers.map((member) => (
-                <Box
-                  key={member.id}
-                  p={5}
-                  borderWidth="1px"
-                  borderRadius="lg"
-                  borderColor={borderColor}
-                  bg={bgColor}
-                  _hover={{ boxShadow: "md" }}
-                  textAlign="center"
-                >
-                  <Box position="relative" mb={4} display="inline-block">
-                    <Avatar size="xl" src={member.avatar} name={member.name} />
-                    {member.isContributor && (
-                      <Box
-                        position="absolute"
-                        bottom={0}
-                        right={0}
-                        bg="teal.500"
-                        color="white"
-                        borderRadius="full"
-                        boxSize={6}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        border="2px solid white"
-                      >
-                        <Icon as={FaMedal} boxSize={3} />
-                      </Box>
+                    {member.badges && (
+                      <HStack justify="center" spacing={2}>
+                        {member.badges.map((badge, index) => (
+                          <Tag key={index} colorScheme="teal" size="sm">
+                            {badge}
+                          </Tag>
+                        ))}
+                      </HStack>
                     )}
                   </Box>
-
-                  <Heading as="h3" size="md" mb={1}>
-                    {member.name}
-                  </Heading>
-                  <Badge colorScheme="teal" mb={3}>
-                    {member.role}
-                  </Badge>
-
-                  <HStack
-                    justify="center"
-                    mb={4}
-                    spacing={4}
-                    fontSize="sm"
-                    color={textColorSecondary}
-                  >
-                    <VStack spacing={0}>
-                      <Text fontWeight="bold">{member.posts}</Text>
-                      <Text>Posts</Text>
-                    </VStack>
-                    <VStack spacing={0}>
-                      <Text fontWeight="bold">{member.joined}</Text>
-                      <Text>Joined</Text>
-                    </VStack>
-                  </HStack>
-
-                  {member.badges && (
-                    <Flex justify="center" wrap="wrap" gap={2}>
-                      {member.badges.map((badge, index) => (
-                        <Badge key={index} colorScheme="blue" variant="subtle">
-                          {badge}
-                        </Badge>
-                      ))}
-                    </Flex>
-                  )}
-                </Box>
-              ))}
-            </SimpleGrid>
-
-            {/* View All Members Button */}
-            <Button
-              mt={8}
-              mx="auto"
-              display="block"
-              variant="outline"
-              colorScheme="teal"
-              rightIcon={<FaChevronRight />}
-              as={Link}
-              to="/community/members"
-            >
-              View All Members
-            </Button>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-
-      {/* Community Guidelines */}
-      <Box p={8} borderRadius="lg" bg={secondaryBg} mb={10}>
-        <Heading as="h2" size="lg" mb={4} color="teal.500">
-          Community Guidelines
-        </Heading>
-        <Text mb={4}>
-          Our community thrives when everyone participates with respect and
-          consideration for others. Please follow these guidelines:
-        </Text>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-          <HStack align="flex-start" spacing={3}>
-            <Icon as={FaUsers} color="teal.500" mt={1} />
-            <Text>
-              Be respectful and inclusive of all community members regardless of
-              background.
-            </Text>
-          </HStack>
-          <HStack align="flex-start" spacing={3}>
-            <Icon as={FaThumbsUp} color="teal.500" mt={1} />
-            <Text>Share constructive feedback and helpful information.</Text>
-          </HStack>
-          <HStack align="flex-start" spacing={3}>
-            <Icon as={FaShareAlt} color="teal.500" mt={1} />
-            <Text>
-              Share your knowledge and experiences to help others succeed.
-            </Text>
-          </HStack>
-          <HStack align="flex-start" spacing={3}>
-            <Icon as={FaRegCommentDots} color="teal.500" mt={1} />
-            <Text>
-              Stay on topic and use appropriate categories for your discussions.
-            </Text>
-          </HStack>
-        </SimpleGrid>
-        <Button
-          as={Link}
-          to="/community/guidelines"
-          variant="link"
-          colorScheme="teal"
-          mt={4}
-          rightIcon={<FaChevronRight />}
-        >
-          Read the full Community Guidelines
-        </Button>
+                ))}
+              </SimpleGrid>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </Box>
 
-      {/* Join the Community CTA */}
+      {/* Tham gia */}
       <Box
+        mt={16}
         p={8}
+        bg={bgColor}
         borderRadius="lg"
-        bg={useColorModeValue("teal.50", "teal.900")}
+        borderWidth="1px"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
         textAlign="center"
       >
-        <Heading as="h2" size="xl" mb={4} color="teal.500">
-          Join Our Growing Community
+        <Heading as="h2" size="lg" mb={4} color={headingColor}>
+          Tham gia cộng đồng
         </Heading>
-        <Text
-          fontSize="lg"
-          color={textColorSecondary}
-          maxW="2xl"
-          mx="auto"
-          mb={6}
-        >
-          Connect with thousands of event professionals and enthusiasts. Share
-          your expertise, learn from others, and help build the future of events
-          together.
+        <Text maxW="2xl" mx="auto" mb={6} color={textColor}>
+          Kết nối với những người có cùng đam mê sự kiện, chia sẻ ý tưởng, đặt
+          câu hỏi và khám phá thêm về cách tổ chức những sự kiện tuyệt vời.
         </Text>
-        <Button as={Link} to="/register" colorScheme="teal" size="lg" mb={4}>
-          Sign Up Now
-        </Button>
-        <Text fontSize="sm" color={textColorSecondary}>
-          Already have an account?{" "}
-          <ChakraLink as={Link} to="/login" color="teal.500">
-            Log in
-          </ChakraLink>
-        </Text>
+        <HStack spacing={4} justify="center">
+          <Button colorScheme="teal" size="lg">
+            Đăng ký ngay
+          </Button>
+          <Button variant="outline" colorScheme="teal" size="lg">
+            Tìm hiểu thêm
+          </Button>
+        </HStack>
       </Box>
+
+      {/* Footer note */}
+      <Divider my={10} />
+      <Text fontSize="sm" textAlign="center" color={textColor}>
+        © {new Date().getFullYear()} EventHub. Đồ án môn IE213 - Kỹ thuật phát
+        triển hệ thống web, UIT.
+      </Text>
     </Container>
   );
 };
