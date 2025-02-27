@@ -239,6 +239,9 @@ export default function Header() {
                   <MenuItem as={Link} to="/my-events">
                     Sự kiện của tôi
                   </MenuItem>
+                  <MenuItem as={Link} to="/saved-events">
+                    Sự kiện đã lưu
+                  </MenuItem>
                   <MenuItem as={Link} to="/my-tickets">
                     Vé của tôi
                   </MenuItem>

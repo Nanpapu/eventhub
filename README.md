@@ -1,6 +1,46 @@
-# EventHub - Nền tảng Tổ chức và Quản lý Sự kiện
+# EventHub - Nền tảng tìm kiếm và tham gia sự kiện
 
 EventHub là một nền tảng toàn diện cho phép người dùng tạo, quản lý và tham gia các sự kiện. Dự án này được xây dựng với NextJS và cung cấp giao diện người dùng hiện đại với hỗ trợ chế độ Dark/Light Mode.
+
+## Các cập nhật mới thực hiện
+
+### Trang Home.tsx
+
+- Đã thêm tính năng cho phép click vào các sự kiện nổi bật để xem chi tiết
+- Các thẻ sự kiện (event card) giờ đây sẽ dẫn đến trang chi tiết sự kiện tương ứng (/events/:id)
+- Đã thêm styling `textDecoration: "none"` để tránh hiển thị gạch chân khi sử dụng Link
+
+### Trang SearchResults.tsx
+
+- Đã đồng bộ hóa giao diện với trang Home.tsx
+- Thay thế component EventCard bằng CustomEventCard giống với component được sử dụng ở trang Home
+- Cải thiện cách hiển thị danh mục (categories):
+  - Đã cấu trúc lại dữ liệu categories thành mảng các đối tượng với id và name
+  - Thêm các danh mục mới: sports, tech, education, health, art, business
+  - Thêm function getCategoryName để dễ dàng hiển thị tên danh mục từ id
+- Đồng bộ hóa cách hiển thị event card, style và màu sắc giữa các trang
+- Các thẻ event giờ đây đều có thể click vào để xem chi tiết
+
+## Cấu trúc đường dẫn
+
+- Trang chủ: `/`
+- Danh sách sự kiện: `/events`
+- Chi tiết sự kiện: `/events/:id`
+- Tìm kiếm sự kiện: `/events?keyword=xxx&location=xxx&category=xxx`
+
+## Hướng dẫn sử dụng
+
+- Trang chủ: Xem các sự kiện nổi bật, duyệt theo danh mục phổ biến
+- Trang kết quả tìm kiếm: Tìm kiếm và lọc sự kiện theo từ khóa, địa điểm và danh mục
+- Trang chi tiết: Xem thông tin chi tiết về một sự kiện cụ thể
+
+## Các tính năng chính
+
+- Hiển thị danh sách sự kiện
+- Tìm kiếm sự kiện theo từ khóa
+- Lọc theo địa điểm, danh mục, giá (miễn phí/có phí)
+- Phân trang kết quả tìm kiếm
+- Giao diện responsive (hỗ trợ desktop và mobile)
 
 ## Cập nhật mới nhất
 
@@ -118,3 +158,52 @@ Component `EventReview` hiện hỗ trợ tốt hơn cho việc hiển thị đ�
 ---
 
 Phát triển bởi nhóm EventHub.
+
+# EventHub - Sự kiện đã lưu
+
+## Tổng quan chức năng "Sự kiện đã lưu"
+
+Chức năng "Sự kiện đã lưu" cho phép người dùng lưu lại các sự kiện họ quan tâm để xem lại sau. Đây là một tính năng tiện lợi giúp người dùng theo dõi và quản lý danh sách sự kiện mà họ quan tâm.
+
+## Các tính năng chính
+
+1. **Lưu sự kiện**: Từ trang chi tiết sự kiện, người dùng có thể nhấn vào nút trái tim để lưu sự kiện.
+2. **Xem danh sách đã lưu**: Người dùng có thể truy cập trang "Sự kiện đã lưu" từ menu người dùng để xem tất cả các sự kiện đã lưu.
+3. **Tìm kiếm và lọc**: Trong trang "Sự kiện đã lưu", người dùng có thể tìm kiếm theo tên hoặc lọc theo thể loại.
+4. **Hủy lưu**: Người dùng có thể dễ dàng hủy lưu sự kiện từ trang danh sách hoặc từ trang chi tiết sự kiện.
+
+## Cách sử dụng
+
+1. **Lưu sự kiện**:
+
+   - Truy cập trang chi tiết sự kiện
+   - Nhấn vào biểu tượng trái tim ở góc trên bên phải
+   - Một thông báo xác nhận sẽ hiển thị khi sự kiện được lưu thành công
+
+2. **Xem sự kiện đã lưu**:
+
+   - Nhấn vào avatar người dùng ở góc trên bên phải
+   - Chọn "Sự kiện đã lưu" từ menu
+   - Danh sách sự kiện đã lưu sẽ hiển thị
+
+3. **Tìm kiếm và lọc**:
+
+   - Sử dụng thanh tìm kiếm ở đầu trang "Sự kiện đã lưu"
+   - Chọn thể loại từ dropdown để lọc danh sách
+
+4. **Hủy lưu sự kiện**:
+   - Từ trang danh sách đã lưu: Nhấn vào biểu tượng trái tim trên card sự kiện
+   - Từ trang chi tiết: Nhấn vào biểu tượng trái tim đã được kích hoạt
+
+## Trang mới đã thêm
+
+1. **SavedEvents.tsx**: Hiển thị tất cả sự kiện đã lưu của người dùng
+
+## Tương lai phát triển
+
+Các tính năng có thể phát triển trong tương lai:
+
+1. Lưu trữ sự kiện đã lưu trong cơ sở dữ liệu để đồng bộ giữa các thiết bị
+2. Thêm chức năng nhóm sự kiện đã lưu thành các danh sách riêng
+3. Thông báo khi sự kiện đã lưu sắp diễn ra
+4. Chia sẻ danh sách sự kiện đã lưu với bạn bè

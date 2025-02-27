@@ -16,6 +16,7 @@ import Profile from "./user/Profile";
 import MyEvents from "./user/MyEvents";
 import Notifications from "./user/Notifications";
 import MyTickets from "./user/MyTickets";
+import SavedEvents from "./user/SavedEvents";
 
 // Organizer pages
 import Dashboard from "./organizer/Dashboard";
@@ -26,6 +27,7 @@ import EventAnalytics from "./organizer/EventAnalytics";
 // Demo page
 // import Demo from "./Demo";
 
+// Re-export tất cả components dưới dạng default exports
 export {
   Home,
   Login,
@@ -42,5 +44,6 @@ export {
   EventCheckIn,
   EventAnalytics,
   MyTickets,
+  SavedEvents,
   // Demo,
 };

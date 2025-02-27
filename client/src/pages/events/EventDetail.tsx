@@ -49,17 +49,6 @@ interface EventData {
   capacity: number;
 }
 
-// Interface cho dữ liệu bình luận
-interface Comment {
-  id: number;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  date: string;
-}
-
 // Dữ liệu mẫu cho sự kiện
 const eventData: EventData = {
   id: 1,
@@ -84,9 +73,6 @@ const eventData: EventData = {
   capacity: 50,
 };
 
-// Dữ liệu mẫu cho bình luận - không còn sử dụng nhưng giữ lại làm tài liệu
-// const commentsData: Comment[] = [ ... ];
-
 const EventDetail = () => {
   // Lấy ID sự kiện từ URL nhưng không sử dụng
   const { id } = useParams<{ id: string }>();
@@ -96,10 +82,6 @@ const EventDetail = () => {
   // State cho các trạng thái trong trang
   const [isRegistered, setIsRegistered] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-
-  // State comments không còn sử dụng sau khi gộp với reviews
-  // const [commentText, setCommentText] = useState("");
-  // const [comments, setComments] = useState<Comment[]>(commentsData);
 
   // Màu sắc thay đổi theo chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
@@ -153,8 +135,11 @@ const EventDetail = () => {
     setIsSaved(!isSaved);
     toast({
       title: isSaved ? "Đã xóa khỏi sự kiện đã lưu" : "Đã lưu sự kiện!",
+      description: isSaved
+        ? "Sự kiện đã được xóa khỏi danh sách đã lưu của bạn."
+        : "Bạn có thể xem lại sự kiện này trong mục 'Sự kiện đã lưu'.",
       status: "success",
-      duration: 2000,
+      duration: 3000,
       isClosable: true,
     });
   };

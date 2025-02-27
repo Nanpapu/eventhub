@@ -21,6 +21,7 @@ import {
   // Demo,
   EventCheckIn,
   EventAnalytics,
+  SavedEvents,
 } from "./pages/index";
 import {
   AboutUs,
@@ -50,6 +51,7 @@ export const router = createBrowserRouter(
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-events" element={<MyEvents />} />
         <Route path="/my-tickets" element={<MyTickets />} />
+        <Route path="/saved-events" element={<SavedEvents />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/dashboard" element={<Dashboard />} />
         {/* <Route path="/demo" element={<Demo />} /> */}
