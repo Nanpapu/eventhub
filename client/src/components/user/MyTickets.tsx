@@ -144,9 +144,6 @@ const MyTickets = () => {
   // State lọc và tìm kiếm
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [showFreeOnly, setShowFreeOnly] = useState(false);
-  const [showPaidOnly, setShowPaidOnly] = useState(false);
 
   // State lưu dữ liệu vé
   const [tickets, setTickets] = useState<Ticket[]>(ticketsData);
@@ -206,9 +203,6 @@ const MyTickets = () => {
   const resetFilters = () => {
     setSearchQuery("");
     setLocationFilter("");
-    setCategoryFilter("");
-    setShowFreeOnly(false);
-    setShowPaidOnly(false);
   };
 
   // Tạo locationOptions cho SearchBar
@@ -234,9 +228,6 @@ const MyTickets = () => {
   // Tạo appliedFilters để hiển thị badges khi có filter
   const appliedFilters = {
     location: locationFilter,
-    category: categoryFilter,
-    showFreeOnly,
-    showPaidOnly,
   };
 
   return (
@@ -317,21 +308,15 @@ const MyTickets = () => {
           setKeyword={setSearchQuery}
           location={locationFilter}
           setLocation={setLocationFilter}
-          category={categoryFilter}
-          setCategory={setCategoryFilter}
-          showFreeOnly={showFreeOnly}
-          setShowFreeOnly={setShowFreeOnly}
-          showPaidOnly={showPaidOnly}
-          setShowPaidOnly={setShowPaidOnly}
           onSearch={handleSearch}
           onReset={resetFilters}
           locations={locationOptions}
-          categories={categoryOptions}
           showLocationFilter={true}
-          showCategoryFilter={true}
-          showPriceFilter={true}
-          appliedFilters={appliedFilters}
-          getCategoryName={getCategoryName}
+          showCategoryFilter={false}
+          showPriceFilter={false}
+          appliedFilters={{
+            location: locationFilter,
+          }}
           mb={6}
           borderWidth="1px"
           borderColor={borderColor}

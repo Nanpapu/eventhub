@@ -255,8 +255,12 @@ const EventManagement = () => {
     name: cat.name,
   }));
 
-  // Tạo locationOptions empty để hiển thị đồng nhất với SearchResults
-  const locationOptions = [];
+  // Tạo locationOptions từ các sự kiện
+  const allEvents = [...myEvents, ...savedEvents];
+  const locationOptions = allEvents
+    .map((event) => event.location)
+    .filter((location, index, self) => self.indexOf(location) === index) // Loại bỏ trùng lặp
+    .map((location) => ({ name: location }));
 
   // Tạo appliedFilters để hiển thị badges khi có filter
   const appliedFilters = {
