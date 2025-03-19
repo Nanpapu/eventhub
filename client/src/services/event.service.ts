@@ -1,0 +1,152 @@
+import api from "../utils/api";
+
+export interface EventFilter {
+  keyword?: string;
+  category?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  isFree?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateEventData {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  venue: string;
+  startDate: string;
+  endDate: string;
+  bannerImage: string;
+  ticketTypes: TicketType[];
+  organizer: string;
+  isPublished?: boolean;
+}
+
+export interface TicketType {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  startSaleDate: string;
+  endSaleDate: string;
+}
+
+export interface TicketData {
+  ticketTypeId: string;
+  quantity: number;
+  attendeeInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  }[];
+}
+
+/**
+ * Service cho Event
+ */
+const eventService = {
+  /**
+   * Lấy danh sách sự kiện với filter
+   * @param filter Thông tin filter
+   */
+  getEvents: async (filter: EventFilter = {}) => {
+    const response = await api.get("/events", { params: filter });
+    return response.data;
+  },
+
+  /**
+   * Lấy thông tin chi tiết sự kiện
+   * @param id ID của sự kiện
+   */
+  getEventById: async (id: string) => {
+    const response = await api.get(`/events/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Tạo sự kiện mới
+   * @param data Thông tin sự kiện
+   */
+  createEvent: async (data: CreateEventData) => {
+    const response = await api.post("/events", data);
+    return response.data;
+  },
+
+  /**
+   * Cập nhật thông tin sự kiện
+   * @param id ID của sự kiện
+   * @param data Thông tin cập nhật
+   */
+  updateEvent: async (id: string, data: Partial<CreateEventData>) => {
+    const response = await api.put(`/events/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Xóa sự kiện
+   * @param id ID của sự kiện
+   */
+  deleteEvent: async (id: string) => {
+    const response = await api.delete(`/events/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Đăng ký tham gia sự kiện
+   * @param eventId ID của sự kiện
+   * @param ticketData Thông tin vé
+   */
+  registerEvent: async (eventId: string, ticketData: TicketData) => {
+    const response = await api.post(`/events/${eventId}/register`, ticketData);
+    return response.data;
+  },
+
+  /**
+   * Lấy danh sách sự kiện của người dùng hiện tại
+   */
+  getUserEvents: async () => {
+    const response = await api.get("/user/events");
+    return response.data;
+  },
+
+  /**
+   * Lấy danh sách sự kiện đã lưu của người dùng
+   */
+  getSavedEvents: async () => {
+    const response = await api.get("/user/saved-events");
+    return response.data;
+  },
+
+  /**
+   * Lưu sự kiện
+   * @param eventId ID của sự kiện
+   */
+  saveEvent: async (eventId: string) => {
+    const response = await api.post(`/events/${eventId}/save`);
+    return response.data;
+  },
+
+  /**
+   * Bỏ lưu sự kiện
+   * @param eventId ID của sự kiện
+   */
+  unsaveEvent: async (eventId: string) => {
+    const response = await api.delete(`/events/${eventId}/save`);
+    return response.data;
+  },
+
+  /**
+   * Kiểm tra người dùng đã lưu sự kiện chưa
+   * @param eventId ID của sự kiện
+   */
+  isEventSaved: async (eventId: string) => {
+    const response = await api.get(`/events/${eventId}/is-saved`);
+    return response.data;
+  },
+};
+
+export default eventService;

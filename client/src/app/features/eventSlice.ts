@@ -1,0 +1,202 @@
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import eventService, { EventFilter } from "../../services/event.service";
+import { RootState } from "../store";
+
+// Định nghĩa interface cho state
+interface EventState {
+  events: any[];
+  event: any | null;
+  savedEvents: any[];
+  userEvents: any[];
+  isLoading: boolean;
+  error: string | null;
+  totalEvents: number;
+  currentPage: number;
+  totalPages: number;
+  filter: EventFilter;
+}
+
+// Khởi tạo state
+const initialState: EventState = {
+  events: [],
+  event: null,
+  savedEvents: [],
+  userEvents: [],
+  isLoading: false,
+  error: null,
+  totalEvents: 0,
+  currentPage: 1,
+  totalPages: 1,
+  filter: {
+    keyword: "",
+    category: "",
+    location: "",
+    page: 1,
+    limit: 10,
+  },
+};
+
+// Async thunk để lấy danh sách sự kiện
+export const fetchEvents = createAsyncThunk(
+  "events/fetchEvents",
+  async (filter: EventFilter = {}, { rejectWithValue }) => {
+    try {
+      return await eventService.getEvents(filter);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch events"
+      );
+    }
+  }
+);
+
+// Async thunk để lấy chi tiết sự kiện
+export const fetchEventById = createAsyncThunk(
+  "events/fetchEventById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await eventService.getEventById(id);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch event details"
+      );
+    }
+  }
+);
+
+// Async thunk để lấy danh sách sự kiện đã lưu
+export const fetchSavedEvents = createAsyncThunk(
+  "events/fetchSavedEvents",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await eventService.getSavedEvents();
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch saved events"
+      );
+    }
+  }
+);
+
+// Async thunk để lấy danh sách sự kiện của người dùng
+export const fetchUserEvents = createAsyncThunk(
+  "events/fetchUserEvents",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await eventService.getUserEvents();
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user events"
+      );
+    }
+  }
+);
+
+// Tạo event slice
+const eventSlice = createSlice({
+  name: "events",
+  initialState,
+  reducers: {
+    // Reset state
+    resetEventState: (state) => {
+      state.error = null;
+      state.isLoading = false;
+    },
+    // Cập nhật filter
+    setFilter: (state, action: PayloadAction<EventFilter>) => {
+      state.filter = { ...state.filter, ...action.payload };
+    },
+    // Reset filter
+    resetFilter: (state) => {
+      state.filter = initialState.filter;
+    },
+    // Cập nhật trang hiện tại
+    setCurrentPage: (state, action: PayloadAction<number>) => {
+      state.currentPage = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch events cases
+      .addCase(fetchEvents.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchEvents.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.events = action.payload.events;
+        state.totalEvents = action.payload.totalEvents;
+        state.totalPages = action.payload.totalPages;
+        state.currentPage = action.payload.currentPage;
+        state.error = null;
+      })
+      .addCase(fetchEvents.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Fetch event by id cases
+      .addCase(fetchEventById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventById.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.event = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchEventById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Fetch saved events cases
+      .addCase(fetchSavedEvents.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchSavedEvents.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.savedEvents = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchSavedEvents.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Fetch user events cases
+      .addCase(fetchUserEvents.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserEvents.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userEvents = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchUserEvents.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
+
+// Export actions
+export const { resetEventState, setFilter, resetFilter, setCurrentPage } =
+  eventSlice.actions;
+
+// Export selectors
+export const selectEvents = (state: RootState) => state.events.events;
+export const selectEvent = (state: RootState) => state.events.event;
+export const selectSavedEvents = (state: RootState) => state.events.savedEvents;
+export const selectUserEvents = (state: RootState) => state.events.userEvents;
+export const selectEventLoading = (state: RootState) => state.events.isLoading;
+export const selectEventError = (state: RootState) => state.events.error;
+export const selectEventFilter = (state: RootState) => state.events.filter;
+export const selectTotalEvents = (state: RootState) => state.events.totalEvents;
+export const selectCurrentPage = (state: RootState) => state.events.currentPage;
+export const selectTotalPages = (state: RootState) => state.events.totalPages;
+
+// Export reducer
+export default eventSlice.reducer;
