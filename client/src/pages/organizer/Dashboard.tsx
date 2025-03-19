@@ -43,6 +43,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Tooltip,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -64,7 +65,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   TooltipProps,
 } from "recharts";
 
@@ -141,6 +142,7 @@ const MonthlyEventsChart = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
   const chartGridColor = useColorModeValue("#e0e0e0", "#4a5568");
   const chartAxisColor = useColorModeValue("#666", "#cbd5e0");
+  const labelColor = useColorModeValue("#2D3748", "#E2E8F0");
 
   useEffect(() => {
     if (containerRef.current) {
@@ -175,13 +177,26 @@ const MonthlyEventsChart = ({
           width={dimensions.width}
           height={dimensions.height}
           data={data}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
           <XAxis dataKey="name" stroke={chartAxisColor} />
-          <YAxis stroke={chartAxisColor} />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="events" fill="#38B2AC" name="Số sự kiện" />
+          <YAxis
+            stroke={chartAxisColor}
+            allowDecimals={false}
+            domain={[0, "dataMax + 1"]}
+          />
+          <RechartsTooltip content={<CustomTooltip />} />
+          <Bar
+            dataKey="events"
+            fill="#38B2AC"
+            name="Số sự kiện"
+            label={{
+              position: "top",
+              fill: labelColor,
+              formatter: (value) => (value > 0 ? value : ""),
+            }}
+          />
         </BarChart>
       </ResponsiveContainer>
     </Box>
@@ -205,17 +220,17 @@ const Dashboard = () => {
     attendeesGrowth: 8.3,
     eventsByMonth: [
       { name: "Jan", events: 2 },
-      { name: "Feb", events: 1 },
-      { name: "Mar", events: 3 },
-      { name: "Apr", events: 2 },
-      { name: "May", events: 1 },
-      { name: "Jun", events: 0 },
-      { name: "Jul", events: 1 },
-      { name: "Aug", events: 0 },
-      { name: "Sep", events: 1 },
-      { name: "Oct", events: 0 },
-      { name: "Nov", events: 1 },
-      { name: "Dec", events: 0 },
+      { name: "Feb", events: 3 },
+      { name: "Mar", events: 5 },
+      { name: "Apr", events: 4 },
+      { name: "May", events: 2 },
+      { name: "Jun", events: 1 },
+      { name: "Jul", events: 3 },
+      { name: "Aug", events: 2 },
+      { name: "Sep", events: 4 },
+      { name: "Oct", events: 6 },
+      { name: "Nov", events: 3 },
+      { name: "Dec", events: 1 },
     ],
   };
 
@@ -573,59 +588,73 @@ const Dashboard = () => {
                         </Td>
                         <Td>${event.revenue.toLocaleString()}</Td>
                         <Td>
-                          <Menu>
-                            <MenuButton
-                              as={IconButton}
-                              icon={<FaEllipsisV />}
-                              variant="ghost"
-                              size="sm"
-                            />
-                            <MenuList>
-                              <MenuItem
+                          <HStack spacing={1}>
+                            <Tooltip label="Chỉnh sửa sự kiện">
+                              <IconButton
+                                aria-label="Chỉnh sửa"
                                 icon={<FaEdit />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="blue"
                                 onClick={() => handleEditEvent(event.id)}
-                              >
-                                Chỉnh Sửa Sự Kiện
-                              </MenuItem>
-                              <MenuItem
+                              />
+                            </Tooltip>
+                            <Tooltip label="Xem phân tích">
+                              <IconButton
+                                aria-label="Phân tích"
                                 icon={<FaChartLine />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="green"
                                 onClick={() =>
                                   navigate(
                                     `/organizer/events/${event.id}/analytics`
                                   )
                                 }
-                              >
-                                Xem Phân Tích
-                              </MenuItem>
-                              <MenuItem
+                              />
+                            </Tooltip>
+                            <Tooltip label="Quản lý người tham gia">
+                              <IconButton
+                                aria-label="Người tham gia"
                                 icon={<FaUsers />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="purple"
                                 onClick={() =>
                                   navigate(
                                     `/organizer/events/${event.id}/attendees`
                                   )
                                 }
-                              >
-                                Quản Lý Người Tham Gia
-                              </MenuItem>
-                              <MenuItem
-                                icon={<FaQrcode />}
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/check-in`
-                                  )
-                                }
-                              >
-                                Điểm Danh Người Tham Gia
-                              </MenuItem>
-                              <MenuItem
-                                icon={<FaTrash />}
-                                color="red.500"
-                                onClick={() => confirmDeleteEvent(event.id)}
-                              >
-                                Xóa Sự Kiện
-                              </MenuItem>
-                            </MenuList>
-                          </Menu>
+                              />
+                            </Tooltip>
+                            <Menu>
+                              <MenuButton
+                                as={IconButton}
+                                icon={<FaEllipsisV />}
+                                variant="ghost"
+                                size="sm"
+                              />
+                              <MenuList>
+                                <MenuItem
+                                  icon={<FaQrcode />}
+                                  onClick={() =>
+                                    navigate(
+                                      `/organizer/events/${event.id}/check-in`
+                                    )
+                                  }
+                                >
+                                  Điểm Danh Người Tham Gia
+                                </MenuItem>
+                                <MenuItem
+                                  icon={<FaTrash />}
+                                  color="red.500"
+                                  onClick={() => confirmDeleteEvent(event.id)}
+                                >
+                                  Xóa Sự Kiện
+                                </MenuItem>
+                              </MenuList>
+                            </Menu>
+                          </HStack>
                         </Td>
                       </Tr>
                     ))}
@@ -692,43 +721,46 @@ const Dashboard = () => {
                         <Td>{event.soldTickets}</Td>
                         <Td>${event.revenue.toLocaleString()}</Td>
                         <Td>
-                          <Menu>
-                            <MenuButton
-                              as={IconButton}
-                              icon={<FaEllipsisV />}
-                              variant="ghost"
-                              size="sm"
-                            />
-                            <MenuList>
-                              <MenuItem
+                          <HStack spacing={1}>
+                            <Tooltip label="Xem phân tích">
+                              <IconButton
+                                aria-label="Phân tích"
                                 icon={<FaChartLine />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="green"
                                 onClick={() =>
                                   navigate(
                                     `/organizer/events/${event.id}/analytics`
                                   )
                                 }
-                              >
-                                Xem Phân Tích
-                              </MenuItem>
-                              <MenuItem
+                              />
+                            </Tooltip>
+                            <Tooltip label="Xem người tham gia">
+                              <IconButton
+                                aria-label="Người tham gia"
                                 icon={<FaUsers />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="purple"
                                 onClick={() =>
                                   navigate(
                                     `/organizer/events/${event.id}/attendees`
                                   )
                                 }
-                              >
-                                Xem Người Tham Gia
-                              </MenuItem>
-                              <MenuItem
+                              />
+                            </Tooltip>
+                            <Tooltip label="Xóa sự kiện">
+                              <IconButton
+                                aria-label="Xóa sự kiện"
                                 icon={<FaTrash />}
-                                color="red.500"
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="red"
                                 onClick={() => confirmDeleteEvent(event.id)}
-                              >
-                                Xóa Sự Kiện
-                              </MenuItem>
-                            </MenuList>
-                          </Menu>
+                              />
+                            </Tooltip>
+                          </HStack>
                         </Td>
                       </Tr>
                     ))}
