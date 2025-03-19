@@ -3,8 +3,6 @@ import {
   Button,
   Container,
   Flex,
-  Grid,
-  GridItem,
   Heading,
   Image,
   Text,
@@ -49,7 +47,6 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import {
-  FaChartPie,
   FaCalendarAlt,
   FaUsers,
   FaTicketAlt,
@@ -69,9 +66,6 @@ import {
   CartesianGrid,
   Tooltip,
   TooltipProps,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 
 // Định nghĩa các kiểu dữ liệu
@@ -97,7 +91,6 @@ interface Analytics {
   revenueGrowth: number;
   attendeesGrowth: number;
   eventsByMonth: { name: string; events: number }[];
-  attendeesBySource: { name: string; value: number }[];
 }
 
 // Custom tooltip cho biểu đồ
@@ -195,120 +188,6 @@ const MonthlyEventsChart = ({
   );
 };
 
-// Biểu đồ tròn hiển thị người tham gia theo nguồn
-const AttendeesSourceChart = ({
-  data,
-}: {
-  data: { name: string; value: number }[];
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
-  const pieStrokeColor = useColorModeValue("white", "gray.800");
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setDimensions({
-        width: containerRef.current.clientWidth,
-        height: 300,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: 300,
-        });
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Tùy chỉnh label cho biểu đồ tròn
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    name,
-  }: {
-    cx?: number;
-    cy?: number;
-    midAngle?: number;
-    innerRadius?: number;
-    outerRadius?: number;
-    percent?: number;
-    name?: string;
-  }) => {
-    if (
-      !cx ||
-      !cy ||
-      !midAngle ||
-      !innerRadius ||
-      !outerRadius ||
-      !percent ||
-      !name
-    )
-      return null;
-
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-      >
-        {`${name}: ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
-  if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
-
-  // Hiển thị biểu đồ tròn
-  return (
-    <Box ref={containerRef} h="300px">
-      <ResponsiveContainer>
-        <PieChart width={dimensions.width} height={dimensions.height}>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomizedLabel}
-            outerRadius={100}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-                stroke={pieStrokeColor}
-                name={entry.name}
-              />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
-    </Box>
-  );
-};
-
 const Dashboard = () => {
   const toast = useToast();
   const navigate = useNavigate();
@@ -337,13 +216,6 @@ const Dashboard = () => {
       { name: "Oct", events: 0 },
       { name: "Nov", events: 1 },
       { name: "Dec", events: 0 },
-    ],
-    attendeesBySource: [
-      { name: "Direct", value: 45 },
-      { name: "Social Media", value: 30 },
-      { name: "Email", value: 15 },
-      { name: "Partners", value: 8 },
-      { name: "Other", value: 2 },
     ],
   };
 
@@ -517,7 +389,7 @@ const Dashboard = () => {
       </Box>
 
       {/* Thống kê tổng quan */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mb={8}>
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
@@ -595,49 +467,15 @@ const Dashboard = () => {
             </Box>
           </Flex>
         </Stat>
-
-        <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
-          <Flex justify="space-between">
-            <Box>
-              <StatLabel fontWeight="medium">Tỷ Lệ Chuyển Đổi</StatLabel>
-              <StatNumber>24.8%</StatNumber>
-              <StatHelpText>
-                <StatArrow type="increase" />
-                3.2% so với tháng trước
-              </StatHelpText>
-            </Box>
-            <Box
-              bg="purple.500"
-              w="40px"
-              h="40px"
-              borderRadius="full"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              color="white"
-            >
-              <FaChartPie />
-            </Box>
-          </Flex>
-        </Stat>
       </SimpleGrid>
 
       {/* Biểu đồ phân tích */}
-      <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6} mb={8}>
-        <GridItem bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
-          <Heading size="md" mb={4}>
-            Số Sự Kiện Theo Tháng
-          </Heading>
-          <MonthlyEventsChart data={analytics.eventsByMonth} />
-        </GridItem>
-
-        <GridItem bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
-          <Heading size="md" mb={4}>
-            Người Tham Gia Theo Nguồn
-          </Heading>
-          <AttendeesSourceChart data={analytics.attendeesBySource} />
-        </GridItem>
-      </Grid>
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={8}>
+        <Heading size="md" mb={4}>
+          Số Sự Kiện Theo Tháng
+        </Heading>
+        <MonthlyEventsChart data={analytics.eventsByMonth} />
+      </Box>
 
       {/* Tabs cho quản lý sự kiện và người tham gia */}
       <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">

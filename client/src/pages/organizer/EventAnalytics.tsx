@@ -100,17 +100,11 @@ interface EventAnalyticsData {
     hour: string;
     count: number;
   }[];
-  marketingStats: {
-    source: string;
-    visitors: number;
-    conversions: number;
-    conversionRate: number;
-  }[];
 }
 
 /**
  * Trang phân tích chi tiết cho một sự kiện cụ thể
- * Hiển thị các biểu đồ và số liệu thống kê về doanh thu, người tham dự, và hiệu quả marketing
+ * Hiển thị các biểu đồ và số liệu thống kê về doanh thu, người tham dự
  */
 const EventAnalytics = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -189,110 +183,105 @@ const EventAnalytics = () => {
           { hour: "15:00", count: 20 },
           { hour: "16:00", count: 10 },
         ],
-        marketingStats: [
-          {
-            source: "Email Campaign",
-            visitors: 1200,
-            conversions: 180,
-            conversionRate: 15,
-          },
-          {
-            source: "Social Media",
-            visitors: 2500,
-            conversions: 120,
-            conversionRate: 4.8,
-          },
-          {
-            source: "Partner Websites",
-            visitors: 800,
-            conversions: 40,
-            conversionRate: 5,
-          },
-          {
-            source: "Direct Traffic",
-            visitors: 450,
-            conversions: 38,
-            conversionRate: 8.4,
-          },
-        ],
       };
 
       setAnalytics(mockData);
       setIsLoading(false);
-    }, 800);
-  }, [eventId, timeRange]);
+    }, 1000);
+  }, [eventId]);
 
-  // Define TypeScript types for CustomTooltip props
-  interface CustomTooltipProps {
-    active?: boolean;
-    payload?: Array<{
-      name: string;
-      value: number;
-      color: string;
-    }>;
-    label?: string;
-  }
-
-  // Render custom tooltip cho biểu đồ
-  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-    if (active && payload && payload.length) {
-      return (
-        <Box
-          bg={tooltipBg}
-          p={3}
-          boxShadow="md"
-          borderRadius="md"
-          border="1px solid"
-          borderColor={tooltipBorderColor}
-        >
-          <Text fontWeight="bold" color={tooltipTextColor}>
-            {label}
-          </Text>
-          {payload.map((entry, index) => (
-            <Text
-              key={`tooltip-${index}`}
-              color={entry.color}
-              fontWeight="medium"
-              textShadow={tooltipTextShadow}
-            >
-              {entry.name}: {entry.value}
-            </Text>
-          ))}
-        </Box>
-      );
-    }
-    return null;
+  // Xử lý chọn khoảng thời gian
+  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTimeRange(e.target.value);
   };
 
-  if (isLoading || !analytics) {
+  // Custom tooltip cho biểu đồ
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
     return (
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={8} align="stretch">
-          <HStack>
-            <Button
-              as={RouterLink}
-              to="/dashboard"
-              leftIcon={<FaArrowLeft />}
-              variant="ghost"
-            >
-              Quay lại Bảng điều khiển
-            </Button>
-          </HStack>
-          <Heading>Đang tải dữ liệu phân tích...</Heading>
-        </VStack>
+      <Box
+        bg={tooltipBg}
+        p={2}
+        boxShadow="sm"
+        borderRadius="md"
+        border="1px"
+        borderColor={tooltipBorderColor}
+      >
+        <Text fontWeight="bold" textShadow={tooltipTextShadow}>
+          {label}
+        </Text>
+        {payload.map((entry: any, index: number) => (
+          <Text
+            key={index}
+            color={entry.color || entry.stroke}
+            fontWeight="medium"
+          >
+            {entry.name}: {entry.value}
+            {entry.name.includes("Doanh thu") ? "$" : ""}
+          </Text>
+        ))}
+      </Box>
+    );
+  };
+
+  // Nếu đang tải dữ liệu
+  if (isLoading) {
+    return (
+      <Container maxW="7xl" py={8}>
+        <Flex align="center" mb={6}>
+          <Button
+            as={RouterLink}
+            to="/organizer/dashboard"
+            size="sm"
+            leftIcon={<FaArrowLeft />}
+            colorScheme="teal"
+            variant="ghost"
+            mr={4}
+          >
+            Quay lại Dashboard
+          </Button>
+          <Heading as="h1" size="xl">
+            Đang tải phân tích sự kiện...
+          </Heading>
+        </Flex>
+      </Container>
+    );
+  }
+
+  // Nếu không có dữ liệu
+  if (!analytics) {
+    return (
+      <Container maxW="7xl" py={8}>
+        <Flex align="center" mb={6}>
+          <Button
+            as={RouterLink}
+            to="/organizer/dashboard"
+            size="sm"
+            leftIcon={<FaArrowLeft />}
+            colorScheme="teal"
+            variant="ghost"
+            mr={4}
+          >
+            Quay lại Dashboard
+          </Button>
+          <Heading as="h1" size="xl">
+            Không tìm thấy dữ liệu phân tích cho sự kiện này
+          </Heading>
+        </Flex>
       </Container>
     );
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
+    <Container maxW="7xl" py={8}>
       <VStack spacing={8} align="stretch">
-        {/* Breadcrumb & Header */}
+        {/* Header và breadcrumb */}
         <Box>
-          <Breadcrumb mb={4} fontSize="sm">
+          <Breadcrumb mb={2} fontSize="sm">
             <BreadcrumbItem>
-              <BreadcrumbLink as={RouterLink} to="/dashboard">
-                Bảng điều khiển
+              <BreadcrumbLink as={RouterLink} to="/organizer/dashboard">
+                Dashboard
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem isCurrentPage>
@@ -300,72 +289,61 @@ const EventAnalytics = () => {
             </BreadcrumbItem>
           </Breadcrumb>
 
-          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+          <Flex
+            justify="space-between"
+            align={{ base: "start", md: "center" }}
+            direction={{ base: "column", md: "row" }}
+            mb={4}
+          >
             <Box>
-              <Heading size="lg">{analytics.title} - Phân tích</Heading>
-              <HStack mt={1}>
-                <Badge
-                  colorScheme={
-                    analytics.eventStatus === "upcoming"
-                      ? "blue"
-                      : analytics.eventStatus === "ongoing"
-                      ? "green"
-                      : "gray"
-                  }
-                >
-                  {analytics.eventStatus.charAt(0).toUpperCase() +
-                    analytics.eventStatus.slice(1)}
-                </Badge>
-                <Text color={dateColor}>{analytics.date}</Text>
-              </HStack>
+              <Heading as="h1" size="xl" mb={1}>
+                {analytics.title}
+              </Heading>
+              <Text color={dateColor}>{analytics.date}</Text>
             </Box>
 
-            <HStack>
+            <HStack spacing={4} mt={{ base: 4, md: 0 }}>
               <Select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                w="150px"
                 size="sm"
+                width="auto"
+                value={timeRange}
+                onChange={handleTimeRangeChange}
               >
-                <option value="all">Tất cả thời gian</option>
-                <option value="month">Tháng trước</option>
-                <option value="week">Tuần trước</option>
-                <option value="day">Ngày trước</option>
+                <option value="all">Toàn bộ thời gian</option>
+                <option value="week">7 ngày qua</option>
+                <option value="month">30 ngày qua</option>
+                <option value="quarter">3 tháng qua</option>
               </Select>
-
               <Menu>
                 <MenuButton
                   as={IconButton}
+                  aria-label="Options"
                   icon={<FaEllipsisV />}
                   variant="ghost"
-                  aria-label="Options"
                   size="sm"
                 />
                 <MenuList>
-                  <MenuItem icon={<FaDownload />}>Xuất dữ liệu</MenuItem>
+                  <MenuItem icon={<FaDownload />}>
+                    Xuất báo cáo (.xlsx)
+                  </MenuItem>
                   <MenuItem icon={<FaPrint />}>In báo cáo</MenuItem>
-                  <MenuItem icon={<FaShareAlt />}>Chia sẻ báo cáo</MenuItem>
-                  <MenuItem icon={<FaFilter />}>Bộ lọc nâng cao</MenuItem>
+                  <MenuItem icon={<FaShareAlt />}>Chia sẻ phân tích</MenuItem>
                 </MenuList>
               </Menu>
             </HStack>
           </Flex>
         </Box>
 
-        {/* Thống kê tổng quan */}
+        {/* Thống kê chính */}
         <Grid
-          templateColumns={{
-            base: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(4, 1fr)",
-          }}
-          gap={6}
+          templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(3, 1fr)" }}
+          gap={4}
         >
           <GridItem>
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Tổng số người tham dự</StatLabel>
+                  <StatLabel>Người tham dự</StatLabel>
                   <StatNumber>{analytics.totalAttendees}</StatNumber>
                   <StatHelpText>
                     {Math.round(
@@ -373,7 +351,7 @@ const EventAnalytics = () => {
                         analytics.totalAttendees) *
                         100
                     )}
-                    % đã check-in
+                    % check-in
                   </StatHelpText>
                 </Box>
                 <Box
@@ -396,7 +374,7 @@ const EventAnalytics = () => {
             <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
               <Flex justify="space-between">
                 <Box>
-                  <StatLabel>Tổng doanh thu</StatLabel>
+                  <StatLabel>Doanh thu</StatLabel>
                   <StatNumber>
                     ${analytics.totalRevenue.toLocaleString()}
                   </StatNumber>
@@ -449,40 +427,6 @@ const EventAnalytics = () => {
               </Flex>
             </Stat>
           </GridItem>
-
-          <GridItem>
-            <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="sm">
-              <Flex justify="space-between">
-                <Box>
-                  <StatLabel>Tỷ lệ check-in</StatLabel>
-                  <StatNumber>
-                    {Math.round(
-                      (analytics.checkedInAttendees /
-                        analytics.totalAttendees) *
-                        100
-                    )}
-                    %
-                  </StatNumber>
-                  <StatHelpText>
-                    {analytics.checkedInAttendees} trong số{" "}
-                    {analytics.totalAttendees}
-                  </StatHelpText>
-                </Box>
-                <Box
-                  bg="orange.500"
-                  w="40px"
-                  h="40px"
-                  borderRadius="full"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  color="white"
-                >
-                  <FaCalendarAlt />
-                </Box>
-              </Flex>
-            </Stat>
-          </GridItem>
         </Grid>
 
         {/* Biểu đồ và phân tích chi tiết */}
@@ -499,12 +443,6 @@ const EventAnalytics = () => {
                 <FaUsers />
               </Box>{" "}
               Phân tích người tham dự
-            </Tab>
-            <Tab fontWeight="medium">
-              <Box as="span" mr={2}>
-                <FaChartBar />
-              </Box>{" "}
-              Hiệu suất tiếp thị
             </Tab>
           </TabList>
 
@@ -787,100 +725,6 @@ const EventAnalytics = () => {
                       </VStack>
                     </GridItem>
                   </Grid>
-                </Box>
-              </VStack>
-            </TabPanel>
-
-            {/* Tab Marketing Performance */}
-            <TabPanel px={0}>
-              <VStack spacing={8} align="stretch">
-                <Box
-                  bg={bgColor}
-                  p={6}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <Heading size="md" mb={6}>
-                    Hiệu suất kênh tiếp thị
-                  </Heading>
-                  <Box overflow="auto">
-                    <Table variant="simple">
-                      <Thead>
-                        <Tr>
-                          <Th>Nguồn</Th>
-                          <Th isNumeric>Lượt truy cập</Th>
-                          <Th isNumeric>Chuyển đổi</Th>
-                          <Th isNumeric>Tỷ lệ chuyển đổi</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {analytics.marketingStats.map((source, index) => (
-                          <Tr key={index}>
-                            <Td>{source.source}</Td>
-                            <Td isNumeric>
-                              {source.visitors.toLocaleString()}
-                            </Td>
-                            <Td isNumeric>{source.conversions}</Td>
-                            <Td isNumeric>
-                              <Badge
-                                colorScheme={
-                                  source.conversionRate > 10
-                                    ? "green"
-                                    : source.conversionRate > 5
-                                    ? "blue"
-                                    : "gray"
-                                }
-                              >
-                                {source.conversionRate}%
-                              </Badge>
-                            </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </Box>
-                </Box>
-
-                <Box
-                  bg={bgColor}
-                  p={6}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <Heading size="md" mb={6}>
-                    Chuyển đổi theo kênh
-                  </Heading>
-                  <Box h="400px">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics.marketingStats}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke={chartGridColor}
-                        />
-                        <XAxis dataKey="source" stroke={chartAxisColor} />
-                        <YAxis stroke={chartAxisColor} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Bar
-                          dataKey="visitors"
-                          name="Lượt truy cập"
-                          fill="#8884d8"
-                        />
-                        <Bar
-                          dataKey="conversions"
-                          name="Chuyển đổi"
-                          fill="#82ca9d"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
                 </Box>
               </VStack>
             </TabPanel>
