@@ -23,10 +23,6 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   IconButton,
   HStack,
   VStack,
@@ -50,12 +46,10 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaTicketAlt,
-  FaEllipsisV,
   FaEdit,
   FaTrash,
   FaPlus,
   FaChartLine,
-  FaQrcode,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -206,7 +200,7 @@ const Dashboard = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [eventToCancel, setEventToCancel] = useState<string | null>(null);
 
   // Dữ liệu mẫu (sẽ được thay thế bằng API calls)
   const analytics: Analytics = {
@@ -318,29 +312,35 @@ const Dashboard = () => {
     });
   };
 
-  // Mở hộp thoại xác nhận khi xóa sự kiện
-  const confirmDeleteEvent = (eventId: string) => {
-    setEventToDelete(eventId);
+  // Mở hộp thoại xác nhận khi hủy sự kiện
+  const confirmCancelEvent = (eventId: string) => {
+    setEventToCancel(eventId);
     onOpen();
   };
 
-  // Xử lý xóa sự kiện sau khi xác nhận
-  const handleDeleteConfirmed = () => {
-    if (!eventToDelete) return;
+  // Xử lý hủy sự kiện sau khi xác nhận
+  const handleCancelConfirmed = () => {
+    if (!eventToCancel) return;
 
-    const updatedEvents = events.filter((event) => event.id !== eventToDelete);
+    // Thay vì xóa, cập nhật trạng thái thành "cancelled"
+    const updatedEvents = events.map((event) =>
+      event.id === eventToCancel
+        ? { ...event, status: "cancelled" as const }
+        : event
+    );
     setEvents(updatedEvents);
 
     toast({
-      title: "Đã xóa sự kiện",
-      description: "Sự kiện đã được xóa thành công",
+      title: "Đã hủy sự kiện",
+      description:
+        "Sự kiện đã được hủy thành công. Người đăng ký sẽ được thông báo.",
       status: "success",
       duration: 3000,
       isClosable: true,
     });
 
     onClose();
-    setEventToDelete(null);
+    setEventToCancel(null);
   };
 
   // Màu sắc cho giao diện
@@ -582,33 +582,16 @@ const Dashboard = () => {
                                 }
                               />
                             </Tooltip>
-                            <Menu>
-                              <MenuButton
-                                as={IconButton}
-                                icon={<FaEllipsisV />}
-                                variant="ghost"
+                            <Tooltip label="Hủy sự kiện">
+                              <IconButton
+                                aria-label="Hủy sự kiện"
+                                icon={<FaTrash />}
                                 size="sm"
+                                variant="ghost"
+                                colorScheme="red"
+                                onClick={() => confirmCancelEvent(event.id)}
                               />
-                              <MenuList>
-                                <MenuItem
-                                  icon={<FaQrcode />}
-                                  onClick={() =>
-                                    navigate(
-                                      `/organizer/events/${event.id}/check-in`
-                                    )
-                                  }
-                                >
-                                  Điểm Danh Người Tham Gia
-                                </MenuItem>
-                                <MenuItem
-                                  icon={<FaTrash />}
-                                  color="red.500"
-                                  onClick={() => confirmDeleteEvent(event.id)}
-                                >
-                                  Xóa Sự Kiện
-                                </MenuItem>
-                              </MenuList>
-                            </Menu>
+                            </Tooltip>
                           </HStack>
                         </Td>
                       </Tr>
@@ -705,14 +688,14 @@ const Dashboard = () => {
                                 }
                               />
                             </Tooltip>
-                            <Tooltip label="Xóa sự kiện">
+                            <Tooltip label="Hủy sự kiện">
                               <IconButton
-                                aria-label="Xóa sự kiện"
+                                aria-label="Hủy sự kiện"
                                 icon={<FaTrash />}
                                 size="sm"
                                 variant="ghost"
                                 colorScheme="red"
-                                onClick={() => confirmDeleteEvent(event.id)}
+                                onClick={() => confirmCancelEvent(event.id)}
                               />
                             </Tooltip>
                           </HStack>
@@ -730,17 +713,23 @@ const Dashboard = () => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay>
           <ModalContent>
-            <ModalHeader>Xác Nhận Xóa</ModalHeader>
+            <ModalHeader>Xác Nhận Hủy Sự Kiện</ModalHeader>
             <ModalCloseButton />
-            <ModalBody>Bạn có chắc chắn muốn xóa sự kiện này không?</ModalBody>
+            <ModalBody>
+              <Text>Bạn có chắc chắn muốn hủy sự kiện này không?</Text>
+              <Text mt={2} fontSize="sm" color="gray.600">
+                Sự kiện sẽ được đánh dấu là đã hủy và tất cả người đăng ký sẽ
+                được thông báo. Dữ liệu sự kiện vẫn được giữ lại trong hệ thống.
+              </Text>
+            </ModalBody>
             <ModalFooter>
-              <Button onClick={onClose}>Hủy</Button>
+              <Button onClick={onClose}>Đóng</Button>
               <Button
                 colorScheme="red"
-                onClick={() => handleDeleteConfirmed()}
+                onClick={() => handleCancelConfirmed()}
                 ml={3}
               >
-                Xóa
+                Hủy Sự Kiện
               </Button>
             </ModalFooter>
           </ModalContent>
