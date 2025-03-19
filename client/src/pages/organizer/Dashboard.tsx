@@ -39,6 +39,7 @@ import {
   ModalBody,
   ModalCloseButton,
   Tooltip,
+  Badge,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -50,6 +51,7 @@ import {
   FaTrash,
   FaPlus,
   FaChartLine,
+  FaUndo,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -274,7 +276,7 @@ const Dashboard = () => {
       location: "Community Center, Boston",
       isOnline: false,
       imageUrl:
-        "https://images.unsplash.com/photo-1551818255-e6e10975bc17?w=500&auto=format",
+        "https://images.unsplash.com/photo-1551818255-5973dc0f32e7?w=500&auto=format",
       totalTickets: 150,
       soldTickets: 120,
       status: "past",
@@ -298,6 +300,9 @@ const Dashboard = () => {
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
   const pastEvents = events.filter((event) => event.status === "past");
+  const cancelledEvents = events.filter(
+    (event) => event.status === "cancelled"
+  );
 
   // Chuyển đến trang chỉnh sửa sự kiện
   const handleEditEvent = (eventId: string) => {
@@ -343,10 +348,30 @@ const Dashboard = () => {
     setEventToCancel(null);
   };
 
+  // Khôi phục sự kiện đã hủy
+  const handleRestoreEvent = (eventId: string) => {
+    const updatedEvents = events.map((event) =>
+      event.id === eventId ? { ...event, status: "upcoming" as const } : event
+    );
+    setEvents(updatedEvents);
+
+    toast({
+      title: "Đã khôi phục sự kiện",
+      description:
+        "Sự kiện đã được khôi phục thành công và hiển thị lại trong mục sự kiện sắp tới.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   // Màu sắc cho giao diện
   const cardBg = useColorModeValue("white", "gray.800");
   const statBg = useColorModeValue("gray.50", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
+  const cancelBtnBg = useColorModeValue("red.50", "red.900");
+  const cancelBtnColor = useColorModeValue("red.600", "red.200");
+  const cancelBtnHoverBg = useColorModeValue("red.100", "red.800");
 
   return (
     <Container maxW="7xl" py={8}>
@@ -448,12 +473,13 @@ const Dashboard = () => {
         <MonthlyEventsChart data={analytics.eventsByMonth} />
       </Box>
 
-      {/* Tabs cho quản lý sự kiện và người tham gia */}
+      {/* Tabs cho quản lý sự kiện */}
       <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
         <Tabs colorScheme="teal" isFitted variant="enclosed">
           <TabList mb={4}>
             <Tab fontWeight="medium">Sự Kiện Sắp Tới</Tab>
             <Tab fontWeight="medium">Sự Kiện Đã Qua</Tab>
+            <Tab fontWeight="medium">Sự Kiện Đã Hủy</Tab>
           </TabList>
 
           <TabPanels>
@@ -587,8 +613,11 @@ const Dashboard = () => {
                                 aria-label="Hủy sự kiện"
                                 icon={<FaTrash />}
                                 size="sm"
-                                variant="ghost"
-                                colorScheme="red"
+                                bg={cancelBtnBg}
+                                color={cancelBtnColor}
+                                _hover={{
+                                  bg: cancelBtnHoverBg,
+                                }}
                                 onClick={() => confirmCancelEvent(event.id)}
                               />
                             </Tooltip>
@@ -688,14 +717,95 @@ const Dashboard = () => {
                                 }
                               />
                             </Tooltip>
-                            <Tooltip label="Hủy sự kiện">
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </TabPanel>
+
+            {/* Tab sự kiện đã hủy */}
+            <TabPanel p={0}>
+              <Heading size="md" mb={4}>
+                Sự Kiện Đã Hủy
+              </Heading>
+
+              {cancelledEvents.length === 0 ? (
+                <Text py={4}>Bạn không có sự kiện đã hủy nào.</Text>
+              ) : (
+                <Table variant="simple">
+                  <Thead bg={tableHeaderBg}>
+                    <Tr>
+                      <Th>Sự Kiện</Th>
+                      <Th>Ngày</Th>
+                      <Th>Đã Bán</Th>
+                      <Th>Doanh Thu</Th>
+                      <Th>Thao Tác</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {cancelledEvents.map((event) => (
+                      <Tr key={event.id} opacity={0.7}>
+                        <Td>
+                          <HStack>
+                            <Image
+                              src={event.imageUrl}
+                              alt={event.title}
+                              boxSize="40px"
+                              borderRadius="md"
+                              objectFit="cover"
+                              opacity={0.6}
+                            />
+                            <VStack align="start" spacing={0}>
+                              <Flex align="center">
+                                <Text fontWeight="medium" mr={2}>
+                                  {event.title}
+                                </Text>
+                                <Badge colorScheme="red">Đã hủy</Badge>
+                              </Flex>
+                              <Text fontSize="xs" color="gray.500">
+                                {event.isOnline
+                                  ? "Sự Kiện Trực Tuyến"
+                                  : event.location}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                        </Td>
+                        <Td>
+                          {event.date.toLocaleDateString("vi-VN", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Td>
+                        <Td>{event.soldTickets}</Td>
+                        <Td>${event.revenue.toLocaleString()}</Td>
+                        <Td>
+                          <HStack spacing={1}>
+                            <Tooltip label="Khôi phục sự kiện">
                               <IconButton
-                                aria-label="Hủy sự kiện"
-                                icon={<FaTrash />}
+                                aria-label="Khôi phục sự kiện"
+                                icon={<FaUndo />}
+                                size="sm"
+                                variant="solid"
+                                colorScheme="blue"
+                                onClick={() => handleRestoreEvent(event.id)}
+                              />
+                            </Tooltip>
+                            <Tooltip label="Xem người tham gia">
+                              <IconButton
+                                aria-label="Người tham gia"
+                                icon={<FaUsers />}
                                 size="sm"
                                 variant="ghost"
-                                colorScheme="red"
-                                onClick={() => confirmCancelEvent(event.id)}
+                                colorScheme="purple"
+                                onClick={() =>
+                                  navigate(
+                                    `/organizer/events/${event.id}/attendees`
+                                  )
+                                }
                               />
                             </Tooltip>
                           </HStack>
@@ -710,6 +820,7 @@ const Dashboard = () => {
         </Tabs>
       </Box>
 
+      {/* Modal xác nhận hủy sự kiện */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay>
           <ModalContent>
