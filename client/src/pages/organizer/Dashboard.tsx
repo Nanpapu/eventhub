@@ -18,7 +18,6 @@ import {
   Tr,
   Th,
   Td,
-  Badge,
   Tabs,
   TabList,
   TabPanels,
@@ -194,7 +193,7 @@ const MonthlyEventsChart = ({
             label={{
               position: "top",
               fill: labelColor,
-              formatter: (value) => (value > 0 ? value : ""),
+              formatter: (value: number) => (value > 0 ? value : ""),
             }}
           />
         </BarChart>
@@ -301,49 +300,6 @@ const Dashboard = () => {
       revenue: 3250,
     },
   ]);
-
-  const attendees = [
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@example.com",
-      ticketType: "VIP",
-      purchaseDate: new Date("2023-10-15"),
-      status: "confirmed",
-    },
-    {
-      id: "2",
-      name: "Emma Johnson",
-      email: "emma.j@example.com",
-      ticketType: "Standard",
-      purchaseDate: new Date("2023-10-18"),
-      status: "confirmed",
-    },
-    {
-      id: "3",
-      name: "Michael Brown",
-      email: "michael.b@example.com",
-      ticketType: "VIP",
-      purchaseDate: new Date("2023-10-20"),
-      status: "confirmed",
-    },
-    {
-      id: "4",
-      name: "Sophia Williams",
-      email: "sophia.w@example.com",
-      ticketType: "Standard",
-      purchaseDate: new Date("2023-10-22"),
-      status: "pending",
-    },
-    {
-      id: "5",
-      name: "Robert Jones",
-      email: "robert.j@example.com",
-      ticketType: "Standard",
-      purchaseDate: new Date("2023-10-25"),
-      status: "cancelled",
-    },
-  ];
 
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
@@ -498,7 +454,6 @@ const Dashboard = () => {
           <TabList mb={4}>
             <Tab fontWeight="medium">Sự Kiện Sắp Tới</Tab>
             <Tab fontWeight="medium">Sự Kiện Đã Qua</Tab>
-            <Tab fontWeight="medium">Người Tham Gia Gần Đây</Tab>
           </TabList>
 
           <TabPanels>
@@ -761,64 +716,6 @@ const Dashboard = () => {
                               />
                             </Tooltip>
                           </HStack>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              )}
-            </TabPanel>
-
-            {/* Tab người tham gia gần đây */}
-            <TabPanel p={0}>
-              <Heading size="md" mb={4}>
-                Người Tham Gia Gần Đây
-              </Heading>
-
-              {attendees.length === 0 ? (
-                <Text py={4}>Không có dữ liệu người tham gia.</Text>
-              ) : (
-                <Table variant="simple">
-                  <Thead bg={tableHeaderBg}>
-                    <Tr>
-                      <Th>Tên</Th>
-                      <Th>Email</Th>
-                      <Th>Loại Vé</Th>
-                      <Th>Ngày Mua</Th>
-                      <Th>Trạng Thái</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {attendees.map((attendee) => (
-                      <Tr key={attendee.id}>
-                        <Td fontWeight="medium">{attendee.name}</Td>
-                        <Td>{attendee.email}</Td>
-                        <Td>{attendee.ticketType}</Td>
-                        <Td>
-                          {attendee.purchaseDate.toLocaleDateString("vi-VN", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </Td>
-                        <Td>
-                          <Badge
-                            colorScheme={
-                              attendee.status === "confirmed"
-                                ? "green"
-                                : attendee.status === "cancelled"
-                                ? "red"
-                                : "yellow"
-                            }
-                            borderRadius="full"
-                            px={2}
-                          >
-                            {attendee.status === "confirmed"
-                              ? "Đã xác nhận"
-                              : attendee.status === "cancelled"
-                              ? "Đã hủy"
-                              : "Đang chờ"}
-                          </Badge>
                         </Td>
                       </Tr>
                     ))}
