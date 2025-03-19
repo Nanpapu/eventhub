@@ -237,10 +237,33 @@ export default function Checkout() {
       return;
     }
 
-    if (event && ticketQuantity > event.availableTickets) {
+    if (
+      !selectedTicketType &&
+      event &&
+      event.ticketTypes &&
+      event.ticketTypes.length > 0
+    ) {
       toast({
         title: "Lỗi",
-        description: `Không đủ vé (chỉ còn ${event.availableTickets} vé)`,
+        description: "Vui lòng chọn loại vé",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Kiểm tra số lượng vé còn lại
+    const availableTickets =
+      event?.ticketTypes && selectedTicketType
+        ? event.ticketTypes.find((t) => t.id === selectedTicketType)
+            ?.availableQuantity || 0
+        : event?.availableTickets || 0;
+
+    if (ticketQuantity > availableTickets) {
+      toast({
+        title: "Lỗi",
+        description: `Không đủ vé (chỉ còn ${availableTickets} vé)`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -446,12 +469,12 @@ export default function Checkout() {
                         borderRadius="md"
                         borderColor={
                           selectedTicketType === ticket.id
-                            ? "teal.500"
+                            ? useColorModeValue("teal.500", "teal.300")
                             : borderColor
                         }
                         bg={
                           selectedTicketType === ticket.id
-                            ? "teal.50"
+                            ? useColorModeValue("teal.50", "teal.900")
                             : "transparent"
                         }
                         cursor="pointer"
@@ -462,7 +485,10 @@ export default function Checkout() {
                             <Text fontWeight="bold" color={textColor}>
                               {ticket.name}
                             </Text>
-                            <Text fontSize="sm" color="gray.500">
+                            <Text
+                              fontSize="sm"
+                              color={useColorModeValue("gray.500", "gray.400")}
+                            >
                               Còn {ticket.availableQuantity} vé
                             </Text>
                           </VStack>
@@ -507,7 +533,15 @@ export default function Checkout() {
 
               <Flex justify="space-between" fontWeight="bold" color={textColor}>
                 <Text>{t("checkout.total")}:</Text>
-                <CurrencyDisplay amount={event.price * ticketQuantity} />
+                <CurrencyDisplay
+                  amount={
+                    event.ticketTypes && selectedTicketType
+                      ? (event.ticketTypes.find(
+                          (t) => t.id === selectedTicketType
+                        )?.price || 0) * ticketQuantity
+                      : event.price * ticketQuantity
+                  }
+                />
               </Flex>
 
               <HStack spacing={4} justify="flex-end" pt={4}>
@@ -529,6 +563,7 @@ export default function Checkout() {
             <CheckoutForm
               event={event}
               ticketQuantity={ticketQuantity}
+              selectedTicketTypeId={selectedTicketType}
               onSuccess={handlePaymentSuccess}
               onCancel={handlePaymentCancel}
             />
