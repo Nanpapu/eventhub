@@ -48,6 +48,12 @@ interface EventData {
   organizer: string;
   availableTickets: number;
   maxPerOrder: number;
+  ticketTypes?: {
+    id: string;
+    name: string;
+    price: number;
+    availableQuantity: number;
+  }[];
 }
 
 // Giả lập dữ liệu sự kiện (trong thực tế sẽ fetch từ API)
@@ -64,6 +70,26 @@ const mockEvents: EventData[] = [
     organizer: "TechEvents Inc.",
     availableTickets: 122,
     maxPerOrder: 10,
+    ticketTypes: [
+      {
+        id: "early-bird",
+        name: "Early Bird",
+        price: 29.99,
+        availableQuantity: 22,
+      },
+      {
+        id: "standard",
+        name: "Standard",
+        price: 49.99,
+        availableQuantity: 80,
+      },
+      {
+        id: "vip",
+        name: "VIP",
+        price: 99.99,
+        availableQuantity: 20,
+      },
+    ],
   },
   {
     id: "2",
@@ -77,6 +103,20 @@ const mockEvents: EventData[] = [
     organizer: "Coding Academy",
     availableTickets: 43,
     maxPerOrder: 3,
+    ticketTypes: [
+      {
+        id: "standard",
+        name: "Standard",
+        price: 29.99,
+        availableQuantity: 30,
+      },
+      {
+        id: "premium",
+        name: "Premium (includes code review)",
+        price: 49.99,
+        availableQuantity: 13,
+      },
+    ],
   },
   {
     id: "3",
@@ -131,6 +171,9 @@ export default function Checkout() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [ticketQuantity, setTicketQuantity] = useState(1);
+  const [selectedTicketType, setSelectedTicketType] = useState<string | null>(
+    null
+  );
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -160,17 +203,25 @@ export default function Checkout() {
   const successIconColor = useColorModeValue("green.700", "green.200");
   const confirmBoxBg = useColorModeValue("white", "gray.700");
 
-  // Giả lập fetch dữ liệu sự kiện
+  // Tải dữ liệu sự kiện
   useEffect(() => {
-    setIsLoading(true);
-    // Trong thực tế, đây sẽ là một API call
-    setTimeout(() => {
-      const foundEvent = mockEvents.find((e) => e.id === eventId);
-      if (foundEvent) {
-        setEvent(foundEvent);
-      }
-      setIsLoading(false);
-    }, 1000);
+    const fetchEvent = async () => {
+      setIsLoading(true);
+      // Giả lập gọi API để lấy dữ liệu
+      setTimeout(() => {
+        const foundEvent = mockEvents.find((e) => e.id === eventId);
+        if (foundEvent) {
+          setEvent(foundEvent);
+          // Tự động chọn loại vé đầu tiên nếu có
+          if (foundEvent.ticketTypes && foundEvent.ticketTypes.length > 0) {
+            setSelectedTicketType(foundEvent.ticketTypes[0].id);
+          }
+        }
+        setIsLoading(false);
+      }, 800);
+    };
+
+    fetchEvent();
   }, [eventId]);
 
   // Xử lý khi bấm tiếp tục ở bước 1
@@ -341,10 +392,30 @@ export default function Checkout() {
                   Giá vé:
                 </Text>
                 <Text color={textColor}>
-                  {event.price === 0 ? (
-                    "Miễn phí"
+                  {event.ticketTypes && selectedTicketType ? (
+                    <>
+                      {event.ticketTypes.find(
+                        (t) => t.id === selectedTicketType
+                      )?.price === 0 ? (
+                        "Miễn phí"
+                      ) : (
+                        <CurrencyDisplay
+                          amount={
+                            event.ticketTypes.find(
+                              (t) => t.id === selectedTicketType
+                            )?.price || 0
+                          }
+                        />
+                      )}
+                    </>
                   ) : (
-                    <CurrencyDisplay amount={event.price} />
+                    <>
+                      {event.price === 0 ? (
+                        "Miễn phí"
+                      ) : (
+                        <CurrencyDisplay amount={event.price} />
+                      )}
+                    </>
                   )}
                 </Text>
               </HStack>
@@ -353,8 +424,61 @@ export default function Checkout() {
                 <Text fontWeight="medium" color={textColor}>
                   Số vé còn lại:
                 </Text>
-                <Text color={textColor}>{event.availableTickets}</Text>
+                <Text color={textColor}>
+                  {event.ticketTypes && selectedTicketType
+                    ? event.ticketTypes.find((t) => t.id === selectedTicketType)
+                        ?.availableQuantity || 0
+                    : event.availableTickets}
+                </Text>
               </HStack>
+
+              {event.ticketTypes && event.ticketTypes.length > 0 && (
+                <>
+                  <Heading size="sm" color={textColor} mt={2}>
+                    Chọn loại vé:
+                  </Heading>
+                  <VStack spacing={3} align="stretch">
+                    {event.ticketTypes.map((ticket) => (
+                      <Box
+                        key={ticket.id}
+                        p={3}
+                        borderWidth="1px"
+                        borderRadius="md"
+                        borderColor={
+                          selectedTicketType === ticket.id
+                            ? "teal.500"
+                            : borderColor
+                        }
+                        bg={
+                          selectedTicketType === ticket.id
+                            ? "teal.50"
+                            : "transparent"
+                        }
+                        cursor="pointer"
+                        onClick={() => setSelectedTicketType(ticket.id)}
+                      >
+                        <Flex justify="space-between" align="center">
+                          <VStack align="start" spacing={0}>
+                            <Text fontWeight="bold" color={textColor}>
+                              {ticket.name}
+                            </Text>
+                            <Text fontSize="sm" color="gray.500">
+                              Còn {ticket.availableQuantity} vé
+                            </Text>
+                          </VStack>
+                          <Text fontWeight="bold" color={textColor}>
+                            {ticket.price === 0 ? (
+                              "Miễn phí"
+                            ) : (
+                              <CurrencyDisplay amount={ticket.price} />
+                            )}
+                          </Text>
+                        </Flex>
+                      </Box>
+                    ))}
+                  </VStack>
+                </>
+              )}
 
               <Divider my={2} />
 

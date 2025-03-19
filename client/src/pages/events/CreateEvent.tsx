@@ -72,6 +72,7 @@ interface EventFormData {
   isOnline: boolean;
   onlineUrl?: string;
   capacity: number;
+  maxTicketsPerPerson: number; // Số vé tối đa mỗi người được mua
   isPaid: boolean;
   price?: number;
   ticketTypes: {
@@ -121,6 +122,7 @@ const CreateEvent = () => {
     address: "",
     isOnline: false,
     capacity: 100,
+    maxTicketsPerPerson: 1,
     isPaid: false,
     ticketTypes: [
       { id: "standard", name: "Standard", price: 0, quantity: 100 },
@@ -162,6 +164,7 @@ const CreateEvent = () => {
             address: "123 Main St, New York, NY",
             isOnline: false,
             capacity: 500,
+            maxTicketsPerPerson: 1,
             isPaid: true,
             price: 25.99,
             ticketTypes: [
@@ -803,6 +806,35 @@ const CreateEvent = () => {
                     </NumberInputStepper>
                   </NumberInput>
                   <FormHelperText>Maximum number of attendees</FormHelperText>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Maximum Tickets Per Person</FormLabel>
+                  <NumberInput
+                    value={formData.maxTicketsPerPerson}
+                    onChange={(value) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        maxTicketsPerPerson: parseInt(value, 10),
+                      }));
+                    }}
+                    min={1}
+                    max={10}
+                  >
+                    <InputGroup>
+                      <InputLeftElement pointerEvents="none">
+                        <FiUsers color="gray.300" />
+                      </InputLeftElement>
+                      <NumberInputField pl={10} />
+                    </InputGroup>
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormHelperText>
+                    Maximum number of tickets each person can purchase
+                  </FormHelperText>
                 </FormControl>
 
                 <Divider />

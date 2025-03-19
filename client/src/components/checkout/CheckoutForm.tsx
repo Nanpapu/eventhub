@@ -38,8 +38,15 @@ interface CheckoutFormProps {
     imageUrl: string;
     price: number;
     organizer: string;
+    ticketTypes?: {
+      id: string;
+      name: string;
+      price: number;
+      availableQuantity: number;
+    }[];
   };
   ticketQuantity: number;
+  selectedTicketTypeId: string | null;
   onSuccess: (transactionId: string) => void;
   onCancel: () => void;
 }
@@ -65,6 +72,7 @@ type FormValues = {
 export default function CheckoutForm({
   event,
   ticketQuantity,
+  selectedTicketTypeId,
   onSuccess,
   onCancel,
 }: CheckoutFormProps) {
@@ -83,7 +91,27 @@ export default function CheckoutForm({
   } = useForm<FormValues>();
 
   // Tính toán tổng tiền
-  const subtotal = event.price * ticketQuantity;
+  const getTicketPrice = () => {
+    if (event.ticketTypes && selectedTicketTypeId) {
+      const selectedType = event.ticketTypes.find(
+        (t) => t.id === selectedTicketTypeId
+      );
+      return selectedType ? selectedType.price : event.price;
+    }
+    return event.price;
+  };
+
+  const getTicketName = () => {
+    if (event.ticketTypes && selectedTicketTypeId) {
+      const selectedType = event.ticketTypes.find(
+        (t) => t.id === selectedTicketTypeId
+      );
+      return selectedType ? selectedType.name : "Standard";
+    }
+    return "Standard";
+  };
+
+  const subtotal = getTicketPrice() * ticketQuantity;
   const serviceFee = Math.round(subtotal * 0.05); // Phí dịch vụ 5%
   const total = subtotal + serviceFee;
 
@@ -158,8 +186,8 @@ export default function CheckoutForm({
                   {event.location}
                 </Text>
                 <Badge colorScheme="teal">
-                  {ticketQuantity} {ticketQuantity > 1 ? "vé" : "vé"} x $
-                  {event.price}
+                  {getTicketName()}: {ticketQuantity}{" "}
+                  {ticketQuantity > 1 ? "vé" : "vé"} x ${getTicketPrice()}
                 </Badge>
               </Box>
             </Flex>

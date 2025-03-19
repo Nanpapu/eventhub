@@ -54,6 +54,7 @@ interface Event {
   isOnline: boolean;
   onlineUrl?: string;
   capacity: number;
+  maxTicketsPerPerson: number; // Số lượng vé tối đa mỗi người có thể mua
   isPaid: boolean;
   price?: number;
   ticketTypes: {
@@ -97,6 +98,7 @@ interface Event {
 - address: required if !isOnline
 - onlineUrl: required if isOnline
 - capacity: required, min 1
+- maxTicketsPerPerson: required, min 1, max = capacity
 - price: required if isPaid && !ticketTypes
 - ticketTypes: array, must have at least one if isPaid && !price
 - image: required
