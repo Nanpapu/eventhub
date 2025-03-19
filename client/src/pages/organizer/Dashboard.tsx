@@ -52,6 +52,7 @@ import {
   FaPlus,
   FaChartLine,
   FaUndo,
+  FaQrcode,
 } from "react-icons/fa";
 import {
   ResponsiveContainer,
@@ -253,7 +254,7 @@ const Dashboard = () => {
         "https://images.unsplash.com/photo-1594904351111-a072f80b1a71?w=500&auto=format",
       totalTickets: 100,
       soldTickets: 87,
-      status: "upcoming",
+      status: "ongoing",
       revenue: 2610,
     },
     {
@@ -295,10 +296,37 @@ const Dashboard = () => {
       status: "upcoming",
       revenue: 3250,
     },
+    {
+      id: "6",
+      title: "AI Conference",
+      date: new Date("2023-10-15"),
+      location: "Tech Hub, San Francisco",
+      isOnline: false,
+      imageUrl:
+        "https://images.unsplash.com/photo-1591115765373-5207764f72e4?w=500&auto=format",
+      totalTickets: 300,
+      soldTickets: 245,
+      status: "ongoing",
+      revenue: 12250,
+    },
+    {
+      id: "7",
+      title: "Webinar Marketing Digital",
+      date: new Date("2023-11-05"),
+      location: "https://zoom.us/j/987654321",
+      isOnline: true,
+      imageUrl:
+        "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&auto=format",
+      totalTickets: 150,
+      soldTickets: 110,
+      status: "cancelled",
+      revenue: 2200,
+    },
   ]);
 
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
+  const ongoingEvents = events.filter((event) => event.status === "ongoing");
   const pastEvents = events.filter((event) => event.status === "past");
   const cancelledEvents = events.filter(
     (event) => event.status === "cancelled"
@@ -478,6 +506,7 @@ const Dashboard = () => {
         <Tabs colorScheme="teal" isFitted variant="enclosed">
           <TabList mb={4}>
             <Tab fontWeight="medium">Sự Kiện Sắp Tới</Tab>
+            <Tab fontWeight="medium">Sự Kiện Đang Diễn Ra</Tab>
             <Tab fontWeight="medium">Sự Kiện Đã Qua</Tab>
             <Tab fontWeight="medium">Sự Kiện Đã Hủy</Tab>
           </TabList>
@@ -486,7 +515,7 @@ const Dashboard = () => {
             {/* Tab sự kiện sắp tới */}
             <TabPanel p={0}>
               <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">Quản Lý Sự Kiện Sắp Tới Của Bạn</Heading>
+                <Heading size="md">Sự Kiện Sắp Tới Của Bạn</Heading>
                 <Button
                   as={RouterLink}
                   to="/create-event"
@@ -580,6 +609,126 @@ const Dashboard = () => {
                                 onClick={() => handleEditEvent(event.id)}
                               />
                             </Tooltip>
+                            <Tooltip label="Hủy sự kiện">
+                              <IconButton
+                                aria-label="Hủy sự kiện"
+                                icon={<FaTrash />}
+                                size="sm"
+                                bg={cancelBtnBg}
+                                color={cancelBtnColor}
+                                _hover={{
+                                  bg: cancelBtnHoverBg,
+                                }}
+                                onClick={() => confirmCancelEvent(event.id)}
+                              />
+                            </Tooltip>
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </TabPanel>
+
+            {/* Tab sự kiện đang diễn ra */}
+            <TabPanel p={0}>
+              <Heading size="md" mb={4}>
+                Sự Kiện Đang Diễn Ra Của Bạn
+              </Heading>
+
+              {ongoingEvents.length === 0 ? (
+                <Text py={4}>Bạn không có sự kiện đang diễn ra nào.</Text>
+              ) : (
+                <Table variant="simple">
+                  <Thead bg={tableHeaderBg}>
+                    <Tr>
+                      <Th>Sự Kiện</Th>
+                      <Th>Ngày</Th>
+                      <Th>Bán Vé</Th>
+                      <Th>Doanh Thu</Th>
+                      <Th>Thao Tác</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {ongoingEvents.map((event) => (
+                      <Tr key={event.id}>
+                        <Td>
+                          <HStack>
+                            <Image
+                              src={event.imageUrl}
+                              alt={event.title}
+                              boxSize="40px"
+                              borderRadius="md"
+                              objectFit="cover"
+                            />
+                            <VStack align="start" spacing={0}>
+                              <Flex align="center">
+                                <Link
+                                  as={RouterLink}
+                                  to={`/events/${event.id}`}
+                                  fontWeight="medium"
+                                  _hover={{ color: "teal.500" }}
+                                  mr={2}
+                                >
+                                  {event.title}
+                                </Link>
+                                <Badge colorScheme="green" fontSize="2xs">
+                                  Đang diễn ra
+                                </Badge>
+                              </Flex>
+                              <Text fontSize="xs" color="gray.500">
+                                {event.isOnline
+                                  ? "Sự Kiện Trực Tuyến"
+                                  : event.location}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                        </Td>
+                        <Td>
+                          {event.date.toLocaleDateString("vi-VN", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text>
+                              {event.soldTickets}/{event.totalTickets} (
+                              {Math.round(
+                                (event.soldTickets / event.totalTickets) * 100
+                              )}
+                              %)
+                            </Text>
+                            <Progress
+                              value={
+                                (event.soldTickets / event.totalTickets) * 100
+                              }
+                              size="sm"
+                              colorScheme="teal"
+                              w="100%"
+                              borderRadius="full"
+                            />
+                          </VStack>
+                        </Td>
+                        <Td>${event.revenue.toLocaleString()}</Td>
+                        <Td>
+                          <HStack spacing={1}>
+                            <Tooltip label="Điểm danh người tham gia">
+                              <IconButton
+                                aria-label="Điểm danh"
+                                icon={<FaQrcode />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="teal"
+                                onClick={() =>
+                                  navigate(
+                                    `/organizer/events/${event.id}/check-in`
+                                  )
+                                }
+                              />
+                            </Tooltip>
                             <Tooltip label="Xem phân tích">
                               <IconButton
                                 aria-label="Phân tích"
@@ -606,19 +755,6 @@ const Dashboard = () => {
                                     `/organizer/events/${event.id}/attendees`
                                   )
                                 }
-                              />
-                            </Tooltip>
-                            <Tooltip label="Hủy sự kiện">
-                              <IconButton
-                                aria-label="Hủy sự kiện"
-                                icon={<FaTrash />}
-                                size="sm"
-                                bg={cancelBtnBg}
-                                color={cancelBtnColor}
-                                _hover={{
-                                  bg: cancelBtnHoverBg,
-                                }}
-                                onClick={() => confirmCancelEvent(event.id)}
                               />
                             </Tooltip>
                           </HStack>
@@ -662,14 +798,20 @@ const Dashboard = () => {
                               objectFit="cover"
                             />
                             <VStack align="start" spacing={0}>
-                              <Link
-                                as={RouterLink}
-                                to={`/events/${event.id}`}
-                                fontWeight="medium"
-                                _hover={{ color: "teal.500" }}
-                              >
-                                {event.title}
-                              </Link>
+                              <Flex align="center">
+                                <Link
+                                  as={RouterLink}
+                                  to={`/events/${event.id}`}
+                                  fontWeight="medium"
+                                  _hover={{ color: "teal.500" }}
+                                  mr={2}
+                                >
+                                  {event.title}
+                                </Link>
+                                <Badge colorScheme="gray" fontSize="2xs">
+                                  Đã kết thúc
+                                </Badge>
+                              </Flex>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
                                   ? "Sự Kiện Trực Tuyến"
@@ -828,7 +970,7 @@ const Dashboard = () => {
             <ModalCloseButton />
             <ModalBody>
               <Text>Bạn có chắc chắn muốn hủy sự kiện này không?</Text>
-              <Text mt={2} fontSize="sm" color="gray.600">
+              <Text mt={2} fontSize="sm" color="gray.500">
                 Sự kiện sẽ được đánh dấu là đã hủy và tất cả người đăng ký sẽ
                 được thông báo. Dữ liệu sự kiện vẫn được giữ lại trong hệ thống.
               </Text>
