@@ -20,6 +20,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
 import eventService, { EventFilter } from "../../services/event.service";
+import { formatDate } from "../../utils/formatters";
 
 // Định nghĩa interface cho event để có type checking
 interface EventData {
@@ -196,6 +197,9 @@ const SearchResults = () => {
     if (category) params.category = category;
     if (newPage > 1) params.page = newPage.toString();
     setSearchParams(params);
+
+    // Gọi API khi chuyển trang
+    filterEvents();
   };
 
   // Reset tất cả bộ lọc
@@ -211,10 +215,22 @@ const SearchResults = () => {
     filterEvents();
   };
 
-  // Tải dữ liệu ban đầu
+  // Tải dữ liệu ban đầu khi component mount và khi URL có params
   useEffect(() => {
-    filterEvents();
-  }, [filterEvents]);
+    // Nếu có tham số trong URL, thực hiện tìm kiếm ngay lập tức
+    if (
+      initialKeyword ||
+      initialLocation ||
+      initialCategory ||
+      initialPage > 1
+    ) {
+      filterEvents();
+    } else {
+      // Nếu không có tham số tìm kiếm, vẫn load dữ liệu mặc định (trang 1)
+      filterEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Format địa điểm cho SearchBar
   const locationOptions = locations.map((loc) => ({ name: loc }));

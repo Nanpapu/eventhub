@@ -167,7 +167,7 @@ const Home = () => {
             id: event.id,
             title: event.title,
             description: event.description,
-            date: formatDate(new Date(event.date)),
+            date: new Date(event.date).toLocaleDateString("vi-VN"),
             location: event.location,
             imageUrl: event.imageUrl,
             category: event.category,
