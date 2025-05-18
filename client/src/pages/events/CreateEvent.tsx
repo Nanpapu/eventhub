@@ -58,6 +58,7 @@ import {
   TagLabel,
   TagCloseButton,
   Badge,
+  InputRightElement,
 } from "@chakra-ui/react";
 import {
   FiCalendar,
@@ -107,6 +108,7 @@ interface EventFormData {
     name: string;
     price: number;
     quantity: number;
+    description?: string;
   }[];
   image: string;
   imageFile?: File | null; // Thêm imageFile để xử lý upload
@@ -494,17 +496,13 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                     flex={1}
                   >
                     <FormLabel htmlFor={`ticketPrice-${ticket.id}`}>
-                      Giá vé (VNĐ)
+                      Giá vé
                     </FormLabel>
                     <NumberInput
                       id={`ticketPrice-${ticket.id}`}
                       value={ticket.price}
-                      onChange={(valueString) =>
-                        updateTicketType(
-                          ticket.id,
-                          "price",
-                          parseFloat(valueString) || 0
-                        )
+                      onChange={(valueString, valueNumber) =>
+                        updateTicketType(ticket.id, "price", valueNumber || 0)
                       }
                       min={0}
                       borderColor={borderColor}
@@ -513,7 +511,16 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                         <InputLeftElement pointerEvents="none">
                           <Icon as={FiDollarSign} color="gray.500" />
                         </InputLeftElement>
-                        <NumberInputField borderColor={borderColor} pl={10} />
+                        <NumberInputField
+                          borderColor={borderColor}
+                          pl={10}
+                          placeholder="VD: 100.000"
+                        />
+                        <InputRightElement width="4.5rem">
+                          <Text pr={1} color="gray.500">
+                            VNĐ
+                          </Text>
+                        </InputRightElement>
                       </InputGroup>
                       <NumberInputStepper>
                         <NumberIncrementStepper />
@@ -561,6 +568,28 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                     )}
                   </FormControl>
                 </HStack>
+                <FormControl
+                  isInvalid={!!errors[`ticketDescription-${ticket.id}`]}
+                >
+                  <FormLabel htmlFor={`ticketDescription-${ticket.id}`}>
+                    Mô tả loại vé (tùy chọn)
+                  </FormLabel>
+                  <Textarea
+                    id={`ticketDescription-${ticket.id}`}
+                    value={ticket.description || ""}
+                    onChange={(e) =>
+                      updateTicketType(ticket.id, "description", e.target.value)
+                    }
+                    placeholder="VD: Vé này bao gồm quyền lợi đặc biệt..."
+                    borderColor={borderColor}
+                    size="sm"
+                  />
+                  {errors[`ticketDescription-${ticket.id}`] && (
+                    <FormErrorMessage>
+                      {errors[`ticketDescription-${ticket.id}`]}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
                 <Flex justify="flex-end">
                   <IconButton
                     aria-label="Xóa loại vé"
@@ -904,6 +933,16 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
                     Giá: {ticket.price.toLocaleString("vi-VN")} VNĐ - Số lượng:{" "}
                     {ticket.quantity}
                   </Text>
+                  {ticket.description && (
+                    <Text
+                      fontSize="xs"
+                      color={secondaryTextColor}
+                      mt={1}
+                      whiteSpace="pre-wrap"
+                    >
+                      Mô tả: {ticket.description}
+                    </Text>
+                  )}
                 </Box>
               ))}
             </VStack>
@@ -1022,7 +1061,7 @@ const CreateEvent = () => {
     isPaid: false,
     price: undefined,
     ticketTypes: [
-      // { id: `ticket-${Date.now()}`, name: "Tiêu chuẩn", price: 0, quantity: 100 }, // Sẽ thêm vé khi isPaid = true
+      // { id: `ticket-${Date.now()}`, name: "Tiêu chuẩn", price: 0, quantity: 100, description: "" }, // Sẽ thêm vé khi isPaid = true
     ],
     image: "https://via.placeholder.com/800x400?text=Event+Image",
     imageFile: null,
@@ -1035,6 +1074,7 @@ const CreateEvent = () => {
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const stepperHoverBg = useColorModeValue("gray.100", "gray.700");
 
   useEffect(() => {
     return () => {
@@ -1052,6 +1092,7 @@ const CreateEvent = () => {
             name: "Tiêu chuẩn",
             price: 0,
             quantity: prev.capacity || 100,
+            description: "",
           },
         ],
       }));
@@ -1115,9 +1156,22 @@ const CreateEvent = () => {
                 name: "Early Bird",
                 price: 19.99,
                 quantity: 100,
+                description: "",
               },
-              { id: "standard", name: "Standard", price: 29.99, quantity: 300 },
-              { id: "vip", name: "VIP", price: 49.99, quantity: 100 },
+              {
+                id: "standard",
+                name: "Standard",
+                price: 29.99,
+                quantity: 300,
+                description: "",
+              },
+              {
+                id: "vip",
+                name: "VIP",
+                price: 49.99,
+                quantity: 100,
+                description: "",
+              },
             ],
             image:
               "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
@@ -1164,6 +1218,7 @@ const CreateEvent = () => {
               name: "Tiêu chuẩn",
               price: 0,
               quantity: 100,
+              description: "",
             },
           ],
         }));
@@ -1261,7 +1316,13 @@ const CreateEvent = () => {
       ...prev,
       ticketTypes: [
         ...prev.ticketTypes,
-        { id: `ticket-${Date.now()}`, name: "", price: 0, quantity: 10 },
+        {
+          id: `ticket-${Date.now()}`,
+          name: "",
+          price: 0,
+          quantity: 10,
+          description: "",
+        },
       ],
     }));
   };
@@ -1509,7 +1570,7 @@ const CreateEvent = () => {
             name: t.name,
             price: t.price,
             quantity: t.quantity,
-            description: t.name,
+            description: t.description || "",
           }))
         : undefined,
       tags,
@@ -1664,19 +1725,49 @@ const CreateEvent = () => {
           >
             {stepperSteps.map((step, index) => {
               const IconComponent = step.icon;
+              const isClickable = index <= activeStep;
               return (
-                <Step key={index} onClick={() => setActiveStep(index)}>
-                  <StepIndicator>
-                    <StepStatus
-                      complete={<IconComponent />}
-                      incomplete={<StepNumber />}
-                      active={<StepNumber />}
-                    />
-                  </StepIndicator>
-                  <Box flexShrink="0" textAlign="left">
-                    <StepTitle>{step.title}</StepTitle>
-                    <StepDescription>{step.description}</StepDescription>
-                  </Box>
+                <Step key={index}>
+                  <Flex
+                    as="button"
+                    onClick={() => {
+                      if (isClickable) {
+                        if (index <= activeStep) {
+                          setActiveStep(index);
+                        }
+                      } else {
+                        toast({
+                          title: "Vui lòng hoàn thành các bước trước",
+                          description:
+                            "Bạn cần hoàn thành các bước theo thứ tự.",
+                          status: "info",
+                          duration: 3000,
+                          isClosable: true,
+                        });
+                      }
+                    }}
+                    cursor={isClickable ? "pointer" : "not-allowed"}
+                    alignItems="center"
+                    textAlign="left"
+                    p={2}
+                    borderRadius="md"
+                    _hover={isClickable ? { bg: stepperHoverBg } : {}}
+                    border="none"
+                    background="none"
+                    w="100%"
+                  >
+                    <StepIndicator>
+                      <StepStatus
+                        complete={<IconComponent />}
+                        incomplete={<StepNumber />}
+                        active={<StepNumber />}
+                      />
+                    </StepIndicator>
+                    <Box flexShrink="0" ml={3}>
+                      <StepTitle>{step.title}</StepTitle>
+                      <StepDescription>{step.description}</StepDescription>
+                    </Box>
+                  </Flex>
                   <StepSeparator />
                 </Step>
               );
