@@ -21,6 +21,7 @@ import {
   HStack,
   IconButton,
   Icon,
+  Spinner,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
@@ -34,25 +35,35 @@ import {
   FiTag,
   FiGrid,
   FiBookmark,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
+import eventService from "../../services/event.service";
 
 // Interface cho dữ liệu sự kiện
 interface Event {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
   startTime: string;
   location: string;
-  image: string;
+  image?: string;
+  imageUrl?: string;
   category: string;
   isPaid: boolean;
   price?: number;
-  organizer: string;
+  organizer: {
+    id?: string;
+    name: string;
+    avatar?: string;
+  };
   isOwner?: boolean;
   participants?: number;
+  // Thêm những trường có thể có từ API
+  address?: string;
+  endTime?: string;
 }
 
 // Danh mục sự kiện
@@ -72,7 +83,7 @@ const categories = [
 // Dữ liệu mẫu: Sự kiện do user tạo
 const myEventsData: Event[] = [
   {
-    id: 101,
+    id: "101",
     title: "Web Development Workshop",
     description: "Learn the latest web development techniques and tools.",
     date: "15/09/2023",
@@ -82,12 +93,14 @@ const myEventsData: Event[] = [
     category: "workshop",
     isPaid: true,
     price: 15.0,
-    organizer: "Nguyen Van A",
+    organizer: {
+      name: "Nguyen Van A",
+    },
     isOwner: true,
     participants: 45,
   },
   {
-    id: 102,
+    id: "102",
     title: "Digital Marketing Conference",
     description: "Explore effective digital marketing strategies for 2023.",
     date: "22/09/2023",
@@ -97,12 +110,14 @@ const myEventsData: Event[] = [
     category: "conference",
     isPaid: true,
     price: 25.0,
-    organizer: "Nguyen Van A",
+    organizer: {
+      name: "Nguyen Van A",
+    },
     isOwner: true,
     participants: 120,
   },
   {
-    id: 103,
+    id: "103",
     title: "Mobile App Design Meetup",
     description: "Share ideas and get feedback on mobile app designs.",
     date: "05/10/2023",
@@ -111,53 +126,11 @@ const myEventsData: Event[] = [
     image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg",
     category: "meetup",
     isPaid: false,
-    organizer: "Nguyen Van A",
+    organizer: {
+      name: "Nguyen Van A",
+    },
     isOwner: true,
     participants: 30,
-  },
-];
-
-// Dữ liệu mẫu: Sự kiện đã lưu
-const savedEventsData: Event[] = [
-  {
-    id: 201,
-    title: "Photography Exhibition",
-    description:
-      "Explore stunning photography from local and international artists.",
-    date: "18/09/2023",
-    startTime: "10:00 AM",
-    location: "Art Gallery",
-    image: "https://images.pexels.com/photos/1591056/pexels-photo-1591056.jpeg",
-    category: "exhibition",
-    isPaid: false,
-    organizer: "Arts Council",
-  },
-  {
-    id: 202,
-    title: "Future of AI Conference",
-    description: "Discover the latest advancements in artificial intelligence.",
-    date: "25/09/2023",
-    startTime: "09:30 AM",
-    location: "Tech Convention Center",
-    image: "https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg",
-    category: "conference",
-    isPaid: true,
-    price: 35.0,
-    organizer: "Tech Forward",
-  },
-  {
-    id: 203,
-    title: "Classical Music Concert",
-    description:
-      "An evening of classical masterpieces performed by renowned musicians.",
-    date: "08/10/2023",
-    startTime: "07:00 PM",
-    location: "Opera House",
-    image: "https://images.pexels.com/photos/7095506/pexels-photo-7095506.jpeg",
-    category: "music",
-    isPaid: true,
-    price: 20.0,
-    organizer: "Symphony Orchestra",
   },
 ];
 
@@ -182,7 +155,9 @@ const EventManagement = () => {
 
   // State lưu dữ liệu sự kiện
   const [myEvents, setMyEvents] = useState<Event[]>(myEventsData);
-  const [savedEvents, setSavedEvents] = useState<Event[]>(savedEventsData);
+  const [savedEvents, setSavedEvents] = useState<Event[]>([]);
+  const [isSavedEventsLoading, setIsSavedEventsLoading] = useState(false);
+  const [savedEventsError, setSavedEventsError] = useState<string | null>(null);
 
   // Màu sắc theo theme
   const tabBg = useColorModeValue("white", "gray.800");
@@ -196,6 +171,61 @@ const EventManagement = () => {
   const iconColor = useColorModeValue("gray.400", "gray.500");
   const tagBg = useColorModeValue("teal.50", "teal.900");
   const tagColor = useColorModeValue("teal.600", "teal.200");
+  const errorColor = useColorModeValue("red.500", "red.300");
+
+  // Fetch saved events từ API
+  useEffect(() => {
+    const fetchSavedEvents = async () => {
+      setIsSavedEventsLoading(true);
+      setSavedEventsError(null);
+
+      try {
+        const response = await eventService.getSavedEvents();
+
+        if (response.success && response.events) {
+          // Format dữ liệu từ API để phù hợp với cấu trúc Event
+          const formattedEvents: Event[] = response.events.map(
+            (event: any) => ({
+              id: event._id || event.id,
+              title: event.title || "Untitled Event",
+              description: event.description || "No description",
+              date: event.date
+                ? new Date(event.date).toLocaleDateString("vi-VN")
+                : "No date specified",
+              startTime: event.startTime || "N/A",
+              endTime: event.endTime || "N/A",
+              location: event.location || "No location",
+              address: event.address || "No address",
+              image: event.imageUrl,
+              imageUrl: event.imageUrl,
+              category: event.category || "other",
+              isPaid: event.isPaid || false,
+              price: event.price || 0,
+              organizer: event.organizer || {
+                name: "Unknown Organizer",
+                avatar:
+                  "https://ui-avatars.com/api/?name=Unknown&background=0D8ABC&color=fff",
+              },
+            })
+          );
+
+          setSavedEvents(formattedEvents);
+        } else {
+          setSavedEventsError("Không thể tải danh sách sự kiện đã lưu");
+        }
+      } catch (error: any) {
+        console.error("Error fetching saved events:", error);
+        setSavedEventsError(
+          error.response?.data?.message ||
+            "Có lỗi xảy ra khi tải sự kiện đã lưu"
+        );
+      } finally {
+        setIsSavedEventsLoading(false);
+      }
+    };
+
+    fetchSavedEvents();
+  }, []);
 
   // Filter sự kiện dựa trên tìm kiếm
   const filteredMyEvents = myEvents.filter((event) => {
@@ -238,15 +268,21 @@ const EventManagement = () => {
   };
 
   // Xóa sự kiện
-  const handleDeleteEvent = (eventId: number) => {
+  const handleDeleteEvent = (eventId: string) => {
     setMyEvents(myEvents.filter((event) => event.id !== eventId));
     // Trong thực tế sẽ gọi API để xóa sự kiện
   };
 
-  // Hủy lưu sự kiện
-  const handleUnsaveEvent = (eventId: number) => {
-    setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
-    // Trong thực tế sẽ gọi API để hủy lưu sự kiện
+  // Hủy lưu sự kiện - gọi API để hủy lưu
+  const handleUnsaveEvent = async (eventId: string) => {
+    try {
+      await eventService.unsaveEvent(eventId);
+      // Cập nhật state sau khi hủy thành công
+      setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
+    } catch (error: any) {
+      console.error("Error unsaving event:", error);
+      // Có thể thêm xử lý thông báo lỗi ở đây
+    }
   };
 
   // Format categories cho SearchBar
@@ -267,6 +303,143 @@ const EventManagement = () => {
     category: categoryFilter,
     showFreeOnly,
     showPaidOnly,
+  };
+
+  // Render loading state cho saved events tab
+  const renderSavedEventsContent = () => {
+    if (isSavedEventsLoading) {
+      return (
+        <Flex justify="center" align="center" minH="200px">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="teal.500" thickness="4px" />
+            <Text>Đang tải sự kiện đã lưu...</Text>
+          </VStack>
+        </Flex>
+      );
+    }
+
+    if (savedEventsError) {
+      return (
+        <Alert status="error" borderRadius="md">
+          <AlertIcon />
+          <Flex direction="column" align="start">
+            <AlertTitle mr={2}>Lỗi khi tải sự kiện đã lưu!</AlertTitle>
+            <AlertDescription>{savedEventsError}</AlertDescription>
+          </Flex>
+        </Alert>
+      );
+    }
+
+    if (filteredSavedEvents.length === 0) {
+      return (
+        <Alert status="info" borderRadius="md">
+          <AlertIcon />
+          <Flex direction="column" align="start">
+            <AlertTitle mr={2}>Không có sự kiện đã lưu!</AlertTitle>
+            <AlertDescription>
+              Bạn chưa lưu sự kiện nào hoặc không có sự kiện phù hợp với bộ lọc
+              hiện tại.
+            </AlertDescription>
+          </Flex>
+        </Alert>
+      );
+    }
+
+    return (
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+        {filteredSavedEvents.map((event) => (
+          <Box
+            key={event.id}
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            bg={cardBg}
+            borderColor={borderColor}
+            transition="all 0.3s"
+            _hover={{
+              transform: "translateY(-5px)",
+              shadow: "md",
+              bg: cardHoverBg,
+            }}
+            position="relative"
+          >
+            <IconButton
+              aria-label="Unsave event"
+              icon={<FiX />}
+              size="sm"
+              position="absolute"
+              top={2}
+              right={2}
+              colorScheme="red"
+              variant="solid"
+              onClick={() => handleUnsaveEvent(event.id)}
+              zIndex={1}
+              borderRadius="full"
+            />
+
+            <Link to={`/events/${event.id}`}>
+              <Box h="200px" overflow="hidden">
+                <Box
+                  bgImage={`url(${event.imageUrl || event.image})`}
+                  bgSize="cover"
+                  bgPosition="center"
+                  h="100%"
+                  w="100%"
+                  transition="transform 0.3s"
+                  _hover={{ transform: "scale(1.05)" }}
+                />
+              </Box>
+
+              <Box p={4}>
+                <Flex justify="space-between" align="start" mb={2}>
+                  <Badge colorScheme="teal" borderRadius="full" px={2}>
+                    {getCategoryName(event.category)}
+                  </Badge>
+                  {event.isPaid ? (
+                    <Badge colorScheme="purple" borderRadius="full" px={2}>
+                      {event.price} VND
+                    </Badge>
+                  ) : (
+                    <Badge colorScheme="green" borderRadius="full" px={2}>
+                      Miễn phí
+                    </Badge>
+                  )}
+                </Flex>
+
+                <Heading as="h3" size="md" mb={2} noOfLines={2}>
+                  {event.title}
+                </Heading>
+
+                <Text
+                  color={secondaryTextColor}
+                  fontSize="sm"
+                  mb={3}
+                  noOfLines={2}
+                >
+                  {event.description}
+                </Text>
+
+                <VStack spacing={1} align="start">
+                  <Flex align="center">
+                    <Icon as={FiCalendar} mr={2} color="teal.500" />
+                    <Text fontSize="sm">
+                      {event.date} • {event.startTime}
+                    </Text>
+                  </Flex>
+
+                  <Flex align="center">
+                    <Icon as={FiMapPin} mr={2} color="teal.500" />
+                    <Text fontSize="sm" noOfLines={1}>
+                      {event.location}
+                    </Text>
+                  </Flex>
+                </VStack>
+              </Box>
+            </Link>
+          </Box>
+        ))}
+      </SimpleGrid>
+    );
   };
 
   return (
@@ -320,7 +493,7 @@ const EventManagement = () => {
               <Icon as={FiBookmark} fontSize="18px" mr={2} />
               <Text>Sự kiện đã lưu</Text>
               <Badge ml={2} colorScheme="purple" borderRadius="full">
-                {filteredSavedEvents.length}
+                {isSavedEventsLoading ? "..." : filteredSavedEvents.length}
               </Badge>
             </Flex>
           </Tab>
@@ -364,7 +537,10 @@ const EventManagement = () => {
               <Flex justify="space-between" align="center" mb={6}>
                 <Heading as="h3" size="md">
                   Tất cả sự kiện (
-                  {filteredMyEvents.length + filteredSavedEvents.length})
+                  {isSavedEventsLoading
+                    ? "..."
+                    : filteredMyEvents.length + filteredSavedEvents.length}
+                  )
                 </Heading>
                 <Button
                   as={Link}
@@ -377,7 +553,14 @@ const EventManagement = () => {
               </Flex>
 
               {/* Hiển thị tất cả sự kiện */}
-              {filteredMyEvents.length + filteredSavedEvents.length > 0 ? (
+              {isSavedEventsLoading ? (
+                <Flex justify="center" align="center" minH="200px">
+                  <VStack spacing={4}>
+                    <Spinner size="xl" color="teal.500" thickness="4px" />
+                    <Text>Đang tải sự kiện...</Text>
+                  </VStack>
+                </Flex>
+              ) : filteredMyEvents.length + filteredSavedEvents.length > 0 ? (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                   {[...filteredMyEvents, ...filteredSavedEvents].map(
                     (event) => (
@@ -415,7 +598,7 @@ const EventManagement = () => {
                         <Link to={`/events/${event.id}`}>
                           <Box h="200px" overflow="hidden">
                             <Box
-                              bgImage={`url(${event.image})`}
+                              bgImage={`url(${event.imageUrl || event.image})`}
                               bgSize="cover"
                               bgPosition="center"
                               h="100%"
@@ -703,7 +886,8 @@ const EventManagement = () => {
             >
               <Flex justify="space-between" align="center" mb={6}>
                 <Heading as="h3" size="md">
-                  Sự kiện đã lưu ({filteredSavedEvents.length})
+                  Sự kiện đã lưu (
+                  {isSavedEventsLoading ? "..." : filteredSavedEvents.length})
                 </Heading>
                 <Button
                   as={Link}
@@ -717,122 +901,7 @@ const EventManagement = () => {
               </Flex>
 
               {/* Hiển thị sự kiện đã lưu */}
-              {filteredSavedEvents.length > 0 ? (
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {filteredSavedEvents.map((event) => (
-                    <Box
-                      key={event.id}
-                      borderWidth="1px"
-                      borderRadius="lg"
-                      overflow="hidden"
-                      bg={cardBg}
-                      borderColor={borderColor}
-                      transition="all 0.3s"
-                      _hover={{
-                        transform: "translateY(-5px)",
-                        shadow: "md",
-                        bg: cardHoverBg,
-                      }}
-                      position="relative"
-                    >
-                      <IconButton
-                        aria-label="Unsave event"
-                        icon={<FiX />}
-                        size="sm"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        colorScheme="red"
-                        variant="solid"
-                        onClick={() => handleUnsaveEvent(event.id)}
-                        zIndex={1}
-                        borderRadius="full"
-                      />
-
-                      <Link to={`/events/${event.id}`}>
-                        <Box h="200px" overflow="hidden">
-                          <Box
-                            bgImage={`url(${event.image})`}
-                            bgSize="cover"
-                            bgPosition="center"
-                            h="100%"
-                            w="100%"
-                            transition="transform 0.3s"
-                            _hover={{ transform: "scale(1.05)" }}
-                          />
-                        </Box>
-
-                        <Box p={4}>
-                          <Flex justify="space-between" align="start" mb={2}>
-                            <Badge
-                              colorScheme="teal"
-                              borderRadius="full"
-                              px={2}
-                            >
-                              {getCategoryName(event.category)}
-                            </Badge>
-                            {event.isPaid ? (
-                              <Badge
-                                colorScheme="purple"
-                                borderRadius="full"
-                                px={2}
-                              >
-                                {event.price} VND
-                              </Badge>
-                            ) : (
-                              <Badge
-                                colorScheme="green"
-                                borderRadius="full"
-                                px={2}
-                              >
-                                Miễn phí
-                              </Badge>
-                            )}
-                          </Flex>
-
-                          <Heading as="h3" size="md" mb={2} noOfLines={2}>
-                            {event.title}
-                          </Heading>
-
-                          <Text
-                            color={secondaryTextColor}
-                            fontSize="sm"
-                            mb={3}
-                            noOfLines={2}
-                          >
-                            {event.description}
-                          </Text>
-
-                          <VStack spacing={1} align="start">
-                            <Flex align="center">
-                              <Icon as={FiCalendar} mr={2} color="teal.500" />
-                              <Text fontSize="sm">
-                                {event.date} • {event.startTime}
-                              </Text>
-                            </Flex>
-
-                            <Flex align="center">
-                              <Icon as={FiMapPin} mr={2} color="teal.500" />
-                              <Text fontSize="sm" noOfLines={1}>
-                                {event.location}
-                              </Text>
-                            </Flex>
-                          </VStack>
-                        </Box>
-                      </Link>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              ) : (
-                <Alert status="info" borderRadius="md">
-                  <AlertIcon />
-                  <AlertTitle mr={2}>Không tìm thấy sự kiện!</AlertTitle>
-                  <AlertDescription>
-                    Bạn chưa lưu sự kiện nào hoặc không có sự kiện phù hợp với
-                    bộ lọc hiện tại.
-                  </AlertDescription>
-                </Alert>
-              )}
+              {renderSavedEventsContent()}
             </Box>
           </TabPanel>
         </TabPanels>
