@@ -1,22 +1,20 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
-// Định nghĩa interface cho User document
-export interface IUser extends mongoose.Document {
+// Interface cho User document
+export interface IUser extends Document {
   email: string;
   password: string;
-  name: string;
-  avatar?: string;
-  bio?: string;
-  role: "user" | "organizer" | "admin";
-  savedEvents: mongoose.Types.ObjectId[];
+  firstName: string;
+  lastName: string;
+  role: "user" | "admin";
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-// Định nghĩa schema
-const UserSchema = new mongoose.Schema(
+// Schema cho User
+const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
@@ -24,55 +22,39 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please provide a valid email address",
-      ],
     },
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
+      minlength: [6, "Password must be at least 6 characters long"],
     },
-    name: {
+    firstName: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, "First name is required"],
       trim: true,
     },
-    avatar: {
+    lastName: {
       type: String,
-      default: "",
-    },
-    bio: {
-      type: String,
-      default: "",
+      required: [true, "Last name is required"],
+      trim: true,
     },
     role: {
       type: String,
-      enum: ["user", "organizer", "admin"],
+      enum: ["user", "admin"],
       default: "user",
     },
-    savedEvents: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Event",
-      },
-    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Middleware để hash password trước khi lưu
-UserSchema.pre("save", async function (next) {
-  // Chỉ hash password nếu nó được sửa đổi hoặc mới
+// Hash password trước khi lưu
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   try {
-    // Tạo salt với 10 rounds
     const salt = await bcrypt.genSalt(10);
-    // Hash password với salt đã tạo
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error: any) {
@@ -81,17 +63,13 @@ UserSchema.pre("save", async function (next) {
 });
 
 // Method để so sánh password
-UserSchema.methods.comparePassword = async function (
+userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
-  try {
-    // So sánh candidatePassword với password đã hash trong database
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    throw error;
-  }
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Tạo và export model
-const User = mongoose.model<IUser>("User", UserSchema);
+const User = mongoose.model<IUser>("User", userSchema);
+
 export default User;

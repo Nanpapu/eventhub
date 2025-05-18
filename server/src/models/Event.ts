@@ -1,190 +1,115 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 // Interface cho TicketType
 export interface ITicketType {
-  id: string;
   name: string;
+  description: string;
   price: number;
   quantity: number;
-  quantitySold: number;
+  startSaleDate: Date;
+  endSaleDate: Date;
+  soldQuantity: number;
 }
 
 // Interface cho Event document
-export interface IEvent extends mongoose.Document {
+export interface IEvent extends Document {
   title: string;
   description: string;
   category: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
   location: string;
-  address: string;
-  isOnline: boolean;
-  onlineUrl?: string;
-  capacity: number;
-  isPaid: boolean;
-  price?: number;
+  venue: string;
+  startDate: Date;
+  endDate: Date;
+  bannerImage: string;
   ticketTypes: ITicketType[];
-  image: string;
-  tags: string[];
   organizer: mongoose.Types.ObjectId;
-  attendees: mongoose.Types.ObjectId[];
-  status: "draft" | "published" | "cancelled" | "completed";
-  views: number;
+  isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Ticket Type Schema (embedded in Event)
-const TicketTypeSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    required: true,
-  },
-  name: {
-    type: String,
-    required: [true, "Ticket name is required"],
-    trim: true,
-  },
-  price: {
-    type: Number,
-    required: [true, "Ticket price is required"],
-    min: [0, "Price cannot be negative"],
-  },
-  quantity: {
-    type: Number,
-    required: [true, "Ticket quantity is required"],
-    min: [1, "Quantity must be at least 1"],
-  },
-  quantitySold: {
-    type: Number,
-    default: 0,
-    min: [0, "Quantity sold cannot be negative"],
-  },
-});
-
-// Main Event Schema
-const EventSchema = new mongoose.Schema(
+// Schema cho Event
+const eventSchema = new Schema<IEvent>(
   {
     title: {
       type: String,
-      required: [true, "Event title is required"],
+      required: [true, "Title is required"],
       trim: true,
     },
     description: {
       type: String,
-      required: [true, "Event description is required"],
+      required: [true, "Description is required"],
     },
     category: {
       type: String,
-      required: [true, "Event category is required"],
-      enum: [
-        "workshop",
-        "conference",
-        "meetup",
-        "networking",
-        "music",
-        "exhibition",
-        "food",
-        "sports",
-        "tech",
-        "education",
-        "health",
-        "art",
-        "business",
-        "other",
-      ],
-    },
-    date: {
-      type: Date,
-      required: [true, "Event date is required"],
-    },
-    startTime: {
-      type: String,
-      required: [true, "Event start time is required"],
-    },
-    endTime: {
-      type: String,
-      required: [true, "Event end time is required"],
+      required: [true, "Category is required"],
+      trim: true,
     },
     location: {
       type: String,
-      required: [true, "Event location is required"],
+      required: [true, "Location is required"],
+      trim: true,
     },
-    address: {
+    venue: {
       type: String,
-      required: function (this: IEvent) {
-        return !this.isOnline;
-      },
+      required: [true, "Venue is required"],
+      trim: true,
     },
-    isOnline: {
-      type: Boolean,
-      default: false,
+    startDate: {
+      type: Date,
+      required: [true, "Start date is required"],
     },
-    onlineUrl: {
+    endDate: {
+      type: Date,
+      required: [true, "End date is required"],
+    },
+    bannerImage: {
       type: String,
-      required: function (this: IEvent) {
-        return this.isOnline;
-      },
+      required: [true, "Banner image is required"],
     },
-    capacity: {
-      type: Number,
-      required: [true, "Event capacity is required"],
-      min: [1, "Capacity must be at least 1"],
-    },
-    isPaid: {
-      type: Boolean,
-      default: false,
-    },
-    price: {
-      type: Number,
-      required: function (this: IEvent) {
-        return (
-          this.isPaid && (!this.ticketTypes || this.ticketTypes.length === 0)
-        );
-      },
-      min: [0, "Price cannot be negative"],
-    },
-    ticketTypes: {
-      type: [TicketTypeSchema],
-      default: [],
-      validate: {
-        validator: function (ticketTypes: ITicketType[]) {
-          // Nếu là event có phí và không có price mặc định thì phải có ít nhất 1 loại vé
-          const isPaid = this.get("isPaid");
-          const hasDefaultPrice = this.get("price") !== undefined;
-          return !isPaid || hasDefaultPrice || ticketTypes.length > 0;
+    ticketTypes: [
+      {
+        name: {
+          type: String,
+          required: [true, "Ticket type name is required"],
         },
-        message:
-          "Paid events must have at least one ticket type or a default price",
+        description: {
+          type: String,
+          required: [true, "Ticket type description is required"],
+        },
+        price: {
+          type: Number,
+          required: [true, "Ticket price is required"],
+          min: [0, "Price cannot be negative"],
+        },
+        quantity: {
+          type: Number,
+          required: [true, "Ticket quantity is required"],
+          min: [0, "Quantity cannot be negative"],
+        },
+        startSaleDate: {
+          type: Date,
+          required: [true, "Start sale date is required"],
+        },
+        endSaleDate: {
+          type: Date,
+          required: [true, "End sale date is required"],
+        },
+        soldQuantity: {
+          type: Number,
+          default: 0,
+          min: [0, "Sold quantity cannot be negative"],
+        },
       },
-    },
-    image: {
-      type: String,
-      required: [true, "Event image is required"],
-    },
-    tags: {
-      type: [String],
-      default: [],
-    },
+    ],
     organizer: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Event organizer is required"],
+      required: [true, "Organizer is required"],
     },
-    attendees: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "User",
-      default: [],
-    },
-    status: {
-      type: String,
-      enum: ["draft", "published", "cancelled", "completed"],
-      default: "draft",
-    },
-    views: {
-      type: Number,
-      default: 0,
+    isPublished: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -192,6 +117,14 @@ const EventSchema = new mongoose.Schema(
   }
 );
 
+// Indexes
+eventSchema.index({ title: "text", description: "text" });
+eventSchema.index({ category: 1 });
+eventSchema.index({ location: 1 });
+eventSchema.index({ startDate: 1 });
+eventSchema.index({ organizer: 1 });
+
 // Tạo và export model
-const Event = mongoose.model<IEvent>("Event", EventSchema);
+const Event = mongoose.model<IEvent>("Event", eventSchema);
+
 export default Event;

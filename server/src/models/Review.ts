@@ -1,27 +1,27 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 // Interface cho Review document
-export interface IReview extends mongoose.Document {
-  userId: mongoose.Types.ObjectId;
-  eventId: mongoose.Types.ObjectId;
+export interface IReview extends Document {
+  event: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId;
   rating: number;
   comment: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Định nghĩa schema
-const ReviewSchema = new mongoose.Schema(
+// Schema cho Review
+const reviewSchema = new Schema<IReview>(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "User ID is required"],
-    },
-    eventId: {
-      type: mongoose.Schema.Types.ObjectId,
+    event: {
+      type: Schema.Types.ObjectId,
       ref: "Event",
-      required: [true, "Event ID is required"],
+      required: [true, "Event is required"],
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User is required"],
     },
     rating: {
       type: Number,
@@ -40,9 +40,11 @@ const ReviewSchema = new mongoose.Schema(
   }
 );
 
-// Mỗi người dùng chỉ có thể đánh giá một sự kiện một lần
-ReviewSchema.index({ userId: 1, eventId: 1 }, { unique: true });
+// Indexes
+reviewSchema.index({ event: 1, user: 1 }, { unique: true });
+reviewSchema.index({ rating: 1 });
 
 // Tạo và export model
-const Review = mongoose.model<IReview>("Review", ReviewSchema);
+const Review = mongoose.model<IReview>("Review", reviewSchema);
+
 export default Review;

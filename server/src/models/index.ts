@@ -1,22 +1,11 @@
-import User, { IUser } from "./User";
-import Event, { IEvent, ITicketType } from "./Event";
-import Ticket, { ITicket } from "./Ticket";
-import Payment, { IPayment } from "./Payment";
-import Review, { IReview } from "./Review";
-import Notification, { INotification } from "./Notification";
-
+// Export tất cả các model
+export { default as User, IUser } from "./User";
+export { default as Event, IEvent, ITicketType } from "./Event";
 export {
-  User,
-  IUser,
-  Event,
-  IEvent,
-  ITicketType,
-  Ticket,
-  ITicket,
-  Payment,
-  IPayment,
-  Review,
-  IReview,
-  Notification,
-  INotification,
-};
+  default as Registration,
+  IRegistration,
+  IAttendeeInfo,
+} from "./Registration";
+export { default as SavedEvent, ISavedEvent } from "./SavedEvent";
+export { default as Review, IReview } from "./Review";
+export { default as Notification, INotification } from "./Notification";

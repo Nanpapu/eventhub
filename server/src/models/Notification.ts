@@ -1,35 +1,43 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 // Interface cho Notification document
-export interface INotification extends mongoose.Document {
-  userId: mongoose.Types.ObjectId;
-  type: "event_reminder" | "ticket_purchase" | "event_update" | "system";
+export interface INotification extends Document {
+  user: mongoose.Types.ObjectId;
+  title: string;
   message: string;
-  relatedId?: string; // Có thể là eventId, ticketId, v.v.
+  type: "event" | "registration" | "payment" | "system";
+  relatedEvent?: mongoose.Types.ObjectId;
   isRead: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-// Định nghĩa schema
-const NotificationSchema = new mongoose.Schema(
+// Schema cho Notification
+const notificationSchema = new Schema<INotification>(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
+    user: {
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User ID is required"],
+      required: [true, "User is required"],
     },
-    type: {
+    title: {
       type: String,
-      enum: ["event_reminder", "ticket_purchase", "event_update", "system"],
-      required: [true, "Notification type is required"],
+      required: [true, "Title is required"],
+      trim: true,
     },
     message: {
       type: String,
-      required: [true, "Notification message is required"],
+      required: [true, "Message is required"],
       trim: true,
     },
-    relatedId: {
+    type: {
       type: String,
+      enum: ["event", "registration", "payment", "system"],
+      required: [true, "Type is required"],
+    },
+    relatedEvent: {
+      type: Schema.Types.ObjectId,
+      ref: "Event",
     },
     isRead: {
       type: Boolean,
@@ -41,13 +49,14 @@ const NotificationSchema = new mongoose.Schema(
   }
 );
 
-// Tạo index để tìm kiếm thông báo nhanh hơn
-NotificationSchema.index({ userId: 1, isRead: 1 });
-NotificationSchema.index({ userId: 1, createdAt: -1 });
+// Indexes
+notificationSchema.index({ user: 1, createdAt: -1 });
+notificationSchema.index({ isRead: 1 });
 
 // Tạo và export model
 const Notification = mongoose.model<INotification>(
   "Notification",
-  NotificationSchema
+  notificationSchema
 );
+
 export default Notification;
