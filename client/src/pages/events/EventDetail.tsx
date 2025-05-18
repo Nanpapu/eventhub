@@ -13,8 +13,9 @@ import {
   useToast,
   IconButton,
   useColorModeValue,
+  Spinner,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FiMapPin,
@@ -26,10 +27,11 @@ import {
   FiHeart,
 } from "react-icons/fi";
 import { FaTimes, FaCalendarCheck, FaShoppingCart } from "react-icons/fa";
+import eventService from "../../services/event.service";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
@@ -37,44 +39,21 @@ interface EventData {
   endTime: string;
   location: string;
   address: string;
-  image: string;
+  imageUrl: string;
   category: string;
   isPaid: boolean;
   price?: number;
   organizer: {
     name: string;
-    avatar: string;
+    avatar?: string;
+    id?: string;
   };
   attendees: number;
   capacity: number;
 }
 
-// Dữ liệu mẫu cho sự kiện
-const eventData: EventData = {
-  id: 1,
-  title: "UI/UX Design Workshop",
-  description:
-    "Join us for a hands-on workshop where you'll learn the fundamentals of UI/UX design. This workshop is perfect for beginners and intermediate designers who want to improve their skills. We'll cover the design thinking process, user research, wireframing, prototyping, and usability testing. By the end of this workshop, you'll have created a complete design for a mobile app.\n\nTopics covered:\n- Design principles and fundamentals\n- User-centered design processes\n- Creating user personas and user flows\n- Wireframing and prototyping\n- Design systems and component libraries\n- Usability testing and iteration\n\nAll participants will receive a certificate of completion and access to exclusive design resources.",
-  date: "15/08/2023",
-  startTime: "09:00 AM",
-  endTime: "04:00 PM",
-  location: "Technology Innovation Hub",
-  address: "123 Tech Street, District 1, Ho Chi Minh City",
-  image: "https://images.pexels.com/photos/7149165/pexels-photo-7149165.jpeg",
-  category: "workshop",
-  isPaid: true,
-  price: 25.99,
-  organizer: {
-    name: "TechDesign Academy",
-    avatar:
-      "https://ui-avatars.com/api/?name=TechDesign+Academy&background=0D8ABC&color=fff",
-  },
-  attendees: 42,
-  capacity: 50,
-};
-
 const EventDetail = () => {
-  // Lấy ID sự kiện từ URL nhưng không sử dụng
+  // Lấy ID sự kiện từ URL
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
   const navigate = useNavigate();
@@ -82,6 +61,9 @@ const EventDetail = () => {
   // State cho các trạng thái trong trang
   const [isRegistered, setIsRegistered] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [event, setEvent] = useState<EventData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Màu sắc thay đổi theo chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
@@ -92,6 +74,79 @@ const EventDetail = () => {
   const infoBoxBgColor = useColorModeValue("gray.50", "gray.700");
   const infoBoxTextColor = useColorModeValue("gray.600", "gray.300");
   const iconColor = useColorModeValue("teal.500", "teal.300");
+
+  // Lấy thông tin sự kiện từ API khi component mount
+  useEffect(() => {
+    const fetchEventData = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const eventData = await eventService.getEventById(id);
+
+        // Debug: Log dữ liệu API trả về để kiểm tra
+        console.log("API response data:", eventData);
+
+        // Format dữ liệu từ API để phù hợp với cấu trúc giao diện
+        const formattedEvent: EventData = {
+          id: eventData.id || id,
+          title: eventData.title || "Untitled Event",
+          description: eventData.description || "No description available",
+          date: eventData.date
+            ? new Date(eventData.date).toLocaleDateString("vi-VN")
+            : "No date specified",
+          startTime: eventData.startTime || "N/A",
+          endTime: eventData.endTime || "N/A",
+          location: eventData.location || "No location specified",
+          address: eventData.address || "No address specified",
+          imageUrl:
+            eventData.imageUrl ||
+            "https://via.placeholder.com/800x400?text=No+Image+Available",
+          category: eventData.category || "Other",
+          isPaid: Boolean(eventData.isPaid),
+          price: eventData.price || 0,
+          organizer: eventData.organizer || {
+            name: "Unknown Organizer",
+            avatar:
+              "https://ui-avatars.com/api/?name=Unknown&background=0D8ABC&color=fff",
+          },
+          attendees: eventData.attendees || 0,
+          capacity: eventData.capacity || 50,
+        };
+
+        // Debug: Log event đã format để kiểm tra
+        console.log("Formatted event:", formattedEvent);
+
+        setEvent(formattedEvent);
+
+        // TODO: Khi có backend, sẽ kiểm tra nếu người dùng đã đăng ký hoặc lưu sự kiện
+        // Ví dụ:
+        // const isEventSaved = await eventService.isEventSaved(id);
+        // setIsSaved(isEventSaved.isSaved);
+      } catch (error: unknown) {
+        console.error("Error fetching event:", error);
+        let errorMessage = "Có lỗi xảy ra khi tải dữ liệu sự kiện";
+
+        // Xử lý lỗi từ axios
+        if (error && typeof error === "object" && "response" in error) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          if (axiosError.response?.data?.message) {
+            errorMessage = axiosError.response.data.message;
+          }
+        }
+
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventData();
+  }, [id]);
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
@@ -131,28 +186,70 @@ const EventDetail = () => {
   };
 
   // Xử lý lưu sự kiện
-  const handleSaveEvent = () => {
-    setIsSaved(!isSaved);
-    toast({
-      title: isSaved ? "Đã xóa khỏi sự kiện đã lưu" : "Đã lưu sự kiện!",
-      description: isSaved
-        ? "Sự kiện đã được xóa khỏi danh sách đã lưu của bạn."
-        : "Bạn có thể xem lại sự kiện này trong mục 'Sự kiện đã lưu'.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+  const handleSaveEvent = async () => {
+    if (!id) return;
+
+    try {
+      if (isSaved) {
+        // Nếu đã lưu, gọi API để bỏ lưu
+        await eventService.unsaveEvent(id);
+        setIsSaved(false);
+        toast({
+          title: "Đã xóa khỏi sự kiện đã lưu",
+          description: "Sự kiện đã được xóa khỏi danh sách đã lưu của bạn.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Nếu chưa lưu, gọi API để lưu
+        await eventService.saveEvent(id);
+        setIsSaved(true);
+        toast({
+          title: "Đã lưu sự kiện!",
+          description:
+            "Bạn có thể xem lại sự kiện này trong mục 'Sự kiện đã lưu'.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error: unknown) {
+      console.error("Error saving/unsaving event:", error);
+
+      let errorMessage = "Không thể lưu/hủy lưu sự kiện. Vui lòng thử lại sau.";
+      // Xử lý lỗi từ axios
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        }
+      }
+
+      toast({
+        title: "Có lỗi xảy ra",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // Xử lý chia sẻ sự kiện
   const handleShare = () => {
     // Logic chia sẻ sẽ được thêm sau khi có backend
-    toast({
-      title: "Đã sao chép liên kết!",
-      description: "Liên kết sự kiện đã được sao chép vào clipboard.",
-      status: "success",
-      duration: 2000,
-      isClosable: true,
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({
+        title: "Đã sao chép liên kết!",
+        description: "Liên kết sự kiện đã được sao chép vào clipboard.",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
     });
   };
 
@@ -168,23 +265,70 @@ const EventDetail = () => {
     */
 
     // DEMO: Chỉ chuyển hướng đến trang thanh toán giả lập
-    navigate(`/events/${id}/checkout`);
-    toast({
-      title: "Chuyển đến thanh toán",
-      description: "Hoàn tất thanh toán để đảm bảo đăng ký của bạn.",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    });
+    if (id) {
+      navigate(`/events/${id}/checkout`);
+      toast({
+        title: "Chuyển đến thanh toán",
+        description: "Hoàn tất thanh toán để đảm bảo đăng ký của bạn.",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+    }
   };
+
+  // Hiển thị trạng thái tải dữ liệu
+  if (loading) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Flex justify="center" align="center" minH="60vh">
+          <Spinner size="xl" color="teal.500" thickness="4px" />
+        </Flex>
+      </Container>
+    );
+  }
+
+  // Hiển thị thông báo lỗi
+  if (error) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Flex direction="column" justify="center" align="center" minH="60vh">
+          <Heading size="lg" mb={4} color="red.500">
+            Có lỗi xảy ra
+          </Heading>
+          <Text mb={6}>{error}</Text>
+          <Button colorScheme="teal" onClick={() => navigate("/events")}>
+            Quay lại danh sách sự kiện
+          </Button>
+        </Flex>
+      </Container>
+    );
+  }
+
+  // Hiển thị thông báo nếu không tìm thấy sự kiện
+  if (!event) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Flex direction="column" justify="center" align="center" minH="60vh">
+          <Heading size="lg" mb={4}>
+            Không tìm thấy sự kiện
+          </Heading>
+          <Text mb={6}>Sự kiện này không tồn tại hoặc đã bị xóa</Text>
+          <Button colorScheme="teal" onClick={() => navigate("/events")}>
+            Quay lại danh sách sự kiện
+          </Button>
+        </Flex>
+      </Container>
+    );
+  }
 
   return (
     <Container maxW="container.xl" py={8}>
       {/* Phần hình ảnh và thông tin cơ bản của sự kiện */}
       <Box position="relative" mb={8} bg={bgColor} borderRadius="lg">
         <Image
-          src={eventData.image}
-          alt={eventData.title}
+          src={event.imageUrl}
+          alt={event.title}
           w="100%"
           h={{ base: "200px", md: "400px" }}
           objectFit="cover"
@@ -200,16 +344,16 @@ const EventDetail = () => {
             py={1}
             borderRadius="md"
           >
-            {eventData.category}
+            {event.category}
           </Badge>
           <Badge
-            colorScheme={eventData.isPaid ? "purple" : "green"}
+            colorScheme={event.isPaid ? "purple" : "green"}
             fontSize="sm"
             px={2}
             py={1}
             borderRadius="md"
           >
-            {eventData.isPaid ? "Có phí" : "Miễn phí"}
+            {event.isPaid ? "Có phí" : "Miễn phí"}
           </Badge>
         </HStack>
       </Box>
@@ -235,7 +379,7 @@ const EventDetail = () => {
               gap={{ base: 4, sm: 0 }}
             >
               <Heading as="h1" size="xl" color={textColor}>
-                {eventData.title}
+                {event.title}
               </Heading>
 
               <HStack spacing={2}>
@@ -260,14 +404,14 @@ const EventDetail = () => {
               <Flex align="center" gap={2}>
                 <Box as={FiCalendar} color={iconColor} />
                 <Text fontWeight="medium" color={textColor}>
-                  {eventData.date}
+                  {event.date}
                 </Text>
               </Flex>
 
               <Flex align="center" gap={2}>
                 <Box as={FiClock} color={iconColor} />
                 <Text color={textColor}>
-                  {eventData.startTime} - {eventData.endTime}
+                  {event.startTime} - {event.endTime}
                 </Text>
               </Flex>
 
@@ -275,19 +419,19 @@ const EventDetail = () => {
                 <Box as={FiMapPin} color={iconColor} mt={1} />
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium" color={textColor}>
-                    {eventData.location}
+                    {event.location}
                   </Text>
                   <Text fontSize="sm" color={secondaryTextColor}>
-                    {eventData.address}
+                    {event.address}
                   </Text>
                 </VStack>
               </Flex>
 
-              {eventData.isPaid && (
+              {event.isPaid && (
                 <Flex align="center" gap={2}>
                   <Box as={FiDollarSign} color={iconColor} />
                   <Text fontWeight="bold" color={textColor}>
-                    {eventData.price} VND
+                    {event.price} VND
                   </Text>
                 </Flex>
               )}
@@ -295,14 +439,14 @@ const EventDetail = () => {
               <Flex align="center" gap={2}>
                 <Box as={FiUsers} color={iconColor} />
                 <Text color={textColor}>
-                  {eventData.attendees} đã đăng ký / {eventData.capacity} chỗ
+                  {event.attendees} đã đăng ký / {event.capacity} chỗ
                 </Text>
               </Flex>
 
               <Flex align="center" gap={2} w="100%">
                 <Box as={FiUsers} color={iconColor} />
                 <Text fontWeight="medium">Tổ chức:</Text>
-                <Text>{eventData.organizer.name}</Text>
+                <Text>{event.organizer.name}</Text>
               </Flex>
             </VStack>
 
@@ -313,7 +457,7 @@ const EventDetail = () => {
               <Heading as="h3" size="md" mb={3} color={textColor}>
                 Về Sự Kiện Này
               </Heading>
-              <Text color={textColor}>{eventData.description}</Text>
+              <Text color={textColor}>{event.description}</Text>
             </Box>
           </VStack>
         </Box>
@@ -339,24 +483,24 @@ const EventDetail = () => {
               <Flex align="center" gap={2}>
                 <Box as={FiCalendar} color={iconColor} />
                 <Text fontWeight="medium" color={textColor}>
-                  {eventData.date}
+                  {event.date}
                 </Text>
               </Flex>
 
               <Flex align="center" gap={2}>
                 <Box as={FiClock} color={iconColor} />
                 <Text color={textColor}>
-                  {eventData.startTime} - {eventData.endTime}
+                  {event.startTime} - {event.endTime}
                 </Text>
               </Flex>
             </VStack>
 
             <Box bg={infoBoxBgColor} p={3} borderRadius="md">
               <Text fontWeight="medium" color={textColor}>
-                {eventData.attendees} người đã đăng ký
+                {event.attendees} người đã đăng ký
               </Text>
               <Text fontSize="sm" color={infoBoxTextColor}>
-                Còn {eventData.capacity - eventData.attendees} chỗ trống
+                Còn {event.capacity - event.attendees} chỗ trống
               </Text>
             </Box>
 
@@ -421,7 +565,7 @@ const EventDetail = () => {
               </Button>
 
               {/* Logic thông thường sẽ như sau:
-                {!eventData.isPaid ? (
+                {!event.isPaid ? (
                   <Button
                     colorScheme={isRegistered ? "red" : "teal"}
                     size="lg"

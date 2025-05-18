@@ -42,13 +42,15 @@ class EventController {
   async getEventById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const event = await eventService.getEventById(id);
+      console.log(`Fetching event with ID: ${id}`);
 
-      return res.status(200).json({
-        success: true,
-        event,
-      });
+      const event = await eventService.getEventById(id);
+      console.log("Event found:", event);
+
+      // Trả về dữ liệu trực tiếp, không bọc trong object
+      return res.status(200).json(event);
     } catch (error: any) {
+      console.error("Error in getEventById:", error);
       return res.status(error.message === "Event not found" ? 404 : 500).json({
         success: false,
         message: error.message || "Đã xảy ra lỗi khi lấy chi tiết sự kiện",

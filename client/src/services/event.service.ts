@@ -71,8 +71,15 @@ const eventService = {
    * @param id ID của sự kiện
    */
   getEventById: async (id: string) => {
-    const response = await api.get(`/events/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/events/${id}`);
+      console.log("API raw response:", response);
+      // API hiện giờ trả về event object trực tiếp
+      return response.data;
+    } catch (error) {
+      console.error("Error in event service getEventById:", error);
+      throw error;
+    }
   },
 
   /**
