@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import authService from "../services/auth.service";
+import config from "../config";
 
 /**
  * Controller xử lý các request liên quan đến xác thực
@@ -149,10 +150,18 @@ const authController = {
       const { email } = req.body;
       const result = await authService.forgotPassword({ email });
 
-      res.status(200).json({
+      // Tạo response object
+      const responseData: any = {
         success: true,
         message: result.message,
-      });
+      };
+
+      // Trong môi trường phát triển, trả về URL xem trước email
+      if (config.nodeEnv === "development" && result.previewURL) {
+        responseData.previewURL = result.previewURL;
+      }
+
+      res.status(200).json(responseData);
     } catch (error: any) {
       console.error("Forgot password error:", error);
       res.status(500).json({

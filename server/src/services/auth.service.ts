@@ -4,6 +4,7 @@ import { generateToken, verifyToken } from "../utils/jwt.utils";
 import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import emailService from "./email.service";
 
 interface RegisterInput {
   email: string;
@@ -128,7 +129,7 @@ const authService = {
    */
   forgotPassword: async (
     data: ForgotPasswordInput
-  ): Promise<{ message: string }> => {
+  ): Promise<{ message: string; previewURL?: string }> => {
     // Tìm user theo email
     const user = await User.findOne({ email: data.email });
     if (!user) {
@@ -154,14 +155,26 @@ const authService = {
       used: false,
     });
 
-    // Trong thực tế, gửi email với link đặt lại mật khẩu
-    // Frontend URL: /reset-password?token=resetToken
-    console.log(`Reset password token for ${data.email}: ${resetToken}`);
+    // Gửi email với link đặt lại mật khẩu
+    try {
+      const emailResult = await emailService.sendPasswordResetEmail(
+        user.email,
+        resetToken
+      );
 
-    return {
-      message:
-        "Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu",
-    };
+      return {
+        message:
+          "Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu",
+        previewURL: emailResult.previewURL,
+      };
+    } catch (error) {
+      console.error("Lỗi khi gửi email đặt lại mật khẩu:", error);
+      // Vẫn trả về thành công để không tiết lộ email tồn tại hay không
+      return {
+        message:
+          "Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu",
+      };
+    }
   },
 
   /**
