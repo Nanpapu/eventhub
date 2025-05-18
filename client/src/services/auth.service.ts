@@ -3,8 +3,8 @@ import api from "../utils/api";
 export interface RegisterData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  name: string;   // Thay đổi từ firstName và lastName sang name
+  role?: "user" | "organizer" | "admin";
 }
 
 export interface LoginData {
@@ -13,13 +13,16 @@ export interface LoginData {
 }
 
 export interface AuthResponse {
+  success?: boolean;
+  message?: string;
   token: string;
   user: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    name: string;   // Thay đổi từ firstName và lastName sang name
     role: string;
+    avatar?: string;
+    bio?: string;
   };
 }
 
@@ -33,6 +36,11 @@ const authService = {
    */
   register: async (data: RegisterData) => {
     const response = await api.post<AuthResponse>("/auth/register", data);
+    // Lưu token vào localStorage
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 
@@ -68,12 +76,25 @@ const authService = {
   /**
    * Lấy thông tin người dùng hiện tại
    */
-  getCurrentUser: () => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      return JSON.parse(user);
+  getCurrentUser: async () => {
+    // Kiểm tra nếu đã có user trong localStorage
+    const cachedUser = localStorage.getItem("user");
+    if (cachedUser) {
+      return JSON.parse(cachedUser);
     }
-    return null;
+    
+    try {
+      // Nếu không có hoặc cần refresh, gọi API
+      const response = await api.get<{success: boolean, user: any}>("/auth/me");
+      if (response.data.success) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        return response.data.user;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      return null;
+    }
   },
 
   /**

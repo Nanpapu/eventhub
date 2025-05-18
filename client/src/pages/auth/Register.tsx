@@ -36,9 +36,11 @@ import {
   FaGoogle,
   FaFacebook,
 } from "react-icons/fa";
+import authService from "../../services/auth.service";
+import { RegisterData } from "../../services/auth.service";
 
 interface RegisterFormValues {
-  fullName: string;
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -78,7 +80,15 @@ const Register = () => {
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      console.log("Register data:", data);
+      const registerData: RegisterData = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+      };
+
+      await authService.register(registerData);
+
       toast({
         title: "Đăng ký thành công!",
         description: "Tài khoản của bạn đã được tạo.",
@@ -89,11 +99,13 @@ const Register = () => {
       });
 
       setTimeout(() => navigate("/login"), 1500);
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
       toast({
         title: "Đăng ký thất bại!",
-        description: "Đã xảy ra lỗi trong quá trình đăng ký.",
+        description:
+          error.response?.data?.message ||
+          "Đã xảy ra lỗi trong quá trình đăng ký.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -170,19 +182,17 @@ const Register = () => {
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <Stack spacing={4}>
-                <FormControl isInvalid={!!errors.fullName}>
+                <FormControl isInvalid={!!errors.name}>
                   <FormLabel fontWeight="medium">Họ và tên</FormLabel>
                   <Input
                     placeholder="Họ tên đầy đủ của bạn"
                     size="lg"
                     focusBorderColor="teal.400"
-                    {...register("fullName", {
+                    {...register("name", {
                       required: "Họ tên là bắt buộc",
                     })}
                   />
-                  <FormErrorMessage>
-                    {errors.fullName?.message}
-                  </FormErrorMessage>
+                  <FormErrorMessage>{errors.name?.message}</FormErrorMessage>
                 </FormControl>
 
                 <FormControl isInvalid={!!errors.email}>

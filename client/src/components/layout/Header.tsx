@@ -51,7 +51,7 @@ const useAuth = () => {
     name: string;
     email: string;
     avatar: string;
-    role: "user" | "organizer";
+    role: "user" | "organizer" | "admin";
   } | null>(null);
 
   // Chỉ để demo

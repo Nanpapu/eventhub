@@ -31,6 +31,7 @@ import {
   FaGoogle,
   FaFacebook,
 } from "react-icons/fa";
+import authService from "../../services/auth.service";
 
 interface LoginFormValues {
   email: string;
@@ -57,7 +58,12 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      console.log("Login data:", data);
+      // Gọi API đăng nhập
+      await authService.login({
+        email: data.email,
+        password: data.password,
+      });
+
       toast({
         title: "Đăng nhập thành công!",
         description: "Chào mừng bạn trở lại với EventHub!",
@@ -68,11 +74,13 @@ const Login = () => {
       });
 
       setTimeout(() => navigate("/"), 1500);
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Lỗi đăng nhập:", error);
       toast({
         title: "Đăng nhập thất bại!",
-        description: "Vui lòng kiểm tra email và mật khẩu của bạn.",
+        description:
+          error.response?.data?.message ||
+          "Vui lòng kiểm tra email và mật khẩu của bạn.",
         status: "error",
         duration: 3000,
         isClosable: true,
