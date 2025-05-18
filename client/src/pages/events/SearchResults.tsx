@@ -12,169 +12,41 @@ import {
   Image,
   Tag,
   Icon,
+  Spinner,
+  Center,
 } from "@chakra-ui/react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
+import eventService, { EventFilter } from "../../services/event.service";
 
 // Định nghĩa interface cho event để có type checking
 interface EventData {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
   location: string;
-  image: string;
+  imageUrl: string;
   category: string;
   isPaid: boolean;
+  address: string;
 }
 
-// Dữ liệu mẫu cho sự kiện
-const eventsData: EventData[] = [
-  {
-    id: 1,
-    title: "Hội thảo thiết kế UI/UX",
-    description:
-      "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
-    date: "15/08/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "workshop",
-    isPaid: false,
-  },
-  {
-    id: 2,
-    title: "Hội nghị công nghệ Blockchain",
-    description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
-    date: "20/08/2023",
-    location: "Hà Nội",
-    image:
-      "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80",
-    category: "conference",
-    isPaid: true,
-  },
-  {
-    id: 3,
-    title: "Lễ hội âm nhạc 2023",
-    description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
-    date: "10/09/2023",
-    location: "Đà Nẵng",
-    image:
-      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "music",
-    isPaid: true,
-  },
-  {
-    id: 4,
-    title: "Đêm giao lưu startup",
-    description:
-      "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
-    date: "25/08/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
-    category: "networking",
-    isPaid: false,
-  },
-  {
-    id: 5,
-    title: "Lễ hội ẩm thực & văn hóa",
-    description:
-      "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
-    date: "05/09/2023",
-    location: "Hà Nội",
-    image:
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "food",
-    isPaid: false,
-  },
-  {
-    id: 6,
-    title: "Hội nghị AI trong kinh doanh",
-    description:
-      "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
-    date: "12/09/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "conference",
-    isPaid: true,
-  },
-  {
-    id: 7,
-    title: "Triển lãm nghệ thuật đương đại",
-    description:
-      "Chiêm ngưỡng các tác phẩm độc đáo từ các nghệ sĩ trong nước và quốc tế",
-    date: "18/09/2023",
-    location: "Hà Nội",
-    image:
-      "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "exhibition",
-    isPaid: true,
-  },
-  {
-    id: 8,
-    title: "Workshop nhiếp ảnh cơ bản",
-    description:
-      "Học các kỹ thuật nhiếp ảnh cơ bản và cách chỉnh sửa hình ảnh chuyên nghiệp",
-    date: "22/08/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1164&q=80",
-    category: "workshop",
-    isPaid: true,
-  },
-  {
-    id: 9,
-    title: "Cuộc thi lập trình Hackathon",
-    description:
-      "Giải đấu lập trình trong 48 giờ với nhiều giải thưởng giá trị",
-    date: "30/08/2023",
-    location: "Đà Nẵng",
-    image:
-      "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "networking",
-    isPaid: false,
-  },
-  {
-    id: 10,
-    title: "Hội chợ công nghệ 2023",
-    description:
-      "Trưng bày và giới thiệu các sản phẩm công nghệ mới nhất trên thị trường",
-    date: "15/09/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "exhibition",
-    isPaid: false,
-  },
-  {
-    id: 11,
-    title: "Hội thảo khởi nghiệp cho sinh viên",
-    description:
-      "Chia sẻ kinh nghiệm và định hướng cho sinh viên muốn bắt đầu khởi nghiệp",
-    date: "05/10/2023",
-    location: "Cần Thơ",
-    image:
-      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "workshop",
-    isPaid: false,
-  },
-  {
-    id: 12,
-    title: "Biểu diễn âm nhạc truyền thống",
-    description:
-      "Thưởng thức các tiết mục âm nhạc dân tộc do các nghệ sĩ tài năng biểu diễn",
-    date: "10/10/2023",
-    location: "Huế",
-    image:
-      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "music",
-    isPaid: false,
-  },
-];
+// API event response interface
+interface EventResponse {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  imageUrl: string;
+  category: string;
+  isPaid: boolean;
+  address: string;
+  [key: string]: string | number | boolean | Date; // Thay thế any bằng union type cụ thể hơn
+}
 
 // Danh sách địa điểm mẫu
 const locations = [
@@ -233,11 +105,14 @@ const SearchResults = () => {
   const [keyword, setKeyword] = useState(initialKeyword);
   const [location, setLocation] = useState(initialLocation);
   const [category, setCategory] = useState(initialCategory);
-  const [filteredEvents, setFilteredEvents] = useState(eventsData);
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [filteredEvents, setFilteredEvents] = useState<EventData[]>([]);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [showPaidOnly, setShowPaidOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialPage);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const eventsPerPage = 6;
 
   // Xử lý tìm kiếm
@@ -247,6 +122,7 @@ const SearchResults = () => {
     if (keyword) params.keyword = keyword;
     if (location) params.location = location;
     if (category) params.category = category;
+    if (currentPage > 1) params.page = currentPage.toString();
     setSearchParams(params);
 
     // Lọc sự kiện dựa trên tìm kiếm
@@ -254,50 +130,60 @@ const SearchResults = () => {
   };
 
   // Xử lý lọc sự kiện
-  const filterEvents = useCallback(() => {
-    let results = [...eventsData];
+  const filterEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-    // Lọc theo từ khóa
-    if (keyword) {
-      results = results.filter(
-        (event) =>
-          event.title.toLowerCase().includes(keyword.toLowerCase()) ||
-          event.description.toLowerCase().includes(keyword.toLowerCase())
+    try {
+      // Tạo đối tượng filter từ state
+      const filter: EventFilter = {
+        page: currentPage,
+        limit: eventsPerPage,
+      };
+
+      if (keyword) filter.keyword = keyword;
+      if (location) filter.location = location;
+      if (category) filter.category = category;
+      if (showFreeOnly) filter.isFree = true;
+      if (showPaidOnly) filter.isFree = false;
+
+      // Gọi API để lấy danh sách sự kiện đã lọc
+      const result = await eventService.getEvents(filter);
+
+      // Chuyển đổi dữ liệu từ API vào định dạng EventData
+      const formattedEvents: EventData[] = result.events.map(
+        (event: EventResponse) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          date: new Date(event.date).toLocaleDateString("vi-VN"),
+          location: event.location,
+          imageUrl: event.imageUrl,
+          category: event.category,
+          isPaid: event.isPaid,
+          address: event.address,
+        })
       );
+
+      setFilteredEvents(formattedEvents);
+      setTotalPages(result.totalPages);
+      setTotalEvents(result.total);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError("Có lỗi xảy ra khi tải dữ liệu sự kiện.");
+      setFilteredEvents([]);
+    } finally {
+      setLoading(false);
     }
-
-    // Lọc theo địa điểm
-    if (location) {
-      results = results.filter((event) =>
-        event.location.toLowerCase().includes(location.toLowerCase())
-      );
-    }
-
-    // Lọc theo thể loại
-    if (category) {
-      results = results.filter((event) => event.category === category);
-    }
-
-    // Lọc theo giá (Free/Paid)
-    if (showFreeOnly) {
-      results = results.filter((event) => !event.isPaid);
-    }
-
-    if (showPaidOnly) {
-      results = results.filter((event) => event.isPaid);
-    }
-
-    setFilteredEvents(results);
-  }, [keyword, location, category, showFreeOnly, showPaidOnly]);
-
-  // Tính toán phân trang
-  const indexOfLastEvent = currentPage * eventsPerPage;
-  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-  const currentEvents = filteredEvents.slice(
-    indexOfFirstEvent,
-    indexOfLastEvent
-  );
-  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  }, [
+    keyword,
+    location,
+    category,
+    showFreeOnly,
+    showPaidOnly,
+    currentPage,
+    eventsPerPage,
+  ]);
 
   // Chuyển trang
   const handlePageChange = (newPage: number) => {
@@ -319,24 +205,16 @@ const SearchResults = () => {
     setCategory("");
     setShowFreeOnly(false);
     setShowPaidOnly(false);
-    setPriceRange([0, 100]);
     setCurrentPage(1);
     setSearchParams({});
-    setFilteredEvents(eventsData);
+    // Gọi lại API khi reset filter
+    filterEvents();
   };
 
-  // Cập nhật kết quả khi các bộ lọc thay đổi
+  // Tải dữ liệu ban đầu
   useEffect(() => {
     filterEvents();
-  }, [
-    keyword,
-    location,
-    category,
-    showFreeOnly,
-    showPaidOnly,
-    priceRange,
-    filterEvents,
-  ]);
+  }, [filterEvents]);
 
   // Format địa điểm cho SearchBar
   const locationOptions = locations.map((loc) => ({ name: loc }));
@@ -368,7 +246,7 @@ const SearchResults = () => {
       >
         <Box position="relative">
           <Image
-            src={event.image}
+            src={event.imageUrl}
             alt={event.title}
             width="100%"
             height="180px"
@@ -466,13 +344,33 @@ const SearchResults = () => {
           mb={6}
         />
 
-        {/* Kết quả tìm kiếm */}
-        {filteredEvents.length > 0 ? (
+        {/* Hiển thị thông báo lỗi nếu có */}
+        {error && (
+          <Box
+            textAlign="center"
+            py={4}
+            px={6}
+            mb={6}
+            bg="red.50"
+            color="red.600"
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor="red.200"
+          >
+            <Text>{error}</Text>
+          </Box>
+        )}
+
+        {/* Hiển thị loading spinner */}
+        {loading ? (
+          <Center py={10}>
+            <Spinner size="xl" color="teal.500" thickness="4px" />
+          </Center>
+        ) : /* Kết quả tìm kiếm */
+        filteredEvents.length > 0 ? (
           <>
             <Flex justify="space-between" align="center" mb={6}>
-              <Text color={textColor}>
-                {filteredEvents.length} sự kiện được tìm thấy
-              </Text>
+              <Text color={textColor}>{totalEvents} sự kiện được tìm thấy</Text>
               {keyword || location || category ? (
                 <Button
                   variant="outline"
@@ -499,7 +397,7 @@ const SearchResults = () => {
                 spacing={8}
                 mb={8}
               >
-                {currentEvents.map((event) => (
+                {filteredEvents.map((event) => (
                   <CustomEventCard key={event.id} event={event} />
                 ))}
               </SimpleGrid>
