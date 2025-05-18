@@ -103,11 +103,15 @@ const eventSchema = new Schema<IEvent>(
     },
     location: {
       type: String,
-      required: [true, "Location is required"],
+      required: function (this: IEvent) {
+        return !this.isOnline;
+      },
     },
     address: {
       type: String,
-      required: [true, "Address is required"],
+      required: function (this: IEvent) {
+        return !this.isOnline;
+      },
     },
     isOnline: {
       type: Boolean,

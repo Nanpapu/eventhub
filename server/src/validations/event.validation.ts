@@ -51,15 +51,32 @@ export const createEventSchema = Joi.object({
       "any.required": "Thời gian kết thúc là bắt buộc",
     }),
 
-  location: Joi.string().required().messages({
-    "string.empty": "Địa điểm không được để trống",
-    "any.required": "Địa điểm là bắt buộc",
-  }),
+  location: Joi.string()
+    .when("isOnline", {
+      is: false,
+      then: Joi.string().required().messages({
+        "string.empty": "Địa điểm không được để trống khi sự kiện offline",
+        "any.required": "Địa điểm là bắt buộc khi sự kiện offline",
+      }),
+      otherwise: Joi.string().allow("").optional(),
+    })
+    .messages({
+      "string.base": "Địa điểm phải là một chuỗi",
+    }),
 
-  address: Joi.string().required().messages({
-    "string.empty": "Địa chỉ chi tiết không được để trống",
-    "any.required": "Địa chỉ chi tiết là bắt buộc",
-  }),
+  address: Joi.string()
+    .when("isOnline", {
+      is: false,
+      then: Joi.string().required().messages({
+        "string.empty":
+          "Địa chỉ chi tiết không được để trống khi sự kiện offline",
+        "any.required": "Địa chỉ chi tiết là bắt buộc khi sự kiện offline",
+      }),
+      otherwise: Joi.string().allow("").optional(),
+    })
+    .messages({
+      "string.base": "Địa chỉ chi tiết phải là một chuỗi",
+    }),
 
   isOnline: Joi.boolean().default(false),
 

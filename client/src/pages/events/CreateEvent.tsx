@@ -1188,13 +1188,22 @@ const CreateEvent = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: checked,
-      ...(name === "isOnline" && checked && { location: "", address: "" }),
-      ...(name === "isOnline" && !checked && { onlineUrl: "" }),
+      ...(name === "isOnline" &&
+        checked && {
+          location: "",
+          address: "",
+          onlineUrl: prev.onlineUrl || "",
+        }),
+      ...(name === "isOnline" &&
+        !checked && {
+          onlineUrl: undefined,
+          location: prev.location || "",
+          address: prev.address || "",
+        }),
       ...(name === "isPaid" &&
         !checked && { ticketTypes: [], price: undefined }),
     }));
 
-    // Xóa các lỗi (errors) liên quan khi trạng thái isOnline hoặc isPaid thay đổi
     if (name === "isOnline") {
       setErrors((prevEditorErrors) => ({
         ...prevEditorErrors,
@@ -1207,8 +1216,7 @@ const CreateEvent = () => {
     if (name === "isPaid") {
       setErrors((prevEditorErrors) => {
         const newEditorErrors = { ...prevEditorErrors };
-        delete newEditorErrors.ticketTypes; // Xóa lỗi tổng quan của ticketTypes
-        // Xóa các lỗi chi tiết của từng loại vé
+        delete newEditorErrors.ticketTypes;
         Object.keys(newEditorErrors).forEach((key) => {
           if (
             key.startsWith("ticketName-") ||
@@ -1218,8 +1226,6 @@ const CreateEvent = () => {
             delete newEditorErrors[key];
           }
         });
-        // Cân nhắc xóa lỗi `price` nếu có và logic của bạn yêu cầu
-        // if (newEditorErrors.price) delete newEditorErrors.price;
         return newEditorErrors;
       });
     }
@@ -1290,12 +1296,11 @@ const CreateEvent = () => {
     }));
   };
 
-  // Hàm helper để lấy các key lỗi có thể có cho một bước cụ thể
   const getErrorKeysForStep = (stepIndex: number): string[] => {
     switch (stepIndex) {
-      case 0: // Basic Info
+      case 0:
         return ["title", "description", "category", "imageFile"];
-      case 1: // Date, Time & Location
+      case 1:
         return [
           "date",
           "startTime",
@@ -1305,17 +1310,15 @@ const CreateEvent = () => {
           "address",
         ];
       case 2: {
-        // Tickets & Pricing
         const ticketErrorKeys = formData.ticketTypes.flatMap((t) => [
           `ticketName-${t.id}`,
           `ticketPrice-${t.id}`,
           `ticketQuantity-${t.id}`,
         ]);
-        return ["ticketTypes", ...ticketErrorKeys]; // "ticketTypes" là lỗi chung cho mảng vé
+        return ["ticketTypes", ...ticketErrorKeys];
       }
-      case 3: // Advanced Settings
+      case 3:
         return ["capacity", "maxTicketsPerPerson"];
-      // Bước 4 (Review) không có validation trực tiếp trong vòng lặp này
       default:
         return [];
     }
@@ -1513,7 +1516,13 @@ const CreateEvent = () => {
       published: true,
     };
 
-    if (apiData.onlineUrl === "") delete apiData.onlineUrl;
+    if (apiData.onlineUrl === "" || apiData.onlineUrl === undefined) {
+      // Nếu onlineUrl là undefined do isOnline false, nó đã là undefined rồi.
+      // Nếu isOnline true nhưng onlineUrl rỗng, validateStep nên bắt lỗi này.
+      // Dòng delete này có thể cần hoặc không tùy thuộc yêu cầu API khi onlineUrl rỗng.
+      // Giả sử API sẽ bỏ qua trường undefined, không cần delete tường minh.
+      // Nếu API coi chuỗi rỗng là lỗi, validateStep phải đảm bảo nó không rỗng khi isOnline=true
+    }
 
     if (editMode && id) {
       console.log("Updating event:", { ...apiData, id });
