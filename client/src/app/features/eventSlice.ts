@@ -14,6 +14,7 @@ interface EventState {
   currentPage: number;
   totalPages: number;
   filter: EventFilter;
+  createSuccess: boolean;
 }
 
 // Khởi tạo state
@@ -34,7 +35,22 @@ const initialState: EventState = {
     page: 1,
     limit: 10,
   },
+  createSuccess: false,
 };
+
+// Async thunk để tạo sự kiện mới
+export const createEvent = createAsyncThunk(
+  "events/createEvent",
+  async (eventData: any, { rejectWithValue }) => {
+    try {
+      return await eventService.createEvent(eventData);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to create event"
+      );
+    }
+  }
+);
 
 // Async thunk để lấy danh sách sự kiện
 export const fetchEvents = createAsyncThunk(
@@ -101,6 +117,7 @@ const eventSlice = createSlice({
     resetEventState: (state) => {
       state.error = null;
       state.isLoading = false;
+      state.createSuccess = false;
     },
     // Cập nhật filter
     setFilter: (state, action: PayloadAction<EventFilter>) => {
@@ -117,6 +134,28 @@ const eventSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Create event cases
+      .addCase(createEvent.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.createSuccess = false;
+      })
+      .addCase(createEvent.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        state.createSuccess = true;
+        state.event = action.payload.event;
+        // Thêm sự kiện mới vào danh sách sự kiện của người dùng nếu có
+        if (state.userEvents.length > 0) {
+          state.userEvents = [action.payload.event, ...state.userEvents];
+        }
+      })
+      .addCase(createEvent.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.createSuccess = false;
+      })
+
       // Fetch events cases
       .addCase(fetchEvents.pending, (state) => {
         state.isLoading = true;
@@ -197,6 +236,8 @@ export const selectEventFilter = (state: RootState) => state.events.filter;
 export const selectTotalEvents = (state: RootState) => state.events.totalEvents;
 export const selectCurrentPage = (state: RootState) => state.events.currentPage;
 export const selectTotalPages = (state: RootState) => state.events.totalPages;
+export const selectCreateSuccess = (state: RootState) =>
+  state.events.createSuccess;
 
 // Export reducer
 export default eventSlice.reducer;

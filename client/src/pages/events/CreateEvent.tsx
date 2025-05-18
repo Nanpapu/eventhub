@@ -57,6 +57,15 @@ import {
   FiArrowLeft,
   FiTrash2,
 } from "react-icons/fi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import {
+  createEvent,
+  selectEventLoading,
+  selectEventError,
+  selectCreateSuccess,
+  resetEventState,
+} from "../../app/features/eventSlice";
+import { CreateEventData } from "../../services/event.service";
 
 // Interface cho dữ liệu sự kiện
 interface EventFormData {
@@ -100,6 +109,11 @@ const categoryOptions = [
 
 // Component tạo và chỉnh sửa sự kiện
 const CreateEvent = () => {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectEventLoading);
+  const error = useAppSelector(selectEventError);
+  const createSuccess = useAppSelector(selectCreateSuccess);
+
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -132,13 +146,50 @@ const CreateEvent = () => {
   });
 
   const [newTag, setNewTag] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
 
   // Colors
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  // Reset event state khi unmount component
+  useEffect(() => {
+    return () => {
+      dispatch(resetEventState());
+    };
+  }, [dispatch]);
+
+  // Theo dõi kết quả tạo sự kiện
+  useEffect(() => {
+    if (createSuccess) {
+      toast({
+        title: editMode ? "Sự kiện đã cập nhật" : "Sự kiện đã tạo",
+        description: editMode
+          ? "Sự kiện của bạn đã được cập nhật thành công"
+          : "Sự kiện của bạn đã được tạo thành công",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Chuyển hướng đến dashboard sau khi thành công
+      navigate("/dashboard");
+    }
+  }, [createSuccess, editMode, navigate, toast]);
+
+  // Hiển thị lỗi nếu có
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Lỗi",
+        description: error,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  }, [error, toast]);
 
   // Load sự kiện hiện có nếu đang ở chế độ chỉnh sửa
   useEffect(() => {
@@ -399,35 +450,49 @@ const CreateEvent = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    // Tạo dữ liệu sự kiện theo đúng cấu trúc API
+    const eventData: CreateEventData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      date: formData.date,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      location: formData.location,
+      address: formData.address,
+      isOnline: formData.isOnline,
+      capacity: formData.capacity,
+      maxTicketsPerPerson: formData.maxTicketsPerPerson,
+      isPaid: formData.isPaid,
+      imageUrl: formData.image,
+      tags: formData.tags,
+      published: true,
+    };
 
-    try {
-      // Trong thực tế, sẽ gọi API để lưu sự kiện
-      // Mô phỏng API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Thêm onlineUrl nếu là sự kiện trực tuyến
+    if (formData.isOnline && formData.onlineUrl) {
+      eventData.onlineUrl = formData.onlineUrl;
+    }
 
-      toast({
-        title: editMode ? "Sự kiện đã cập nhật" : "Sự kiện đã tạo",
-        description: editMode
-          ? "Sự kiện của bạn đã được cập nhật thành công"
-          : "Sự kiện của bạn đã được tạo thành công",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+    // Thêm giá nếu là sự kiện có phí
+    if (formData.isPaid) {
+      eventData.price = formData.price;
 
-      // Chuyển hướng đến dashboard sau khi thành công
-      navigate("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: "Đã xảy ra lỗi khi lưu sự kiện của bạn",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+      // Thêm thông tin về các loại vé
+      eventData.ticketTypes = formData.ticketTypes.map((ticket) => ({
+        name: ticket.name,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        description: `${ticket.name} ticket`,
+      }));
+    }
+
+    if (editMode && eventId) {
+      // TODO: Cập nhật sự kiện
+      console.log("Updating event:", eventData);
+    } else {
+      // Tạo sự kiện mới
+      dispatch(createEvent(eventData));
     }
   };
 
@@ -490,7 +555,7 @@ const CreateEvent = () => {
             <Button
               colorScheme="teal"
               leftIcon={<FiSave />}
-              isLoading={isSubmitting}
+              isLoading={isLoading}
               onClick={handleSubmit}
             >
               {editMode ? "Lưu thay đổi" : "Tạo sự kiện"}
@@ -969,7 +1034,7 @@ const CreateEvent = () => {
                 colorScheme="teal"
                 rightIcon={<FiSave />}
                 type="submit"
-                isLoading={isSubmitting}
+                isLoading={isLoading}
               >
                 {editMode ? "Save Changes" : "Create Event"}
               </Button>

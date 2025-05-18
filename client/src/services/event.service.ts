@@ -15,23 +15,31 @@ export interface CreateEventData {
   title: string;
   description: string;
   category: string;
+  date: string;
+  startTime: string;
+  endTime: string;
   location: string;
-  venue: string;
-  startDate: string;
-  endDate: string;
-  bannerImage: string;
-  ticketTypes: TicketType[];
-  organizer: string;
-  isPublished?: boolean;
+  address: string;
+  isOnline: boolean;
+  onlineUrl?: string;
+  imageUrl: string;
+  isPaid: boolean;
+  price?: number;
+  capacity: number;
+  maxTicketsPerPerson: number;
+  ticketTypes?: TicketType[];
+  tags?: string[];
+  published?: boolean;
 }
 
 export interface TicketType {
   name: string;
-  description: string;
   price: number;
   quantity: number;
-  startSaleDate: string;
-  endSaleDate: string;
+  description?: string;
+  availableQuantity?: number;
+  startSaleDate?: string;
+  endSaleDate?: string;
 }
 
 export interface TicketData {
