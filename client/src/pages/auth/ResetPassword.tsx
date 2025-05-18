@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
 import { useTranslation } from "react-i18next";
@@ -40,6 +40,14 @@ const ResetPassword = () => {
   // Lấy token từ query parameters
   const params = new URLSearchParams(location.search);
   const token = params.get("token");
+
+  // Lưu token vào state và xóa nó khỏi URL để tăng bảo mật
+  useEffect(() => {
+    if (token) {
+      // Thay thế URL hiện tại bằng URL không có token
+      window.history.replaceState({}, document.title, "/auth/reset-password");
+    }
+  }, [token]);
 
   // Nếu không có token, chuyển hướng về trang quên mật khẩu
   if (!token) {

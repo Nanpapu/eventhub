@@ -3,29 +3,50 @@ import config from "../config";
 
 /**
  * Cấu hình transporter cho Nodemailer
- * Trong môi trường phát triển, chúng ta sử dụng Ethereal để giả lập email
- * Trong môi trường production, nên thay thế bằng dịch vụ SMTP thực tế
  */
 const createTransporter = async () => {
-  // Tạo tài khoản test với Ethereal (chỉ cho môi trường phát triển)
-  const testAccount = await nodemailer.createTestAccount();
+  // Kiểm tra môi trường
+  if (config.nodeEnv === "development" && config.emailService === "ethereal") {
+    // Tạo tài khoản test với Ethereal (chỉ cho môi trường phát triển)
+    const testAccount = await nodemailer.createTestAccount();
 
-  // Tạo transporter với Ethereal
-  const transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
+    // Tạo transporter với Ethereal
+    const transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
 
-  return {
-    transporter,
-    previewUrl: nodemailer.getTestMessageUrl,
-    testAccount,
-  };
+    return {
+      transporter,
+      previewUrl: nodemailer.getTestMessageUrl,
+      testAccount,
+      isDevelopment: true,
+    };
+  } else {
+    // Sử dụng cấu hình SMTP thực tế
+    const transporter = nodemailer.createTransport({
+      service: config.emailService, // 'gmail', 'outlook', etc.
+      host: config.emailHost,
+      port: config.emailPort,
+      secure: config.emailPort === 465, // true for 465, false for other ports
+      auth: {
+        user: config.emailUser,
+        pass: config.emailPass,
+      },
+    });
+
+    return {
+      transporter,
+      previewUrl: null,
+      testAccount: { user: config.emailFrom || config.emailUser },
+      isDevelopment: false,
+    };
+  }
 };
 
 /**
@@ -36,20 +57,20 @@ const emailService = {
    * Gửi email đặt lại mật khẩu
    * @param email Email người nhận
    * @param resetToken Token đặt lại mật khẩu
-   * @param resetLink Link đặt lại mật khẩu đầy đủ
    */
   async sendPasswordResetEmail(email: string, resetToken: string) {
     try {
-      const { transporter, previewUrl, testAccount } =
+      const { transporter, previewUrl, testAccount, isDevelopment } =
         await createTransporter();
 
       // Tạo link đặt lại mật khẩu
-      // Sử dụng cấu hình từ config
       const resetLink = `${config.clientURL}/auth/reset-password?token=${resetToken}`;
 
       // Nội dung email
       const mailOptions = {
-        from: `"EventHub" <${testAccount.user}>`,
+        from: `"EventHub" <${
+          isDevelopment ? testAccount.user : config.emailFrom
+        }>`,
         to: email,
         subject: "Đặt lại mật khẩu của bạn",
         html: `
@@ -77,17 +98,27 @@ const emailService = {
       // Gửi email
       const info = await transporter.sendMail(mailOptions);
 
-      // Tạo URL xem trước email (chỉ dùng trong môi trường phát triển với Ethereal)
-      const previewURL = previewUrl(info) as string;
-
-      console.log(`Email đặt lại mật khẩu gửi đến ${email}:`);
-      console.log(`Link xem email: ${previewURL}`);
-
-      return {
+      // Kết quả
+      const result: {
+        success: boolean;
+        message: string;
+        previewURL?: string;
+      } = {
         success: true,
         message: "Email đặt lại mật khẩu đã được gửi",
-        previewURL, // Chỉ trả về trong môi trường phát triển
       };
+
+      // Trong môi trường phát triển với Ethereal, trả về link xem trước email
+      if (isDevelopment && previewUrl) {
+        const previewURL = previewUrl(info) as string;
+        console.log(`Email đặt lại mật khẩu gửi đến ${email}:`);
+        console.log(`Link xem email: ${previewURL}`);
+        result.previewURL = previewURL;
+      } else {
+        console.log(`Email đặt lại mật khẩu đã được gửi đến ${email}`);
+      }
+
+      return result;
     } catch (error) {
       console.error("Lỗi khi gửi email đặt lại mật khẩu:", error);
       throw error;
