@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import connectDB from "./config/database";
+import routes from "./routes";
 
 // Load environment variables
 dotenv.config();
@@ -25,7 +26,10 @@ connectDB()
     process.exit(1);
   });
 
-// Routes
+// API Routes
+app.use("/api", routes);
+
+// Base route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to EventHub API" });
 });
