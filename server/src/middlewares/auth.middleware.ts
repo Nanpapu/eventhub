@@ -76,3 +76,47 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     });
   }
 };
+
+/**
+ * Middleware kiểm tra người dùng có quyền organizer không
+ */
+export const isOrganizer = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (
+    req.user &&
+    (req.user.role === "organizer" || req.user.role === "admin")
+  ) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Không có quyền truy cập, yêu cầu quyền organizer",
+    });
+  }
+};
+
+/**
+ * Middleware kiểm tra người dùng hoặc là admin hoặc là chính user đó
+ */
+export const isOwnerOrAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.params.userId || req.params.id;
+
+  if (
+    req.user &&
+    (req.user.role === "admin" || req.user._id.toString() === userId)
+  ) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Không có quyền truy cập",
+    });
+  }
+};

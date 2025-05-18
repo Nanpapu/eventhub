@@ -22,12 +22,11 @@ const authController = {
       }
 
       // Xử lý đăng ký
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, name } = req.body;
       const result = await authService.register({
         email,
         password,
-        firstName,
-        lastName,
+        name,
       });
 
       // Trả về kết quả
@@ -112,9 +111,10 @@ const authController = {
         user: {
           id: user._id,
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          name: user.name,
           role: user.role,
+          avatar: user.avatar,
+          bio: user.bio,
         },
       });
     } catch (error) {

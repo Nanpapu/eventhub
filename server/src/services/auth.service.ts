@@ -1,11 +1,11 @@
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import { generateToken } from "../utils/jwt.utils";
+import mongoose from "mongoose";
 
 interface RegisterInput {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  name: string;
 }
 
 interface LoginInput {
@@ -17,9 +17,9 @@ interface AuthResult {
   user: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     role: string;
+    avatar?: string;
   };
   token: string;
 }
@@ -51,9 +51,9 @@ const authService = {
       user: {
         id: user._id?.toString() || "",
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         role: user.role,
+        avatar: user.avatar,
       },
       token,
     };
@@ -85,9 +85,9 @@ const authService = {
       user: {
         id: user._id?.toString() || "",
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         role: user.role,
+        avatar: user.avatar,
       },
       token,
     };

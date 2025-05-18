@@ -5,9 +5,11 @@ import bcrypt from "bcryptjs";
 export interface IUser extends Document {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  role: "user" | "admin";
+  name: string;
+  avatar?: string;
+  bio?: string;
+  role: "user" | "organizer" | "admin";
+  savedEvents: mongoose.Types.ObjectId[]; // Reference to Event IDs
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -28,21 +30,30 @@ const userSchema = new Schema<IUser>(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
     },
-    firstName: {
+    name: {
       type: String,
-      required: [true, "First name is required"],
+      required: [true, "Name is required"],
       trim: true,
     },
-    lastName: {
+    avatar: {
       type: String,
-      required: [true, "Last name is required"],
-      trim: true,
+      default: "",
+    },
+    bio: {
+      type: String,
+      default: "",
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "organizer", "admin"],
       default: "user",
     },
+    savedEvents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Event",
+      },
+    ],
   },
   {
     timestamps: true,
