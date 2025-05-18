@@ -8,6 +8,8 @@ import {
   Home,
   Login,
   Register,
+  ForgotPassword,
+  ResetPassword,
   SearchResults,
   EventDetail,
   CreateEvent,
@@ -44,6 +46,8 @@ export const router = createBrowserRouter(
         <Route index element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/events" element={<SearchResults />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/events/:id" element={<EventDetail />} />

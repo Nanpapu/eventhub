@@ -4,6 +4,8 @@ import Home from "./Home";
 // Auth pages
 import Login from "./auth/Login";
 import Register from "./auth/Register";
+import ForgotPassword from "./auth/ForgotPassword";
+import ResetPassword from "./auth/ResetPassword";
 
 // Event pages
 import SearchResults from "./events/SearchResults";
@@ -33,6 +35,8 @@ export {
   Home,
   Login,
   Register,
+  ForgotPassword,
+  ResetPassword,
   SearchResults,
   EventDetail,
   CreateEvent,

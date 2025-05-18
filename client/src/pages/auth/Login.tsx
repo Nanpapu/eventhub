@@ -32,6 +32,7 @@ import {
   FaFacebook,
 } from "react-icons/fa";
 import authService from "../../services/auth.service";
+import { useTranslation } from "react-i18next";
 
 interface LoginFormValues {
   email: string;
@@ -211,6 +212,8 @@ const Login = () => {
                     Ghi nhớ đăng nhập
                   </Checkbox>
                   <ChakraLink
+                    as={Link}
+                    to="/auth/forgot-password"
                     color="teal.500"
                     fontSize="sm"
                     fontWeight="medium"

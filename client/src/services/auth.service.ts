@@ -3,13 +3,30 @@ import api from "../utils/api";
 export interface RegisterData {
   email: string;
   password: string;
-  name: string;   // Thay đổi từ firstName và lastName sang name
+  name: string; // Thay đổi từ firstName và lastName sang name
   role?: "user" | "organizer" | "admin";
 }
 
 export interface LoginData {
   email: string;
   password: string;
+}
+
+// Interface cho quên mật khẩu
+export interface ForgotPasswordData {
+  email: string;
+}
+
+// Interface cho đặt lại mật khẩu
+export interface ResetPasswordData {
+  token: string;
+  password: string;
+}
+
+// Interface cho đổi mật khẩu
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface AuthResponse {
@@ -19,7 +36,7 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
-    name: string;   // Thay đổi từ firstName và lastName sang name
+    name: string; // Thay đổi từ firstName và lastName sang name
     role: string;
     avatar?: string;
     bio?: string;
@@ -82,10 +99,12 @@ const authService = {
     if (cachedUser) {
       return JSON.parse(cachedUser);
     }
-    
+
     try {
       // Nếu không có hoặc cần refresh, gọi API
-      const response = await api.get<{success: boolean, user: any}>("/auth/me");
+      const response = await api.get<{ success: boolean; user: any }>(
+        "/auth/me"
+      );
       if (response.data.success) {
         localStorage.setItem("user", JSON.stringify(response.data.user));
         return response.data.user;
@@ -102,6 +121,33 @@ const authService = {
    */
   getToken: () => {
     return localStorage.getItem("token");
+  },
+
+  /**
+   * Gửi yêu cầu quên mật khẩu
+   * @param data Dữ liệu quên mật khẩu (email)
+   */
+  forgotPassword: async (data: ForgotPasswordData) => {
+    const response = await api.post("/auth/forgot-password", data);
+    return response.data;
+  },
+
+  /**
+   * Đặt lại mật khẩu bằng token
+   * @param data Dữ liệu đặt lại mật khẩu (token và mật khẩu mới)
+   */
+  resetPassword: async (data: ResetPasswordData) => {
+    const response = await api.post("/auth/reset-password", data);
+    return response.data;
+  },
+
+  /**
+   * Đổi mật khẩu (khi đã đăng nhập)
+   * @param data Dữ liệu đổi mật khẩu
+   */
+  changePassword: async (data: ChangePasswordData) => {
+    const response = await api.put("/auth/change-password", data);
+    return response.data;
   },
 };
 

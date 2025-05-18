@@ -40,6 +40,7 @@ import {
   FaSave,
   FaTimes,
 } from "react-icons/fa";
+import authService from "../../services/auth.service";
 
 // Interface cho thông tin cá nhân
 interface ProfileFormData {
@@ -220,9 +221,13 @@ const Profile = () => {
 
   // Xử lý đổi mật khẩu
   const onPasswordSubmit = async (data: PasswordFormData) => {
+    setIsPasswordSubmitting(true);
     try {
-      // Giả lập đổi mật khẩu (sẽ thay thế bằng API call)
-      console.log("Password data to update:", data);
+      // Gọi API đổi mật khẩu
+      await authService.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
 
       // Hiển thị thông báo thành công
       toast({
@@ -235,16 +240,20 @@ const Profile = () => {
 
       // Reset form
       resetPasswordForm();
-    } catch (err) {
+    } catch (error: any) {
       // Xử lý lỗi
-      console.error("Error updating password:", err);
+      console.error("Error updating password:", error);
       toast({
         title: "Đổi mật khẩu thất bại",
-        description: "Đã xảy ra lỗi khi thay đổi mật khẩu của bạn",
+        description:
+          error.response?.data?.message ||
+          "Đã xảy ra lỗi khi thay đổi mật khẩu của bạn",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsPasswordSubmitting(false);
     }
   };
 
@@ -726,7 +735,7 @@ const Profile = () => {
                               color="blue.600"
                               mr={2}
                             >
-                              <FaBell size={20} />
+                              <FaCamera size={20} />
                             </Box>
                             <Heading size="md">Thông báo</Heading>
                           </Flex>
