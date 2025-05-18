@@ -2,19 +2,11 @@ import {
   Box,
   VStack,
   Heading,
-  Text,
-  Divider,
   FormControl,
   FormLabel,
   Input,
   Button,
   useColorModeValue,
-  Switch,
-  HStack,
-  Select,
-  RadioGroup,
-  Radio,
-  Stack,
   Accordion,
   AccordionItem,
   AccordionButton,
@@ -28,6 +20,8 @@ import {
   AlertDescription,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import authService from "../../services/auth.service";
+import { AxiosError } from "axios";
 
 /**
  * Component hiển thị các cài đặt tài khoản người dùng
@@ -37,15 +31,8 @@ const UserSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // State cho các cài đặt thông báo
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
-
-  // State cho cài đặt riêng tư
-  const [profileVisibility, setProfileVisibility] = useState("public");
-  const [showAttendedEvents, setShowAttendedEvents] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Toast notifications
   const toast = useToast();
@@ -53,12 +40,11 @@ const UserSettings = () => {
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
 
   // Xử lý submit form đổi mật khẩu
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     // Validate form
     if (!currentPassword) {
@@ -94,43 +80,58 @@ const UserSettings = () => {
       return;
     }
 
-    // Trong thực tế sẽ gọi API để đổi mật khẩu
-    toast({
-      title: "Thành công",
-      description: "Mật khẩu đã được thay đổi",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    // Kiểm tra độ mạnh của mật khẩu
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      toast({
+        title: "Lỗi",
+        description:
+          "Mật khẩu không đủ mạnh. Vui lòng tuân thủ các yêu cầu về mật khẩu.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
-    // Reset form
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
+    try {
+      setIsLoading(true);
+      // Gọi API để đổi mật khẩu
+      await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
 
-  // Xử lý lưu cài đặt thông báo
-  const handleSaveNotificationSettings = () => {
-    // Trong thực tế sẽ gọi API để lưu cài đặt
-    toast({
-      title: "Thành công",
-      description: "Cài đặt thông báo đã được lưu",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-  };
+      toast({
+        title: "Thành công",
+        description: "Mật khẩu đã được thay đổi",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
 
-  // Xử lý lưu cài đặt riêng tư
-  const handleSavePrivacySettings = () => {
-    // Trong thực tế sẽ gọi API để lưu cài đặt
-    toast({
-      title: "Thành công",
-      description: "Cài đặt quyền riêng tư đã được lưu",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      // Reset form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      setError(
+        axiosError.response?.data?.message ||
+          "Có lỗi xảy ra khi thay đổi mật khẩu. Vui lòng thử lại sau."
+      );
+      toast({
+        title: "Lỗi",
+        description:
+          axiosError.response?.data?.message ||
+          "Có lỗi xảy ra khi thay đổi mật khẩu",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -167,6 +168,13 @@ const UserSettings = () => {
           >
             <form onSubmit={handleChangePassword}>
               <VStack spacing={4} align="stretch">
+                {error && (
+                  <Alert status="error" borderRadius="md">
+                    <AlertIcon />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
                 <FormControl isRequired>
                   <FormLabel>Mật khẩu hiện tại</FormLabel>
                   <Input
@@ -201,164 +209,17 @@ const UserSettings = () => {
                   />
                 </FormControl>
 
-                <Button colorScheme="teal" type="submit" alignSelf="flex-end">
+                <Button
+                  colorScheme="teal"
+                  type="submit"
+                  alignSelf="flex-end"
+                  isLoading={isLoading}
+                  loadingText="Đang xử lý"
+                >
                   Thay đổi mật khẩu
                 </Button>
               </VStack>
             </form>
-          </AccordionPanel>
-        </AccordionItem>
-
-        {/* Phần cài đặt thông báo */}
-        <AccordionItem border="none" mb={4}>
-          <h2>
-            <AccordionButton
-              bg={bgColor}
-              p={4}
-              borderRadius="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-              _hover={{ bg: useColorModeValue("gray.50", "gray.700") }}
-            >
-              <Box flex="1" textAlign="left">
-                <Heading as="h3" size="md">
-                  Thông báo
-                </Heading>
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
-          </h2>
-          <AccordionPanel
-            pb={4}
-            bg={bgColor}
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor={borderColor}
-            borderTop="none"
-            borderTopRadius="0"
-            mt="-1px"
-          >
-            <VStack spacing={4} align="stretch">
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="email-notifications" mb="0">
-                  Thông báo qua email
-                </FormLabel>
-                <Switch
-                  id="email-notifications"
-                  colorScheme="teal"
-                  isChecked={emailNotifications}
-                  onChange={(e) => setEmailNotifications(e.target.checked)}
-                />
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="sms-notifications" mb="0">
-                  Thông báo qua SMS
-                </FormLabel>
-                <Switch
-                  id="sms-notifications"
-                  colorScheme="teal"
-                  isChecked={smsNotifications}
-                  onChange={(e) => setSmsNotifications(e.target.checked)}
-                />
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="push-notifications" mb="0">
-                  Thông báo đẩy
-                </FormLabel>
-                <Switch
-                  id="push-notifications"
-                  colorScheme="teal"
-                  isChecked={pushNotifications}
-                  onChange={(e) => setPushNotifications(e.target.checked)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Tần suất gửi thông báo</FormLabel>
-                <Select defaultValue="daily">
-                  <option value="realtime">Thời gian thực</option>
-                  <option value="daily">Hàng ngày</option>
-                  <option value="weekly">Hàng tuần</option>
-                </Select>
-              </FormControl>
-
-              <Button
-                colorScheme="teal"
-                alignSelf="flex-end"
-                onClick={handleSaveNotificationSettings}
-              >
-                Lưu cài đặt
-              </Button>
-            </VStack>
-          </AccordionPanel>
-        </AccordionItem>
-
-        {/* Phần cài đặt quyền riêng tư */}
-        <AccordionItem border="none" mb={4}>
-          <h2>
-            <AccordionButton
-              bg={bgColor}
-              p={4}
-              borderRadius="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-              _hover={{ bg: useColorModeValue("gray.50", "gray.700") }}
-            >
-              <Box flex="1" textAlign="left">
-                <Heading as="h3" size="md">
-                  Quyền riêng tư
-                </Heading>
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
-          </h2>
-          <AccordionPanel
-            pb={4}
-            bg={bgColor}
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor={borderColor}
-            borderTop="none"
-            borderTopRadius="0"
-            mt="-1px"
-          >
-            <VStack spacing={4} align="stretch">
-              <FormControl>
-                <FormLabel>Quyền xem trang cá nhân</FormLabel>
-                <RadioGroup
-                  value={profileVisibility}
-                  onChange={setProfileVisibility}
-                >
-                  <Stack direction="column" spacing={2}>
-                    <Radio value="public">Công khai</Radio>
-                    <Radio value="friends">Chỉ bạn bè</Radio>
-                    <Radio value="private">Riêng tư</Radio>
-                  </Stack>
-                </RadioGroup>
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="show-attended-events" mb="0">
-                  Hiển thị sự kiện đã tham gia
-                </FormLabel>
-                <Switch
-                  id="show-attended-events"
-                  colorScheme="teal"
-                  isChecked={showAttendedEvents}
-                  onChange={(e) => setShowAttendedEvents(e.target.checked)}
-                />
-              </FormControl>
-
-              <Button
-                colorScheme="teal"
-                alignSelf="flex-end"
-                onClick={handleSavePrivacySettings}
-              >
-                Lưu cài đặt
-              </Button>
-            </VStack>
           </AccordionPanel>
         </AccordionItem>
 

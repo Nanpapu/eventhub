@@ -282,6 +282,111 @@ class EventController {
       });
     }
   }
+
+  /**
+   * Lưu sự kiện vào danh sách đã lưu của người dùng
+   * @route POST /events/:id/save
+   */
+  async saveEvent(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user.id;
+
+      // Lưu sự kiện vào danh sách đã lưu của người dùng
+      await eventService.saveEvent(id, userId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Sự kiện đã được lưu thành công",
+      });
+    } catch (error: any) {
+      const statusCode =
+        error.message === "Event not found" ||
+        error.message === "Event already saved"
+          ? 400
+          : 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || "Đã xảy ra lỗi khi lưu sự kiện",
+      });
+    }
+  }
+
+  /**
+   * Xóa sự kiện khỏi danh sách đã lưu của người dùng
+   * @route DELETE /events/:id/save
+   */
+  async unsaveEvent(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user.id;
+
+      // Xóa sự kiện khỏi danh sách đã lưu của người dùng
+      await eventService.unsaveEvent(id, userId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Sự kiện đã được xóa khỏi danh sách đã lưu",
+      });
+    } catch (error: any) {
+      const statusCode =
+        error.message === "Event not found" ||
+        error.message === "Event not saved"
+          ? 400
+          : 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || "Đã xảy ra lỗi khi xóa sự kiện đã lưu",
+      });
+    }
+  }
+
+  /**
+   * Kiểm tra xem sự kiện đã được người dùng lưu chưa
+   * @route GET /events/:id/is-saved
+   */
+  async isEventSaved(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user.id;
+
+      // Kiểm tra xem sự kiện đã được lưu chưa
+      const isSaved = await eventService.isEventSaved(id, userId);
+
+      return res.status(200).json({
+        success: true,
+        isSaved,
+      });
+    } catch (error: any) {
+      const statusCode = error.message === "Event not found" ? 404 : 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || "Đã xảy ra lỗi khi kiểm tra trạng thái lưu",
+      });
+    }
+  }
+
+  /**
+   * Lấy danh sách sự kiện đã lưu của người dùng
+   * @route GET /user/saved-events
+   */
+  async getSavedEvents(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const events = await eventService.getSavedEvents(userId);
+
+      return res.status(200).json({
+        success: true,
+        events,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message || "Đã xảy ra lỗi khi lấy danh sách sự kiện đã lưu",
+      });
+    }
+  }
 }
 
 export default new EventController();

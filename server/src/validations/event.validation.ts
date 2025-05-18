@@ -1,5 +1,18 @@
 import Joi from "joi";
 
+// Interface phục vụ cho filter event
+export interface EventFilter {
+  keyword?: string;
+  category?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  isFree?: boolean;
+  page?: number;
+  limit?: number;
+  organizer?: string;
+}
+
 export const createEventSchema = Joi.object({
   title: Joi.string().required().min(3).max(100).messages({
     "string.empty": "Tiêu đề không được để trống",

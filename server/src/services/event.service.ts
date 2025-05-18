@@ -1,18 +1,7 @@
 import mongoose from "mongoose";
 import Event, { IEvent } from "../models/Event";
 import User from "../models/User";
-
-interface EventFilter {
-  keyword?: string;
-  category?: string;
-  location?: string;
-  startDate?: Date;
-  endDate?: Date;
-  isFree?: boolean;
-  page?: number;
-  limit?: number;
-  organizer?: string;
-}
+import { EventFilter } from "../validations/event.validation";
 
 interface CreateEventData {
   title: string;
@@ -49,322 +38,333 @@ interface UpdateEventData extends Partial<CreateEventData> {}
 /**
  * Service cho Event
  */
-class EventService {
+const eventService = {
   /**
-   * Lấy danh sách sự kiện với filter
-   * @param filter Thông tin filter
+   * Lấy danh sách sự kiện
    */
   async getEvents(filter: EventFilter = {}) {
-    try {
-      const {
-        keyword,
-        category,
-        location,
-        startDate,
-        endDate,
-        isFree,
-        page = 1,
-        limit = 10,
-        organizer,
-      } = filter;
+    const {
+      keyword,
+      category,
+      location,
+      startDate,
+      endDate,
+      isFree,
+      page = 1,
+      limit = 10,
+    } = filter;
 
-      // Tạo query object
-      const query: any = {};
+    const query: any = {};
 
-      // Thêm các điều kiện vào query
-      if (keyword) {
-        query.$text = { $search: keyword };
+    // Chỉ lấy các sự kiện đã published
+    query.published = true;
+
+    // Filter theo từ khóa
+    if (keyword) {
+      query.$or = [
+        { title: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } },
+      ];
+    }
+
+    // Filter theo category
+    if (category) {
+      query.category = category;
+    }
+
+    // Filter theo location
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    // Filter theo ngày
+    if (startDate || endDate) {
+      query.date = {};
+
+      if (startDate) {
+        query.date.$gte = new Date(startDate);
       }
 
-      if (category) {
-        query.category = category;
+      if (endDate) {
+        query.date.$lte = new Date(endDate);
       }
+    }
 
-      if (location) {
-        query.location = { $regex: location, $options: "i" };
-      }
+    // Filter theo giá vé
+    if (isFree !== undefined) {
+      query.isPaid = !isFree;
+    }
 
-      // Filter theo thời gian
-      if (startDate || endDate) {
-        query.date = {};
-        if (startDate) {
-          query.date.$gte = new Date(startDate);
-        }
-        if (endDate) {
-          query.date.$lte = new Date(endDate);
-        }
-      }
+    // Tính toán số lượng sự kiện bỏ qua
+    const skip = (page - 1) * limit;
 
-      // Filter theo giá
-      if (isFree !== undefined) {
-        query.isPaid = !isFree;
-      }
+    // Query database
+    const events = await Event.find(query)
+      .populate("organizer", "name avatar")
+      .skip(skip)
+      .limit(limit)
+      .sort({ date: 1 });
 
-      // Filter theo organizer
-      if (organizer) {
-        query.organizer = new mongoose.Types.ObjectId(organizer);
-      }
+    // Đếm tổng số sự kiện thỏa mãn điều kiện
+    const total = await Event.countDocuments(query);
 
-      // Chỉ lấy các sự kiện đã publish
-      query.published = true;
+    // Tính toán tổng số trang
+    const totalPages = Math.ceil(total / limit);
 
-      // Tính toán skip cho phân trang
-      const skip = (page - 1) * limit;
-
-      // Thực hiện truy vấn và đếm tổng số sự kiện
-      const [events, total] = await Promise.all([
-        Event.find(query)
-          .populate("organizer", "name avatar")
-          .skip(skip)
-          .limit(limit)
-          .sort({ date: 1 }),
-        Event.countDocuments(query),
-      ]);
-
-      // Tính toán tổng số trang
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        events,
+    return {
+      events,
+      pagination: {
         total,
         page,
         limit,
         totalPages,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
+      },
+    };
+  },
 
   /**
-   * Lấy chi tiết sự kiện theo ID
-   * @param id ID của sự kiện
+   * Lấy thông tin chi tiết sự kiện theo ID
    */
   async getEventById(id: string) {
-    try {
-      const event = await Event.findById(id).populate(
-        "organizer",
-        "name avatar"
-      );
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      return event;
-    } catch (error) {
-      throw error;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Event not found");
     }
-  }
+
+    const event = await Event.findById(id).populate("organizer", "name avatar");
+
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    return event;
+  },
 
   /**
    * Tạo sự kiện mới
-   * @param data Dữ liệu sự kiện
    */
   async createEvent(data: CreateEventData) {
-    try {
-      // Xác minh organizer có tồn tại không
-      const user = await User.findById(data.organizer);
-      if (!user) {
-        throw new Error("Invalid organizer");
-      }
-
-      // Tạo danh sách ticket types
-      let ticketTypes = [];
-      if (data.isPaid && data.ticketTypes && data.ticketTypes.length > 0) {
-        ticketTypes = data.ticketTypes.map((ticket) => ({
-          ...ticket,
-          availableQuantity: ticket.quantity,
-        }));
-      } else if (data.isPaid && data.price) {
-        // Nếu không có ticket types nhưng có price, tạo một loại vé mặc định
-        ticketTypes = [
-          {
-            name: "Standard Ticket",
-            price: data.price,
-            quantity: data.capacity,
-            availableQuantity: data.capacity,
-            description: "Standard entry ticket",
-          },
-        ];
-      }
-
-      // Tạo sự kiện mới
-      const newEvent = new Event({
-        ...data,
-        ticketTypes,
-      });
-
-      await newEvent.save();
-      return newEvent;
-    } catch (error) {
-      throw error;
-    }
-  }
+    const event = new Event(data);
+    return await event.save();
+  },
 
   /**
    * Cập nhật thông tin sự kiện
-   * @param id ID của sự kiện
-   * @param data Dữ liệu cập nhật
    */
   async updateEvent(id: string, data: UpdateEventData) {
-    try {
-      // Kiểm tra sự kiện có tồn tại không
-      const event = await Event.findById(id);
-      if (!event) {
-        throw new Error("Event not found");
-      }
-
-      // Xử lý đặc biệt cho ticketTypes nếu có
-      if (data.ticketTypes) {
-        // Giữ lại số lượng vé đã bán từ ticketTypes cũ
-        const updatedTicketTypes = data.ticketTypes.map((newType) => {
-          // Tìm loại vé cũ tương ứng (nếu có)
-          const oldType = event.ticketTypes.find(
-            (t) => t.name === newType.name
-          );
-
-          // Tính toán số lượng vé đã bán (nếu có thông tin cũ)
-          const soldQuantity = oldType
-            ? oldType.quantity - oldType.availableQuantity
-            : 0;
-
-          // Cập nhật số lượng vé còn lại
-          return {
-            ...newType,
-            availableQuantity: Math.max(0, newType.quantity - soldQuantity),
-          };
-        });
-
-        data.ticketTypes = updatedTicketTypes;
-      }
-
-      // Cập nhật sự kiện
-      const updatedEvent = await Event.findByIdAndUpdate(
-        id,
-        { $set: data },
-        { new: true, runValidators: true }
-      ).populate("organizer", "name avatar");
-
-      if (!updatedEvent) {
-        throw new Error("Failed to update event");
-      }
-
-      return updatedEvent;
-    } catch (error) {
-      throw error;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Event not found");
     }
-  }
+
+    const event = await Event.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    return event;
+  },
 
   /**
    * Xóa sự kiện
-   * @param id ID của sự kiện
    */
   async deleteEvent(id: string) {
-    try {
-      // Kiểm tra sự kiện có tồn tại không
-      const event = await Event.findById(id);
-      if (!event) {
-        throw new Error("Event not found");
-      }
-
-      // Xóa sự kiện
-      await Event.findByIdAndDelete(id);
-
-      return { success: true, message: "Event deleted successfully" };
-    } catch (error) {
-      throw error;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Event not found");
     }
-  }
+
+    const event = await Event.findByIdAndDelete(id);
+
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    return true;
+  },
 
   /**
-   * Lấy sự kiện của người dùng (đã tạo)
-   * @param userId ID của người dùng
+   * Lấy sự kiện của người dùng hiện tại
    */
   async getUserEvents(userId: string) {
-    try {
-      const events = await Event.find({ organizer: userId })
-        .sort({ date: 1 })
-        .populate("organizer", "name avatar");
-
-      return events;
-    } catch (error) {
-      throw error;
-    }
-  }
+    return Event.find({ organizer: userId }).sort({ createdAt: -1 });
+  },
 
   /**
-   * Đếm số lượng sự kiện theo các tiêu chí
-   * @param organizerId ID của nhà tổ chức (optional)
+   * Lấy thống kê sự kiện của người dùng hiện tại
    */
-  async getEventStats(organizerId?: string) {
-    try {
-      const query: any = {};
+  async getEventStats(userId: string) {
+    const stats = {
+      total: 0,
+      published: 0,
+      draft: 0,
+      past: 0,
+      upcoming: 0,
+    };
 
-      // Nếu có organizerId, chỉ đếm sự kiện của nhà tổ chức đó
-      if (organizerId) {
-        query.organizer = new mongoose.Types.ObjectId(organizerId);
-      }
+    // Đếm tổng số sự kiện
+    stats.total = await Event.countDocuments({ organizer: userId });
 
-      // Query cơ bản: đếm tổng số sự kiện
-      const totalEvents = await Event.countDocuments(query);
+    // Đếm số sự kiện đã published
+    stats.published = await Event.countDocuments({
+      organizer: userId,
+      published: true,
+    });
 
-      // Đếm số sự kiện theo trạng thái
-      const now = new Date();
+    // Đếm số sự kiện draft
+    stats.draft = await Event.countDocuments({
+      organizer: userId,
+      published: false,
+    });
 
-      // Sự kiện sắp diễn ra (sau ngày hiện tại)
-      const upcomingEvents = await Event.countDocuments({
-        ...query,
-        date: { $gt: now },
-      });
+    // Ngày hiện tại
+    const currentDate = new Date();
 
-      // Sự kiện đã kết thúc (trước ngày hiện tại)
-      const pastEvents = await Event.countDocuments({
-        ...query,
-        date: { $lt: now },
-      });
+    // Đếm số sự kiện đã qua
+    stats.past = await Event.countDocuments({
+      organizer: userId,
+      date: { $lt: currentDate },
+    });
 
-      // Sự kiện theo danh mục
-      const eventsByCategory = await Event.aggregate([
-        { $match: query },
-        { $group: { _id: "$category", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-      ]);
+    // Đếm số sự kiện sắp tới
+    stats.upcoming = await Event.countDocuments({
+      organizer: userId,
+      date: { $gte: currentDate },
+    });
 
-      return {
-        totalEvents,
-        upcomingEvents,
-        pastEvents,
-        eventsByCategory: eventsByCategory.map((item) => ({
-          category: item._id,
-          count: item.count,
-        })),
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
+    return stats;
+  },
 
   /**
    * Cập nhật trạng thái published của sự kiện
-   * @param id ID của sự kiện
-   * @param status Trạng thái published mới
    */
-  async updateEventPublishStatus(id: string, status: boolean) {
-    try {
-      const event = await Event.findByIdAndUpdate(
-        id,
-        { $set: { published: status } },
-        { new: true }
-      );
-
-      if (!event) {
-        throw new Error("Event not found");
-      }
-
-      return event;
-    } catch (error) {
-      throw error;
+  async updateEventPublishStatus(id: string, published: boolean) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Event not found");
     }
-  }
-}
 
-export default new EventService();
+    const event = await Event.findByIdAndUpdate(
+      id,
+      { published },
+      { new: true, runValidators: true }
+    );
+
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    return event;
+  },
+
+  /**
+   * Lưu sự kiện vào danh sách đã lưu của người dùng
+   */
+  async saveEvent(eventId: string, userId: string) {
+    // Kiểm tra sự kiện có tồn tại không
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      throw new Error("Event not found");
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    // Kiểm tra sự kiện đã được lưu chưa
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Kiểm tra xem sự kiện đã được lưu chưa
+    if (user.savedEvents.includes(new mongoose.Types.ObjectId(eventId))) {
+      throw new Error("Event already saved");
+    }
+
+    // Lưu sự kiện vào danh sách
+    user.savedEvents.push(new mongoose.Types.ObjectId(eventId));
+    await user.save();
+
+    return true;
+  },
+
+  /**
+   * Xóa sự kiện khỏi danh sách đã lưu của người dùng
+   */
+  async unsaveEvent(eventId: string, userId: string) {
+    // Kiểm tra sự kiện có tồn tại không
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      throw new Error("Event not found");
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    // Tìm người dùng
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Kiểm tra xem sự kiện có trong danh sách đã lưu không
+    const eventObjId = new mongoose.Types.ObjectId(eventId);
+    const eventIndex = user.savedEvents.findIndex((id) =>
+      id.equals(eventObjId)
+    );
+
+    if (eventIndex === -1) {
+      throw new Error("Event not saved");
+    }
+
+    // Xóa sự kiện khỏi danh sách
+    user.savedEvents.splice(eventIndex, 1);
+    await user.save();
+
+    return true;
+  },
+
+  /**
+   * Kiểm tra xem sự kiện đã được người dùng lưu chưa
+   */
+  async isEventSaved(eventId: string, userId: string) {
+    // Kiểm tra tính hợp lệ của ID
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      throw new Error("Event not found");
+    }
+
+    // Tìm người dùng
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Kiểm tra xem sự kiện có trong danh sách đã lưu không
+    const eventObjId = new mongoose.Types.ObjectId(eventId);
+    return user.savedEvents.some((id) => id.equals(eventObjId));
+  },
+
+  /**
+   * Lấy danh sách sự kiện đã lưu của người dùng
+   */
+  async getSavedEvents(userId: string) {
+    // Tìm người dùng và populate savedEvents
+    const user = await User.findById(userId).populate({
+      path: "savedEvents",
+      populate: {
+        path: "organizer",
+        select: "name avatar",
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user.savedEvents;
+  },
+};
+
+export default eventService;
