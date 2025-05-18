@@ -85,6 +85,10 @@ import {
   resetEventState,
 } from "../../app/features/eventSlice";
 import { CreateEventData } from "../../services/event.service";
+import {
+  selectUser,
+  selectIsAuthenticated,
+} from "../../app/features/authSlice";
 
 // Interface cho dữ liệu sự kiện
 interface EventFormData {
@@ -1018,6 +1022,8 @@ const CreateEvent = () => {
   const isLoading = useAppSelector(selectEventLoading);
   const errorStore = useAppSelector(selectEventError);
   const createSuccess = useAppSelector(selectCreateSuccess);
+  const currentUser = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   const toast = useToast();
   const navigate = useNavigate();
@@ -1071,10 +1077,40 @@ const CreateEvent = () => {
   const [newTag, setNewTag] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const stepperHoverBg = useColorModeValue("gray.100", "gray.700");
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser && currentUser.role !== "organizer") {
+      toast({
+        title: "Không có quyền truy cập",
+        description: "Bạn cần là nhà tổ chức để tạo hoặc chỉnh sửa sự kiện.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate("/");
+    } else if (isAuthenticated === false && authChecked) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description:
+          "Bạn cần đăng nhập với tư cách nhà tổ chức để truy cập trang này.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate("/login");
+    }
+  }, [currentUser, isAuthenticated, navigate, toast, authChecked]);
+
+  useEffect(() => {
+    if (isAuthenticated !== null) {
+      setAuthChecked(true);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     return () => {

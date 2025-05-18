@@ -23,8 +23,12 @@ router.get("/:id/is-saved", eventController.isEventSaved);
 
 // Routes cho nhà tổ chức
 router.post("/", isOrganizer, eventController.createEvent);
-router.put("/:id", eventController.updateEvent); // Có kiểm tra quyền trong controller
-router.delete("/:id", eventController.deleteEvent); // Có kiểm tra quyền trong controller
-router.patch("/:id/publish", eventController.updateEventPublishStatus); // Có kiểm tra quyền trong controller
+router.put("/:id", isOrganizer, eventController.updateEvent);
+router.delete("/:id", isOrganizer, eventController.deleteEvent);
+router.patch(
+  "/:id/publish",
+  isOrganizer,
+  eventController.updateEventPublishStatus
+);
 
 export default router;

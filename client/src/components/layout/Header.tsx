@@ -149,6 +149,34 @@ export default function Header() {
     });
   };
 
+  // Lọc NAV_ITEMS dựa trên vai trò người dùng
+  const getFilteredNavItems = (userRole?: string) => {
+    // Tạo bản sao của NAV_ITEMS để không thay đổi mảng gốc
+    let items = [...NAV_ITEMS].filter((item) => item.label !== "Tạo sự kiện");
+
+    if (userRole === "organizer") {
+      const createEventItem: NavItem = {
+        label: "Tạo sự kiện",
+        labelKey: "events.createEvent",
+        href: "/create-event",
+      };
+      // Tìm vị trí của mục "Sự kiện" để chèn "Tạo sự kiện" ngay sau đó
+      const eventsItemIndex = items.findIndex(
+        (item) => item.labelKey === "events.events"
+      );
+      if (eventsItemIndex !== -1) {
+        items.splice(eventsItemIndex + 1, 0, createEventItem);
+      } else {
+        // Nếu không tìm thấy mục "Sự kiện", thêm vào cuối (hoặc một vị trí hợp lý khác)
+        items.push(createEventItem);
+      }
+    }
+    return items;
+  };
+
+  // Lấy danh sách NAV_ITEMS đã được lọc
+  const filteredNavItems = getFilteredNavItems(currentUser?.role);
+
   return (
     <Box position="sticky" top={0} zIndex={10}>
       <Flex
@@ -192,7 +220,7 @@ export default function Header() {
           </ChakraLink>
 
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
-            <DesktopNav />
+            <DesktopNav navItems={filteredNavItems} />
           </Flex>
         </Flex>
 
@@ -208,18 +236,20 @@ export default function Header() {
 
           {isUserAuthenticated ? (
             <>
-              <Button
-                as={Link}
-                to="/create-event"
-                display={{ base: "none", md: "inline-flex" }}
-                fontSize="sm"
-                fontWeight={600}
-                leftIcon={<MdAdd />}
-                colorScheme="teal"
-                variant="outline"
-              >
-                Tạo sự kiện
-              </Button>
+              {currentUser?.role === "organizer" && (
+                <Button
+                  as={Link}
+                  to="/create-event"
+                  display={{ base: "none", md: "inline-flex" }}
+                  fontSize="sm"
+                  fontWeight={600}
+                  leftIcon={<MdAdd />}
+                  colorScheme="teal"
+                  variant="outline"
+                >
+                  Tạo sự kiện
+                </Button>
+              )}
 
               <Box display={{ base: "none", md: "flex" }}>
                 <NotificationBell />
@@ -275,13 +305,6 @@ export default function Header() {
                         icon={<Icon as={MdEvent} mr={2} />}
                       >
                         Sự kiện đã tạo
-                      </MenuItem>
-                      <MenuItem
-                        as={Link}
-                        to="/create-event"
-                        icon={<Icon as={MdAdd} mr={2} />}
-                      >
-                        Tạo sự kiện mới
                       </MenuItem>
                     </>
                   ) : (
@@ -374,13 +397,13 @@ export default function Header() {
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
-        <MobileNav />
+        <MobileNav navItems={filteredNavItems} />
       </Collapse>
     </Box>
   );
 }
 
-const DesktopNav = () => {
+const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
   // Màu sắc theo theme
   const linkColor = useColorModeValue("gray.800", "gray.100");
   const linkHoverColor = useColorModeValue("teal.600", "teal.300");
@@ -389,7 +412,7 @@ const DesktopNav = () => {
 
   return (
     <Stack direction={"row"} spacing={4}>
-      {NAV_ITEMS.map((navItem) => {
+      {navItems.map((navItem) => {
         // Sử dụng tên Tiếng Việt trực tiếp
         const displayLabel = navItem.label;
 
@@ -499,7 +522,7 @@ const DesktopSubNav = ({
   );
 };
 
-const MobileNav = () => {
+const MobileNav = ({ navItems }: { navItems: Array<NavItem> }) => {
   const bgColor = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
@@ -512,7 +535,7 @@ const MobileNav = () => {
       borderStyle="solid"
       borderColor={borderColor}
     >
-      {NAV_ITEMS.map((navItem) => (
+      {navItems.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
     </Stack>
