@@ -15,12 +15,11 @@ import {
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
 import eventService, { EventFilter } from "../../services/event.service";
-import { formatDate } from "../../utils/formatters";
 
 // Định nghĩa interface cho event để có type checking
 interface EventData {
@@ -83,17 +82,89 @@ const getCategoryName = (categoryId: string): string => {
   return category ? category.name : "Khác";
 };
 
+// Custom EventCard component tương tự như ở trang Home
+const CustomEventCard = memo(({ event }: { event: EventData }) => {
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const tagBg = useColorModeValue("teal.50", "teal.900");
+  const tagColor = useColorModeValue("teal.600", "teal.200");
+  const locationColor = useColorModeValue("gray.600", "gray.400");
+
+  return (
+    <Box
+      as={Link}
+      to={`/events/${event.id}`}
+      borderRadius="lg"
+      overflow="hidden"
+      bg={cardBg}
+      borderWidth="1px"
+      borderColor={borderColor}
+      _hover={{
+        transform: "translateY(-5px)",
+        boxShadow: "lg",
+        bg: cardHoverBg,
+      }}
+      transition="all 0.3s"
+      sx={{ textDecoration: "none" }}
+    >
+      <Box position="relative">
+        <Image
+          src={event.imageUrl}
+          alt={event.title}
+          width="100%"
+          height="180px"
+          objectFit="cover"
+          fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
+        />
+        <Box position="absolute" top={2} right={2}>
+          {event.isPaid ? (
+            <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
+              Trả phí
+            </Badge>
+          ) : (
+            <Badge colorScheme="green" py={1} px={2} borderRadius="md">
+              Miễn phí
+            </Badge>
+          )}
+        </Box>
+      </Box>
+
+      <Box p={4}>
+        <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
+          <Icon as={FiTag} mr={1} />
+          {getCategoryName(event.category)}
+        </Tag>
+
+        <Heading as="h3" size="md" mb={2} noOfLines={2}>
+          {event.title}
+        </Heading>
+
+        <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
+          {event.description}
+        </Text>
+
+        <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
+          <Icon as={FiCalendar} mr={2} />
+          <Text>{event.date}</Text>
+        </Flex>
+
+        <Flex fontSize="sm" color={locationColor} align="center">
+          <Icon as={FiMapPin} mr={2} />
+          <Text>{event.location}</Text>
+        </Flex>
+      </Box>
+    </Box>
+  );
+});
+
 const SearchResults = () => {
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
-  const tagBg = useColorModeValue("teal.50", "teal.900");
-  const tagColor = useColorModeValue("teal.600", "teal.200");
-  const locationColor = useColorModeValue("gray.600", "gray.400");
 
   // Lấy query params từ URL
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,7 +188,7 @@ const SearchResults = () => {
   const eventsPerPage = 6;
 
   // Xử lý tìm kiếm
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     // Cập nhật URL với các tham số tìm kiếm
     const params: { [key: string]: string } = {};
     if (keyword) params.keyword = keyword;
@@ -128,7 +199,7 @@ const SearchResults = () => {
 
     // Lọc sự kiện dựa trên tìm kiếm
     filterEvents();
-  };
+  }, [keyword, location, category, currentPage, setSearchParams]);
 
   // Xử lý lọc sự kiện
   const filterEvents = useCallback(async () => {
@@ -186,24 +257,27 @@ const SearchResults = () => {
     eventsPerPage,
   ]);
 
-  // Chuyển trang
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+  // Chuyển trang - sử dụng useCallback để tránh re-render không cần thiết
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setCurrentPage(newPage);
 
-    // Cập nhật URL
-    const params: { [key: string]: string } = {};
-    if (keyword) params.keyword = keyword;
-    if (location) params.location = location;
-    if (category) params.category = category;
-    if (newPage > 1) params.page = newPage.toString();
-    setSearchParams(params);
+      // Cập nhật URL
+      const params: { [key: string]: string } = {};
+      if (keyword) params.keyword = keyword;
+      if (location) params.location = location;
+      if (category) params.category = category;
+      if (newPage > 1) params.page = newPage.toString();
+      setSearchParams(params);
 
-    // Gọi API khi chuyển trang
-    filterEvents();
-  };
+      // Gọi API khi chuyển trang
+      filterEvents();
+    },
+    [keyword, location, category, setSearchParams, filterEvents]
+  );
 
   // Reset tất cả bộ lọc
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setKeyword("");
     setLocation("");
     setCategory("");
@@ -213,9 +287,9 @@ const SearchResults = () => {
     setSearchParams({});
     // Gọi lại API khi reset filter
     filterEvents();
-  };
+  }, [setSearchParams, filterEvents]);
 
-  // Tải dữ liệu ban đầu khi component mount và khi URL có params
+  // Tải dữ liệu ban đầu khi component mount
   useEffect(() => {
     // Nếu có tham số trong URL, thực hiện tìm kiếm ngay lập tức
     if (
@@ -240,75 +314,6 @@ const SearchResults = () => {
     id: cat.id,
     name: cat.name,
   }));
-
-  // Custom EventCard component tương tự như ở trang Home
-  const CustomEventCard = ({ event }: { event: EventData }) => {
-    return (
-      <Box
-        as={Link}
-        to={`/events/${event.id}`}
-        borderRadius="lg"
-        overflow="hidden"
-        bg={cardBg}
-        borderWidth="1px"
-        borderColor={borderColor}
-        _hover={{
-          transform: "translateY(-5px)",
-          boxShadow: "lg",
-          bg: cardHoverBg,
-        }}
-        transition="all 0.3s"
-        sx={{ textDecoration: "none" }}
-      >
-        <Box position="relative">
-          <Image
-            src={event.imageUrl}
-            alt={event.title}
-            width="100%"
-            height="180px"
-            objectFit="cover"
-            fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
-          />
-          <Box position="absolute" top={2} right={2}>
-            {event.isPaid ? (
-              <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
-                Trả phí
-              </Badge>
-            ) : (
-              <Badge colorScheme="green" py={1} px={2} borderRadius="md">
-                Miễn phí
-              </Badge>
-            )}
-          </Box>
-        </Box>
-
-        <Box p={4}>
-          <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
-            <Icon as={FiTag} mr={1} />
-            {getCategoryName(event.category)}
-          </Tag>
-
-          <Heading as="h3" size="md" mb={2} noOfLines={2}>
-            {event.title}
-          </Heading>
-
-          <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
-            {event.description}
-          </Text>
-
-          <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
-            <Icon as={FiCalendar} mr={2} />
-            <Text>{event.date}</Text>
-          </Flex>
-
-          <Flex fontSize="sm" color={locationColor} align="center">
-            <Icon as={FiMapPin} mr={2} />
-            <Text>{event.location}</Text>
-          </Flex>
-        </Box>
-      </Box>
-    );
-  };
 
   return (
     <Box bg={bgColor}>
