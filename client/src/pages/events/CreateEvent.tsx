@@ -407,7 +407,8 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
   );
 };
 
-interface TicketsPricingStepProps extends Omit<StepProps, "handleChange"> {
+interface TicketsPricingStepProps
+  extends Omit<StepProps, "handleChange" | "setFormData"> {
   handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   addTicketType: () => void;
   removeTicketType: (id: string) => void;
@@ -417,7 +418,6 @@ interface TicketsPricingStepProps extends Omit<StepProps, "handleChange"> {
 // Bước 3: Vé & Giá
 const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
   formData,
-  setFormData,
   errors,
   handleCheckboxChange,
   addTicketType,
@@ -436,12 +436,7 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
           id="isPaid"
           name="isPaid"
           isChecked={formData.isPaid}
-          onChange={(e) => {
-            handleCheckboxChange(e);
-            if (!e.target.checked && formData.ticketTypes.length === 0) {
-              setFormData((prev) => ({ ...prev, price: 0 }));
-            }
-          }}
+          onChange={handleCheckboxChange}
           colorScheme="teal"
         />
       </FormControl>
@@ -1198,6 +1193,36 @@ const CreateEvent = () => {
       ...(name === "isPaid" &&
         !checked && { ticketTypes: [], price: undefined }),
     }));
+
+    // Xóa các lỗi (errors) liên quan khi trạng thái isOnline hoặc isPaid thay đổi
+    if (name === "isOnline") {
+      setErrors((prevEditorErrors) => ({
+        ...prevEditorErrors,
+        onlineUrl: "",
+        location: "",
+        address: "",
+      }));
+    }
+
+    if (name === "isPaid") {
+      setErrors((prevEditorErrors) => {
+        const newEditorErrors = { ...prevEditorErrors };
+        delete newEditorErrors.ticketTypes; // Xóa lỗi tổng quan của ticketTypes
+        // Xóa các lỗi chi tiết của từng loại vé
+        Object.keys(newEditorErrors).forEach((key) => {
+          if (
+            key.startsWith("ticketName-") ||
+            key.startsWith("ticketPrice-") ||
+            key.startsWith("ticketQuantity-")
+          ) {
+            delete newEditorErrors[key];
+          }
+        });
+        // Cân nhắc xóa lỗi `price` nếu có và logic của bạn yêu cầu
+        // if (newEditorErrors.price) delete newEditorErrors.price;
+        return newEditorErrors;
+      });
+    }
   };
 
   const handleCapacityChange = (value: string) => {
@@ -1265,51 +1290,75 @@ const CreateEvent = () => {
     }));
   };
 
-  const validateStep = (stepIndex: number): boolean => {
+  // Hàm helper để lấy các key lỗi có thể có cho một bước cụ thể
+  const getErrorKeysForStep = (stepIndex: number): string[] => {
+    switch (stepIndex) {
+      case 0: // Basic Info
+        return ["title", "description", "category", "imageFile"];
+      case 1: // Date, Time & Location
+        return [
+          "date",
+          "startTime",
+          "endTime",
+          "onlineUrl",
+          "location",
+          "address",
+        ];
+      case 2: {
+        // Tickets & Pricing
+        const ticketErrorKeys = formData.ticketTypes.flatMap((t) => [
+          `ticketName-${t.id}`,
+          `ticketPrice-${t.id}`,
+          `ticketQuantity-${t.id}`,
+        ]);
+        return ["ticketTypes", ...ticketErrorKeys]; // "ticketTypes" là lỗi chung cho mảng vé
+      }
+      case 3: // Advanced Settings
+        return ["capacity", "maxTicketsPerPerson"];
+      // Bước 4 (Review) không có validation trực tiếp trong vòng lặp này
+      default:
+        return [];
+    }
+  };
+
+  const validateStep = (stepIndex: number): Record<string, string> => {
     const newStepErrors: Record<string, string> = {};
-    let isValid = true;
 
     switch (stepIndex) {
       case 0:
         if (!formData.title.trim()) {
           newStepErrors.title = "Tên sự kiện là bắt buộc.";
-          isValid = false;
         }
         if (!formData.description.trim()) {
           newStepErrors.description = "Mô tả sự kiện là bắt buộc.";
-          isValid = false;
         }
         if (!formData.category) {
           newStepErrors.category = "Danh mục sự kiện là bắt buộc.";
-          isValid = false;
         }
         break;
       case 1:
         if (!formData.date) {
           newStepErrors.date = "Ngày diễn ra là bắt buộc.";
-          isValid = false;
         }
         if (!formData.startTime) {
           newStepErrors.startTime = "Thời gian bắt đầu là bắt buộc.";
-          isValid = false;
         }
         if (!formData.endTime) {
           newStepErrors.endTime = "Thời gian kết thúc là bắt buộc.";
-          isValid = false;
         }
-        if (formData.isOnline && !formData.onlineUrl?.trim()) {
-          newStepErrors.onlineUrl = "URL sự kiện trực tuyến là bắt buộc.";
-          isValid = false;
-        }
-        if (!formData.isOnline && !formData.location.trim()) {
-          newStepErrors.location =
-            "Tên địa điểm là bắt buộc cho sự kiện offline.";
-          isValid = false;
-        }
-        if (!formData.isOnline && !formData.address.trim()) {
-          newStepErrors.address =
-            "Địa chỉ cụ thể là bắt buộc cho sự kiện offline.";
-          isValid = false;
+        if (formData.isOnline) {
+          if (!formData.onlineUrl?.trim()) {
+            newStepErrors.onlineUrl = "URL sự kiện trực tuyến là bắt buộc.";
+          }
+        } else {
+          if (!formData.location.trim()) {
+            newStepErrors.location =
+              "Tên địa điểm là bắt buộc cho sự kiện offline.";
+          }
+          if (!formData.address.trim()) {
+            newStepErrors.address =
+              "Địa chỉ cụ thể là bắt buộc cho sự kiện offline.";
+          }
         }
         break;
       case 2:
@@ -1317,23 +1366,19 @@ const CreateEvent = () => {
           if (formData.ticketTypes.length === 0) {
             newStepErrors.ticketTypes =
               "Sự kiện có phí phải có ít nhất một loại vé. Vui lòng thêm loại vé.";
-            isValid = false;
           }
           formData.ticketTypes.forEach((ticket) => {
             if (!ticket.name.trim()) {
               newStepErrors[`ticketName-${ticket.id}`] =
                 "Tên loại vé là bắt buộc.";
-              isValid = false;
             }
             if (ticket.price < 0) {
               newStepErrors[`ticketPrice-${ticket.id}`] =
                 "Giá vé không thể âm.";
-              isValid = false;
             }
             if (ticket.quantity <= 0) {
               newStepErrors[`ticketQuantity-${ticket.id}`] =
                 "Số lượng vé phải lớn hơn 0.";
-              isValid = false;
             }
           });
         }
@@ -1341,86 +1386,55 @@ const CreateEvent = () => {
       case 3:
         if (formData.capacity <= 0) {
           newStepErrors.capacity = "Sức chứa của sự kiện phải lớn hơn 0.";
-          isValid = false;
         }
         if (formData.maxTicketsPerPerson <= 0) {
           newStepErrors.maxTicketsPerPerson =
             "Số vé tối đa mỗi người phải lớn hơn 0.";
-          isValid = false;
         }
         break;
     }
 
     setErrors((prevErrors) => {
-      const currentStepErrorKeysPattern = (() => {
-        switch (stepIndex) {
-          case 0:
-            return /^(title|description|category|imageFile)$/;
-          case 1:
-            return /^(date|startTime|endTime|onlineUrl|location|address)$/;
-          case 2:
-            return /^(ticketTypes|ticketName-|ticketPrice-|ticketQuantity-)/;
-          case 3:
-            return /^(capacity|maxTicketsPerPerson)$/;
-          default:
-            return /^$/;
-        }
-      })();
-
+      const currentStepErrorKeys = getErrorKeysForStep(stepIndex);
       const cleanedErrors = { ...prevErrors };
-      for (const key in cleanedErrors) {
-        if (currentStepErrorKeysPattern.test(key)) {
-          delete cleanedErrors[key];
-        }
+      currentStepErrorKeys.forEach((key) => {
+        delete cleanedErrors[key];
+      });
+      if (stepIndex === 2) {
+        Object.keys(cleanedErrors).forEach((key) => {
+          if (
+            key.startsWith("ticketName-") ||
+            key.startsWith("ticketPrice-") ||
+            key.startsWith("ticketQuantity-")
+          ) {
+            delete cleanedErrors[key];
+          }
+        });
       }
       return { ...cleanedErrors, ...newStepErrors };
     });
-    return isValid;
+    return newStepErrors;
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     let allStepsValid = true;
+    const finalSubmissionErrors: Record<string, string> = {};
+
     for (let i = 0; i < stepperSteps.length - 1; i++) {
-      if (!validateStep(i)) {
+      const stepSpecificErrors = validateStep(i);
+      if (Object.keys(stepSpecificErrors).length > 0) {
         allStepsValid = false;
+        Object.assign(finalSubmissionErrors, stepSpecificErrors);
       }
     }
 
     if (!allStepsValid) {
       let firstErrorStep = -1;
       for (let i = 0; i < stepperSteps.length - 1; i++) {
-        const stepErrorKeys = (() => {
-          switch (i) {
-            case 0:
-              return ["title", "description", "category", "imageFile"];
-            case 1:
-              return [
-                "date",
-                "startTime",
-                "endTime",
-                "onlineUrl",
-                "location",
-                "address",
-              ];
-            case 2:
-              return formData.ticketTypes
-                .flatMap((t) => [
-                  `ticketName-${t.id}`,
-                  `ticketPrice-${t.id}`,
-                  `ticketQuantity-${t.id}`,
-                ])
-                .concat(["ticketTypes"]);
-            case 3:
-              return ["capacity", "maxTicketsPerPerson"];
-            default:
-              return [];
-          }
-        })();
-        const currentStepHasError = stepErrorKeys.some((key) => errors[key]);
-
-        if (currentStepHasError) {
+        const stepErrorKeys = getErrorKeysForStep(i);
+        if (stepErrorKeys.some((key) => finalSubmissionErrors[key])) {
           firstErrorStep = i;
           break;
         }
@@ -1449,8 +1463,6 @@ const CreateEvent = () => {
       return;
     }
 
-    // const { imageFile, ...baseData } = formData; // Comment dòng này lại hoặc sửa
-    // Thay vào đó, chỉ lấy những gì cần thiết cho apiData từ formData
     const {
       id,
       title,
@@ -1477,41 +1489,38 @@ const CreateEvent = () => {
       date,
       startTime,
       endTime,
-      location: isOnline ? "" : location, // Đảm bảo location là string
-      address: isOnline ? "" : address, // Đảm bảo address là string
+      location: isOnline ? "" : location,
+      address: isOnline ? "" : address,
       isOnline,
-      onlineUrl: isOnline ? onlineUrl : undefined, // onlineUrl có thể là optional
+      onlineUrl: isOnline ? onlineUrl : undefined,
       capacity,
       maxTicketsPerPerson,
       isPaid,
-      // Logic cũ cho price giữ nguyên
       price:
         formData.isPaid && formData.ticketTypes.length > 0
           ? undefined
           : formData.price,
-      imageUrl: image, // Sử dụng formData.image đã có sẵn (URL preview hoặc URL từ server nếu edit)
+      imageUrl: image,
       ticketTypes: formData.isPaid
         ? formData.ticketTypes.map((t) => ({
             name: t.name,
             price: t.price,
             quantity: t.quantity,
-            description: t.name, // Giả sử description của ticket type là name
+            description: t.name,
           }))
         : undefined,
       tags,
       published: true,
     };
 
-    // Xóa các trường không cần thiết có giá trị rỗng hoặc undefined trước khi gửi đi
-    if (apiData.onlineUrl === "") delete apiData.onlineUrl; // Giữ lại nếu onlineUrl là optional
+    if (apiData.onlineUrl === "") delete apiData.onlineUrl;
 
     if (editMode && id) {
-      // Sử dụng id đã destructure
       console.log("Updating event:", { ...apiData, id });
-      dispatch(createEvent({ ...apiData, id })); // Truyền id vào đây
+      dispatch(createEvent({ ...apiData, id }));
     } else {
       console.log("Creating event:", apiData);
-      dispatch(createEvent(apiData)); // Gọi trực tiếp với apiData cho trường hợp tạo mới
+      dispatch(createEvent(apiData));
     }
   };
 
@@ -1528,7 +1537,8 @@ const CreateEvent = () => {
   };
 
   const handleNextStep = () => {
-    if (validateStep(activeStep)) {
+    const currentStepErrors = validateStep(activeStep);
+    if (Object.keys(currentStepErrors).length === 0) {
       setActiveStep((prev) => prev + 1);
       window.scrollTo(0, 0);
     } else {
@@ -1563,8 +1573,8 @@ const CreateEvent = () => {
       case 2:
         return (
           <TicketsPricingStep
-            {...commonProps}
-            setFormData={setFormData}
+            formData={commonProps.formData}
+            errors={commonProps.errors}
             handleCheckboxChange={handleCheckboxChange}
             addTicketType={addTicketType}
             removeTicketType={removeTicketType}
