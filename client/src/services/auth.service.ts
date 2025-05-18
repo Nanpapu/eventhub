@@ -154,6 +154,27 @@ const authService = {
     const response = await api.put("/auth/change-password", data);
     return response.data;
   },
+
+  /**
+   * Cập nhật thông tin người dùng
+   * @param data Thông tin cập nhật
+   */
+  updateProfile: async (data: {
+    name?: string;
+    bio?: string;
+    avatar?: string;
+  }) => {
+    const response = await api.put("/auth/profile", data);
+
+    // Cập nhật thông tin người dùng trong localStorage
+    if (response.data.success && response.data.user) {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const updatedUser = { ...currentUser, ...response.data.user };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+
+    return response.data;
+  },
 };
 
 export default authService;

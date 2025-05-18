@@ -28,6 +28,7 @@ import {
   HStack,
   Tooltip,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -41,6 +42,15 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import authService from "../../services/auth.service";
+
+// Interface cho lỗi API
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 // Interface cho thông tin cá nhân
 interface ProfileFormData {
@@ -76,6 +86,8 @@ const Profile = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Thêm trạng thái mode cho từng tab
   const [profileEditMode, setProfileEditMode] = useState(false);
@@ -116,16 +128,6 @@ const Profile = () => {
   const toggleConfirmPassword = () =>
     setShowConfirmPassword(!showConfirmPassword);
 
-  // Giả lập dữ liệu người dùng (sẽ được thay thế bằng API call)
-  const mockUserData = {
-    fullName: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0901234567",
-    location: "TP. Hồ Chí Minh, Việt Nam",
-    bio: "Tôi là một người đam mê công nghệ và thích tham gia các sự kiện về công nghệ thông tin.",
-    avatar: "https://bit.ly/3Q3eQvj",
-  };
-
   // Giả lập dữ liệu tùy chọn người dùng
   const mockPreferencesData = {
     // Thông báo
@@ -137,31 +139,47 @@ const Profile = () => {
     dateFormat: "DD/MM/YYYY",
   };
 
-  // Cập nhật form với dữ liệu người dùng khi component được mount
+  // Lấy thông tin người dùng từ API khi component mount
   useEffect(() => {
-    // Trong thực tế, đây sẽ là một API call để lấy thông tin người dùng
-    resetProfileForm({
-      fullName: mockUserData.fullName,
-      email: mockUserData.email,
-      phone: mockUserData.phone,
-      location: mockUserData.location,
-      bio: mockUserData.bio,
-    });
+    const fetchUserProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // Cập nhật form cài đặt
-    resetPreferencesForm(mockPreferencesData);
+        // Lấy thông tin người dùng từ API
+        const userData = await authService.getCurrentUser();
 
-    setAvatarPreview(mockUserData.avatar);
-  }, [
-    resetProfileForm,
-    resetPreferencesForm,
-    mockUserData.fullName,
-    mockUserData.email,
-    mockUserData.phone,
-    mockUserData.location,
-    mockUserData.bio,
-    mockUserData.avatar,
-  ]);
+        if (!userData) {
+          setError("Không thể tải thông tin người dùng");
+          return;
+        }
+
+        // Cập nhật form với dữ liệu người dùng
+        resetProfileForm({
+          fullName: userData.name || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          location: userData.location || "",
+          bio: userData.bio || "",
+        });
+
+        // Cập nhật avatar
+        if (userData.avatar) {
+          setAvatarPreview(userData.avatar);
+        }
+
+        // Cập nhật form cài đặt (vẫn giữ dữ liệu mẫu cho phần này)
+        resetPreferencesForm(mockPreferencesData);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setError("Có lỗi xảy ra khi tải thông tin người dùng");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [resetProfileForm, resetPreferencesForm]);
 
   // Xử lý upload ảnh đại diện
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,18 +187,27 @@ const Profile = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
+        const result = reader.result as string;
+        setAvatarPreview(result);
+
+        // Trong thực tế, đây sẽ là API call để upload ảnh
+        // Ví dụ:
+        // const formData = new FormData();
+        // formData.append('avatar', file);
+        // const response = await api.post('/upload/avatar', formData);
+        // Sau đó cập nhật thông tin người dùng với URL avatar mới
+        // await authService.updateProfile({ avatar: response.data.url });
+
+        // Tạm thời chỉ hiển thị avatar mới
+        toast({
+          title: "Ảnh đại diện đã cập nhật",
+          description: "Ảnh đại diện của bạn đã được cập nhật thành công",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       };
       reader.readAsDataURL(file);
-
-      // Trong thực tế, đây sẽ là nơi để upload ảnh lên server
-      toast({
-        title: "Ảnh đại diện đã cập nhật",
-        description: "Ảnh đại diện của bạn đã được cập nhật thành công",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
     }
   };
 
@@ -192,8 +219,12 @@ const Profile = () => {
   // Xử lý cập nhật thông tin cá nhân
   const onProfileSubmit = async (data: ProfileFormData) => {
     try {
-      // Giả lập cập nhật thông tin người dùng (sẽ thay thế bằng API call)
-      console.log("Profile data to update:", data);
+      // Gọi API cập nhật thông tin người dùng
+      await authService.updateProfile({
+        name: data.fullName,
+        bio: data.bio,
+        // Các thông tin khác như location và phone cần thêm vào backend
+      });
 
       // Hiển thị thông báo thành công
       toast({
@@ -206,12 +237,17 @@ const Profile = () => {
 
       // Tắt chế độ chỉnh sửa
       setProfileEditMode(false);
-    } catch (err) {
+    } catch (error: unknown) {
       // Xử lý lỗi
-      console.error("Error updating profile:", err);
+      console.error("Error updating profile:", error);
+      const apiError = error as ApiErrorResponse;
+      const errorMessage =
+        apiError?.response?.data?.message ||
+        "Đã xảy ra lỗi khi cập nhật hồ sơ của bạn";
+
       toast({
         title: "Cập nhật thất bại",
-        description: "Đã xảy ra lỗi khi cập nhật hồ sơ của bạn",
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -221,7 +257,6 @@ const Profile = () => {
 
   // Xử lý đổi mật khẩu
   const onPasswordSubmit = async (data: PasswordFormData) => {
-    setIsPasswordSubmitting(true);
     try {
       // Gọi API đổi mật khẩu
       await authService.changePassword({
@@ -240,20 +275,21 @@ const Profile = () => {
 
       // Reset form
       resetPasswordForm();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Xử lý lỗi
       console.error("Error updating password:", error);
+      const apiError = error as ApiErrorResponse;
+      const errorMessage =
+        apiError?.response?.data?.message ||
+        "Đã xảy ra lỗi khi thay đổi mật khẩu của bạn";
+
       toast({
         title: "Đổi mật khẩu thất bại",
-        description:
-          error.response?.data?.message ||
-          "Đã xảy ra lỗi khi thay đổi mật khẩu của bạn",
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsPasswordSubmitting(false);
     }
   };
 
@@ -289,13 +325,24 @@ const Profile = () => {
 
   // Hủy chỉnh sửa profile
   const handleCancelProfileEdit = () => {
-    resetProfileForm({
-      fullName: mockUserData.fullName,
-      email: mockUserData.email,
-      phone: mockUserData.phone,
-      location: mockUserData.location,
-      bio: mockUserData.bio,
-    });
+    const fetchAndResetUserProfile = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        if (userData) {
+          resetProfileForm({
+            fullName: userData.name || "",
+            email: userData.email || "",
+            phone: userData.phone || "",
+            location: userData.location || "",
+            bio: userData.bio || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAndResetUserProfile();
     setProfileEditMode(false);
   };
 
@@ -305,10 +352,46 @@ const Profile = () => {
     setPreferencesEditMode(false);
   };
 
+  // Lấy thông tin người dùng hiện tại
+  const getCurrentUser = () => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      return JSON.parse(userData);
+    }
+    return null;
+  };
+
+  const user = getCurrentUser();
+
   // Màu sắc dựa trên chế độ màu
   const bgColor = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("lg", "dark-lg");
   const highlightColor = useColorModeValue("gray.100", "gray.700");
+
+  if (loading) {
+    return (
+      <Container maxW="4xl" py={8}>
+        <Flex justify="center" align="center" minH="60vh">
+          <Spinner size="xl" color="teal.500" thickness="4px" />
+        </Flex>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxW="4xl" py={8}>
+        <Flex direction="column" justify="center" align="center" minH="60vh">
+          <Heading size="lg" mb={4} color="red.500">
+            {error}
+          </Heading>
+          <Button colorScheme="teal" onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </Flex>
+      </Container>
+    );
+  }
 
   return (
     <Container maxW="4xl" py={8}>
@@ -321,7 +404,7 @@ const Profile = () => {
                 <Avatar
                   size="2xl"
                   src={avatarPreview || undefined}
-                  name={mockUserData.fullName}
+                  name={user?.name || "User"}
                   cursor="pointer"
                   onClick={handleAvatarClick}
                 />
@@ -346,12 +429,18 @@ const Profile = () => {
                   onChange={handleAvatarChange}
                 />
               </Box>
-              <Heading size="md">{mockUserData.fullName}</Heading>
-              <Text color="gray.500">{mockUserData.email}</Text>
+              <Heading size="md">{user?.name || "User"}</Heading>
+              <Text color="gray.500">{user?.email || ""}</Text>
               <Divider />
               <VStack align="start" spacing={2} w="full">
-                <Text fontWeight="bold">Địa điểm</Text>
-                <Text>{mockUserData.location}</Text>
+                <Text fontWeight="bold">Vai trò</Text>
+                <Text>
+                  {user?.role === "organizer"
+                    ? "Nhà tổ chức"
+                    : user?.role === "admin"
+                    ? "Quản trị viên"
+                    : "Người dùng"}
+                </Text>
               </VStack>
             </VStack>
           </Box>
@@ -429,7 +518,7 @@ const Profile = () => {
                               bg={highlightColor}
                               w="full"
                             >
-                              {mockUserData.fullName}
+                              {user?.name || ""}
                             </Box>
                           )}
                           <FormErrorMessage>
@@ -452,6 +541,8 @@ const Profile = () => {
                               type="email"
                               size="md"
                               focusBorderColor="teal.400"
+                              readOnly={true}
+                              disabled={true}
                             />
                           ) : (
                             <Box
@@ -460,7 +551,7 @@ const Profile = () => {
                               bg={highlightColor}
                               w="full"
                             >
-                              {mockUserData.email}
+                              {user?.email || ""}
                             </Box>
                           )}
                           <FormErrorMessage>
@@ -486,7 +577,7 @@ const Profile = () => {
                               bg={highlightColor}
                               w="full"
                             >
-                              {mockUserData.phone || "Chưa cập nhật"}
+                              {user?.phone || "Chưa cập nhật"}
                             </Box>
                           )}
                           <FormErrorMessage>
@@ -510,7 +601,7 @@ const Profile = () => {
                               bg={highlightColor}
                               w="full"
                             >
-                              {mockUserData.location || "Chưa cập nhật"}
+                              {user?.location || "Chưa cập nhật"}
                             </Box>
                           )}
                           <FormErrorMessage>
@@ -537,7 +628,7 @@ const Profile = () => {
                               w="full"
                               minH="100px"
                             >
-                              {mockUserData.bio || "Chưa cập nhật"}
+                              {user?.bio || "Chưa cập nhật"}
                             </Box>
                           )}
                           <FormErrorMessage>
@@ -549,7 +640,7 @@ const Profile = () => {
                   </Box>
                 </TabPanel>
 
-                {/* Tab đổi mật khẩu */}
+                {/* Tab đổi mật khẩu - giữ nguyên vì đã sử dụng API */}
                 <TabPanel>
                   <form onSubmit={handleSubmitPassword(onPasswordSubmit)}>
                     <VStack spacing={4} align="start">
@@ -681,7 +772,7 @@ const Profile = () => {
                   </form>
                 </TabPanel>
 
-                {/* Tab tùy chọn (đơn giản hóa từ Settings) */}
+                {/* Tab tùy chọn (đơn giản hóa từ Settings) - giữ nguyên vì vẫn dùng dữ liệu mẫu */}
                 <TabPanel>
                   <Box>
                     <Flex justify="space-between" align="center" mb={4}>
@@ -735,7 +826,7 @@ const Profile = () => {
                               color="blue.600"
                               mr={2}
                             >
-                              <FaCamera size={20} />
+                              <FaBell size={20} />
                             </Box>
                             <Heading size="md">Thông báo</Heading>
                           </Flex>

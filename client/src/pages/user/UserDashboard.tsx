@@ -32,6 +32,7 @@ import {
   GridItem,
   Icon,
   useToast,
+  Spinner,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
@@ -44,11 +45,35 @@ import {
   FiMapPin,
   FiCalendar as FiDateJoin,
   FiEdit,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import EventManagement from "../../components/user/EventManagement";
 import MyTickets from "../../components/user/MyTickets";
 import UserSettings from "../../components/user/UserSettings";
+import authService from "../../services/auth.service";
+
+// Interface for API error responses
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
+// Interface for user data
+interface UserData {
+  id?: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role?: string;
+  phone?: string;
+  location?: string;
+  bio?: string;
+  joinDate?: string; // Ngày tham gia (có thể được lấy từ createdAt)
+}
 
 /**
  * Trang tài khoản người dùng tích hợp - gộp từ các trang Sự kiện của tôi,
@@ -59,15 +84,27 @@ const UserDashboard = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // State cho thống kê
+  const [stats, setStats] = useState({
+    createdEvents: 0,
+    savedEvents: 0,
+    tickets: 0,
+  });
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserData>({
     name: "",
     email: "",
     phone: "",
     location: "",
     bio: "",
   });
+
+  // State cho user data
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   // Sử dụng React Router để xử lý URL và điều hướng
   const navigate = useNavigate();
@@ -84,29 +121,64 @@ const UserDashboard = () => {
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const highlightBg = useColorModeValue("gray.50", "gray.700");
   const iconColor = useColorModeValue("teal.500", "teal.300");
+  const errorColor = useColorModeValue("red.500", "red.300");
 
-  // Dữ liệu người dùng mẫu (sau này sẽ được lấy từ API)
-  const userData = {
-    name: "Nguyen Van A",
-    email: "nguyenvana@example.com",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    createdEvents: 5,
-    savedEvents: 12,
-    tickets: 8,
-    phone: "0901234567",
-    location: "TP. Hồ Chí Minh, Việt Nam",
-    joinDate: "01/01/2023",
-  };
-
-  // Khởi tạo form data từ user data
+  // Fetch thông tin người dùng từ API
   useEffect(() => {
-    setFormData({
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      location: userData.location,
-      bio: "",
-    });
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Lấy thông tin người dùng từ API
+        const user = await authService.getCurrentUser();
+
+        if (!user) {
+          setError("Không thể tải thông tin người dùng");
+          return;
+        }
+
+        // Parse ngày tham gia từ ID MongoDB hoặc từ createdAt nếu có
+        let joinDate = "Không xác định";
+        if (user.createdAt) {
+          joinDate = new Date(user.createdAt).toLocaleDateString("vi-VN");
+        } else if (user.id) {
+          // MongoDB ObjectIDs chứa timestamp trong 4 byte đầu tiên
+          // Nhưng vì frontend không có cách truy cập trực tiếp, ta chỉ hiển thị "Không xác định"
+        }
+
+        // Format lại dữ liệu người dùng
+        const formattedUser: UserData = {
+          id: user.id,
+          name: user.name || "Người dùng",
+          email: user.email,
+          avatar: user.avatar,
+          role: user.role,
+          phone: user.phone || "",
+          location: user.location || "",
+          bio: user.bio || "",
+          joinDate,
+        };
+
+        // Giả lập số lượng thống kê (sau này sẽ lấy từ API)
+        // Trong thực tế, bạn sẽ gọi API để lấy số liệu thống kê này
+        setStats({
+          createdEvents: 5, // Sẽ lấy từ API
+          savedEvents: 12, // Sẽ lấy từ API
+          tickets: 8, // Sẽ lấy từ API
+        });
+
+        setUserData(formattedUser);
+        setFormData(formattedUser);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Có lỗi xảy ra khi tải thông tin người dùng");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   // Xử lý thay đổi tab
@@ -144,20 +216,86 @@ const UserDashboard = () => {
   };
 
   // Xử lý submit form
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Trong thực tế sẽ gọi API để cập nhật thông tin người dùng
-    toast({
-      title: "Thông tin đã cập nhật",
-      description: "Thông tin cá nhân của bạn đã được cập nhật thành công.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    try {
+      // Gọi API để cập nhật thông tin người dùng
+      await authService.updateProfile({
+        name: formData.name,
+        bio: formData.bio,
+        // Có thể thêm các trường khác khi backend hỗ trợ
+      });
 
-    onClose();
+      // Cập nhật userData state với dữ liệu mới
+      if (userData) {
+        setUserData({
+          ...userData,
+          name: formData.name,
+          bio: formData.bio,
+          phone: formData.phone,
+          location: formData.location,
+        });
+      }
+
+      // Hiển thị thông báo thành công
+      toast({
+        title: "Thông tin đã cập nhật",
+        description: "Thông tin cá nhân của bạn đã được cập nhật thành công.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      const apiError = error as ApiErrorResponse;
+      const errorMessage =
+        apiError?.response?.data?.message ||
+        "Đã xảy ra lỗi khi cập nhật thông tin";
+
+      toast({
+        title: "Cập nhật thất bại",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
+
+  // Hiển thị loading state
+  if (loading) {
+    return (
+      <Box bg={bgColor} minH="calc(100vh - 80px)">
+        <Container maxW="container.xl" py={8}>
+          <Flex justify="center" align="center" minH="60vh">
+            <Spinner size="xl" color="teal.500" thickness="4px" />
+          </Flex>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Hiển thị error state
+  if (error) {
+    return (
+      <Box bg={bgColor} minH="calc(100vh - 80px)">
+        <Container maxW="container.xl" py={8}>
+          <Flex direction="column" justify="center" align="center" minH="60vh">
+            <Icon as={FiAlertCircle} boxSize={16} color={errorColor} mb={4} />
+            <Heading size="lg" mb={4} color={errorColor}>
+              {error}
+            </Heading>
+            <Button colorScheme="teal" onClick={() => window.location.reload()}>
+              Thử lại
+            </Button>
+          </Flex>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box bg={bgColor} minH="calc(100vh - 80px)">
@@ -177,7 +315,8 @@ const UserDashboard = () => {
             align={{ base: "center", md: "start" }}
           >
             <Avatar
-              src={userData.avatar}
+              src={userData?.avatar}
+              name={userData?.name}
               size="xl"
               mr={{ base: 0, md: 6 }}
               mb={{ base: 4, md: 0 }}
@@ -185,21 +324,21 @@ const UserDashboard = () => {
 
             <Box flex="1">
               <Heading as="h1" size="lg" color={textColor}>
-                {userData.name}
+                {userData?.name}
               </Heading>
               <Text color={secondaryTextColor} mb={4}>
-                {userData.email}
+                {userData?.email}
               </Text>
 
               <HStack spacing={4} flexWrap="wrap">
                 <Badge colorScheme="teal" p={2} borderRadius="md">
-                  {userData.createdEvents} sự kiện đã tạo
+                  {stats.createdEvents} sự kiện đã tạo
                 </Badge>
                 <Badge colorScheme="purple" p={2} borderRadius="md">
-                  {userData.savedEvents} sự kiện đã lưu
+                  {stats.savedEvents} sự kiện đã lưu
                 </Badge>
                 <Badge colorScheme="blue" p={2} borderRadius="md">
-                  {userData.tickets} vé đã mua
+                  {stats.tickets} vé đã mua
                 </Badge>
               </HStack>
             </Box>
@@ -284,7 +423,7 @@ const UserDashboard = () => {
                           <Icon as={FiUser} color={iconColor} mr={2} />
                           <Text fontWeight="bold">Họ và tên</Text>
                         </Flex>
-                        <Text>{userData.name}</Text>
+                        <Text>{userData?.name}</Text>
                       </Flex>
 
                       <Flex
@@ -298,7 +437,7 @@ const UserDashboard = () => {
                           <Icon as={FiMail} color={iconColor} mr={2} />
                           <Text fontWeight="bold">Email</Text>
                         </Flex>
-                        <Text>{userData.email}</Text>
+                        <Text>{userData?.email}</Text>
                       </Flex>
 
                       <Flex
@@ -312,7 +451,7 @@ const UserDashboard = () => {
                           <Icon as={FiPhone} color={iconColor} mr={2} />
                           <Text fontWeight="bold">Số điện thoại</Text>
                         </Flex>
-                        <Text>{userData.phone}</Text>
+                        <Text>{userData?.phone || "Chưa cập nhật"}</Text>
                       </Flex>
                     </VStack>
                   </GridItem>
@@ -330,7 +469,7 @@ const UserDashboard = () => {
                           <Icon as={FiMapPin} color={iconColor} mr={2} />
                           <Text fontWeight="bold">Địa chỉ</Text>
                         </Flex>
-                        <Text>{userData.location}</Text>
+                        <Text>{userData?.location || "Chưa cập nhật"}</Text>
                       </Flex>
 
                       <Flex
@@ -344,8 +483,24 @@ const UserDashboard = () => {
                           <Icon as={FiDateJoin} color={iconColor} mr={2} />
                           <Text fontWeight="bold">Ngày tham gia</Text>
                         </Flex>
-                        <Text>{userData.joinDate}</Text>
+                        <Text>{userData?.joinDate || "Không xác định"}</Text>
                       </Flex>
+
+                      {userData?.bio && (
+                        <Flex
+                          direction="column"
+                          p={4}
+                          bg={highlightBg}
+                          borderRadius="md"
+                          w="100%"
+                        >
+                          <Flex align="center" mb={2}>
+                            <Icon as={FiUser} color={iconColor} mr={2} />
+                            <Text fontWeight="bold">Giới thiệu</Text>
+                          </Flex>
+                          <Text>{userData?.bio}</Text>
+                        </Flex>
+                      )}
                     </VStack>
                   </GridItem>
                 </Grid>
@@ -394,7 +549,12 @@ const UserDashboard = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      readOnly
+                      disabled
                     />
+                    <Text fontSize="sm" color="gray.500">
+                      Email không thể thay đổi
+                    </Text>
                   </FormControl>
 
                   <FormControl id="phone">
