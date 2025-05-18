@@ -23,6 +23,26 @@ export const loginValidation = [
 ];
 
 /**
+ * Validation rules cho quên mật khẩu
+ */
+export const forgotPasswordValidation = [
+  body("email").isEmail().withMessage("Email không hợp lệ").normalizeEmail(),
+];
+
+/**
+ * Validation rules cho đặt lại mật khẩu
+ */
+export const resetPasswordValidation = [
+  body("token")
+    .notEmpty()
+    .withMessage("Token đặt lại mật khẩu không được để trống"),
+
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Mật khẩu mới phải có ít nhất 6 ký tự"),
+];
+
+/**
  * Validation rules cho đổi mật khẩu
  */
 export const changePasswordValidation = [
@@ -33,4 +53,15 @@ export const changePasswordValidation = [
   body("newPassword")
     .isLength({ min: 6 })
     .withMessage("Mật khẩu mới phải có ít nhất 6 ký tự"),
+];
+
+/**
+ * Validation rules cho cập nhật profile
+ */
+export const updateProfileValidation = [
+  body("name").optional().trim(),
+
+  body("avatar").optional().trim(),
+
+  body("bio").optional().trim(),
 ];
