@@ -33,6 +33,8 @@ import {
 } from "react-icons/fa";
 import authService from "../../services/auth.service";
 import { useTranslation } from "react-i18next";
+import { useAppDispatch } from "../../app/hooks";
+import { login } from "../../app/features/authSlice";
 
 interface LoginFormValues {
   email: string;
@@ -44,6 +46,7 @@ const Login = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -59,29 +62,46 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // Gọi API đăng nhập
-      await authService.login({
-        email: data.email,
-        password: data.password,
-      });
+      // Sử dụng Redux action thay vì gọi authService trực tiếp
+      const resultAction = await dispatch(
+        login({
+          email: data.email,
+          password: data.password,
+        })
+      );
 
-      toast({
-        title: "Đăng nhập thành công!",
-        description: "Chào mừng bạn trở lại với EventHub!",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
+      // Kiểm tra kết quả của action
+      if (login.fulfilled.match(resultAction)) {
+        // Đăng nhập thành công
+        toast({
+          title: "Đăng nhập thành công!",
+          description: "Chào mừng bạn trở lại với EventHub!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
 
-      setTimeout(() => navigate("/"), 1500);
+        // Chuyển hướng sau khi đăng nhập thành công
+        setTimeout(() => navigate("/"), 1500);
+      } else {
+        // Đăng nhập thất bại (kết quả rejected)
+        // Thông báo lỗi đã được xử lý trong authSlice.rejected
+        const errorMessage = resultAction.payload || "Đăng nhập thất bại";
+        toast({
+          title: "Đăng nhập thất bại!",
+          description: errorMessage,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      }
     } catch (error: any) {
       console.error("Lỗi đăng nhập:", error);
       toast({
         title: "Đăng nhập thất bại!",
-        description:
-          error.response?.data?.message ||
-          "Vui lòng kiểm tra email và mật khẩu của bạn.",
+        description: "Vui lòng kiểm tra email và mật khẩu của bạn.",
         status: "error",
         duration: 3000,
         isClosable: true,

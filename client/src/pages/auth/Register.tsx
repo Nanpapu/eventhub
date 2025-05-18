@@ -36,8 +36,9 @@ import {
   FaGoogle,
   FaFacebook,
 } from "react-icons/fa";
-import authService from "../../services/auth.service";
-import { RegisterData } from "../../services/auth.service";
+import { useAppDispatch } from "../../app/hooks";
+import { register as registerAction } from "../../app/features/authSlice";
+import authService, { RegisterData } from "../../services/auth.service";
 
 interface RegisterFormValues {
   name: string;
@@ -59,6 +60,7 @@ const Register = () => {
   const [selectedRole, setSelectedRole] = useState<"user" | "organizer">(
     "user"
   );
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -94,25 +96,35 @@ const Register = () => {
         registerData.phone = data.phone;
       }
 
-      await authService.register(registerData);
+      const resultAction = await dispatch(registerAction(registerData));
 
-      toast({
-        title: "Đăng ký thành công!",
-        description: "Tài khoản của bạn đã được tạo.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
+      if (registerAction.fulfilled.match(resultAction)) {
+        toast({
+          title: "Đăng ký thành công!",
+          description: "Tài khoản của bạn đã được tạo.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
 
-      setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        const errorMessage = resultAction.payload || "Đăng ký thất bại";
+        toast({
+          title: "Đăng ký thất bại!",
+          description: errorMessage,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      }
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
       toast({
         title: "Đăng ký thất bại!",
-        description:
-          error.response?.data?.message ||
-          "Đã xảy ra lỗi trong quá trình đăng ký.",
+        description: "Đã xảy ra lỗi trong quá trình đăng ký.",
         status: "error",
         duration: 3000,
         isClosable: true,

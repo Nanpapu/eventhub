@@ -42,22 +42,25 @@ import { useState } from "react";
 import { NotificationBell } from "../notification";
 import ColorModeToggle from "../common/ColorModeToggle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectUser,
+} from "../../app/features/authSlice";
 
-// Giả lập trạng thái đăng nhập (sẽ được thay thế bằng context/redux sau này)
-const useAuth = () => {
-  // Trong thực tế, thông tin này sẽ được lấy từ localStorage/context/redux
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{
+// Demo login function (sẽ bị xóa khi tích hợp auth hoàn toàn)
+const useDemoAuth = () => {
+  // Đây là một hook tạm thời chỉ cho mục đích demo
+  const [demoUser, setDemoUser] = useState<{
     name: string;
     email: string;
     avatar: string;
     role: "user" | "organizer" | "admin";
   } | null>(null);
 
-  // Chỉ để demo
   const login = () => {
-    setIsAuthenticated(true);
-    setUser({
+    setDemoUser({
       name: "John Doe",
       email: "john@example.com",
       avatar: "https://bit.ly/3Q3eQvj",
@@ -65,10 +68,8 @@ const useAuth = () => {
     });
   };
 
-  // Thêm hàm login với vai trò organizer
   const loginAsOrganizer = () => {
-    setIsAuthenticated(true);
-    setUser({
+    setDemoUser({
       name: "Event Manager",
       email: "organizer@example.com",
       avatar: "https://bit.ly/3R7HRgG",
@@ -76,19 +77,25 @@ const useAuth = () => {
     });
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-  };
-
-  return { isAuthenticated, user, login, loginAsOrganizer, logout };
+  return { demoUser, login, loginAsOrganizer };
 };
 
 export default function Header() {
   const { isOpen, onToggle } = useDisclosure();
-  const { isAuthenticated, user, login, loginAsOrganizer, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const dispatch = useAppDispatch();
+
+  // Lấy thông tin về người dùng từ Redux store
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
+
+  // Demo functions cho nút "Đăng nhập Demo"
+  const { demoUser, login, loginAsOrganizer } = useDemoAuth();
+
+  // Kết hợp user thật từ Redux với user demo (ưu tiên user thật)
+  const currentUser = user || demoUser;
+  const isUserAuthenticated = isAuthenticated || !!demoUser;
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
@@ -99,7 +106,16 @@ export default function Header() {
 
   // Xử lý đăng xuất
   const handleLogout = () => {
-    logout();
+    if (demoUser) {
+      // Nếu là user demo, reset state local
+      useDemoAuth().login = () => {};
+      useDemoAuth().loginAsOrganizer = () => {};
+      window.location.reload(); // Reload trang để reset state demo
+    } else {
+      // Nếu là user thật, dispatch action logout
+      dispatch(logout());
+    }
+
     toast({
       title: "Đăng xuất thành công",
       status: "success",
@@ -190,7 +206,7 @@ export default function Header() {
           <LanguageSwitcher />
           <ColorModeToggle />
 
-          {isAuthenticated ? (
+          {isUserAuthenticated ? (
             <>
               <Button
                 as={Link}
@@ -221,7 +237,7 @@ export default function Header() {
                 >
                   <Avatar
                     size={"sm"}
-                    src={user?.avatar}
+                    src={currentUser?.avatar}
                     _hover={{
                       transform: "scale(1.05)",
                       transition: "all 0.2s ease",
@@ -230,10 +246,10 @@ export default function Header() {
                 </MenuButton>
                 <MenuList>
                   <Text px={3} py={2} fontWeight="bold">
-                    {user?.name}
+                    {currentUser?.name}
                   </Text>
                   <Text px={3} pb={2} fontSize="sm" color={secondaryTextColor}>
-                    {user?.email}
+                    {currentUser?.email}
                   </Text>
                   <MenuDivider />
                   <MenuItem
@@ -244,7 +260,7 @@ export default function Header() {
                     Quản lý tài khoản
                   </MenuItem>
 
-                  {user?.role === "organizer" ? (
+                  {currentUser?.role === "organizer" ? (
                     <>
                       <MenuItem
                         as={Link}
