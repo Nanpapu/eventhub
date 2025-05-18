@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Router } from "express";
 import authController from "../controllers/auth.controller";
 import {
   registerValidation,
@@ -10,7 +10,7 @@ import {
 } from "../validations/auth.validation";
 import { authenticate } from "../middlewares/auth.middleware";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Route đăng ký
 router.post("/register", registerValidation, authController.register);

@@ -15,10 +15,11 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       // Xử lý đăng ký
@@ -30,7 +31,7 @@ const authController = {
       });
 
       // Trả về kết quả
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         message: "Đăng ký thành công",
         ...result,
@@ -40,13 +41,14 @@ const authController = {
 
       // Nếu là lỗi kiểm tra
       if (error.message === "Email đã được sử dụng") {
-        return res.status(409).json({
+        res.status(409).json({
           success: false,
           message: error.message,
         });
+        return;
       }
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -62,10 +64,11 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       // Xử lý đăng nhập
@@ -73,7 +76,7 @@ const authController = {
       const result = await authService.login({ email, password });
 
       // Trả về kết quả
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: "Đăng nhập thành công",
         ...result,
@@ -83,13 +86,14 @@ const authController = {
 
       // Nếu là lỗi xác thực
       if (error.message === "Email hoặc mật khẩu không chính xác") {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: error.message,
         });
+        return;
       }
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -106,7 +110,7 @@ const authController = {
       const user = req.user;
 
       // Trả về thông tin người dùng
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         user: {
           id: user._id,
@@ -119,7 +123,7 @@ const authController = {
       });
     } catch (error) {
       console.error("Get user error:", error);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -135,22 +139,23 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       const { email } = req.body;
       const result = await authService.forgotPassword({ email });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: result.message,
       });
     } catch (error: any) {
       console.error("Forgot password error:", error);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -166,16 +171,17 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       const { token, password } = req.body;
       const result = await authService.resetPassword({ token, password });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: result.message,
       });
@@ -183,13 +189,14 @@ const authController = {
       console.error("Reset password error:", error);
 
       if (error.message === "Token không hợp lệ hoặc đã hết hạn") {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: error.message,
         });
+        return;
       }
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -205,10 +212,11 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       const { currentPassword, newPassword } = req.body;
@@ -220,7 +228,7 @@ const authController = {
         userId,
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: result.message,
       });
@@ -228,13 +236,14 @@ const authController = {
       console.error("Change password error:", error);
 
       if (error.message === "Mật khẩu hiện tại không chính xác") {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: error.message,
         });
+        return;
       }
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
@@ -250,10 +259,11 @@ const authController = {
       // Kiểm tra lỗi từ validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           errors: errors.array(),
         });
+        return;
       }
 
       const { name, avatar, bio } = req.body;
@@ -266,14 +276,14 @@ const authController = {
         userId,
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: "Cập nhật thông tin thành công",
         user: result.user,
       });
     } catch (error: any) {
       console.error("Update profile error:", error);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Lỗi server",
       });

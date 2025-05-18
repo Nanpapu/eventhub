@@ -24,10 +24,11 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: "Không tìm thấy token xác thực",
       });
+      return;
     }
 
     // Lấy token từ header
@@ -36,19 +37,21 @@ export const authenticate = async (
     // Xác thực token
     const decoded = verifyToken(token);
     if (!decoded) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: "Token không hợp lệ hoặc đã hết hạn",
       });
+      return;
     }
 
     // Tìm user từ id trong token
     const user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: "Không tìm thấy người dùng với token này",
       });
+      return;
     }
 
     // Gán user vào request
@@ -56,7 +59,7 @@ export const authenticate = async (
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Lỗi server",
     });
@@ -70,7 +73,7 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       message: "Không có quyền truy cập, yêu cầu quyền admin",
     });
@@ -91,7 +94,7 @@ export const isOrganizer = (
   ) {
     next();
   } else {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       message: "Không có quyền truy cập, yêu cầu quyền organizer",
     });
@@ -114,7 +117,7 @@ export const isOwnerOrAdmin = (
   ) {
     next();
   } else {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       message: "Không có quyền truy cập",
     });
