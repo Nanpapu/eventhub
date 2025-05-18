@@ -87,6 +87,13 @@ const Register = () => {
         role: data.role,
       };
 
+      if (data.role === "organizer") {
+        registerData.organizationName = data.organizationName;
+        registerData.organizationType = data.organizationType;
+        registerData.description = data.description;
+        registerData.phone = data.phone;
+      }
+
       await authService.register(registerData);
 
       toast({

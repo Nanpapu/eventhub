@@ -11,6 +11,34 @@ export const registerValidation = [
     .withMessage("Mật khẩu phải có ít nhất 6 ký tự"),
 
   body("name").notEmpty().withMessage("Tên không được để trống").trim(),
+
+  body("role")
+    .optional()
+    .isIn(["user", "organizer"])
+    .withMessage("Vai trò không hợp lệ"),
+
+  // Nếu role là "organizer", kiểm tra các trường bắt buộc
+  body("organizationName")
+    .if(body("role").equals("organizer"))
+    .notEmpty()
+    .withMessage("Tên tổ chức là bắt buộc")
+    .trim(),
+
+  body("organizationType")
+    .if(body("role").equals("organizer"))
+    .notEmpty()
+    .withMessage("Loại tổ chức là bắt buộc")
+    .trim(),
+
+  body("phone")
+    .if(body("role").equals("organizer"))
+    .notEmpty()
+    .withMessage("Số điện thoại là bắt buộc")
+    .matches(/^[0-9]{10,11}$/)
+    .withMessage("Số điện thoại không hợp lệ")
+    .trim(),
+
+  body("description").optional().trim(),
 ];
 
 /**

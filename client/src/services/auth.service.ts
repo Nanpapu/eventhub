@@ -5,6 +5,11 @@ export interface RegisterData {
   password: string;
   name: string; // Thay đổi từ firstName và lastName sang name
   role?: "user" | "organizer" | "admin";
+  // Thông tin bổ sung cho tổ chức
+  organizationName?: string;
+  organizationType?: string;
+  description?: string;
+  phone?: string;
 }
 
 export interface LoginData {

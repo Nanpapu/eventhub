@@ -10,6 +10,11 @@ interface RegisterInput {
   email: string;
   password: string;
   name: string;
+  role?: "user" | "organizer" | "admin";
+  organizationName?: string;
+  organizationType?: string;
+  description?: string;
+  phone?: string;
 }
 
 interface LoginInput {

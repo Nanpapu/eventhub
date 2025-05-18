@@ -24,11 +24,26 @@ const authController = {
       }
 
       // Xử lý đăng ký
-      const { email, password, name } = req.body;
+      const {
+        email,
+        password,
+        name,
+        role,
+        organizationName,
+        organizationType,
+        description,
+        phone,
+      } = req.body;
+
       const result = await authService.register({
         email,
         password,
         name,
+        role,
+        organizationName,
+        organizationType,
+        description,
+        phone,
       });
 
       // Trả về kết quả

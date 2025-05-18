@@ -9,6 +9,11 @@ export interface IUser extends Document {
   avatar?: string;
   bio?: string;
   role: "user" | "organizer" | "admin";
+  // Thông tin tổ chức
+  organizationName?: string;
+  organizationType?: string;
+  description?: string;
+  phone?: string;
   savedEvents: mongoose.Types.ObjectId[]; // Reference to Event IDs
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +52,23 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["user", "organizer", "admin"],
       default: "user",
+    },
+    // Thông tin tổ chức
+    organizationName: {
+      type: String,
+      trim: true,
+    },
+    organizationType: {
+      type: String,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
     },
     savedEvents: [
       {
