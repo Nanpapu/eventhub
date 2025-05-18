@@ -44,9 +44,8 @@ const emailService = {
         await createTransporter();
 
       // Tạo link đặt lại mật khẩu
-      // Thay CLIENT_URL bằng URL thực tế của client từ config
-      const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
-      const resetLink = `${clientUrl}/auth/reset-password?token=${resetToken}`;
+      // Sử dụng cấu hình từ config
+      const resetLink = `${config.clientURL}/auth/reset-password?token=${resetToken}`;
 
       // Nội dung email
       const mailOptions = {

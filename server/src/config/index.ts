@@ -9,7 +9,7 @@ const config = {
   nodeEnv: process.env.NODE_ENV || "development",
 
   // MongoDB
-  mongoURI: process.env.MONGO_URI || "mongodb://localhost:27017/eventhub",
+  mongoURI: process.env.MONGODB_URI || "mongodb+srv://21521059:Lam%4020032001@data.v6vriop.mongodb.net/eventhub",
 
   // JWT
   jwtSecret: process.env.JWT_SECRET || "your-secret-key",

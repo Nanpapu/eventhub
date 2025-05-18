@@ -12,6 +12,12 @@ import {
   useToast,
   Image,
   Center,
+  Link as ChakraLink,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  CloseButton,
 } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -29,6 +35,7 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
 
   const {
     register,
@@ -38,8 +45,15 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true);
+    setPreviewURL(null); // Reset preview URL
     try {
-      await authService.forgotPassword(data);
+      const response = await authService.forgotPassword(data);
+
+      // Kiểm tra xem có URL xem trước không (cho môi trường phát triển)
+      if (response.previewURL) {
+        setPreviewURL(response.previewURL);
+      }
+
       toast({
         title: t("auth.forgotPassword.resetLinkSent"),
         status: "success",
@@ -73,6 +87,36 @@ const ForgotPassword = () => {
             <Text color="gray.500">{t("auth.forgotPassword.instruction")}</Text>
           </Stack>
         </Stack>
+
+        {previewURL && (
+          <Alert status="info" mb={4} borderRadius="md">
+            <AlertIcon />
+            <Box flex="1">
+              <AlertTitle mb={1}>Email preview available</AlertTitle>
+              <AlertDescription display="block">
+                <Text>
+                  This is a development feature. In production, the email would
+                  be sent to your inbox.
+                </Text>
+                <ChakraLink
+                  href={previewURL}
+                  isExternal
+                  color="teal.500"
+                  textDecoration="underline"
+                >
+                  Click here to view the reset password email
+                </ChakraLink>
+              </AlertDescription>
+            </Box>
+            <CloseButton
+              alignSelf="flex-start"
+              position="relative"
+              right={-1}
+              top={-1}
+              onClick={() => setPreviewURL(null)}
+            />
+          </Alert>
+        )}
 
         <Box
           py={{ base: 0, sm: 8 }}
