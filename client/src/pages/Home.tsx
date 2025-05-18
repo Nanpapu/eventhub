@@ -12,10 +12,14 @@ import {
   Tag,
   Icon,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { FiArrowRight, FiCalendar, FiMapPin, FiTag } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { formatDate } from "../utils/formatters";
 
 // Danh sách categories
 const categories = [
@@ -43,89 +47,20 @@ const getCategoryName = (categoryId: string): string => {
 
 // Tạo interface cho event để có type checking
 interface EventData {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
   location: string;
-  image: string;
+  imageUrl: string;
   category: string;
   isPaid: boolean;
+  organizer?: {
+    name: string;
+    id: string;
+    avatar?: string;
+  };
 }
-
-// Sample event data
-const events: EventData[] = [
-  {
-    id: 1,
-    title: "Hội thảo thiết kế UI/UX",
-    description:
-      "Hội thảo về các nguyên tắc thiết kế giao diện người dùng hiện đại",
-    date: "15/08/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "workshop",
-    isPaid: false,
-  },
-  {
-    id: 2,
-    title: "Hội nghị công nghệ Blockchain",
-    description: "Khám phá tiềm năng và ứng dụng của công nghệ blockchain",
-    date: "20/08/2023",
-    location: "Hà Nội",
-    image:
-      "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80",
-    category: "conference",
-    isPaid: true,
-  },
-  {
-    id: 3,
-    title: "Lễ hội âm nhạc 2023",
-    description: "Sự kiện âm nhạc lớn nhất trong năm với các nghệ sĩ hàng đầu",
-    date: "10/09/2023",
-    location: "Đà Nẵng",
-    image:
-      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "music",
-    isPaid: true,
-  },
-  {
-    id: 4,
-    title: "Đêm giao lưu startup",
-    description:
-      "Kết nối với các nhà sáng lập, nhà đầu tư và những người đam mê khởi nghiệp",
-    date: "25/08/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
-    category: "networking",
-    isPaid: false,
-  },
-  {
-    id: 5,
-    title: "Lễ hội ẩm thực & văn hóa",
-    description:
-      "Khám phá các món ẩm thực đa dạng và các tiết mục biểu diễn văn hóa",
-    date: "05/09/2023",
-    location: "Hà Nội",
-    image:
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "food",
-    isPaid: false,
-  },
-  {
-    id: 6,
-    title: "Hội nghị AI trong kinh doanh",
-    description:
-      "Tìm hiểu cách AI đang thay đổi doanh nghiệp và các ngành công nghiệp",
-    date: "12/09/2023",
-    location: "TP. Hồ Chí Minh",
-    image:
-      "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    category: "conference",
-    isPaid: true,
-  },
-];
 
 // Interface cho danh mục
 interface CategoryData {
@@ -210,8 +145,50 @@ const popularCategories: CategoryData[] = [
   },
 ];
 
+const API_URL = "http://localhost:5000/api";
+
 const Home = () => {
   const navigate = useNavigate();
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Lấy danh sách sự kiện từ API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await axios.get(`${API_URL}/events?limit=6`);
+
+        if (response.data.success) {
+          // Chuyển đổi dữ liệu từ API để phù hợp với interface
+          const formattedEvents = response.data.events.map((event: any) => ({
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            date: formatDate(new Date(event.date)),
+            location: event.location,
+            imageUrl: event.imageUrl,
+            category: event.category,
+            isPaid: event.isPaid,
+            organizer: event.organizer,
+          }));
+
+          setEvents(formattedEvents);
+        } else {
+          setError("Không thể tải danh sách sự kiện");
+        }
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setError("Có lỗi xảy ra khi tải dữ liệu");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
@@ -262,7 +239,7 @@ const Home = () => {
       >
         <Box position="relative">
           <Image
-            src={event.image}
+            src={event.imageUrl}
             alt={event.title}
             width="100%"
             height="180px"
@@ -412,15 +389,45 @@ const Home = () => {
               borderWidth="1px"
               borderColor={borderColor}
             >
-              <SimpleGrid
-                columns={{ base: 1, sm: 2, md: 3 }}
-                spacing={8}
-                w="100%"
-              >
-                {events.map((event) => (
-                  <CustomEventCard key={event.id} event={event} />
-                ))}
-              </SimpleGrid>
+              {loading ? (
+                <Flex justify="center" align="center" minH="300px">
+                  <Spinner size="xl" color="teal.500" thickness="4px" />
+                </Flex>
+              ) : error ? (
+                <Flex
+                  justify="center"
+                  align="center"
+                  minH="200px"
+                  direction="column"
+                  gap={4}
+                >
+                  <Text color="red.500" fontSize="lg">
+                    {error}
+                  </Text>
+                  <Button
+                    colorScheme="teal"
+                    onClick={() => window.location.reload()}
+                  >
+                    Thử lại
+                  </Button>
+                </Flex>
+              ) : events.length === 0 ? (
+                <Flex justify="center" align="center" minH="200px">
+                  <Text fontSize="lg" color={textColor}>
+                    Không có sự kiện nào. Hãy quay lại sau!
+                  </Text>
+                </Flex>
+              ) : (
+                <SimpleGrid
+                  columns={{ base: 1, sm: 2, md: 3 }}
+                  spacing={8}
+                  w="100%"
+                >
+                  {events.map((event) => (
+                    <CustomEventCard key={event.id} event={event} />
+                  ))}
+                </SimpleGrid>
+              )}
             </Box>
           </VStack>
         </Container>

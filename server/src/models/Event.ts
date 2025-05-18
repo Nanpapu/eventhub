@@ -15,18 +15,67 @@ export interface ITicketType {
 export interface IEvent extends Document {
   title: string;
   description: string;
-  category: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
   location: string;
-  venue: string;
-  startDate: Date;
-  endDate: Date;
-  bannerImage: string;
-  ticketTypes: ITicketType[];
+  address: string;
+  isOnline: boolean;
+  onlineUrl?: string;
+  imageUrl: string;
+  category: string;
+  isPaid: boolean;
+  price?: number;
+  capacity: number;
+  maxTicketsPerPerson: number;
+  ticketTypes: {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    availableQuantity: number;
+    startSaleDate?: Date;
+    endSaleDate?: Date;
+    description?: string;
+  }[];
+  tags: string[];
   organizer: mongoose.Types.ObjectId;
-  isPublished: boolean;
+  attendees: number;
+  published: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const ticketTypeSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  availableQuantity: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  startSaleDate: {
+    type: Date,
+  },
+  endSaleDate: {
+    type: Date,
+  },
+  description: {
+    type: String,
+  },
+});
 
 // Schema cho Event
 const eventSchema = new Schema<IEvent>(
@@ -40,66 +89,64 @@ const eventSchema = new Schema<IEvent>(
       type: String,
       required: [true, "Description is required"],
     },
-    category: {
+    date: {
+      type: Date,
+      required: [true, "Date is required"],
+    },
+    startTime: {
       type: String,
-      required: [true, "Category is required"],
-      trim: true,
+      required: [true, "Start time is required"],
+    },
+    endTime: {
+      type: String,
+      required: [true, "End time is required"],
     },
     location: {
       type: String,
       required: [true, "Location is required"],
-      trim: true,
     },
-    venue: {
+    address: {
       type: String,
-      required: [true, "Venue is required"],
-      trim: true,
+      required: [true, "Address is required"],
     },
-    startDate: {
-      type: Date,
-      required: [true, "Start date is required"],
+    isOnline: {
+      type: Boolean,
+      default: false,
     },
-    endDate: {
-      type: Date,
-      required: [true, "End date is required"],
-    },
-    bannerImage: {
+    onlineUrl: {
       type: String,
-      required: [true, "Banner image is required"],
     },
-    ticketTypes: [
+    imageUrl: {
+      type: String,
+      required: [true, "Image URL is required"],
+    },
+    category: {
+      type: String,
+      required: [true, "Category is required"],
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    price: {
+      type: Number,
+      min: 0,
+    },
+    capacity: {
+      type: Number,
+      required: [true, "Capacity is required"],
+      min: 1,
+    },
+    maxTicketsPerPerson: {
+      type: Number,
+      required: [true, "Max tickets per person is required"],
+      min: 1,
+      default: 10,
+    },
+    ticketTypes: [ticketTypeSchema],
+    tags: [
       {
-        name: {
-          type: String,
-          required: [true, "Ticket type name is required"],
-        },
-        description: {
-          type: String,
-          required: [true, "Ticket type description is required"],
-        },
-        price: {
-          type: Number,
-          required: [true, "Ticket price is required"],
-          min: [0, "Price cannot be negative"],
-        },
-        quantity: {
-          type: Number,
-          required: [true, "Ticket quantity is required"],
-          min: [0, "Quantity cannot be negative"],
-        },
-        startSaleDate: {
-          type: Date,
-          required: [true, "Start sale date is required"],
-        },
-        endSaleDate: {
-          type: Date,
-          required: [true, "End sale date is required"],
-        },
-        soldQuantity: {
-          type: Number,
-          default: 0,
-          min: [0, "Sold quantity cannot be negative"],
-        },
+        type: String,
       },
     ],
     organizer: {
@@ -107,9 +154,13 @@ const eventSchema = new Schema<IEvent>(
       ref: "User",
       required: [true, "Organizer is required"],
     },
-    isPublished: {
+    attendees: {
+      type: Number,
+      default: 0,
+    },
+    published: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   {
@@ -117,11 +168,33 @@ const eventSchema = new Schema<IEvent>(
   }
 );
 
+// Thêm virtual field để tính số vé còn lại
+eventSchema.virtual("availableTickets").get(function (this: IEvent) {
+  if (this.ticketTypes && this.ticketTypes.length > 0) {
+    return this.ticketTypes.reduce(
+      (sum, type) => sum + type.availableQuantity,
+      0
+    );
+  }
+  return Math.max(0, this.capacity - this.attendees);
+});
+
+// Đảm bảo virtuals được bao gồm khi convert to JSON
+eventSchema.set("toJSON", {
+  virtuals: true,
+  transform: (_doc, ret) => {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+});
+
 // Indexes
 eventSchema.index({ title: "text", description: "text" });
 eventSchema.index({ category: 1 });
 eventSchema.index({ location: 1 });
-eventSchema.index({ startDate: 1 });
+eventSchema.index({ date: 1 });
 eventSchema.index({ organizer: 1 });
 
 // Tạo và export model
