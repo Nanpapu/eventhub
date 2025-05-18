@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Box,
   Button,
@@ -12,7 +12,6 @@ import {
   Input,
   Textarea,
   Select,
-  Stack,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -27,7 +26,6 @@ import {
   Image,
   Text,
   IconButton,
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -43,19 +41,39 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Progress,
+  Stepper,
+  Step,
+  StepIndicator,
+  StepStatus,
+  StepNumber,
+  StepTitle,
+  StepDescription,
+  StepSeparator,
+  useSteps,
+  Spinner,
+  Wrap,
+  WrapItem,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  Badge,
 } from "@chakra-ui/react";
 import {
   FiCalendar,
   FiMapPin,
   FiClock,
   FiDollarSign,
-  FiUsers,
-  FiX,
   FiPlus,
   FiUpload,
   FiSave,
   FiArrowLeft,
   FiTrash2,
+  FiInfo,
+  FiList,
+  FiSettings,
+  FiCheckCircle,
+  FiLink,
 } from "react-icons/fi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -91,6 +109,7 @@ interface EventFormData {
     quantity: number;
   }[];
   image: string;
+  imageFile?: File | null; // Thêm imageFile để xử lý upload
   tags: string[];
 }
 
@@ -107,24 +126,891 @@ const categoryOptions = [
   "Khác",
 ];
 
+// Props chung cho các Step components
+interface StepProps {
+  formData: EventFormData;
+  handleChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  setFormData: React.Dispatch<React.SetStateAction<EventFormData>>;
+  errors: Record<string, string>;
+  // Thêm các props khác nếu cần cho từng step
+}
+
+// Bước 1: Thông tin cơ bản
+const BasicInfoStep: React.FC<StepProps> = ({
+  formData,
+  handleChange,
+  setFormData,
+  errors,
+}) => {
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData((prev) => ({
+        ...prev,
+        image: URL.createObjectURL(file), // Cập nhật URL để preview
+        imageFile: file, // Lưu file để upload
+      }));
+    }
+  };
+
+  return (
+    <VStack spacing={6} align="stretch">
+      <FormControl isInvalid={!!errors.title} isRequired>
+        <FormLabel htmlFor="title">Tên sự kiện</FormLabel>
+        <Input
+          id="title"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          borderColor={borderColor}
+          placeholder="VD: Hội thảo Công nghệ Blockchain 2024"
+        />
+        {errors.title && <FormErrorMessage>{errors.title}</FormErrorMessage>}
+      </FormControl>
+
+      <FormControl isInvalid={!!errors.description} isRequired>
+        <FormLabel htmlFor="description">Mô tả sự kiện</FormLabel>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          borderColor={borderColor}
+          minH="120px"
+          placeholder="Mô tả chi tiết về nội dung, lịch trình, diễn giả của sự kiện..."
+        />
+        {errors.description && (
+          <FormErrorMessage>{errors.description}</FormErrorMessage>
+        )}
+      </FormControl>
+
+      <FormControl isInvalid={!!errors.category} isRequired>
+        <FormLabel htmlFor="category">Danh mục</FormLabel>
+        <Select
+          id="category"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          placeholder="Chọn danh mục cho sự kiện"
+          borderColor={borderColor}
+        >
+          {categoryOptions.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </Select>
+        {errors.category && (
+          <FormErrorMessage>{errors.category}</FormErrorMessage>
+        )}
+      </FormControl>
+
+      <FormControl isInvalid={!!errors.imageFile}>
+        <FormLabel htmlFor="imageFile">Ảnh bìa sự kiện</FormLabel>
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FiUpload} />
+          </InputLeftElement>
+          <Input
+            type="file"
+            id="imageFile" // Đổi id và name để không trùng với formData.image (URL)
+            name="imageFile"
+            accept="image/*"
+            onChange={handleImageChange} // Sử dụng handleImageChange
+            p={1.5}
+            borderColor={borderColor}
+          />
+        </InputGroup>
+        {formData.image &&
+          formData.image !==
+            "https://via.placeholder.com/800x400?text=Event+Image" && (
+            <Image
+              src={formData.image} // Hiển thị preview từ URL (có thể là URL.createObjectURL)
+              alt="Xem trước ảnh bìa"
+              mt={4}
+              maxH="250px"
+              borderRadius="md"
+              objectFit="cover"
+              borderWidth="1px"
+              borderColor={borderColor}
+            />
+          )}
+        <FormHelperText>
+          Chọn ảnh đại diện cho sự kiện của bạn. Ảnh nên có chất lượng tốt và tỷ
+          lệ phù hợp.
+        </FormHelperText>
+        {errors.imageFile && (
+          <FormErrorMessage>{errors.imageFile}</FormErrorMessage>
+        )}
+      </FormControl>
+    </VStack>
+  );
+};
+
+// Các step component khác giữ nguyên dạng rỗng hoặc cập nhật props nếu cần
+interface DateTimeLocationStepProps extends StepProps {
+  handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+// Bước 2: Thời gian & Địa điểm
+const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
+  formData,
+  handleChange,
+  errors,
+  handleCheckboxChange,
+}) => {
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  return (
+    <VStack spacing={6} align="stretch">
+      <FormControl isInvalid={!!errors.date} isRequired>
+        <FormLabel htmlFor="date">Ngày diễn ra</FormLabel>
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FiCalendar} color="gray.500" />
+          </InputLeftElement>
+          <Input
+            id="date"
+            name="date"
+            type="date"
+            value={formData.date}
+            onChange={handleChange}
+            borderColor={borderColor}
+          />
+        </InputGroup>
+        {errors.date && <FormErrorMessage>{errors.date}</FormErrorMessage>}
+      </FormControl>
+
+      <HStack spacing={6} align="flex-start">
+        <FormControl isInvalid={!!errors.startTime} isRequired flex={1}>
+          <FormLabel htmlFor="startTime">Thời gian bắt đầu</FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiClock} color="gray.500" />
+            </InputLeftElement>
+            <Input
+              id="startTime"
+              name="startTime"
+              type="time"
+              value={formData.startTime}
+              onChange={handleChange}
+              borderColor={borderColor}
+            />
+          </InputGroup>
+          {errors.startTime && (
+            <FormErrorMessage>{errors.startTime}</FormErrorMessage>
+          )}
+        </FormControl>
+
+        <FormControl isInvalid={!!errors.endTime} isRequired flex={1}>
+          <FormLabel htmlFor="endTime">Thời gian kết thúc</FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiClock} color="gray.500" />
+            </InputLeftElement>
+            <Input
+              id="endTime"
+              name="endTime"
+              type="time"
+              value={formData.endTime}
+              onChange={handleChange}
+              borderColor={borderColor}
+            />
+          </InputGroup>
+          {errors.endTime && (
+            <FormErrorMessage>{errors.endTime}</FormErrorMessage>
+          )}
+        </FormControl>
+      </HStack>
+
+      <Divider />
+
+      <FormControl display="flex" alignItems="center">
+        <FormLabel htmlFor="isOnline" mb="0">
+          Sự kiện trực tuyến (Online)?
+        </FormLabel>
+        <Switch
+          id="isOnline"
+          name="isOnline"
+          isChecked={formData.isOnline}
+          onChange={handleCheckboxChange}
+          colorScheme="teal"
+        />
+      </FormControl>
+
+      {formData.isOnline ? (
+        <FormControl isInvalid={!!errors.onlineUrl} isRequired>
+          <FormLabel htmlFor="onlineUrl">URL sự kiện trực tuyến</FormLabel>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiLink} color="gray.500" />
+            </InputLeftElement>
+            <Input
+              id="onlineUrl"
+              name="onlineUrl"
+              value={formData.onlineUrl || ""}
+              onChange={handleChange}
+              placeholder="VD: https://zoom.us/j/your-meeting-id"
+              borderColor={borderColor}
+            />
+          </InputGroup>
+          <FormHelperText>
+            Cung cấp đường dẫn để người tham gia có thể truy cập sự kiện.
+          </FormHelperText>
+          {errors.onlineUrl && (
+            <FormErrorMessage>{errors.onlineUrl}</FormErrorMessage>
+          )}
+        </FormControl>
+      ) : (
+        <>
+          <FormControl isInvalid={!!errors.location} isRequired>
+            <FormLabel htmlFor="location">Tên địa điểm</FormLabel>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FiMapPin} color="gray.500" />
+              </InputLeftElement>
+              <Input
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="VD: Trung tâm Hội nghị Quốc gia"
+                borderColor={borderColor}
+              />
+            </InputGroup>
+            {errors.location && (
+              <FormErrorMessage>{errors.location}</FormErrorMessage>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={!!errors.address} isRequired>
+            <FormLabel htmlFor="address">Địa chỉ cụ thể</FormLabel>
+            <Textarea
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="VD: Số 1 Đại lộ Thăng Long, Mễ Trì, Nam Từ Liêm, Hà Nội"
+              borderColor={borderColor}
+            />
+            {errors.address && (
+              <FormErrorMessage>{errors.address}</FormErrorMessage>
+            )}
+          </FormControl>
+        </>
+      )}
+    </VStack>
+  );
+};
+
+interface TicketsPricingStepProps extends Omit<StepProps, "handleChange"> {
+  handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addTicketType: () => void;
+  removeTicketType: (id: string) => void;
+  updateTicketType: (id: string, field: string, value: string | number) => void;
+}
+
+// Bước 3: Vé & Giá
+const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
+  formData,
+  setFormData,
+  errors,
+  handleCheckboxChange,
+  addTicketType,
+  removeTicketType,
+  updateTicketType,
+}) => {
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  return (
+    <VStack spacing={6} align="stretch">
+      <FormControl display="flex" alignItems="center">
+        <FormLabel htmlFor="isPaid" mb="0">
+          Đây là sự kiện có thu phí?
+        </FormLabel>
+        <Switch
+          id="isPaid"
+          name="isPaid"
+          isChecked={formData.isPaid}
+          onChange={(e) => {
+            handleCheckboxChange(e);
+            if (!e.target.checked && formData.ticketTypes.length === 0) {
+              setFormData((prev) => ({ ...prev, price: 0 }));
+            }
+          }}
+          colorScheme="teal"
+        />
+      </FormControl>
+
+      {formData.isPaid ? (
+        <VStack
+          spacing={6}
+          align="stretch"
+          pl={0}
+          borderWidth="1px"
+          borderColor={borderColor}
+          p={5}
+          borderRadius="md"
+        >
+          <Heading size="sm" mb={0}>
+            Quản lý các loại vé
+          </Heading>
+          {formData.ticketTypes.map((ticket) => (
+            <Box
+              key={ticket.id}
+              p={4}
+              borderWidth="1px"
+              borderColor={borderColor}
+              borderRadius="lg"
+              _hover={{ shadow: "md" }}
+            >
+              <VStack spacing={4} align="stretch">
+                <FormControl
+                  isInvalid={!!errors[`ticketName-${ticket.id}`]}
+                  isRequired
+                >
+                  <FormLabel htmlFor={`ticketName-${ticket.id}`}>
+                    Tên loại vé
+                  </FormLabel>
+                  <Input
+                    id={`ticketName-${ticket.id}`}
+                    value={ticket.name}
+                    onChange={(e) =>
+                      updateTicketType(ticket.id, "name", e.target.value)
+                    }
+                    placeholder="VD: Vé VIP, Vé thường, Early Bird"
+                    borderColor={borderColor}
+                  />
+                  {errors[`ticketName-${ticket.id}`] && (
+                    <FormErrorMessage>
+                      {errors[`ticketName-${ticket.id}`]}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+
+                <HStack spacing={4}>
+                  <FormControl
+                    isInvalid={!!errors[`ticketPrice-${ticket.id}`]}
+                    isRequired
+                    flex={1}
+                  >
+                    <FormLabel htmlFor={`ticketPrice-${ticket.id}`}>
+                      Giá vé (VNĐ)
+                    </FormLabel>
+                    <NumberInput
+                      id={`ticketPrice-${ticket.id}`}
+                      value={ticket.price}
+                      onChange={(valueString) =>
+                        updateTicketType(
+                          ticket.id,
+                          "price",
+                          parseFloat(valueString) || 0
+                        )
+                      }
+                      min={0}
+                      borderColor={borderColor}
+                    >
+                      <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                          <Icon as={FiDollarSign} color="gray.500" />
+                        </InputLeftElement>
+                        <NumberInputField borderColor={borderColor} pl={10} />
+                      </InputGroup>
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                    {errors[`ticketPrice-${ticket.id}`] && (
+                      <FormErrorMessage>
+                        {errors[`ticketPrice-${ticket.id}`]}
+                      </FormErrorMessage>
+                    )}
+                  </FormControl>
+
+                  <FormControl
+                    isInvalid={!!errors[`ticketQuantity-${ticket.id}`]}
+                    isRequired
+                    flex={1}
+                  >
+                    <FormLabel htmlFor={`ticketQuantity-${ticket.id}`}>
+                      Số lượng vé
+                    </FormLabel>
+                    <NumberInput
+                      id={`ticketQuantity-${ticket.id}`}
+                      value={ticket.quantity}
+                      onChange={(valueString) =>
+                        updateTicketType(
+                          ticket.id,
+                          "quantity",
+                          parseInt(valueString, 10) || 0
+                        )
+                      }
+                      min={1}
+                      borderColor={borderColor}
+                    >
+                      <NumberInputField borderColor={borderColor} />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                    {errors[`ticketQuantity-${ticket.id}`] && (
+                      <FormErrorMessage>
+                        {errors[`ticketQuantity-${ticket.id}`]}
+                      </FormErrorMessage>
+                    )}
+                  </FormControl>
+                </HStack>
+                <Flex justify="flex-end">
+                  <IconButton
+                    aria-label="Xóa loại vé"
+                    icon={<FiTrash2 />}
+                    size="sm"
+                    colorScheme="red"
+                    variant="ghost"
+                    onClick={() => removeTicketType(ticket.id)}
+                    isDisabled={formData.ticketTypes.length <= 1}
+                  />
+                </Flex>
+              </VStack>
+            </Box>
+          ))}
+          <Button
+            leftIcon={<FiPlus />}
+            onClick={addTicketType}
+            colorScheme="teal"
+            variant="outline"
+            size="sm"
+            alignSelf="flex-start"
+          >
+            Thêm loại vé
+          </Button>
+        </VStack>
+      ) : (
+        <Text color="gray.500" fontStyle="italic">
+          Sự kiện này miễn phí cho tất cả người tham dự. Nếu bạn muốn bán vé,
+          vui lòng bật tùy chọn sự kiện có thu phí ở trên.
+        </Text>
+      )}
+    </VStack>
+  );
+};
+
+// Định nghĩa lại AdvancedSettingsStepProps một cách tường minh
+interface AdvancedSettingsStepProps {
+  formData: EventFormData;
+  errors: Record<string, string>;
+  newTag: string;
+  setNewTag: React.Dispatch<React.SetStateAction<string>>;
+  addTag: () => void;
+  removeTag: (tag: string) => void;
+  handleCapacityChange: (value: string) => void;
+  handleMaxTicketsChange: (value: string) => void;
+}
+
+// Bước 4: Cài đặt khác
+const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
+  formData,
+  errors,
+  newTag,
+  setNewTag,
+  addTag,
+  removeTag,
+  handleCapacityChange,
+  handleMaxTicketsChange,
+}) => {
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  return (
+    <VStack spacing={6} align="stretch">
+      <FormControl isInvalid={!!errors.capacity}>
+        <FormLabel htmlFor="capacity">Sức chứa của sự kiện</FormLabel>
+        <NumberInput
+          id="capacity"
+          value={formData.capacity}
+          onChange={handleCapacityChange}
+          min={1}
+          borderColor={borderColor}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        {errors.capacity && (
+          <FormErrorMessage>{errors.capacity}</FormErrorMessage>
+        )}
+        <FormHelperText>
+          Tổng số người có thể tham dự sự kiện này.
+        </FormHelperText>
+      </FormControl>
+
+      <FormControl isInvalid={!!errors.maxTicketsPerPerson}>
+        <FormLabel htmlFor="maxTicketsPerPerson">
+          Số vé tối đa mỗi người có thể mua
+        </FormLabel>
+        <NumberInput
+          id="maxTicketsPerPerson"
+          name="maxTicketsPerPerson"
+          value={formData.maxTicketsPerPerson}
+          onChange={handleMaxTicketsChange}
+          min={1}
+          borderColor={borderColor}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        {errors.maxTicketsPerPerson && (
+          <FormErrorMessage>{errors.maxTicketsPerPerson}</FormErrorMessage>
+        )}
+        <FormHelperText>
+          Giới hạn số lượng vé một người tham gia có thể mua cho sự kiện này.
+        </FormHelperText>
+      </FormControl>
+
+      <FormControl>
+        <FormLabel htmlFor="tags">Thẻ (Tags)</FormLabel>
+        <InputGroup>
+          <Input
+            id="tags"
+            placeholder="Nhập tag và nhấn Thêm"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            borderColor={borderColor}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
+            }}
+          />
+          <Button onClick={addTag} ml={2} colorScheme="teal">
+            Thêm Tag
+          </Button>
+        </InputGroup>
+        {formData.tags.length > 0 && (
+          <Wrap mt={4} spacing={2}>
+            {formData.tags.map((tag) => (
+              <WrapItem key={tag}>
+                <Tag
+                  size="lg"
+                  variant="solid"
+                  colorScheme="teal"
+                  borderRadius="full"
+                >
+                  <TagLabel>{tag}</TagLabel>
+                  <TagCloseButton onClick={() => removeTag(tag)} />
+                </Tag>
+              </WrapItem>
+            ))}
+          </Wrap>
+        )}
+        <FormHelperText>
+          Gắn thẻ để phân loại và giúp sự kiện dễ tìm kiếm hơn. Nhấn Enter hoặc
+          click "Thêm Tag".
+        </FormHelperText>
+      </FormControl>
+    </VStack>
+  );
+};
+
+interface ReviewConfirmStepProps {
+  formData: EventFormData;
+}
+
+// Bước 5: Xem trước & Xác nhận
+const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
+  const iconColor = useColorModeValue("teal.500", "teal.300");
+  const ticketBoxBgColor = useColorModeValue("gray.50", "gray.700");
+  const onlineLinkColor = useColorModeValue("teal.500", "teal.300");
+
+  return (
+    <VStack spacing={6} align="stretch">
+      <Heading size="lg" mb={4} textAlign="center">
+        Xem Lại Thông Tin Sự Kiện
+      </Heading>
+
+      {/* Phần hình ảnh và thông tin cơ bản */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderRadius="md"
+        borderColor={borderColor}
+        shadow="sm"
+      >
+        <Heading size="md" mb={4}>
+          1. Thông Tin Cơ Bản
+        </Heading>
+        <VStack spacing={4} align="stretch">
+          {formData.image &&
+            formData.image !==
+              "https://via.placeholder.com/800x400?text=Event+Image" && (
+              <Image
+                src={formData.image}
+                alt={formData.title}
+                maxH="300px"
+                borderRadius="md"
+                objectFit="cover"
+                mb={4}
+              />
+            )}
+          <Flex>
+            <Text fontWeight="bold" minW="120px">
+              Tên sự kiện:
+            </Text>
+            <Text>{formData.title}</Text>
+          </Flex>
+          <Flex>
+            <Text fontWeight="bold" minW="120px">
+              Mô tả:
+            </Text>
+            <Text whiteSpace="pre-wrap">{formData.description}</Text>
+          </Flex>
+          <Flex>
+            <Text fontWeight="bold" minW="120px">
+              Danh mục:
+            </Text>
+            <Badge colorScheme="teal" px={2} py={1} borderRadius="md">
+              {formData.category}
+            </Badge>
+          </Flex>
+        </VStack>
+      </Box>
+
+      {/* Thời gian & Địa điểm */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderRadius="md"
+        borderColor={borderColor}
+        shadow="sm"
+      >
+        <Heading size="md" mb={4}>
+          2. Thời Gian & Địa Điểm
+        </Heading>
+        <VStack spacing={3} align="stretch">
+          <Flex align="center" gap={2}>
+            <Icon as={FiCalendar} color={iconColor} />
+            <Text fontWeight="medium">
+              {new Date(formData.date).toLocaleDateString("vi-VN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </Text>
+          </Flex>
+          <Flex align="center" gap={2}>
+            <Icon as={FiClock} color={iconColor} />
+            <Text>
+              {formData.startTime} - {formData.endTime}
+            </Text>
+          </Flex>
+          {formData.isOnline ? (
+            <Flex align="center" gap={2}>
+              <Icon as={FiLink} color={iconColor} />
+              <Text>
+                Trực tuyến tại:{" "}
+                <a
+                  href={formData.onlineUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: onlineLinkColor,
+                    textDecoration: "underline",
+                  }}
+                >
+                  {formData.onlineUrl}
+                </a>
+              </Text>
+            </Flex>
+          ) : (
+            <Flex align="start" gap={2}>
+              <Icon as={FiMapPin} color={iconColor} mt={1} />
+              <VStack align="start" spacing={0}>
+                <Text fontWeight="medium">{formData.location}</Text>
+                <Text fontSize="sm" color={secondaryTextColor}>
+                  {formData.address}
+                </Text>
+              </VStack>
+            </Flex>
+          )}
+        </VStack>
+      </Box>
+
+      {/* Vé & Giá */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderRadius="md"
+        borderColor={borderColor}
+        shadow="sm"
+      >
+        <Heading size="md" mb={4}>
+          3. Thông Tin Vé & Giá
+        </Heading>
+        <VStack spacing={3} align="stretch">
+          <Flex>
+            <Text fontWeight="bold" minW="120px">
+              Hình thức:
+            </Text>
+            <Badge
+              colorScheme={formData.isPaid ? "purple" : "green"}
+              px={2}
+              py={1}
+              borderRadius="md"
+            >
+              {formData.isPaid ? "Có Phí" : "Miễn Phí"}
+            </Badge>
+          </Flex>
+          {!formData.isPaid && formData.price === 0 && (
+            <Text color={secondaryTextColor} fontStyle="italic">
+              Sự kiện này miễn phí tham dự.
+            </Text>
+          )}
+          {formData.isPaid && formData.ticketTypes.length > 0 && (
+            <VStack align="stretch" spacing={3} mt={2}>
+              <Text fontWeight="bold">Các loại vé:</Text>
+              {formData.ticketTypes.map((ticket) => (
+                <Box
+                  key={ticket.id}
+                  p={3}
+                  borderWidth="1px"
+                  borderColor={borderColor}
+                  borderRadius="md"
+                  bg={ticketBoxBgColor}
+                >
+                  <Flex justify="space-between" align="center">
+                    <Text fontWeight="medium">{ticket.name}</Text>
+                    <IconButton
+                      aria-label="Ticket Info"
+                      icon={<FiInfo />}
+                      size="sm"
+                      variant="ghost"
+                      isRound
+                      onClick={() =>
+                        alert(
+                          `Thông tin chi tiết vé ${ticket.name} (chưa có UI)`
+                        )
+                      }
+                    />
+                  </Flex>
+                  <Text fontSize="sm" color={secondaryTextColor}>
+                    Giá: {ticket.price.toLocaleString("vi-VN")} VNĐ - Số lượng:{" "}
+                    {ticket.quantity}
+                  </Text>
+                </Box>
+              ))}
+            </VStack>
+          )}
+          {formData.isPaid && formData.ticketTypes.length === 0 && (
+            <Text color="red.500">
+              Sự kiện được đánh dấu là có phí nhưng chưa có loại vé nào được
+              thêm.
+            </Text>
+          )}
+        </VStack>
+      </Box>
+
+      {/* Cài đặt khác */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderRadius="md"
+        borderColor={borderColor}
+        shadow="sm"
+      >
+        <Heading size="md" mb={4}>
+          4. Cài Đặt Khác
+        </Heading>
+        <VStack spacing={3} align="stretch">
+          <Flex>
+            <Text fontWeight="bold" minW="180px">
+              Sức chứa tối đa:
+            </Text>
+            <Text>{formData.capacity} người</Text>
+          </Flex>
+          <Flex>
+            <Text fontWeight="bold" minW="180px">
+              Vé tối đa/người:
+            </Text>
+            <Text>{formData.maxTicketsPerPerson} vé</Text>
+          </Flex>
+          {formData.tags.length > 0 && (
+            <Flex align="start">
+              <Text fontWeight="bold" minW="180px" mt={1}>
+                Tags:
+              </Text>
+              <Wrap spacing={2}>
+                {formData.tags.map((tag) => (
+                  <WrapItem key={tag}>
+                    <Tag
+                      size="md"
+                      variant="solid"
+                      colorScheme="blue"
+                      borderRadius="full"
+                    >
+                      <TagLabel>{tag}</TagLabel>
+                    </Tag>
+                  </WrapItem>
+                ))}
+              </Wrap>
+            </Flex>
+          )}
+        </VStack>
+      </Box>
+
+      <Divider my={6} />
+      <Text textAlign="center" color={secondaryTextColor} fontStyle="italic">
+        Vui lòng kiểm tra kỹ tất cả thông tin trước khi hoàn tất.
+      </Text>
+    </VStack>
+  );
+};
+
 // Component tạo và chỉnh sửa sự kiện
 const CreateEvent = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectEventLoading);
-  const error = useAppSelector(selectEventError);
+  const errorStore = useAppSelector(selectEventError);
   const createSuccess = useAppSelector(selectCreateSuccess);
 
   const toast = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
+  const locationHook = useLocation();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Parse URL query params để xác định chế độ chỉnh sửa hay tạo mới
-  const queryParams = new URLSearchParams(location.search);
+  const stepperSteps = [
+    { title: "Thông tin", description: "Cơ bản", icon: FiInfo },
+    {
+      title: "Thời gian & Địa điểm",
+      description: "Lịch trình",
+      icon: FiCalendar,
+    },
+    { title: "Vé & Giá", description: "Chi phí", icon: FiList },
+    { title: "Cài đặt", description: "Nâng cao", icon: FiSettings },
+    { title: "Xem trước", description: "Hoàn tất", icon: FiCheckCircle },
+  ];
+
+  const { activeStep, setActiveStep } = useSteps({
+    index: 0,
+    count: stepperSteps.length,
+  });
+
+  const queryParams = new URLSearchParams(locationHook.search);
   const editMode = queryParams.has("edit");
   const eventId = queryParams.get("edit");
 
-  // Form data state
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     description: "",
@@ -135,13 +1021,16 @@ const CreateEvent = () => {
     location: "",
     address: "",
     isOnline: false,
+    onlineUrl: "",
     capacity: 100,
     maxTicketsPerPerson: 1,
     isPaid: false,
+    price: undefined,
     ticketTypes: [
-      { id: "standard", name: "Standard", price: 0, quantity: 100 },
+      // { id: `ticket-${Date.now()}`, name: "Tiêu chuẩn", price: 0, quantity: 100 }, // Sẽ thêm vé khi isPaid = true
     ],
     image: "https://via.placeholder.com/800x400?text=Event+Image",
+    imageFile: null,
     tags: [],
   });
 
@@ -149,18 +1038,34 @@ const CreateEvent = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
 
-  // Colors
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Reset event state khi unmount component
   useEffect(() => {
     return () => {
       dispatch(resetEventState());
     };
   }, [dispatch]);
 
-  // Theo dõi kết quả tạo sự kiện
+  useEffect(() => {
+    if (formData.isPaid && formData.ticketTypes.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        ticketTypes: [
+          {
+            id: `ticket-${Date.now()}`,
+            name: "Tiêu chuẩn",
+            price: 0,
+            quantity: prev.capacity || 100,
+          },
+        ],
+      }));
+    } else if (!formData.isPaid) {
+      // Optionally clear ticket types or set a default free one if needed when switching to not paid
+      // setFormData(prev => ({ ...prev, ticketTypes: [] }));
+    }
+  }, [formData.isPaid, formData.capacity]);
+
   useEffect(() => {
     if (createSuccess) {
       toast({
@@ -172,52 +1077,43 @@ const CreateEvent = () => {
         duration: 3000,
         isClosable: true,
       });
-
-      // Chuyển hướng đến dashboard sau khi thành công
-      navigate("/dashboard");
+      navigate(editMode && eventId ? `/events/${eventId}` : "/user/events");
     }
-  }, [createSuccess, editMode, navigate, toast]);
+  }, [createSuccess, editMode, navigate, toast, eventId]);
 
-  // Hiển thị lỗi nếu có
   useEffect(() => {
-    if (error) {
+    if (errorStore) {
       toast({
         title: "Lỗi",
-        description: error,
+        description: errorStore,
         status: "error",
         duration: 4000,
         isClosable: true,
       });
     }
-  }, [error, toast]);
+  }, [errorStore, toast]);
 
-  // Load sự kiện hiện có nếu đang ở chế độ chỉnh sửa
   useEffect(() => {
-    if (editMode && eventId) {
-      // Trong thực tế, sẽ gọi API để lấy dữ liệu sự kiện
-      // Mô phỏng API call để lấy dữ liệu sự kiện
+    if (editMode && eventId && !isDataLoaded) {
       const loadEventData = async () => {
         try {
-          // Mô phỏng thời gian tải dữ liệu
           await new Promise((resolve) => setTimeout(resolve, 800));
-
-          // Dữ liệu mẫu cho một sự kiện hiện có
           const mockEventData: EventFormData = {
             id: eventId,
-            title: "Tech Conference 2023",
-            description:
-              "Join us for a hands-on workshop where you'll learn the fundamentals of UI/UX design and modern web development techniques.",
-            category: "Conference",
+            title: "Tech Conference 2023 (Loaded)",
+            description: "Join us for a hands-on workshop...",
+            category: "Hội nghị",
             date: "2023-12-15",
             startTime: "09:00",
             endTime: "16:00",
             location: "Convention Center",
             address: "123 Main St, New York, NY",
             isOnline: false,
+            onlineUrl: "",
             capacity: 500,
             maxTicketsPerPerson: 1,
             isPaid: true,
-            price: 25.99,
+            price: undefined,
             ticketTypes: [
               {
                 id: "early-bird",
@@ -230,103 +1126,98 @@ const CreateEvent = () => {
             ],
             image:
               "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
+            imageFile: null,
             tags: ["tech", "web development", "design", "networking"],
           };
-
           setFormData(mockEventData);
           setIsDataLoaded(true);
-
           toast({
             title: "Đã tải dữ liệu sự kiện",
-            description: "Bạn có thể chỉnh sửa thông tin sự kiện",
             status: "success",
             duration: 3000,
             isClosable: true,
           });
-        } catch (error) {
+        } catch (loadError: unknown) {
+          console.error("Error loading event data:", loadError);
+          let errorMessage = "Không thể tải dữ liệu";
+          if (
+            typeof loadError === "object" &&
+            loadError !== null &&
+            "message" in loadError
+          ) {
+            errorMessage = (loadError as { message: string }).message;
+          }
           toast({
             title: "Lỗi khi tải sự kiện",
-            description: "Không thể tải dữ liệu sự kiện để chỉnh sửa",
+            description: errorMessage,
             status: "error",
-            duration: 4000,
+            duration: 5000,
             isClosable: true,
           });
-
-          // Redirect back to dashboard if data cannot be loaded
-          navigate("/dashboard");
+          navigate("/create-event");
         }
       };
-
       loadEventData();
+    } else if (!editMode) {
+      setIsDataLoaded(true);
+      if (formData.isPaid && formData.ticketTypes.length === 0) {
+        setFormData((prev) => ({
+          ...prev,
+          ticketTypes: [
+            {
+              id: `ticket-${Date.now()}`,
+              name: "Tiêu chuẩn",
+              price: 0,
+              quantity: 100,
+            },
+          ],
+        }));
+      }
     }
-  }, [editMode, eventId, toast, navigate]);
+  }, [editMode, eventId, toast, navigate, isDataLoaded, formData.isPaid]);
 
-  // Xử lý thay đổi form fields
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => {
-    const { name, value, type } = e.target;
-
-    if (type === "checkbox") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-
-    // Clear error when field is edited
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Xử lý thay đổi checkbox
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: checked,
+      ...(name === "isOnline" && checked && { location: "", address: "" }),
+      ...(name === "isOnline" && !checked && { onlineUrl: "" }),
+      ...(name === "isPaid" &&
+        !checked && { ticketTypes: [], price: undefined }),
     }));
   };
 
-  // Xử lý thay đổi price
-  const handlePriceChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === "" ? undefined : parseFloat(value),
-    }));
-  };
-
-  // Xử lý thay đổi capacity
   const handleCapacityChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, capacity: parseInt(value, 10) || 0 }));
+  };
+
+  const handleMaxTicketsChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      capacity: parseInt(value, 10),
+      maxTicketsPerPerson: parseInt(value, 10) || 0,
     }));
   };
 
-  // Thêm tag mới
   const addTag = () => {
     if (newTag.trim() !== "" && !formData.tags.includes(newTag.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()],
-      }));
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
       setNewTag("");
     }
   };
 
-  // Xóa tag
   const removeTag = (tagToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -334,38 +1225,33 @@ const CreateEvent = () => {
     }));
   };
 
-  // Thêm ticket type
   const addTicketType = () => {
-    const newId = `ticket-${Date.now()}`;
     setFormData((prev) => ({
       ...prev,
       ticketTypes: [
         ...prev.ticketTypes,
-        { id: newId, name: "New Ticket", price: 0, quantity: 50 },
+        { id: `ticket-${Date.now()}`, name: "", price: 0, quantity: 10 },
       ],
     }));
   };
 
-  // Xóa ticket type
   const removeTicketType = (id: string) => {
-    if (formData.ticketTypes.length <= 1) {
+    if (formData.ticketTypes.length > 1) {
+      setFormData((prev) => ({
+        ...prev,
+        ticketTypes: prev.ticketTypes.filter((tt) => tt.id !== id),
+      }));
+    } else {
       toast({
         title: "Không thể xóa",
-        description: "Sự kiện phải có ít nhất một loại vé",
+        description: "Sự kiện có phí phải có ít nhất một loại vé.",
         status: "warning",
         duration: 3000,
         isClosable: true,
       });
-      return;
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      ticketTypes: prev.ticketTypes.filter((ticket) => ticket.id !== id),
-    }));
   };
 
-  // Cập nhật ticket type
   const updateTicketType = (
     id: string,
     field: string,
@@ -373,147 +1259,347 @@ const CreateEvent = () => {
   ) => {
     setFormData((prev) => ({
       ...prev,
-      ticketTypes: prev.ticketTypes.map((ticket) =>
-        ticket.id === id ? { ...ticket, [field]: value } : ticket
+      ticketTypes: prev.ticketTypes.map((tt) =>
+        tt.id === id ? { ...tt, [field]: value } : tt
       ),
     }));
   };
 
-  // Xác nhận xóa sự kiện
-  const confirmDeleteEvent = () => {
-    onOpen();
-  };
+  const validateStep = (stepIndex: number): boolean => {
+    const newStepErrors: Record<string, string> = {};
+    let isValid = true;
 
-  // Xóa sự kiện (sau khi xác nhận)
-  const handleDeleteEvent = () => {
-    // Trong thực tế, sẽ gọi API để xóa sự kiện
-    toast({
-      title: "Sự kiện đã xóa",
-      description: "Sự kiện đã bị xóa vĩnh viễn",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-
-    onClose();
-    navigate("/dashboard");
-  };
-
-  // Validate form trước khi submit
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.title.trim()) newErrors.title = "Tiêu đề là bắt buộc";
-    if (!formData.description.trim())
-      newErrors.description = "Mô tả là bắt buộc";
-    if (!formData.category) newErrors.category = "Danh mục là bắt buộc";
-    if (!formData.date) newErrors.date = "Ngày là bắt buộc";
-    if (!formData.startTime)
-      newErrors.startTime = "Thời gian bắt đầu là bắt buộc";
-    if (!formData.endTime) newErrors.endTime = "Thời gian kết thúc là bắt buộc";
-
-    if (!formData.isOnline && !formData.location.trim()) {
-      newErrors.location = "Địa điểm là bắt buộc cho sự kiện trực tiếp";
+    switch (stepIndex) {
+      case 0:
+        if (!formData.title.trim()) {
+          newStepErrors.title = "Tên sự kiện là bắt buộc.";
+          isValid = false;
+        }
+        if (!formData.description.trim()) {
+          newStepErrors.description = "Mô tả sự kiện là bắt buộc.";
+          isValid = false;
+        }
+        if (!formData.category) {
+          newStepErrors.category = "Danh mục sự kiện là bắt buộc.";
+          isValid = false;
+        }
+        break;
+      case 1:
+        if (!formData.date) {
+          newStepErrors.date = "Ngày diễn ra là bắt buộc.";
+          isValid = false;
+        }
+        if (!formData.startTime) {
+          newStepErrors.startTime = "Thời gian bắt đầu là bắt buộc.";
+          isValid = false;
+        }
+        if (!formData.endTime) {
+          newStepErrors.endTime = "Thời gian kết thúc là bắt buộc.";
+          isValid = false;
+        }
+        if (formData.isOnline && !formData.onlineUrl?.trim()) {
+          newStepErrors.onlineUrl = "URL sự kiện trực tuyến là bắt buộc.";
+          isValid = false;
+        }
+        if (!formData.isOnline && !formData.location.trim()) {
+          newStepErrors.location =
+            "Tên địa điểm là bắt buộc cho sự kiện offline.";
+          isValid = false;
+        }
+        if (!formData.isOnline && !formData.address.trim()) {
+          newStepErrors.address =
+            "Địa chỉ cụ thể là bắt buộc cho sự kiện offline.";
+          isValid = false;
+        }
+        break;
+      case 2:
+        if (formData.isPaid) {
+          if (formData.ticketTypes.length === 0) {
+            newStepErrors.ticketTypes =
+              "Sự kiện có phí phải có ít nhất một loại vé. Vui lòng thêm loại vé.";
+            isValid = false;
+          }
+          formData.ticketTypes.forEach((ticket) => {
+            if (!ticket.name.trim()) {
+              newStepErrors[`ticketName-${ticket.id}`] =
+                "Tên loại vé là bắt buộc.";
+              isValid = false;
+            }
+            if (ticket.price < 0) {
+              newStepErrors[`ticketPrice-${ticket.id}`] =
+                "Giá vé không thể âm.";
+              isValid = false;
+            }
+            if (ticket.quantity <= 0) {
+              newStepErrors[`ticketQuantity-${ticket.id}`] =
+                "Số lượng vé phải lớn hơn 0.";
+              isValid = false;
+            }
+          });
+        }
+        break;
+      case 3:
+        if (formData.capacity <= 0) {
+          newStepErrors.capacity = "Sức chứa của sự kiện phải lớn hơn 0.";
+          isValid = false;
+        }
+        if (formData.maxTicketsPerPerson <= 0) {
+          newStepErrors.maxTicketsPerPerson =
+            "Số vé tối đa mỗi người phải lớn hơn 0.";
+          isValid = false;
+        }
+        break;
     }
 
-    if (formData.isOnline && !formData.onlineUrl?.trim()) {
-      newErrors.onlineUrl = "URL trực tuyến là bắt buộc cho sự kiện ảo";
-    }
+    setErrors((prevErrors) => {
+      const currentStepErrorKeysPattern = (() => {
+        switch (stepIndex) {
+          case 0:
+            return /^(title|description|category|imageFile)$/;
+          case 1:
+            return /^(date|startTime|endTime|onlineUrl|location|address)$/;
+          case 2:
+            return /^(ticketTypes|ticketName-|ticketPrice-|ticketQuantity-)/;
+          case 3:
+            return /^(capacity|maxTicketsPerPerson)$/;
+          default:
+            return /^$/;
+        }
+      })();
 
-    if (formData.isPaid && (!formData.price || formData.price <= 0)) {
-      newErrors.price = "Giá hợp lệ là bắt buộc cho sự kiện có phí";
-    }
-
-    // Validate if all ticket types have names
-    formData.ticketTypes.forEach((ticket, index) => {
-      if (!ticket.name.trim()) {
-        newErrors[`ticketName-${index}`] = "Tên vé là bắt buộc";
+      const cleanedErrors = { ...prevErrors };
+      for (const key in cleanedErrors) {
+        if (currentStepErrorKeysPattern.test(key)) {
+          delete cleanedErrors[key];
+        }
       }
+      return { ...cleanedErrors, ...newStepErrors };
     });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
 
-  // Submit form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-    if (!validateForm()) {
-      toast({
-        title: "Lỗi xác thực",
-        description: "Vui lòng sửa các lỗi trong biểu mẫu",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+    let allStepsValid = true;
+    for (let i = 0; i < stepperSteps.length - 1; i++) {
+      if (!validateStep(i)) {
+        allStepsValid = false;
+      }
+    }
+
+    if (!allStepsValid) {
+      let firstErrorStep = -1;
+      for (let i = 0; i < stepperSteps.length - 1; i++) {
+        const stepErrorKeys = (() => {
+          switch (i) {
+            case 0:
+              return ["title", "description", "category", "imageFile"];
+            case 1:
+              return [
+                "date",
+                "startTime",
+                "endTime",
+                "onlineUrl",
+                "location",
+                "address",
+              ];
+            case 2:
+              return formData.ticketTypes
+                .flatMap((t) => [
+                  `ticketName-${t.id}`,
+                  `ticketPrice-${t.id}`,
+                  `ticketQuantity-${t.id}`,
+                ])
+                .concat(["ticketTypes"]);
+            case 3:
+              return ["capacity", "maxTicketsPerPerson"];
+            default:
+              return [];
+          }
+        })();
+        const currentStepHasError = stepErrorKeys.some((key) => errors[key]);
+
+        if (currentStepHasError) {
+          firstErrorStep = i;
+          break;
+        }
+      }
+
+      if (firstErrorStep !== -1) {
+        setActiveStep(firstErrorStep);
+        toast({
+          title: "Thông tin chưa hoàn tất",
+          description: `Vui lòng kiểm tra lại các trường được đánh dấu đỏ ở Bước ${
+            firstErrorStep + 1
+          }.`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Thông tin chưa hoàn tất",
+          description: "Vui lòng kiểm tra lại thông tin ở các bước.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
       return;
     }
 
-    // Tạo dữ liệu sự kiện theo đúng cấu trúc API
-    const eventData: CreateEventData = {
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      date: formData.date,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      location: formData.location,
-      address: formData.address,
-      isOnline: formData.isOnline,
-      capacity: formData.capacity,
-      maxTicketsPerPerson: formData.maxTicketsPerPerson,
-      isPaid: formData.isPaid,
-      imageUrl: formData.image,
-      tags: formData.tags,
+    // const { imageFile, ...baseData } = formData; // Comment dòng này lại hoặc sửa
+    // Thay vào đó, chỉ lấy những gì cần thiết cho apiData từ formData
+    const {
+      id,
+      title,
+      description,
+      category,
+      date,
+      startTime,
+      endTime,
+      location,
+      address,
+      isOnline,
+      onlineUrl,
+      capacity,
+      maxTicketsPerPerson,
+      isPaid,
+      tags,
+      image,
+    } = formData;
+
+    const apiData: CreateEventData = {
+      title,
+      description,
+      category,
+      date,
+      startTime,
+      endTime,
+      location: isOnline ? "" : location, // Đảm bảo location là string
+      address: isOnline ? "" : address, // Đảm bảo address là string
+      isOnline,
+      onlineUrl: isOnline ? onlineUrl : undefined, // onlineUrl có thể là optional
+      capacity,
+      maxTicketsPerPerson,
+      isPaid,
+      // Logic cũ cho price giữ nguyên
+      price:
+        formData.isPaid && formData.ticketTypes.length > 0
+          ? undefined
+          : formData.price,
+      imageUrl: image, // Sử dụng formData.image đã có sẵn (URL preview hoặc URL từ server nếu edit)
+      ticketTypes: formData.isPaid
+        ? formData.ticketTypes.map((t) => ({
+            name: t.name,
+            price: t.price,
+            quantity: t.quantity,
+            description: t.name, // Giả sử description của ticket type là name
+          }))
+        : undefined,
+      tags,
       published: true,
     };
 
-    // Thêm onlineUrl nếu là sự kiện trực tuyến
-    if (formData.isOnline && formData.onlineUrl) {
-      eventData.onlineUrl = formData.onlineUrl;
-    }
+    // Xóa các trường không cần thiết có giá trị rỗng hoặc undefined trước khi gửi đi
+    if (apiData.onlineUrl === "") delete apiData.onlineUrl; // Giữ lại nếu onlineUrl là optional
 
-    // Thêm giá nếu là sự kiện có phí
-    if (formData.isPaid) {
-      eventData.price = formData.price;
-
-      // Thêm thông tin về các loại vé
-      eventData.ticketTypes = formData.ticketTypes.map((ticket) => ({
-        name: ticket.name,
-        price: ticket.price,
-        quantity: ticket.quantity,
-        description: `${ticket.name} ticket`,
-      }));
-    }
-
-    if (editMode && eventId) {
-      // TODO: Cập nhật sự kiện
-      console.log("Updating event:", eventData);
+    if (editMode && id) {
+      // Sử dụng id đã destructure
+      console.log("Updating event:", { ...apiData, id });
+      dispatch(createEvent({ ...apiData, id })); // Truyền id vào đây
     } else {
-      // Tạo sự kiện mới
-      dispatch(createEvent(eventData));
+      console.log("Creating event:", apiData);
+      dispatch(createEvent(apiData)); // Gọi trực tiếp với apiData cho trường hợp tạo mới
     }
   };
 
-  // Nếu đang tải dữ liệu sự kiện (chế độ chỉnh sửa)
-  if (!isDataLoaded) {
+  const confirmDeleteEvent = () => onOpen();
+  const handleDeleteEvent = () => {
+    toast({
+      title: "Sự kiện đã được xóa (Mô phỏng)",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
+    onClose();
+    navigate("/user/events");
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(activeStep)) {
+      setActiveStep((prev) => prev + 1);
+      window.scrollTo(0, 0);
+    } else {
+      toast({
+        title: "Thông tin chưa hợp lệ",
+        description: "Vui lòng hoàn tất các trường bắt buộc ở bước này.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handlePrevStep = () => {
+    setActiveStep((prev) => prev - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const renderStepContent = () => {
+    const commonProps = { formData, setFormData, errors };
+    switch (activeStep) {
+      case 0:
+        return <BasicInfoStep {...commonProps} handleChange={handleChange} />;
+      case 1:
+        return (
+          <DateTimeLocationStep
+            {...commonProps}
+            handleChange={handleChange}
+            handleCheckboxChange={handleCheckboxChange}
+          />
+        );
+      case 2:
+        return (
+          <TicketsPricingStep
+            {...commonProps}
+            setFormData={setFormData}
+            handleCheckboxChange={handleCheckboxChange}
+            addTicketType={addTicketType}
+            removeTicketType={removeTicketType}
+            updateTicketType={updateTicketType}
+          />
+        );
+      case 3:
+        return (
+          <AdvancedSettingsStep
+            formData={commonProps.formData}
+            errors={commonProps.errors}
+            newTag={newTag}
+            setNewTag={setNewTag}
+            addTag={addTag}
+            removeTag={removeTag}
+            handleCapacityChange={handleCapacityChange}
+            handleMaxTicketsChange={handleMaxTicketsChange}
+          />
+        );
+      case 4:
+        return <ReviewConfirmStep formData={formData} />;
+      default:
+        return <Box>Unknown Step</Box>;
+    }
+  };
+
+  if (!isDataLoaded && editMode) {
     return (
-      <Container maxW="container.lg" py={8}>
-        <VStack spacing={8} align="stretch">
-          <Button
-            leftIcon={<FiArrowLeft />}
-            variant="ghost"
-            alignSelf="flex-start"
-            onClick={() => navigate(-1)}
-          >
-            Quay lại Bảng điều khiển
-          </Button>
-          <Heading>
-            {editMode ? "Đang tải sự kiện..." : "Tạo sự kiện mới"}
-          </Heading>
-          <Text>Please wait while we load the event data...</Text>
-        </VStack>
+      <Container maxW="container.md" py={10}>
+        <Flex justify="center" align="center" minH="300px">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="teal.500" />
+            <Text>Đang tải dữ liệu sự kiện...</Text>
+          </VStack>
+        </Flex>
       </Container>
     );
   }
@@ -521,544 +1607,141 @@ const CreateEvent = () => {
   return (
     <Container maxW="container.lg" py={8}>
       <VStack spacing={8} align="stretch">
-        {/* Breadcrumb */}
-        <Breadcrumb fontSize="sm">
+        <Breadcrumb fontWeight="medium" fontSize="sm">
           <BreadcrumbItem>
-            <BreadcrumbLink onClick={() => navigate("/dashboard")}>
-              Bảng điều khiển
+            <BreadcrumbLink as={Link} to="/">
+              Trang chủ
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/user/events">
+              Quản lý sự kiện
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>
-              {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện"}
+            <BreadcrumbLink href="#">
+              {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
             </BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
 
-        {/* Header */}
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-          <Heading>
-            {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
-          </Heading>
+        <Heading as="h1" size="xl" textAlign="center">
+          {editMode ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
+        </Heading>
 
-          <HStack spacing={4}>
-            {editMode && (
-              <Button
-                colorScheme="red"
-                variant="outline"
-                leftIcon={<FiTrash2 />}
-                onClick={confirmDeleteEvent}
-              >
-                Xóa sự kiện
-              </Button>
-            )}
-            <Button
+        <Box
+          bg={bgColor}
+          p={{ base: 4, md: 8 }}
+          borderRadius="xl"
+          shadow="xl"
+          borderWidth="1px"
+          borderColor={borderColor}
+        >
+          <Stepper
+            index={activeStep}
+            colorScheme="teal"
+            mb={10}
+            display={{ base: "none", md: "flex" }}
+          >
+            {stepperSteps.map((step, index) => {
+              const IconComponent = step.icon;
+              return (
+                <Step key={index} onClick={() => setActiveStep(index)}>
+                  <StepIndicator>
+                    <StepStatus
+                      complete={<IconComponent />}
+                      incomplete={<StepNumber />}
+                      active={<StepNumber />}
+                    />
+                  </StepIndicator>
+                  <Box flexShrink="0" textAlign="left">
+                    <StepTitle>{step.title}</StepTitle>
+                    <StepDescription>{step.description}</StepDescription>
+                  </Box>
+                  <StepSeparator />
+                </Step>
+              );
+            })}
+          </Stepper>
+
+          <Box display={{ md: "none" }} mb={6}>
+            <Text fontWeight="bold" textAlign="center" mb={1}>
+              Bước {activeStep + 1} / {stepperSteps.length}:{" "}
+              {stepperSteps[activeStep].title}
+            </Text>
+            <Progress
+              value={(activeStep + 1) * (100 / stepperSteps.length)}
+              size="sm"
               colorScheme="teal"
-              leftIcon={<FiSave />}
-              isLoading={isLoading}
-              onClick={handleSubmit}
+              borderRadius="md"
+            />
+          </Box>
+
+          <Box minH="400px">{renderStepContent()}</Box>
+
+          <Flex mt={10} justify="space-between">
+            <Button
+              onClick={handlePrevStep}
+              isDisabled={activeStep === 0 || isLoading}
+              leftIcon={<FiArrowLeft />}
+              variant="outline"
             >
-              {editMode ? "Lưu thay đổi" : "Tạo sự kiện"}
+              Quay lại
             </Button>
-          </HStack>
-        </Flex>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <Stack spacing={8}>
-            {/* Event Basic Information */}
-            <Box
-              bg={bgColor}
-              p={6}
-              borderRadius="lg"
-              boxShadow="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-            >
-              <VStack spacing={6} align="stretch">
-                <Heading size="md">Basic Information</Heading>
-
-                <FormControl isRequired isInvalid={!!errors.title}>
-                  <FormLabel>Event Title</FormLabel>
-                  <Input
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Enter event title"
-                  />
-                  {errors.title && (
-                    <FormErrorMessage>{errors.title}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <FormControl isRequired isInvalid={!!errors.description}>
-                  <FormLabel>Description</FormLabel>
-                  <Textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Describe your event"
-                    rows={5}
-                  />
-                  {errors.description && (
-                    <FormErrorMessage>{errors.description}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <HStack spacing={6} align="flex-start">
-                  <FormControl isRequired isInvalid={!!errors.category}>
-                    <FormLabel>Category</FormLabel>
-                    <Select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      placeholder="Select category"
-                    >
-                      {categoryOptions.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </Select>
-                    {errors.category && (
-                      <FormErrorMessage>{errors.category}</FormErrorMessage>
-                    )}
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>Tags</FormLabel>
-                    <HStack>
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Add event tags"
-                      />
-                      <IconButton
-                        aria-label="Add tag"
-                        icon={<FiPlus />}
-                        onClick={addTag}
-                      />
-                    </HStack>
-                    <Box mt={2}>
-                      {formData.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          m={1}
-                          py={1}
-                          px={2}
-                          borderRadius="full"
-                          colorScheme="teal"
-                        >
-                          {tag}
-                          <Icon
-                            as={FiX}
-                            ml={1}
-                            cursor="pointer"
-                            onClick={() => removeTag(tag)}
-                          />
-                        </Badge>
-                      ))}
-                    </Box>
-                  </FormControl>
-                </HStack>
-
-                <FormControl>
-                  <FormLabel>Event Image</FormLabel>
-                  <VStack spacing={3} align="stretch">
-                    <Input
-                      name="image"
-                      value={formData.image}
-                      onChange={handleChange}
-                      placeholder="Image URL"
-                    />
-                    <HStack>
-                      <Button leftIcon={<FiUpload />} size="sm">
-                        Upload Image
-                      </Button>
-                      <Text fontSize="sm" color="gray.500">
-                        Or paste image URL above
-                      </Text>
-                    </HStack>
-                    {formData.image && (
-                      <Image
-                        src={formData.image}
-                        alt="Event preview"
-                        borderRadius="md"
-                        fallbackSrc="https://via.placeholder.com/800x400?text=Preview+Image"
-                        maxH="200px"
-                        objectFit="cover"
-                      />
-                    )}
-                  </VStack>
-                </FormControl>
-              </VStack>
-            </Box>
-
-            {/* Date & Time */}
-            <Box
-              bg={bgColor}
-              p={6}
-              borderRadius="lg"
-              boxShadow="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-            >
-              <VStack spacing={6} align="stretch">
-                <Heading size="md">Date & Time</Heading>
-
-                <FormControl isRequired isInvalid={!!errors.date}>
-                  <FormLabel>Date</FormLabel>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <FiCalendar color="gray.300" />
-                    </InputLeftElement>
-                    <Input
-                      name="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                    />
-                  </InputGroup>
-                  {errors.date && (
-                    <FormErrorMessage>{errors.date}</FormErrorMessage>
-                  )}
-                </FormControl>
-
-                <HStack spacing={6}>
-                  <FormControl isRequired isInvalid={!!errors.startTime}>
-                    <FormLabel>Start Time</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <FiClock color="gray.300" />
-                      </InputLeftElement>
-                      <Input
-                        name="startTime"
-                        type="time"
-                        value={formData.startTime}
-                        onChange={handleChange}
-                      />
-                    </InputGroup>
-                    {errors.startTime && (
-                      <FormErrorMessage>{errors.startTime}</FormErrorMessage>
-                    )}
-                  </FormControl>
-
-                  <FormControl isRequired isInvalid={!!errors.endTime}>
-                    <FormLabel>End Time</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <FiClock color="gray.300" />
-                      </InputLeftElement>
-                      <Input
-                        name="endTime"
-                        type="time"
-                        value={formData.endTime}
-                        onChange={handleChange}
-                      />
-                    </InputGroup>
-                    {errors.endTime && (
-                      <FormErrorMessage>{errors.endTime}</FormErrorMessage>
-                    )}
-                  </FormControl>
-                </HStack>
-              </VStack>
-            </Box>
-
-            {/* Location */}
-            <Box
-              bg={bgColor}
-              p={6}
-              borderRadius="lg"
-              boxShadow="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-            >
-              <VStack spacing={6} align="stretch">
-                <Heading size="md">Location</Heading>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0">Is this an online event?</FormLabel>
-                  <Switch
-                    name="isOnline"
-                    isChecked={formData.isOnline}
-                    onChange={handleCheckboxChange}
-                  />
-                </FormControl>
-
-                {formData.isOnline ? (
-                  <FormControl isRequired isInvalid={!!errors.onlineUrl}>
-                    <FormLabel>Online Event URL</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <FiMapPin color="gray.300" />
-                      </InputLeftElement>
-                      <Input
-                        name="onlineUrl"
-                        value={formData.onlineUrl || ""}
-                        onChange={handleChange}
-                        placeholder="https://zoom.us/j/your-meeting-id"
-                      />
-                    </InputGroup>
-                    <FormHelperText>
-                      Add the URL where attendees can join the event
-                    </FormHelperText>
-                    {errors.onlineUrl && (
-                      <FormErrorMessage>{errors.onlineUrl}</FormErrorMessage>
-                    )}
-                  </FormControl>
-                ) : (
-                  <>
-                    <FormControl isRequired isInvalid={!!errors.location}>
-                      <FormLabel>Venue Name</FormLabel>
-                      <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                          <FiMapPin color="gray.300" />
-                        </InputLeftElement>
-                        <Input
-                          name="location"
-                          value={formData.location}
-                          onChange={handleChange}
-                          placeholder="Enter venue name"
-                        />
-                      </InputGroup>
-                      {errors.location && (
-                        <FormErrorMessage>{errors.location}</FormErrorMessage>
-                      )}
-                    </FormControl>
-
-                    <FormControl isRequired>
-                      <FormLabel>Address</FormLabel>
-                      <Textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        placeholder="Enter venue address"
-                      />
-                    </FormControl>
-                  </>
-                )}
-              </VStack>
-            </Box>
-
-            {/* Capacity & Tickets */}
-            <Box
-              bg={bgColor}
-              p={6}
-              borderRadius="lg"
-              boxShadow="md"
-              borderWidth="1px"
-              borderColor={borderColor}
-            >
-              <VStack spacing={6} align="stretch">
-                <Heading size="md">Capacity & Tickets</Heading>
-
-                <FormControl>
-                  <FormLabel>Total Capacity</FormLabel>
-                  <NumberInput
-                    value={formData.capacity}
-                    onChange={handleCapacityChange}
-                    min={1}
-                  >
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <FiUsers color="gray.300" />
-                      </InputLeftElement>
-                      <NumberInputField pl={10} />
-                    </InputGroup>
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <FormHelperText>Maximum number of attendees</FormHelperText>
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Maximum Tickets Per Person</FormLabel>
-                  <NumberInput
-                    value={formData.maxTicketsPerPerson}
-                    onChange={(value) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        maxTicketsPerPerson: parseInt(value, 10),
-                      }));
-                    }}
-                    min={1}
-                    max={10}
-                  >
-                    <InputGroup>
-                      <InputLeftElement pointerEvents="none">
-                        <FiUsers color="gray.300" />
-                      </InputLeftElement>
-                      <NumberInputField pl={10} />
-                    </InputGroup>
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <FormHelperText>
-                    Maximum number of tickets each person can purchase
-                  </FormHelperText>
-                </FormControl>
-
-                <Divider />
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0">Is this a paid event?</FormLabel>
-                  <Switch
-                    name="isPaid"
-                    isChecked={formData.isPaid}
-                    onChange={handleCheckboxChange}
-                  />
-                </FormControl>
-
-                {formData.isPaid && (
-                  <VStack spacing={5} align="stretch">
-                    <Heading size="sm" mt={2}>
-                      Ticket Types
-                    </Heading>
-
-                    {formData.ticketTypes.map((ticket, index) => (
-                      <HStack key={ticket.id} spacing={4}>
-                        <FormControl
-                          isRequired
-                          isInvalid={!!errors[`ticketName-${index}`]}
-                        >
-                          <FormLabel>Name</FormLabel>
-                          <Input
-                            value={ticket.name}
-                            onChange={(e) =>
-                              updateTicketType(
-                                ticket.id,
-                                "name",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Ticket name"
-                          />
-                          {errors[`ticketName-${index}`] && (
-                            <FormErrorMessage>
-                              {errors[`ticketName-${index}`]}
-                            </FormErrorMessage>
-                          )}
-                        </FormControl>
-
-                        <FormControl>
-                          <FormLabel>Price ($)</FormLabel>
-                          <NumberInput
-                            value={ticket.price}
-                            onChange={(value) =>
-                              updateTicketType(
-                                ticket.id,
-                                "price",
-                                parseFloat(value)
-                              )
-                            }
-                            min={0}
-                            precision={2}
-                          >
-                            <InputGroup>
-                              <InputLeftElement pointerEvents="none">
-                                <FiDollarSign color="gray.300" />
-                              </InputLeftElement>
-                              <NumberInputField pl={10} />
-                            </InputGroup>
-                            <NumberInputStepper>
-                              <NumberIncrementStepper />
-                              <NumberDecrementStepper />
-                            </NumberInputStepper>
-                          </NumberInput>
-                        </FormControl>
-
-                        <FormControl>
-                          <FormLabel>Quantity</FormLabel>
-                          <NumberInput
-                            value={ticket.quantity}
-                            onChange={(value) =>
-                              updateTicketType(
-                                ticket.id,
-                                "quantity",
-                                parseInt(value, 10)
-                              )
-                            }
-                            min={1}
-                          >
-                            <NumberInputField />
-                            <NumberInputStepper>
-                              <NumberIncrementStepper />
-                              <NumberDecrementStepper />
-                            </NumberInputStepper>
-                          </NumberInput>
-                        </FormControl>
-
-                        <IconButton
-                          aria-label="Remove ticket type"
-                          icon={<FiTrash2 />}
-                          onClick={() => removeTicketType(ticket.id)}
-                          alignSelf="flex-end"
-                          mb="2"
-                        />
-                      </HStack>
-                    ))}
-
-                    <Button
-                      leftIcon={<FiPlus />}
-                      onClick={addTicketType}
-                      alignSelf="flex-start"
-                      size="sm"
-                      colorScheme="teal"
-                      variant="outline"
-                    >
-                      Add Ticket Type
-                    </Button>
-                  </VStack>
-                )}
-
-                {!formData.isPaid && (
-                  <Text color="gray.500">Event is free for all attendees</Text>
-                )}
-              </VStack>
-            </Box>
-
-            {/* Submit Buttons */}
-            <Flex justify="space-between" mt={4}>
-              <Button
-                leftIcon={<FiArrowLeft />}
-                variant="outline"
-                onClick={() => navigate("/dashboard")}
-              >
-                Cancel
-              </Button>
+            {activeStep === stepperSteps.length - 1 ? (
               <Button
                 colorScheme="teal"
-                rightIcon={<FiSave />}
-                type="submit"
+                onClick={() => handleSubmit()}
+                isLoading={isLoading}
+                leftIcon={<FiSave />}
+              >
+                {editMode ? "Cập nhật sự kiện" : "Hoàn tất & Tạo sự kiện"}
+              </Button>
+            ) : (
+              <Button
+                colorScheme="teal"
+                onClick={handleNextStep}
                 isLoading={isLoading}
               >
-                {editMode ? "Save Changes" : "Create Event"}
+                Tiếp theo
               </Button>
-            </Flex>
-          </Stack>
-        </form>
+            )}
+          </Flex>
+        </Box>
+
+        {editMode && formData.id && (
+          <Flex justify="flex-end" mt={4}>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={confirmDeleteEvent}
+              leftIcon={<FiTrash2 />}
+              isLoading={isLoading}
+            >
+              Xóa sự kiện này
+            </Button>
+          </Flex>
+        )}
       </VStack>
 
-      {/* Delete Confirmation Dialog */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirm Delete</ModalHeader>
+          <ModalHeader>Xác nhận xóa sự kiện</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            Are you sure you want to delete this event? This action cannot be
-            undone.
+            <Text>
+              Bạn có chắc chắn muốn xóa sự kiện "
+              <strong>{formData.title}</strong>"? Hành động này không thể hoàn
+              tác.
+            </Text>
           </ModalBody>
           <ModalFooter>
-            <Button variant="outline" mr={3} onClick={onClose}>
-              Cancel
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Hủy
             </Button>
             <Button colorScheme="red" onClick={handleDeleteEvent}>
-              Delete Event
+              Xóa sự kiện
             </Button>
           </ModalFooter>
         </ModalContent>
