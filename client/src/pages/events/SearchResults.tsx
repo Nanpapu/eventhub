@@ -459,7 +459,6 @@ const SearchResults = () => {
                 as="h1"
                 size={{ base: "xl", md: "2xl" }}
                 color={bannerTextColor}
-                fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif"
               >
                 Khám Phá Sự Kiện Hoàn Hảo
               </Heading>
@@ -467,7 +466,6 @@ const SearchResults = () => {
                 fontSize={{ base: "lg", md: "xl" }}
                 color={bannerTextColor}
                 maxW={{ base: "full", md: "container.sm" }}
-                fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif"
               >
                 Lọc sự kiện theo tên, địa điểm, danh mục hoặc duyệt toàn bộ danh
                 sách. Luôn có những trải nghiệm mới đang chờ bạn!

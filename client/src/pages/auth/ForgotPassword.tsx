@@ -18,6 +18,7 @@ import {
   AlertTitle,
   AlertDescription,
   CloseButton,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -36,6 +37,8 @@ const ForgotPassword = () => {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
+
+  const formBg = useColorModeValue("white", "gray.700");
 
   const {
     register,
@@ -121,7 +124,7 @@ const ForgotPassword = () => {
         <Box
           py={{ base: 0, sm: 8 }}
           px={{ base: 4, sm: 10 }}
-          bg={{ base: "transparent", sm: "white" }}
+          bg={{ base: "transparent", sm: formBg }}
           boxShadow={{ base: "none", sm: "md" }}
           borderRadius={{ base: "none", sm: "lg" }}
         >

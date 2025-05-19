@@ -15,6 +15,7 @@ import {
   IconButton,
   Image,
   Center,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -36,6 +37,9 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Lấy màu nền cho Box dựa trên color mode
+  const formBg = useColorModeValue("white", "gray.700");
 
   // Lấy token từ query parameters
   const params = new URLSearchParams(location.search);
@@ -85,7 +89,7 @@ const ResetPassword = () => {
       });
 
       // Chuyển hướng đến trang đăng nhập
-      navigate("/auth/login");
+      navigate("/login");
     } catch (error: any) {
       toast({
         title: t("auth.resetPassword.resetFailed"),
@@ -116,7 +120,7 @@ const ResetPassword = () => {
         <Box
           py={{ base: 0, sm: 8 }}
           px={{ base: 4, sm: 10 }}
-          bg={{ base: "transparent", sm: "white" }}
+          bg={{ base: "transparent", sm: formBg }}
           boxShadow={{ base: "none", sm: "md" }}
           borderRadius={{ base: "none", sm: "lg" }}
         >
