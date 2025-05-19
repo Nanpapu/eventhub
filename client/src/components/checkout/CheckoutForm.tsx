@@ -21,14 +21,7 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import {
-  FaCcVisa,
-  FaCcMastercard,
-  FaCcPaypal,
-  FaMoneyBillWave,
-  FaSpinner,
-  FaCheck,
-} from "react-icons/fa";
+import { FaMoneyBillWave, FaSpinner, FaCheck } from "react-icons/fa";
 import checkoutService from "../../services/checkout.service";
 
 interface CheckoutFormProps {
@@ -96,10 +89,7 @@ export default function CheckoutForm({
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm<FormValues>();
-
-  const formValues = watch();
 
   // Tính toán tổng tiền
   const getTicketPrice = () => {
@@ -138,7 +128,10 @@ export default function CheckoutForm({
       email: data.email,
       phone: data.phone,
       paymentMethodDetails: {
-        type: paymentMethod === "demo_success" ? "DEMO_SUCCESS" : "DEMO_FAIL",
+        type:
+          paymentMethod === "demo_success"
+            ? "DEMO_SUCCESS"
+            : ("DEMO_FAIL" as "DEMO_SUCCESS" | "DEMO_FAIL"),
       },
     };
 
@@ -167,12 +160,15 @@ export default function CheckoutForm({
           isClosable: true,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("[CheckoutForm] Error during payment submission:", error);
+      let errorMessage = "Không thể hoàn tất thanh toán vào lúc này.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         title: "Lỗi xử lý thanh toán",
-        description:
-          error.message || "Không thể hoàn tất thanh toán vào lúc này.",
+        description: errorMessage,
         status: "error",
         duration: 5000,
         isClosable: true,
