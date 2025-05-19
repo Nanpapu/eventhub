@@ -11,6 +11,7 @@ import {
   Icon,
   Spinner,
   Center,
+  VStack,
 } from "@chakra-ui/react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -48,6 +49,7 @@ const locations = [
 const SearchResults = () => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const resultsInfoBg = useColorModeValue("gray.100", "gray.700");
+  const bannerTextColor = "white";
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -426,19 +428,60 @@ const SearchResults = () => {
 
   return (
     <Box bg={useColorModeValue("white", "gray.900")}>
-      <Container maxW="container.xl" py={8}>
-        <Heading as="h1" size="xl" mb={6} color={textColor}>
-          {areFiltersApplied() ? "Kết quả tìm kiếm" : "Khám phá tất cả sự kiện"}
-        </Heading>
+      {!areFiltersApplied() && (
+        <Box
+          py={{ base: 14, md: 20 }}
+          px={{ base: 4, md: 8 }}
+          borderRadius={{ base: 0, md: "lg" }}
+          mb={10}
+          position="relative"
+          backgroundImage="url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80')"
+          backgroundSize="cover"
+          backgroundPosition="center"
+        >
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bg="blackAlpha.700"
+            borderRadius={{ base: 0, md: "lg" }}
+          />
+          <Container maxW="container.lg" position="relative">
+            <VStack
+              spacing={5}
+              align={{ base: "center", md: "flex-start" }}
+              maxW={{ base: "full", md: "container.md" }}
+              textAlign={{ base: "center", md: "left" }}
+            >
+              <Heading
+                as="h1"
+                size={{ base: "xl", md: "2xl" }}
+                color={bannerTextColor}
+                fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif"
+              >
+                Khám Phá Sự Kiện Hoàn Hảo
+              </Heading>
+              <Text
+                fontSize={{ base: "lg", md: "xl" }}
+                color={bannerTextColor}
+                maxW={{ base: "full", md: "container.sm" }}
+                fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif"
+              >
+                Lọc sự kiện theo tên, địa điểm, danh mục hoặc duyệt toàn bộ danh
+                sách. Luôn có những trải nghiệm mới đang chờ bạn!
+              </Text>
+            </VStack>
+          </Container>
+        </Box>
+      )}
 
-        {!areFiltersApplied() && (
-          <Box mb={8}>
-            <Text fontSize="lg" color={textColor} mb={4}>
-              Khám phá và tham gia các sự kiện đa dạng từ hội thảo, hội nghị đến
-              các lễ hội âm nhạc và giao lưu. Tìm kiếm sự kiện phù hợp với sở
-              thích và lịch trình của bạn ngay hôm nay!
-            </Text>
-          </Box>
+      <Container maxW="container.xl" py={areFiltersApplied() ? 8 : 0}>
+        {areFiltersApplied() && (
+          <Heading as="h1" size="xl" mb={6} color={textColor}>
+            Kết quả tìm kiếm
+          </Heading>
         )}
 
         <SearchBar
@@ -472,7 +515,7 @@ const SearchResults = () => {
             showPaidOnly: appliedShowPaidOnly,
           }}
           getCategoryName={getCategoryName}
-          mb={6}
+          mb={areFiltersApplied() ? 6 : 10}
         />
 
         {renderContent()}
