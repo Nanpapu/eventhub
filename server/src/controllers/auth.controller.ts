@@ -122,27 +122,12 @@ const authController = {
    */
   getMe: async (req: Request, res: Response) => {
     try {
-      // req.user đã được set bởi middleware authenticate
-      const user = req.user;
-
-      // Trả về thông tin người dùng
-      res.status(200).json({
-        success: true,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          bio: user.bio,
-        },
-      });
-    } catch (error) {
-      console.error("Get user error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Lỗi server",
-      });
+      // Giả sử req.user.id chứa ID của người dùng đã xác thực
+      const userId = req.user.id;
+      const user = await authService.getCurrentUser(userId);
+      res.status(200).json({ success: true, user });
+    } catch (error: any) {
+      res.status(404).json({ success: false, message: error.message });
     }
   },
 
@@ -290,14 +275,16 @@ const authController = {
         return;
       }
 
-      const { name, avatar, bio } = req.body;
+      const { name, avatar, bio, phone, location } = req.body;
       const userId = req.user._id;
 
       const result = await authService.updateProfile({
+        userId,
         name,
         avatar,
         bio,
-        userId,
+        phone,
+        location,
       });
 
       res.status(200).json({

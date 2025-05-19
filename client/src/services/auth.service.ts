@@ -34,6 +34,15 @@ export interface ChangePasswordData {
   newPassword: string;
 }
 
+// Interface cho việc cập nhật hồ sơ người dùng
+export interface UpdateProfileData {
+  name?: string;
+  avatar?: string; // Giữ lại avatar nếu có logic cập nhật avatar riêng
+  bio?: string;
+  phone?: string; // Đảm bảo phone có ở đây
+  location?: string; // Đảm bảo location có ở đây
+}
+
 export interface AuthResponse {
   success?: boolean;
   message?: string;
@@ -160,11 +169,7 @@ const authService = {
    * Cập nhật thông tin người dùng
    * @param data Thông tin cập nhật
    */
-  updateProfile: async (data: {
-    name?: string;
-    bio?: string;
-    avatar?: string;
-  }) => {
+  updateProfile: async (data: UpdateProfileData) => {
     const response = await api.put("/auth/profile", data);
 
     // Cập nhật thông tin người dùng trong localStorage

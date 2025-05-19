@@ -224,7 +224,9 @@ const UserDashboard = () => {
       await authService.updateProfile({
         name: formData.name,
         bio: formData.bio,
-        // Có thể thêm các trường khác khi backend hỗ trợ
+        phone: formData.phone,
+        location: formData.location,
+        // Các trường khác như avatar có thể cần một quy trình riêng (ví dụ: upload file)
       });
 
       // Cập nhật userData state với dữ liệu mới

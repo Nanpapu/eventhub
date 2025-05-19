@@ -41,6 +41,8 @@ interface UpdateProfileInput {
   name?: string;
   avatar?: string;
   bio?: string;
+  phone?: string;
+  location?: string;
   userId: string | mongoose.Types.ObjectId;
 }
 
@@ -52,6 +54,8 @@ interface AuthResult {
     role: string;
     avatar?: string;
     bio?: string;
+    phone?: string;
+    location?: string;
   };
   token: string;
 }
@@ -87,6 +91,8 @@ const authService = {
         role: user.role,
         avatar: user.avatar,
         bio: user.bio,
+        phone: user.phone,
+        location: user.location,
       },
       token,
     };
@@ -122,6 +128,8 @@ const authService = {
         role: user.role,
         avatar: user.avatar,
         bio: user.bio,
+        phone: user.phone,
+        location: user.location,
       },
       token,
     };
@@ -260,6 +268,8 @@ const authService = {
       role: string;
       avatar?: string;
       bio?: string;
+      phone?: string;
+      location?: string;
     };
   }> => {
     // Tìm user
@@ -272,6 +282,8 @@ const authService = {
     if (data.name) user.name = data.name;
     if (data.avatar) user.avatar = data.avatar;
     if (data.bio) user.bio = data.bio;
+    if (data.phone) user.phone = data.phone;
+    if (data.location) user.location = data.location;
 
     // Lưu thay đổi
     await user.save();
@@ -284,7 +296,27 @@ const authService = {
         role: user.role,
         avatar: user.avatar,
         bio: user.bio,
+        phone: user.phone,
+        location: user.location,
       },
+    };
+  },
+
+  async getCurrentUser(userId: string): Promise<any> {
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: user.role,
+      bio: user.bio,
+      phone: user.phone,
+      location: user.location,
+      createdAt: user.createdAt,
     };
   },
 };

@@ -14,6 +14,7 @@ export interface IUser extends Document {
   organizationType?: string;
   description?: string;
   phone?: string;
+  location?: string;
   savedEvents: mongoose.Types.ObjectId[]; // Reference to Event IDs
   createdAt: Date;
   updatedAt: Date;
@@ -67,6 +68,10 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     phone: {
+      type: String,
+      trim: true,
+    },
+    location: {
       type: String,
       trim: true,
     },
