@@ -32,16 +32,50 @@ import {
   FiEye,
   FiPlus,
   FiX,
-  FiTag,
   FiGrid,
   FiBookmark,
-  FiAlertCircle,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
 import eventService from "../../services/event.service";
 
-// Interface cho dữ liệu sự kiện
+// Interface cho dữ liệu sự kiện thô từ API (cho cả myEvents và savedEvents)
+interface ApiEventDto {
+  _id: string; // Thường là _id từ MongoDB
+  id: string; // Virtual id
+  title: string;
+  description: string;
+  date: string | Date; // API có thể trả về string, cần chuyển đổi
+  startTime: string;
+  endTime?: string;
+  location: string;
+  address?: string;
+  imageUrl?: string;
+  category: string;
+  isPaid: boolean;
+  price?: number;
+  organizer: {
+    _id?: string;
+    id?: string;
+    name: string;
+    avatar?: string;
+  };
+  attendees?: number; // Số người tham gia (cho sự kiện của tôi)
+  // Các trường khác có thể có từ API
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  // Dành cho ticketTypes nếu có, cấu trúc tùy theo API
+  ticketTypes?: {
+    id: string;
+    _id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    availableQuantity: number;
+  }[];
+}
+
+// Interface cho dữ liệu sự kiện đã được format để hiển thị
 interface Event {
   id: string;
   title: string;
@@ -80,59 +114,59 @@ const categories = [
   { id: "other", name: "Khác" },
 ];
 
-// Dữ liệu mẫu: Sự kiện do user tạo
-const myEventsData: Event[] = [
-  {
-    id: "101",
-    title: "Web Development Workshop",
-    description: "Learn the latest web development techniques and tools.",
-    date: "15/09/2023",
-    startTime: "10:00 AM",
-    location: "Tech Hub Center",
-    image: "https://images.pexels.com/photos/1181271/pexels-photo-1181271.jpeg",
-    category: "workshop",
-    isPaid: true,
-    price: 15.0,
-    organizer: {
-      name: "Nguyen Van A",
-    },
-    isOwner: true,
-    participants: 45,
-  },
-  {
-    id: "102",
-    title: "Digital Marketing Conference",
-    description: "Explore effective digital marketing strategies for 2023.",
-    date: "22/09/2023",
-    startTime: "09:00 AM",
-    location: "Business Center",
-    image: "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg",
-    category: "conference",
-    isPaid: true,
-    price: 25.0,
-    organizer: {
-      name: "Nguyen Van A",
-    },
-    isOwner: true,
-    participants: 120,
-  },
-  {
-    id: "103",
-    title: "Mobile App Design Meetup",
-    description: "Share ideas and get feedback on mobile app designs.",
-    date: "05/10/2023",
-    startTime: "06:30 PM",
-    location: "Design Studio",
-    image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg",
-    category: "meetup",
-    isPaid: false,
-    organizer: {
-      name: "Nguyen Van A",
-    },
-    isOwner: true,
-    participants: 30,
-  },
-];
+// Dữ liệu mẫu: Sự kiện do user tạo - SẼ BỊ XÓA SAU KHI TÍCH HỢP API
+// const myEventsData: Event[] = [
+//   {
+//     id: "101",
+//     title: "Web Development Workshop",
+//     description: "Learn the latest web development techniques and tools.",
+//     date: "15/09/2023",
+//     startTime: "10:00 AM",
+//     location: "Tech Hub Center",
+//     image: "https://images.pexels.com/photos/1181271/pexels-photo-1181271.jpeg",
+//     category: "workshop",
+//     isPaid: true,
+//     price: 15.0,
+//     organizer: {
+//       name: "Nguyen Van A",
+//     },
+//     isOwner: true,
+//     participants: 45,
+//   },
+//   {
+//     id: "102",
+//     title: "Digital Marketing Conference",
+//     description: "Explore effective digital marketing strategies for 2023.",
+//     date: "22/09/2023",
+//     startTime: "09:00 AM",
+//     location: "Business Center",
+//     image: "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg",
+//     category: "conference",
+//     isPaid: true,
+//     price: 25.0,
+//     organizer: {
+//       name: "Nguyen Van A",
+//     },
+//     isOwner: true,
+//     participants: 120,
+//   },
+//   {
+//     id: "103",
+//     title: "Mobile App Design Meetup",
+//     description: "Share ideas and get feedback on mobile app designs.",
+//     date: "05/10/2023",
+//     startTime: "06:30 PM",
+//     location: "Design Studio",
+//     image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg",
+//     category: "meetup",
+//     isPaid: false,
+//     organizer: {
+//       name: "Nguyen Van A",
+//     },
+//     isOwner: true,
+//     participants: 30,
+//   },
+// ];
 
 // Function để lấy tên category từ id
 const getCategoryName = (categoryId: string): string => {
@@ -154,7 +188,10 @@ const EventManagement = () => {
   const [showPaidOnly, setShowPaidOnly] = useState(false);
 
   // State lưu dữ liệu sự kiện
-  const [myEvents, setMyEvents] = useState<Event[]>(myEventsData);
+  const [myEvents, setMyEvents] = useState<Event[]>([]);
+  const [isMyEventsLoading, setIsMyEventsLoading] = useState(false);
+  const [myEventsError, setMyEventsError] = useState<string | null>(null);
+
   const [savedEvents, setSavedEvents] = useState<Event[]>([]);
   const [isSavedEventsLoading, setIsSavedEventsLoading] = useState(false);
   const [savedEventsError, setSavedEventsError] = useState<string | null>(null);
@@ -166,12 +203,66 @@ const EventManagement = () => {
   const cardBg = useColorModeValue("white", "gray.800");
   const cardHoverBg = useColorModeValue("gray.50", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
-  const iconColor = useColorModeValue("gray.400", "gray.500");
-  const tagBg = useColorModeValue("teal.50", "teal.900");
-  const tagColor = useColorModeValue("teal.600", "teal.200");
-  const errorColor = useColorModeValue("red.500", "red.300");
+
+  // Fetch "Sự kiện của tôi" (sự kiện do người dùng tạo)
+  useEffect(() => {
+    const fetchMyEvents = async () => {
+      setIsMyEventsLoading(true);
+      setMyEventsError(null);
+      try {
+        const response = await eventService.getUserEvents(); // API call
+        if (response.success && Array.isArray(response.events)) {
+          const formattedEvents: Event[] = response.events.map(
+            (event: ApiEventDto) => ({
+              id: event.id || event._id, // Ưu tiên id (virtual) nếu có, fallback về _id
+              title: event.title || "Sự kiện không có tiêu đề",
+              description: event.description || "Không có mô tả",
+              date: event.date
+                ? new Date(event.date).toLocaleDateString("vi-VN")
+                : "Chưa có ngày",
+              startTime: event.startTime || "N/A",
+              endTime: event.endTime || "N/A",
+              location: event.location || "Chưa có địa điểm",
+              address: event.address || "Chưa có địa chỉ",
+              image: event.imageUrl, // API trả về imageUrl
+              imageUrl: event.imageUrl,
+              category: event.category || "other",
+              isPaid: event.isPaid || false,
+              price: event.price || 0,
+              organizer: {
+                id: event.organizer?.id || event.organizer?._id,
+                name: event.organizer?.name || "Người tổ chức ẩn danh",
+                avatar: event.organizer?.avatar,
+              },
+              isOwner: true, // Sự kiện của tôi luôn là owner
+              participants: event.attendees || 0, // API trả về attendees
+            })
+          );
+          setMyEvents(formattedEvents);
+        } else {
+          setMyEventsError(
+            response.message || "Không thể tải danh sách sự kiện của bạn."
+          );
+        }
+      } catch (err: unknown) {
+        const error = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
+        console.error("Error fetching my events:", error);
+        setMyEventsError(
+          error.response?.data?.message ||
+            error.message || // Thêm error.message
+            "Có lỗi xảy ra khi tải sự kiện của bạn."
+        );
+      } finally {
+        setIsMyEventsLoading(false);
+      }
+    };
+
+    fetchMyEvents();
+  }, []);
 
   // Fetch saved events từ API
   useEffect(() => {
@@ -182,11 +273,12 @@ const EventManagement = () => {
       try {
         const response = await eventService.getSavedEvents();
 
-        if (response.success && response.events) {
+        if (response.success && Array.isArray(response.events)) {
           // Format dữ liệu từ API để phù hợp với cấu trúc Event
           const formattedEvents: Event[] = response.events.map(
-            (event: any) => ({
-              id: event._id || event.id,
+            (event: ApiEventDto) => ({
+              // Sử dụng ApiEventDto
+              id: event.id || event._id,
               title: event.title || "Untitled Event",
               description: event.description || "No description",
               date: event.date
@@ -211,12 +303,20 @@ const EventManagement = () => {
 
           setSavedEvents(formattedEvents);
         } else {
-          setSavedEventsError("Không thể tải danh sách sự kiện đã lưu");
+          setSavedEventsError(
+            response.message || "Không thể tải danh sách sự kiện đã lưu"
+          );
         }
-      } catch (error: any) {
+      } catch (err: unknown) {
+        // Thay any bằng unknown
+        const error = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        }; // Type assertion
         console.error("Error fetching saved events:", error);
         setSavedEventsError(
           error.response?.data?.message ||
+            error.message || // Thêm error.message
             "Có lỗi xảy ra khi tải sự kiện đã lưu"
         );
       } finally {
@@ -268,9 +368,12 @@ const EventManagement = () => {
   };
 
   // Xóa sự kiện
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
+    // TODO: Gọi API để xóa sự kiện trên server
+    // Ví dụ: await eventService.deleteEvent(eventId);
+    // Sau đó cập nhật lại state:
     setMyEvents(myEvents.filter((event) => event.id !== eventId));
-    // Trong thực tế sẽ gọi API để xóa sự kiện
+    // Hiển thị toast thông báo thành công/thất bại
   };
 
   // Hủy lưu sự kiện - gọi API để hủy lưu
@@ -279,7 +382,9 @@ const EventManagement = () => {
       await eventService.unsaveEvent(eventId);
       // Cập nhật state sau khi hủy thành công
       setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
-    } catch (error: any) {
+    } catch (err: unknown) {
+      // Thay any bằng unknown
+      const error = err as { response?: { data?: { message?: string } } }; // Type assertion
       console.error("Error unsaving event:", error);
       // Có thể thêm xử lý thông báo lỗi ở đây
     }
@@ -292,7 +397,7 @@ const EventManagement = () => {
   }));
 
   // Tạo locationOptions từ các sự kiện
-  const allEvents = [...myEvents, ...savedEvents];
+  const allEvents = [...myEvents, ...savedEvents]; // myEventsData đã bị xóa, myEvents giờ là state
   const locationOptions = allEvents
     .map((event) => event.location)
     .filter((location, index, self) => self.indexOf(location) === index) // Loại bỏ trùng lặp
@@ -442,6 +547,167 @@ const EventManagement = () => {
     );
   };
 
+  const renderMyEventsContent = () => {
+    if (isMyEventsLoading) {
+      return (
+        <Flex justify="center" align="center" minH="200px">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="teal.500" thickness="4px" />
+            <Text>Đang tải sự kiện của bạn...</Text>
+          </VStack>
+        </Flex>
+      );
+    }
+
+    if (myEventsError) {
+      return (
+        <Alert status="error" borderRadius="md">
+          <AlertIcon />
+          <Flex direction="column" align="start">
+            <AlertTitle mr={2}>Lỗi khi tải sự kiện của bạn!</AlertTitle>
+            <AlertDescription>{myEventsError}</AlertDescription>
+          </Flex>
+        </Alert>
+      );
+    }
+
+    if (filteredMyEvents.length === 0) {
+      return (
+        <Alert status="info" borderRadius="md">
+          <AlertIcon />
+          <Flex direction="column" align="start">
+            <AlertTitle mr={2}>Không có sự kiện nào!</AlertTitle>
+            <AlertDescription>
+              Bạn chưa tạo sự kiện nào hoặc không có sự kiện phù hợp với bộ lọc
+              hiện tại.{" "}
+              <ChakraLink
+                as={Link}
+                to="/create-event"
+                color="teal.500"
+                fontWeight="bold"
+              >
+                Tạo sự kiện mới ngay!
+              </ChakraLink>
+            </AlertDescription>
+          </Flex>
+        </Alert>
+      );
+    }
+
+    return (
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+        {filteredMyEvents.map((event) => (
+          <Box
+            key={event.id}
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            bg={cardBg}
+            borderColor={borderColor}
+            transition="all 0.3s"
+            _hover={{
+              transform: "translateY(-5px)",
+              shadow: "md",
+              bg: cardHoverBg,
+            }}
+          >
+            <Link to={`/events/${event.id}`}>
+              <Box h="200px" overflow="hidden">
+                <Box
+                  bgImage={`url(${event.imageUrl || event.image})`}
+                  bgSize="cover"
+                  bgPosition="center"
+                  h="100%"
+                  w="100%"
+                  transition="transform 0.3s"
+                  _hover={{ transform: "scale(1.05)" }}
+                />
+              </Box>
+
+              <Box p={4}>
+                <Flex justify="space-between" align="start" mb={2}>
+                  <Badge colorScheme="teal" borderRadius="full" px={2}>
+                    {getCategoryName(event.category)}
+                  </Badge>
+                  {event.isPaid ? (
+                    <Badge colorScheme="purple" borderRadius="full" px={2}>
+                      {event.price} VND
+                    </Badge>
+                  ) : (
+                    <Badge colorScheme="green" borderRadius="full" px={2}>
+                      Miễn phí
+                    </Badge>
+                  )}
+                </Flex>
+
+                <Heading as="h3" size="md" mb={2} noOfLines={2}>
+                  {event.title}
+                </Heading>
+
+                <Text
+                  color={secondaryTextColor}
+                  fontSize="sm"
+                  mb={3}
+                  noOfLines={2}
+                >
+                  {event.description}
+                </Text>
+
+                <VStack spacing={1} align="start">
+                  <Flex align="center">
+                    <Icon as={FiCalendar} mr={2} color="teal.500" />
+                    <Text fontSize="sm">
+                      {event.date} • {event.startTime}
+                    </Text>
+                  </Flex>
+
+                  <Flex align="center">
+                    <Icon as={FiMapPin} mr={2} color="teal.500" />
+                    <Text fontSize="sm" noOfLines={1}>
+                      {event.location}
+                    </Text>
+                  </Flex>
+                </VStack>
+              </Box>
+            </Link>
+
+            {/* Actions for "My Events" */}
+            <Flex
+              justify="space-between"
+              align="center"
+              p={4}
+              borderTopWidth="1px"
+              borderColor={borderColor}
+            >
+              <Text fontSize="sm" color={secondaryTextColor}>
+                {event.participants || 0} người tham gia
+              </Text>
+              <HStack>
+                <IconButton
+                  aria-label="Edit event"
+                  icon={<FiEdit />}
+                  size="sm"
+                  colorScheme="blue"
+                  variant="outline"
+                  as={Link}
+                  to={`/events/edit/${event.id}`}
+                />
+                <IconButton
+                  aria-label="Delete event"
+                  icon={<FiTrash2 />}
+                  size="sm"
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() => handleDeleteEvent(event.id)}
+                />
+              </HStack>
+            </Flex>
+          </Box>
+        ))}
+      </SimpleGrid>
+    );
+  };
+
   return (
     <Box>
       {/* Tab container */}
@@ -464,7 +730,9 @@ const EventManagement = () => {
               <Icon as={FiGrid} fontSize="18px" mr={2} />
               <Text>Tất cả sự kiện</Text>
               <Badge ml={2} colorScheme="blue" borderRadius="full">
-                {filteredMyEvents.length + filteredSavedEvents.length}
+                {isMyEventsLoading || isSavedEventsLoading
+                  ? "..."
+                  : filteredMyEvents.length + filteredSavedEvents.length}
               </Badge>
             </Flex>
           </Tab>
@@ -479,7 +747,7 @@ const EventManagement = () => {
               <Icon as={FiCalendar} fontSize="18px" mr={2} />
               <Text>Sự kiện của tôi</Text>
               <Badge ml={2} colorScheme="green" borderRadius="full">
-                {filteredMyEvents.length}
+                {isMyEventsLoading ? "..." : filteredMyEvents.length}
               </Badge>
             </Flex>
           </Tab>
@@ -537,7 +805,7 @@ const EventManagement = () => {
               <Flex justify="space-between" align="center" mb={6}>
                 <Heading as="h3" size="md">
                   Tất cả sự kiện (
-                  {isSavedEventsLoading
+                  {isMyEventsLoading || isSavedEventsLoading
                     ? "..."
                     : filteredMyEvents.length + filteredSavedEvents.length}
                   )
@@ -553,7 +821,7 @@ const EventManagement = () => {
               </Flex>
 
               {/* Hiển thị tất cả sự kiện */}
-              {isSavedEventsLoading ? (
+              {isMyEventsLoading || isSavedEventsLoading ? (
                 <Flex justify="center" align="center" minH="200px">
                   <VStack spacing={4}>
                     <Spinner size="xl" color="teal.500" thickness="4px" />
@@ -562,8 +830,17 @@ const EventManagement = () => {
                 </Flex>
               ) : filteredMyEvents.length + filteredSavedEvents.length > 0 ? (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {[...filteredMyEvents, ...filteredSavedEvents].map(
-                    (event) => (
+                  {[...filteredMyEvents, ...filteredSavedEvents]
+                    .sort(
+                      (a, b) =>
+                        new Date(
+                          b.date.split("/").reverse().join("-")
+                        ).getTime() -
+                        new Date(
+                          a.date.split("/").reverse().join("-")
+                        ).getTime()
+                    ) // Sắp xếp theo ngày giảm dần
+                    .map((event) => (
                       <Box
                         key={event.id}
                         borderWidth="1px"
@@ -686,7 +963,7 @@ const EventManagement = () => {
                                 colorScheme="blue"
                                 variant="outline"
                                 as={Link}
-                                to={`/events/${event.id}/edit`}
+                                to={`/events/edit/${event.id}`}
                               />
                               <IconButton
                                 aria-label="Delete event"
@@ -700,8 +977,7 @@ const EventManagement = () => {
                           </Flex>
                         )}
                       </Box>
-                    )
-                  )}
+                    ))}
                 </SimpleGrid>
               ) : (
                 <Alert status="info" borderRadius="md">
@@ -740,138 +1016,7 @@ const EventManagement = () => {
               </Flex>
 
               {/* Hiển thị sự kiện của tôi */}
-              {filteredMyEvents.length > 0 ? (
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {filteredMyEvents.map((event) => (
-                    <Box
-                      key={event.id}
-                      borderWidth="1px"
-                      borderRadius="lg"
-                      overflow="hidden"
-                      bg={cardBg}
-                      borderColor={borderColor}
-                      transition="all 0.3s"
-                      _hover={{
-                        transform: "translateY(-5px)",
-                        shadow: "md",
-                        bg: cardHoverBg,
-                      }}
-                    >
-                      <Link to={`/events/${event.id}`}>
-                        <Box h="200px" overflow="hidden">
-                          <Box
-                            bgImage={`url(${event.image})`}
-                            bgSize="cover"
-                            bgPosition="center"
-                            h="100%"
-                            w="100%"
-                            transition="transform 0.3s"
-                            _hover={{ transform: "scale(1.05)" }}
-                          />
-                        </Box>
-
-                        <Box p={4}>
-                          <Flex justify="space-between" align="start" mb={2}>
-                            <Badge
-                              colorScheme="teal"
-                              borderRadius="full"
-                              px={2}
-                            >
-                              {getCategoryName(event.category)}
-                            </Badge>
-                            {event.isPaid ? (
-                              <Badge
-                                colorScheme="purple"
-                                borderRadius="full"
-                                px={2}
-                              >
-                                {event.price} VND
-                              </Badge>
-                            ) : (
-                              <Badge
-                                colorScheme="green"
-                                borderRadius="full"
-                                px={2}
-                              >
-                                Miễn phí
-                              </Badge>
-                            )}
-                          </Flex>
-
-                          <Heading as="h3" size="md" mb={2} noOfLines={2}>
-                            {event.title}
-                          </Heading>
-
-                          <Text
-                            color={secondaryTextColor}
-                            fontSize="sm"
-                            mb={3}
-                            noOfLines={2}
-                          >
-                            {event.description}
-                          </Text>
-
-                          <VStack spacing={1} align="start">
-                            <Flex align="center">
-                              <Icon as={FiCalendar} mr={2} color="teal.500" />
-                              <Text fontSize="sm">
-                                {event.date} • {event.startTime}
-                              </Text>
-                            </Flex>
-
-                            <Flex align="center">
-                              <Icon as={FiMapPin} mr={2} color="teal.500" />
-                              <Text fontSize="sm" noOfLines={1}>
-                                {event.location}
-                              </Text>
-                            </Flex>
-                          </VStack>
-                        </Box>
-                      </Link>
-
-                      {/* Actions */}
-                      <Flex
-                        justify="space-between"
-                        p={4}
-                        borderTopWidth="1px"
-                        borderColor={borderColor}
-                      >
-                        <Text fontSize="sm" color={secondaryTextColor}>
-                          {event.participants} người tham gia
-                        </Text>
-                        <HStack>
-                          <IconButton
-                            aria-label="Edit event"
-                            icon={<FiEdit />}
-                            size="sm"
-                            colorScheme="blue"
-                            variant="outline"
-                            as={Link}
-                            to={`/events/${event.id}/edit`}
-                          />
-                          <IconButton
-                            aria-label="Delete event"
-                            icon={<FiTrash2 />}
-                            size="sm"
-                            colorScheme="red"
-                            variant="outline"
-                            onClick={() => handleDeleteEvent(event.id)}
-                          />
-                        </HStack>
-                      </Flex>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              ) : (
-                <Alert status="info" borderRadius="md">
-                  <AlertIcon />
-                  <AlertTitle mr={2}>Không tìm thấy sự kiện!</AlertTitle>
-                  <AlertDescription>
-                    Bạn chưa tạo sự kiện nào hoặc không có sự kiện phù hợp với
-                    bộ lọc hiện tại.
-                  </AlertDescription>
-                </Alert>
-              )}
+              {renderMyEventsContent()}
             </Box>
           </TabPanel>
 

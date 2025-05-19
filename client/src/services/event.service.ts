@@ -124,7 +124,7 @@ const eventService = {
    * Lấy danh sách sự kiện của người dùng hiện tại
    */
   getUserEvents: async () => {
-    const response = await api.get("/user/events");
+    const response = await api.get("/events/user/events");
     return response.data;
   },
 
@@ -132,7 +132,7 @@ const eventService = {
    * Lấy danh sách sự kiện đã lưu của người dùng
    */
   getSavedEvents: async () => {
-    const response = await api.get("/user/saved-events");
+    const response = await api.get("/events/user/saved-events");
     return response.data;
   },
 
