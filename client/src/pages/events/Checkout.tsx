@@ -135,6 +135,7 @@ export default function Checkout() {
             date: data.date
               ? new Date(data.date).toLocaleDateString("vi-VN")
               : "N/A",
+            maxPerOrder: data.maxTicketsPerPerson || 3,
           };
           setEvent(formattedData);
           if (
