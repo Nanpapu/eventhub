@@ -16,7 +16,6 @@ import {
   FormHelperText,
   Alert,
   AlertIcon,
-  AlertTitle,
   AlertDescription,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -223,7 +222,9 @@ const UserSettings = () => {
           </AccordionPanel>
         </AccordionItem>
 
-        {/* Phần xóa tài khoản */}
+        {/* TODO: Implement Account Deletion Feature */}
+        {/*
+        // Phần xóa tài khoản
         <AccordionItem border="none">
           <h2>
             <AccordionButton
@@ -273,6 +274,7 @@ const UserSettings = () => {
             </VStack>
           </AccordionPanel>
         </AccordionItem>
+        */}
       </Accordion>
     </Box>
   );
