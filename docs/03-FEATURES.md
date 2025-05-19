@@ -73,7 +73,6 @@ interface SearchParams {
 
 - Hiển thị thông tin chi tiết về sự kiện
 - Cho phép đăng ký/mua vé
-- Hiển thị đánh giá và bình luận
 - Hiển thị sự kiện liên quan
 - Lưu sự kiện vào danh sách yêu thích
 
@@ -253,38 +252,6 @@ interface OrderData {
 - `getUserTickets(userId)`: Lấy danh sách vé đã mua
 - `getUserSavedEvents(userId)`: Lấy danh sách sự kiện đã lưu
 - `getUserOrders(userId)`: Lấy lịch sử đơn hàng
-
-## Đánh giá và Bình luận
-
-**Chức năng chính:**
-
-- Đánh giá sự kiện (1-5 sao)
-- Thêm bình luận về sự kiện
-- Hiển thị đánh giá trung bình
-- Phân trang và lọc đánh giá
-
-**Components:**
-
-- ReviewForm: Form thêm đánh giá mới
-- ReviewsList: Danh sách đánh giá
-- RatingDisplay: Hiển thị đánh giá trung bình
-
-**API Calls:**
-
-- `createReview(reviewData)`: Tạo đánh giá mới
-- `getEventReviews(eventId, params)`: Lấy đánh giá cho sự kiện
-- `getEventRating(eventId)`: Lấy đánh giá trung bình của sự kiện
-
-**Model dữ liệu:**
-
-```typescript
-interface ReviewData {
-  userId: string;
-  eventId: string;
-  rating: number; // 1-5
-  comment: string;
-}
-```
 
 ## Thông báo (Notifications)
 

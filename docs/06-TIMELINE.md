@@ -97,7 +97,7 @@ Tài liệu này mô tả chi tiết kế hoạch phát triển, testing và tri
    - Đăng/hủy sự kiện
 
 2. Triển khai File Upload Service
-   
+
    - Upload và lưu trữ hình ảnh
    - Resize và tối ưu hình ảnh
    - Xóa hình ảnh
@@ -156,9 +156,9 @@ Tài liệu này mô tả chi tiết kế hoạch phát triển, testing và tri
 - Email Service hoạt động
 - Đã có tests cho các API
 
-### Sprint 5: Notifications & Reviews (1 tuần)
+### Sprint 5: Notifications
 
-**Mục tiêu**: Triển khai hệ thống thông báo và đánh giá.
+**Mục tiêu**: Triển khai hệ thống thông báo.
 
 **Tasks**:
 
@@ -175,16 +175,10 @@ Tài liệu này mô tả chi tiết kế hoạch phát triển, testing và tri
    - Xử lý kết nối và ngắt kết nối
    - Gửi thông báo real-time
 
-3. Triển khai API Reviews
-   - Tạo đánh giá
-   - Lấy đánh giá cho sự kiện
-   - Tính rating trung bình
-
 **Deliverables**:
 
 - API Notifications hoàn chỉnh
 - Hệ thống Real-time Notifications hoạt động
-- API Reviews hoàn chỉnh
 - Đã có tests cho các API
 
 ### Sprint 6: Organizer Dashboard (1 tuần)

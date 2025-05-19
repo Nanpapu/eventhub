@@ -194,39 +194,7 @@ interface Payment {
 - processRefund(): Xử lý hoàn tiền
 - generateReceipt(): Tạo hóa đơn
 
-### 5. Review Schema
-
-```typescript
-interface Review {
-  _id: string;
-  userId: mongoose.Types.ObjectId; // Reference to User ID
-  eventId: mongoose.Types.ObjectId; // Reference to Event ID
-  rating: number;
-  comment: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-**Indexes:**
-
-- userId: 1
-- eventId: 1
-- rating: 1
-- compound: { userId: 1, eventId: 1 }, unique: true
-
-**Validations:**
-
-- userId: required, ObjectId
-- eventId: required, ObjectId
-- rating: required, min 1, max 5
-- comment: required
-
-**Static Methods:**
-
-- getAverageRating(eventId): Tính rating trung bình cho sự kiện
-
-### 6. Notification Schema
+### 5. Notification Schema
 
 ```typescript
 interface Notification {
@@ -316,17 +284,6 @@ ticketId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket', required: true 
 userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 ```
 
-### 6. Event - Review (One-to-Many)
-
-- Một Event có thể có nhiều Review
-- Mỗi Review thuộc về một Event
-
-```typescript
-// Review schema
-eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true }
-userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
-```
-
 ## Indexes và Query Optimization
 
 ### User Collection
@@ -365,14 +322,6 @@ db.payments.createIndex({ ticketId: 1 });
 db.payments.createIndex({ status: 1 });
 ```
 
-### Review Collection
-
-```javascript
-db.reviews.createIndex({ eventId: 1 });
-db.reviews.createIndex({ userId: 1, eventId: 1 }, { unique: true });
-db.reviews.createIndex({ rating: 1 });
-```
-
 ### Notification Collection
 
 ```javascript
@@ -407,13 +356,8 @@ db.notifications.createIndex({ userId: 1, createdAt: -1 });
    - Tạo notification khi payment thành công
    - Không cho phép mua vé nếu sự kiện đã kết thúc hoặc đã đầy
 
-5. **Reviews**
+5. **Data Retention Rules**
 
-   - User chỉ có thể review sự kiện nếu đã mua vé
-   - User chỉ có thể review mỗi sự kiện một lần
-   - Rating phải từ 1-5
-
-6. **Data Retention Rules**
    - Thông báo sẽ được lưu trữ trong 3 tháng
    - Payment records sẽ được lưu trữ trong 2 năm
    - User data sẽ được lưu trữ cho đến khi user yêu cầu xóa

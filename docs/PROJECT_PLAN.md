@@ -593,26 +593,6 @@ interface EventFormData {
 - `getEventStats(eventId)`: Lấy thống kê sự kiện
 - `checkInAttendee(eventId, ticketId)`: Check-in người tham dự
 
-### Đánh giá và Bình luận
-
-**Chức năng chính:**
-
-- Đánh giá sự kiện (1-5 sao)
-- Thêm bình luận về sự kiện
-- Hiển thị đánh giá trung bình
-- Phân trang và lọc đánh giá
-
-**Components:**
-
-- ReviewForm: Form thêm đánh giá mới
-- ReviewsList: Danh sách đánh giá
-- RatingDisplay: Hiển thị đánh giá trung bình
-
-**API Calls:**
-
-- `createReview(reviewData)`: Tạo đánh giá mới
-- `getEventReviews(eventId, params)`: Lấy đánh giá cho sự kiện
-
 ### Thông báo (Notifications)
 
 **Chức năng chính:**

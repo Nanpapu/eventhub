@@ -698,9 +698,7 @@ Form data with 'image' field
       "id": "60d21b4667d0d8992e610c85",
       "name": "John Doe"
     },
-    "status": "published",
-    "averageRating": 4.5,
-    "totalReviews": 10
+    "status": "published"
   }
 }
 ```
@@ -963,95 +961,6 @@ Form data with 'image' field
 - 400: Bad Request
 - 401: Unauthorized
 - 403: Forbidden
-- 404: Not Found
-
-## Review APIs
-
-### 1. Tạo đánh giá mới
-
-**Endpoint:** `POST /api/reviews`
-
-**Headers:**
-
-- Authorization: Bearer {token}
-
-**Request:**
-
-```json
-{
-  "eventId": "60d21b4667d0d8992e610c87",
-  "rating": 5,
-  "comment": "Great event! Very well organized."
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Review created successfully",
-  "review": {
-    "id": "60d21b4667d0d8992e610c95",
-    "eventId": "60d21b4667d0d8992e610c87",
-    "userId": "60d21b4667d0d8992e610c85",
-    "rating": 5,
-    "comment": "Great event! Very well organized.",
-    "createdAt": "2023-09-16T10:00:00.000Z"
-  }
-}
-```
-
-**Status Codes:**
-
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-
-### 2. Lấy đánh giá cho sự kiện
-
-**Endpoint:** `GET /api/events/:id/reviews`
-
-**Query Parameters:**
-
-- page: Page number
-- limit: Items per page
-- sortBy: Sort by field (createdAt, rating)
-- sortOrder: Sort order (asc, desc)
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "reviews": [
-    {
-      "id": "60d21b4667d0d8992e610c95",
-      "user": {
-        "id": "60d21b4667d0d8992e610c85",
-        "name": "John Doe",
-        "avatar": "https://example.com/avatar.jpg"
-      },
-      "rating": 5,
-      "comment": "Great event! Very well organized.",
-      "createdAt": "2023-09-16T10:00:00.000Z"
-    }
-  ],
-  "pagination": {
-    "total": 10,
-    "pages": 1,
-    "page": 1,
-    "limit": 10
-  },
-  "averageRating": 4.5
-}
-```
-
-**Status Codes:**
-
-- 200: OK
 - 404: Not Found
 
 ## Notification APIs

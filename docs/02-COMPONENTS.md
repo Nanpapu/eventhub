@@ -130,16 +130,7 @@ interface EventType {
 }
 ```
 
-### 2. EventReview Component
-
-**Chức năng chính:**
-
-- Hiển thị và quản lý đánh giá cho sự kiện
-- Cho phép thêm đánh giá mới
-- Hiển thị đánh giá trung bình
-- Phân trang và lọc đánh giá
-
-### 3. TicketDetails Component
+### 2. TicketDetails Component
 
 **Chức năng chính:**
 
