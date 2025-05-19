@@ -187,9 +187,27 @@ eventSchema.virtual("availableTickets").get(function (this: IEvent) {
 eventSchema.set("toJSON", {
   virtuals: true,
   transform: (_doc, ret) => {
-    ret.id = ret._id;
-    delete ret._id;
+    // Xử lý cho document Event chính
+    if (ret._id) {
+      ret.id = ret._id.toString(); // Đảm bảo là string
+      delete ret._id;
+    }
     delete ret.__v;
+
+    // Xử lý cho các sub-documents trong ticketTypes
+    if (ret.ticketTypes && Array.isArray(ret.ticketTypes)) {
+      ret.ticketTypes = ret.ticketTypes.map((ticketType: any) => {
+        const newTicketType = { ...ticketType }; // Tạo bản sao để tránh thay đổi trực tiếp
+        if (newTicketType._id) {
+          newTicketType.id = newTicketType._id.toString(); // Đổi _id thành id và đảm bảo là string
+          delete newTicketType._id;
+        }
+        // Bạn có thể xóa các trường không cần thiết khác của ticketType ở đây nếu muốn
+        // delete newTicketType.__v; // Subdocuments không có __v trừ khi bạn tạo schema riêng cho chúng và không tắt nó
+        return newTicketType;
+      });
+    }
+
     return ret;
   },
 });

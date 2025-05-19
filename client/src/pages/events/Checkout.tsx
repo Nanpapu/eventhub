@@ -194,6 +194,10 @@ export default function Checkout() {
 
   // Xử lý khi thay đổi loại vé
   const handleTicketTypeChange = (newTicketTypeId: string) => {
+    console.log(
+      "[Checkout.tsx] handleTicketTypeChange - newTicketTypeId:",
+      newTicketTypeId
+    );
     setSelectedTicketType(newTicketTypeId);
     // Tìm thông tin của loại vé mới
     const newTypeInfo = event?.ticketTypes?.find(
@@ -207,20 +211,20 @@ export default function Checkout() {
       Math.min(newMaxAvailable, eventMaxPerOrder)
     );
 
-    // Nếu số lượng hiện tại lớn hơn số lượng cho phép của loại vé mới (hoặc lớn hơn số lượng còn lại), reset về 1
-    // Hoặc nếu số lượng cho phép mới là 0, cũng reset về 1 (hoặc 0 nếu min là 0)
     if (ticketQuantity > newMaxAllowed || newMaxAllowed === 0) {
       setTicketQuantity(newMaxAllowed > 0 ? 1 : 0);
     } else if (ticketQuantity === 0 && newMaxAllowed > 0) {
-      // Nếu đang là 0 mà loại vé mới có vé, đặt lại là 1
       setTicketQuantity(1);
     }
-    // Nếu không, giữ nguyên ticketQuantity hiện tại nếu nó vẫn hợp lệ
   };
 
   // Xử lý khi bấm tiếp tục ở bước 1
   const handleContinueToPayment = () => {
     if (!event) return;
+    console.log(
+      "[Checkout.tsx] handleContinueToPayment - selectedTicketType:",
+      selectedTicketType
+    ); // DEBUG
 
     const currentTicketPrice = currentSelectedTicketInfo?.price ?? event.price;
     if (currentTicketPrice === undefined) {
@@ -440,7 +444,7 @@ export default function Checkout() {
                 <Text fontWeight="medium" color={textColor}>
                   Giá vé:
                 </Text>
-                <Text color={textColor}>
+                <Text as="span" color={textColor}>
                   {currentSelectedTicketInfo ? (
                     currentSelectedTicketInfo.price === 0 ? (
                       "Miễn phí"
@@ -470,61 +474,67 @@ export default function Checkout() {
                     Chọn loại vé:
                   </Heading>
                   <VStack spacing={3} align="stretch">
-                    {event.ticketTypes.map((ticket) => (
-                      <Box
-                        key={ticket.id}
-                        p={3}
-                        borderWidth="1px"
-                        borderRadius="md"
-                        borderColor={
-                          selectedTicketType === ticket.id
-                            ? selectedTicketBorderColor
-                            : borderColor
-                        }
-                        bg={
-                          selectedTicketType === ticket.id
-                            ? selectedTicketBgColor
-                            : "transparent"
-                        }
-                        cursor={
-                          ticket.availableQuantity > 0
-                            ? "pointer"
-                            : "not-allowed"
-                        }
-                        opacity={ticket.availableQuantity > 0 ? 1 : 0.6}
-                        onClick={() =>
-                          ticket.availableQuantity > 0 &&
-                          handleTicketTypeChange(ticket.id)
-                        }
-                      >
-                        <Flex justify="space-between" align="center">
-                          <VStack align="start" spacing={0}>
-                            <Text fontWeight="bold" color={textColor}>
-                              {ticket.name}
+                    {event.ticketTypes.map((ticket) => {
+                      const isSelected = selectedTicketType === ticket.id;
+                      console.log(
+                        `[Checkout.tsx] Rendering ticket: ${ticket.name} (ID: ${ticket.id}), selectedTicketType: ${selectedTicketType}, isSelected: ${isSelected}`
+                      ); // DEBUG
+                      return (
+                        <Box
+                          key={ticket.id}
+                          p={3}
+                          borderWidth="1px"
+                          borderRadius="md"
+                          borderColor={
+                            isSelected // Sử dụng biến isSelected đã check ở trên
+                              ? selectedTicketBorderColor
+                              : borderColor
+                          }
+                          bg={
+                            isSelected // Sử dụng biến isSelected
+                              ? selectedTicketBgColor
+                              : "transparent"
+                          }
+                          cursor={
+                            ticket.availableQuantity > 0
+                              ? "pointer"
+                              : "not-allowed"
+                          }
+                          opacity={ticket.availableQuantity > 0 ? 1 : 0.6}
+                          onClick={() =>
+                            ticket.availableQuantity > 0 &&
+                            handleTicketTypeChange(ticket.id)
+                          }
+                        >
+                          <Flex justify="space-between" align="center">
+                            <VStack align="start" spacing={0}>
+                              <Text fontWeight="bold" color={textColor}>
+                                {ticket.name}
+                              </Text>
+                              <Text
+                                fontSize="sm"
+                                color={
+                                  ticket.availableQuantity > 0
+                                    ? ticketAvailableTextColor
+                                    : "red.400"
+                                }
+                              >
+                                {ticket.availableQuantity > 0
+                                  ? `Còn ${ticket.availableQuantity} vé`
+                                  : "Hết vé"}
+                              </Text>
+                            </VStack>
+                            <Text fontWeight="bold" color={textColor} as="span">
+                              {ticket.price === 0 ? (
+                                "Miễn phí"
+                              ) : (
+                                <CurrencyDisplay amount={ticket.price} />
+                              )}
                             </Text>
-                            <Text
-                              fontSize="sm"
-                              color={
-                                ticket.availableQuantity > 0
-                                  ? ticketAvailableTextColor
-                                  : "red.400"
-                              }
-                            >
-                              {ticket.availableQuantity > 0
-                                ? `Còn ${ticket.availableQuantity} vé`
-                                : "Hết vé"}
-                            </Text>
-                          </VStack>
-                          <Text fontWeight="bold" color={textColor}>
-                            {ticket.price === 0 ? (
-                              "Miễn phí"
-                            ) : (
-                              <CurrencyDisplay amount={ticket.price} />
-                            )}
-                          </Text>
-                        </Flex>
-                      </Box>
-                    ))}
+                          </Flex>
+                        </Box>
+                      );
+                    })}
                   </VStack>
                 </>
               )}
@@ -557,12 +567,14 @@ export default function Checkout() {
 
               <Flex justify="space-between" fontWeight="bold" color={textColor}>
                 <Text>{t("checkout.total")}:</Text>
-                <CurrencyDisplay
-                  amount={
-                    (currentSelectedTicketInfo?.price ?? event.price ?? 0) *
-                    ticketQuantity
-                  }
-                />
+                <Text as="span">
+                  <CurrencyDisplay
+                    amount={
+                      (currentSelectedTicketInfo?.price ?? event.price ?? 0) *
+                      ticketQuantity
+                    }
+                  />
+                </Text>
               </Flex>
 
               <HStack spacing={4} justify="flex-end" pt={4}>

@@ -27,6 +27,7 @@ import {
   FaCcPaypal,
   FaMoneyBillWave,
   FaSpinner,
+  FaCheck,
 } from "react-icons/fa";
 import checkoutService from "../../services/checkout.service";
 
