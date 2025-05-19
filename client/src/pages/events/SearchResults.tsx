@@ -15,11 +15,12 @@ import {
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
 import eventService, { EventFilter } from "../../services/event.service";
+// import { useTranslation } from "react-i18next"; // Biến t không được sử dụng, có thể xóa hoặc comment
 
 // Định nghĩa interface cho event để có type checking
 interface EventData {
@@ -166,167 +167,360 @@ const SearchResults = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
 
-  // Lấy query params từ URL
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialKeyword = searchParams.get("keyword") || "";
-  const initialLocation = searchParams.get("location") || "";
-  const initialCategory = searchParams.get("category") || "";
-  const initialPage = parseInt(searchParams.get("page") || "1", 10);
 
-  // State cho trang tìm kiếm
-  const [keyword, setKeyword] = useState(initialKeyword);
-  const [location, setLocation] = useState(initialLocation);
-  const [category, setCategory] = useState(initialCategory);
+  // State cho các filter đã được áp dụng để fetch dữ liệu
+  const [appliedKeyword, setAppliedKeyword] = useState(
+    () => searchParams.get("keyword") || ""
+  );
+  const [appliedLocation, setAppliedLocation] = useState(
+    () => searchParams.get("location") || ""
+  );
+  const [appliedCategory, setAppliedCategory] = useState(
+    () => searchParams.get("category") || ""
+  );
+  const [appliedShowFreeOnly, setAppliedShowFreeOnly] = useState(
+    () => searchParams.get("free") === "true"
+  );
+  const [appliedShowPaidOnly, setAppliedShowPaidOnly] = useState(
+    () => searchParams.get("paid") === "true"
+  );
+  const [currentPage, setCurrentPage] = useState(() =>
+    parseInt(searchParams.get("page") || "1", 10)
+  );
+
+  // State cho các giá trị đang được chọn trong SearchBar (chưa áp dụng)
+  const [tempKeyword, setTempKeyword] = useState(appliedKeyword);
+  const [tempLocation, setTempLocation] = useState(appliedLocation);
+  const [tempCategory, setTempCategory] = useState(appliedCategory);
+  const [tempShowFreeOnly, setTempShowFreeOnly] = useState(appliedShowFreeOnly);
+  const [tempShowPaidOnly, setTempShowPaidOnly] = useState(appliedShowPaidOnly);
+
   const [filteredEvents, setFilteredEvents] = useState<EventData[]>([]);
-  const [showFreeOnly, setShowFreeOnly] = useState(false);
-  const [showPaidOnly, setShowPaidOnly] = useState(false);
-  const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const eventsPerPage = 6;
 
-  // Xử lý tìm kiếm
-  const handleSearch = useCallback(() => {
-    // Cập nhật URL với các tham số tìm kiếm
-    const params: { [key: string]: string } = {};
-    if (keyword) params.keyword = keyword;
-    if (location) params.location = location;
-    if (category) params.category = category;
-    if (currentPage > 1) params.page = currentPage.toString();
-    setSearchParams(params);
+  // Hàm kiểm tra xem có filter nào đang được áp dụng không
+  const areFiltersApplied = useCallback(() => {
+    return !!(
+      appliedKeyword ||
+      appliedLocation ||
+      appliedCategory ||
+      appliedShowFreeOnly ||
+      appliedShowPaidOnly
+    );
+  }, [
+    appliedKeyword,
+    appliedLocation,
+    appliedCategory,
+    appliedShowFreeOnly,
+    appliedShowPaidOnly,
+  ]);
 
-    // Lọc sự kiện dựa trên tìm kiếm
-    filterEvents();
-  }, [keyword, location, category, currentPage, setSearchParams]);
+  const fetchAndFilterEvents = useCallback(
+    async (pageToFetch: number, filters: EventFilter) => {
+      console.log("[fetchAndFilterEvents] Called with:", {
+        pageToFetch,
+        filters,
+      });
+      setLoading(true);
+      setError(null);
 
-  // Xử lý lọc sự kiện
-  const filterEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Tạo đối tượng filter từ state
-      const filter: EventFilter = {
-        page: currentPage,
+      const apiFilter: EventFilter = {
+        page: pageToFetch,
         limit: eventsPerPage,
       };
 
-      if (keyword) filter.keyword = keyword;
-      if (location) filter.location = location;
-      if (category) filter.category = category;
-      if (showFreeOnly) filter.isFree = true;
-      if (showPaidOnly) filter.isFree = false;
+      if (filters.keyword) apiFilter.keyword = filters.keyword;
+      if (filters.location) apiFilter.location = filters.location;
+      if (filters.category) apiFilter.category = filters.category;
+      if (filters.isFree !== undefined) apiFilter.isFree = filters.isFree;
 
-      // Gọi API để lấy danh sách sự kiện đã lọc
-      const result = await eventService.getEvents(filter);
+      console.log("[fetchAndFilterEvents] API Filter to be sent:", apiFilter);
 
-      // Chuyển đổi dữ liệu từ API vào định dạng EventData
-      const formattedEvents: EventData[] = result.events.map(
-        (event: EventResponse) => ({
-          id: event.id,
-          title: event.title,
-          description: event.description,
-          date: new Date(event.date).toLocaleDateString("vi-VN"),
-          location: event.location,
-          imageUrl: event.imageUrl,
-          category: event.category,
-          isPaid: event.isPaid,
-          address: event.address,
-        })
-      );
+      try {
+        const response = await eventService.getEvents(apiFilter);
+        console.log("[fetchAndFilterEvents] API Response received:", response);
 
-      setFilteredEvents(formattedEvents);
-      setTotalPages(result.totalPages);
-      setTotalEvents(result.total);
-    } catch (err) {
-      console.error("Error fetching events:", err);
-      setError("Có lỗi xảy ra khi tải dữ liệu sự kiện.");
-      setFilteredEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    keyword,
-    location,
-    category,
-    showFreeOnly,
-    showPaidOnly,
-    currentPage,
-    eventsPerPage,
-  ]);
-
-  // Chuyển trang - sử dụng useCallback để tránh re-render không cần thiết
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setCurrentPage(newPage);
-
-      // Cập nhật URL
-      const params: { [key: string]: string } = {};
-      if (keyword) params.keyword = keyword;
-      if (location) params.location = location;
-      if (category) params.category = category;
-      if (newPage > 1) params.page = newPage.toString();
-      setSearchParams(params);
-
-      // Gọi API khi chuyển trang
-      filterEvents();
+        if (response && response.events && response.pagination) {
+          const formattedEvents: EventData[] = response.events.map(
+            (event: EventResponse) => ({
+              id: event.id,
+              title: event.title,
+              description: event.description,
+              date: new Date(event.date).toLocaleDateString("vi-VN"),
+              location: event.location,
+              imageUrl: event.imageUrl,
+              category: event.category,
+              isPaid: event.isPaid,
+              address: event.address,
+            })
+          );
+          setFilteredEvents(formattedEvents);
+          setTotalEvents(response.pagination.total);
+          setTotalPages(
+            response.pagination.totalPages > 0
+              ? response.pagination.totalPages
+              : 1
+          );
+        } else {
+          console.error(
+            "[fetchAndFilterEvents] Invalid API response structure:",
+            response
+          );
+          throw new Error("Invalid API response structure");
+        }
+      } catch (err) {
+        console.error("[fetchAndFilterEvents] Error fetching events:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Có lỗi xảy ra khi tải dữ liệu sự kiện."
+        );
+        setFilteredEvents([]);
+        setTotalEvents(0);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
     },
-    [keyword, location, category, setSearchParams, filterEvents]
+    [eventsPerPage]
   );
 
-  // Reset tất cả bộ lọc
-  const resetFilters = useCallback(() => {
-    setKeyword("");
-    setLocation("");
-    setCategory("");
-    setShowFreeOnly(false);
-    setShowPaidOnly(false);
-    setCurrentPage(1);
-    setSearchParams({});
-    // Gọi lại API khi reset filter
-    filterEvents();
-  }, [setSearchParams, filterEvents]);
-
-  // Tải dữ liệu ban đầu khi component mount
+  // Effect để fetch dữ liệu khi filter hoặc page thay đổi
   useEffect(() => {
-    // Nếu có tham số trong URL, thực hiện tìm kiếm ngay lập tức
-    if (
-      initialKeyword ||
-      initialLocation ||
-      initialCategory ||
-      initialPage > 1
-    ) {
-      filterEvents();
+    const currentFilters: EventFilter = {
+      keyword: appliedKeyword,
+      location: appliedLocation,
+      category: appliedCategory,
+      isFree: appliedShowFreeOnly
+        ? true
+        : appliedShowPaidOnly
+        ? false
+        : undefined,
+    };
+    console.log(
+      `[useEffect appliedFilters/currentPage] Triggered. Page: ${currentPage}, Filters:`,
+      currentFilters
+    );
+    fetchAndFilterEvents(currentPage, currentFilters);
+
+    // Cập nhật URL params
+    const newSearchParams = new URLSearchParams();
+    if (appliedKeyword) newSearchParams.set("keyword", appliedKeyword);
+    if (appliedLocation) newSearchParams.set("location", appliedLocation);
+    if (appliedCategory) newSearchParams.set("category", appliedCategory);
+    if (appliedShowFreeOnly) newSearchParams.set("free", "true");
+    else if (appliedShowPaidOnly) newSearchParams.set("paid", "true");
+
+    if (currentPage > 1) {
+      newSearchParams.set("page", currentPage.toString());
     } else {
-      // Nếu không có tham số tìm kiếm, vẫn load dữ liệu mặc định (trang 1)
-      filterEvents();
+      newSearchParams.delete("page");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Chỉ gọi setSearchParams nếu có sự thay đổi thực sự
+    // Lấy search string hiện tại từ window.location để so sánh chính xác hơn
+    const currentSearchString = window.location.search.substring(1); // Bỏ dấu '?'
+    if (newSearchParams.toString() !== currentSearchString) {
+      console.log(
+        "[useEffect appliedFilters/currentPage] Updating URL Search Params:",
+        newSearchParams.toString()
+      );
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [
+    appliedKeyword,
+    appliedLocation,
+    appliedCategory,
+    appliedShowFreeOnly,
+    appliedShowPaidOnly,
+    currentPage,
+    fetchAndFilterEvents,
+    setSearchParams,
+  ]);
+
+  const handleApplySearch = useCallback(() => {
+    console.log("[handleApplySearch] Applying search with temp filters:", {
+      tempKeyword,
+      tempLocation,
+      tempCategory,
+      tempShowFreeOnly,
+      tempShowPaidOnly,
+    });
+    setAppliedKeyword(tempKeyword);
+    setAppliedLocation(tempLocation);
+    setAppliedCategory(tempCategory);
+    setAppliedShowFreeOnly(tempShowFreeOnly);
+    setAppliedShowPaidOnly(tempShowPaidOnly);
+    setCurrentPage(1);
+  }, [
+    tempKeyword,
+    tempLocation,
+    tempCategory,
+    tempShowFreeOnly,
+    tempShowPaidOnly,
+  ]);
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      console.log(`[handlePageChange] Changing to page: ${newPage}`);
+      if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+        setCurrentPage(newPage);
+      } else {
+        console.log(
+          `[handlePageChange] Page change to ${newPage} aborted. Conditions not met: totalPages=${totalPages}, currentPage=${currentPage}`
+        );
+      }
+    },
+    [totalPages, currentPage]
+  );
+
+  const handleResetFilters = useCallback(() => {
+    console.log("[handleResetFilters] Resetting all filters.");
+    setTempKeyword("");
+    setTempLocation("");
+    setTempCategory("");
+    setTempShowFreeOnly(false);
+    setTempShowPaidOnly(false);
+
+    setAppliedKeyword("");
+    setAppliedLocation("");
+    setAppliedCategory("");
+    setAppliedShowFreeOnly(false);
+    setAppliedShowPaidOnly(false);
+    setCurrentPage(1);
   }, []);
 
-  // Format địa điểm cho SearchBar
   const locationOptions = locations.map((loc) => ({ name: loc }));
-
-  // Format danh mục cho SearchBar
   const categoryOptions = categories.map((cat) => ({
     id: cat.id,
     name: cat.name,
   }));
 
+  const renderPaginationControls = () => {
+    console.log("---- [renderPaginationControls] Debug Info ----");
+    console.log("Current Page (state):", currentPage);
+    console.log("Total Events (state):", totalEvents);
+    console.log("Total Pages (state, from server):", totalPages);
+    console.log("Events Per Page (constant):", eventsPerPage);
+    console.log("Is Loading (state):", loading);
+    console.log("----------------------------------------------");
+
+    if (loading && totalEvents === 0 && currentPage === 1) {
+      return null;
+    }
+
+    if (totalPages <= 1 || totalEvents === 0) {
+      return null;
+    }
+
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(
+        <Button
+          key={i}
+          size="sm"
+          colorScheme="teal"
+          variant={currentPage === i ? "solid" : "ghost"}
+          onClick={() => handlePageChange(i)}
+          isDisabled={loading}
+          mx={1}
+        >
+          {i}
+        </Button>
+      );
+    }
+
+    return (
+      <Flex justify="center" mt={8} mb={4}>
+        <HStack spacing={2}>
+          <Button
+            size="sm"
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+            isDisabled={currentPage === 1 || loading}
+            colorScheme="teal"
+            variant="outline"
+          >
+            Trước
+          </Button>
+          {pageNumbers}
+          <Button
+            size="sm"
+            onClick={() =>
+              handlePageChange(Math.min(totalPages, currentPage + 1))
+            }
+            isDisabled={currentPage === totalPages || loading}
+            colorScheme="teal"
+            variant="outline"
+          >
+            Sau
+          </Button>
+        </HStack>
+      </Flex>
+    );
+  };
+
+  if (loading && filteredEvents.length === 0 && currentPage === 1 && !error) {
+    return (
+      <Box bg={useColorModeValue("white", "gray.900")} minH="100vh">
+        <Container maxW="container.xl" py={8}>
+          <SearchBar
+            keyword={tempKeyword}
+            setKeyword={setTempKeyword}
+            location={tempLocation}
+            setLocation={setTempLocation}
+            category={tempCategory}
+            setCategory={setTempCategory}
+            showFreeOnly={tempShowFreeOnly}
+            setShowFreeOnly={(value) => {
+              setTempShowFreeOnly(value);
+              if (value) setTempShowPaidOnly(false);
+            }}
+            showPaidOnly={tempShowPaidOnly}
+            setShowPaidOnly={(value) => {
+              setTempShowPaidOnly(value);
+              if (value) setTempShowFreeOnly(false);
+            }}
+            onSearch={handleApplySearch}
+            onReset={handleResetFilters}
+            categories={categories.map((cat) => ({
+              id: cat.id,
+              value: cat.id,
+              label: cat.name,
+            }))}
+            locations={locations.map((loc) => ({ name: loc }))}
+            showLocationFilter={true}
+            showCategoryFilter={true}
+            showPriceFilter={true}
+            appliedFilters={{
+              location: appliedLocation,
+              category: appliedCategory,
+              showFreeOnly: appliedShowFreeOnly,
+              showPaidOnly: appliedShowPaidOnly,
+            }}
+            getCategoryName={getCategoryName}
+            mb={6}
+          />
+          <Center py={20}>
+            <Spinner size="xl" color="teal.500" thickness="4px" />
+          </Center>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
-    <Box bg={bgColor}>
+    <Box bg={useColorModeValue("white", "gray.900")}>
       <Container maxW="container.xl" py={8}>
-        {/* Tiêu đề trang */}
         <Heading as="h1" size="xl" mb={6} color={textColor}>
-          {keyword || location || category
-            ? "Kết quả tìm kiếm"
-            : "Khám phá tất cả sự kiện"}
+          {areFiltersApplied() ? "Kết quả tìm kiếm" : "Khám phá tất cả sự kiện"}
         </Heading>
 
-        {/* Giới thiệu trang - Chỉ hiển thị khi không có tìm kiếm */}
-        {!(keyword || location || category) && (
+        {!areFiltersApplied() && (
           <Box mb={8}>
             <Text fontSize="lg" color={textColor} mb={4}>
               Khám phá và tham gia các sự kiện đa dạng từ hội thảo, hội nghị đến
@@ -336,36 +530,40 @@ const SearchResults = () => {
           </Box>
         )}
 
-        {/* SearchBar Component */}
         <SearchBar
-          keyword={keyword}
-          setKeyword={setKeyword}
-          location={location}
-          setLocation={setLocation}
-          category={category}
-          setCategory={setCategory}
-          showFreeOnly={showFreeOnly}
-          setShowFreeOnly={setShowFreeOnly}
-          showPaidOnly={showPaidOnly}
-          setShowPaidOnly={setShowPaidOnly}
-          onSearch={handleSearch}
-          onReset={resetFilters}
+          keyword={tempKeyword}
+          setKeyword={setTempKeyword}
+          location={tempLocation}
+          setLocation={setTempLocation}
+          category={tempCategory}
+          setCategory={setTempCategory}
+          showFreeOnly={tempShowFreeOnly}
+          setShowFreeOnly={(value) => {
+            setTempShowFreeOnly(value);
+            if (value) setTempShowPaidOnly(false);
+          }}
+          showPaidOnly={tempShowPaidOnly}
+          setShowPaidOnly={(value) => {
+            setTempShowPaidOnly(value);
+            if (value) setTempShowFreeOnly(false);
+          }}
+          onSearch={handleApplySearch}
+          onReset={handleResetFilters}
           categories={categoryOptions}
           locations={locationOptions}
           showLocationFilter={true}
           showCategoryFilter={true}
           showPriceFilter={true}
           appliedFilters={{
-            location,
-            category,
-            showFreeOnly,
-            showPaidOnly,
+            location: appliedLocation,
+            category: appliedCategory,
+            showFreeOnly: appliedShowFreeOnly,
+            showPaidOnly: appliedShowPaidOnly,
           }}
           getCategoryName={getCategoryName}
           mb={6}
         />
 
-        {/* Hiển thị thông báo lỗi nếu có */}
         {error && (
           <Box
             textAlign="center"
@@ -382,94 +580,20 @@ const SearchResults = () => {
           </Box>
         )}
 
-        {/* Hiển thị loading spinner */}
-        {loading ? (
-          <Center py={10}>
-            <Spinner size="xl" color="teal.500" thickness="4px" />
+        {loading && filteredEvents.length > 0 && (
+          <Center
+            py={10}
+            bg={sectionBg}
+            borderRadius="lg"
+            my={6}
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <Spinner size="lg" color="teal.500" />
           </Center>
-        ) : /* Kết quả tìm kiếm */
-        filteredEvents.length > 0 ? (
-          <>
-            <Flex justify="space-between" align="center" mb={6}>
-              <Text color={textColor}>{totalEvents} sự kiện được tìm thấy</Text>
-              {keyword || location || category ? (
-                <Button
-                  variant="outline"
-                  colorScheme="teal"
-                  size="sm"
-                  leftIcon={<FiX />}
-                  onClick={resetFilters}
-                >
-                  Xóa tất cả bộ lọc
-                </Button>
-              ) : null}
-            </Flex>
+        )}
 
-            <Box
-              bg={sectionBg}
-              p={6}
-              borderRadius="lg"
-              mb={6}
-              borderWidth="1px"
-              borderColor={borderColor}
-            >
-              <SimpleGrid
-                columns={{ base: 1, md: 2, lg: 3 }}
-                spacing={8}
-                mb={8}
-              >
-                {filteredEvents.map((event) => (
-                  <CustomEventCard key={event.id} event={event} />
-                ))}
-              </SimpleGrid>
-
-              {/* Phân trang đơn giản */}
-              {totalPages > 1 && (
-                <Flex justify="center" mt={4}>
-                  <HStack spacing={2}>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(Math.max(1, currentPage - 1))
-                      }
-                      isDisabled={currentPage === 1}
-                      colorScheme="teal"
-                      variant="outline"
-                    >
-                      Trước
-                    </Button>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <Button
-                          key={page}
-                          size="sm"
-                          colorScheme="teal"
-                          variant={currentPage === page ? "solid" : "ghost"}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </Button>
-                      )
-                    )}
-
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(Math.min(totalPages, currentPage + 1))
-                      }
-                      isDisabled={currentPage === totalPages}
-                      colorScheme="teal"
-                      variant="outline"
-                    >
-                      Sau
-                    </Button>
-                  </HStack>
-                </Flex>
-              )}
-            </Box>
-          </>
-        ) : (
+        {!loading && filteredEvents.length === 0 && !error && (
           <Box
             textAlign="center"
             py={10}
@@ -478,16 +602,56 @@ const SearchResults = () => {
             p={8}
             borderWidth="1px"
             borderColor={borderColor}
+            my={6}
           >
             <Heading size="md" mb={4} color={textColor}>
-              Không tìm thấy sự kiện
+              Không tìm thấy sự kiện nào
             </Heading>
             <Text mb={6} color={textColor}>
-              Hãy thử điều chỉnh bộ lọc của bạn
+              Hãy thử điều chỉnh bộ lọc của bạn hoặc xóa bộ lọc hiện tại.
             </Text>
-            <Button colorScheme="teal" onClick={resetFilters}>
-              Xóa bộ lọc
-            </Button>
+            {areFiltersApplied() && (
+              <Button colorScheme="teal" onClick={handleResetFilters}>
+                Xóa tất cả bộ lọc
+              </Button>
+            )}
+          </Box>
+        )}
+
+        {filteredEvents.length > 0 && (
+          <Box
+            bg={sectionBg}
+            p={{ base: 3, md: 6 }}
+            borderRadius="lg"
+            my={6}
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <Flex
+              justify="space-between"
+              align="center"
+              mb={6}
+              px={{ base: 2, md: 0 }}
+            >
+              <Text color={textColor}>{totalEvents} sự kiện được tìm thấy</Text>
+              {areFiltersApplied() && (
+                <Button
+                  variant="outline"
+                  colorScheme="teal"
+                  size="sm"
+                  leftIcon={<FiX />}
+                  onClick={handleResetFilters}
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
+            </Flex>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {filteredEvents.map((event) => (
+                <CustomEventCard key={event.id} event={event} />
+              ))}
+            </SimpleGrid>
+            {renderPaginationControls()}
           </Box>
         )}
       </Container>

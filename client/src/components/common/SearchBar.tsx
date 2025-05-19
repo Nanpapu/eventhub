@@ -136,14 +136,22 @@ const SearchBar = ({
   const [tempShowFreeOnly, setTempShowFreeOnly] = useState(showFreeOnly);
   const [tempShowPaidOnly, setTempShowPaidOnly] = useState(showPaidOnly);
 
-  // Cập nhật state tạm thời khi props thay đổi
+  // Cập nhật state tạm thời khi props thay đổi (khi parent SearchResults reset hoặc load từ URL)
   useEffect(() => {
     setTempKeyword(keyword);
-    setTempLocation(location);
-    setTempCategory(category);
-    setTempShowFreeOnly(showFreeOnly);
-    setTempShowPaidOnly(showPaidOnly);
-  }, [keyword, location, category, showFreeOnly, showPaidOnly]);
+    // Chỉ cập nhật tempLocation, tempCategory, tempShowFreeOnly, tempShowPaidOnly
+    // nếu chúng được cung cấp qua props (tức là không phải giá trị mặc định của useState ở parent)
+    // Điều này quan trọng để SearchBar có thể tự quản lý các giá trị này cho đến khi Search được nhấn
+    if (location !== undefined) setTempLocation(location); // Giả sử location là location từ props
+    if (category !== undefined) setTempCategory(category);
+    if (showFreeOnly !== undefined) setTempShowFreeOnly(showFreeOnly);
+    if (showPaidOnly !== undefined) setTempShowPaidOnly(showPaidOnly);
+  }, [keyword, location, category, showFreeOnly, showPaidOnly]); // Cần đổi tên props cho rõ ràng
+
+  // Helper để kiểm tra xem có filter nào đang được chọn trong SearchBar không
+  const internalFiltersApplied = () => {
+    return !!(keyword || location || category || showFreeOnly || showPaidOnly);
+  };
 
   // Apply filters từ drawer
   const applyFilters = () => {
@@ -278,15 +286,17 @@ const SearchBar = ({
                 </HStack>
               )}
 
-              <Button
-                variant="outline"
-                colorScheme="teal"
-                size="md"
-                leftIcon={<FiX />}
-                onClick={onReset}
-              >
-                Xóa bộ lọc
-              </Button>
+              {internalFiltersApplied() && (
+                <Button
+                  variant="outline"
+                  colorScheme="teal"
+                  size="md"
+                  leftIcon={<FiX />}
+                  onClick={onReset}
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
             </Flex>
           )}
         </Flex>
