@@ -54,6 +54,11 @@ export interface IEvent extends Document {
 }
 
 const ticketTypeSchema = new Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    auto: true,
+  },
   name: {
     type: String,
     required: true,
@@ -179,6 +184,42 @@ const eventSchema = new Schema<IEvent>(
   }
 );
 
+// Thêm Mongoose Hooks để theo dõi việc lưu Event
+eventSchema.pre("save", function (this: IEvent, next) {
+  // \`this\` ở đây là document Event sắp được lưu
+  console.log(
+    `[EventModel PRE-SAVE hook] Event "${this.title}" (ID: ${this._id}) is about to be saved.`
+  );
+
+  // Kiểm tra xem trường ticketTypes có bị thay đổi không
+  if (this.isModified("ticketTypes")) {
+    console.log(
+      '[EventModel PRE-SAVE hook] The "ticketTypes" field was modified.'
+    );
+    console.log(
+      "[EventModel PRE-SAVE hook] Current ticketTypes before save:",
+      JSON.stringify(this.ticketTypes, null, 2)
+    );
+  } else {
+    console.log(
+      '[EventModel PRE-SAVE hook] The "ticketTypes" field was NOT modified.'
+    );
+  }
+  next();
+});
+
+eventSchema.post("save", function (doc: IEvent, next) {
+  // \`doc\` ở đây là document Event vừa được lưu
+  console.log(
+    `[EventModel POST-SAVE hook] Event "${doc.title}" (ID: ${doc._id}) was successfully saved.`
+  );
+  console.log(
+    "[EventModel POST-SAVE hook] Saved ticketTypes:",
+    JSON.stringify(doc.ticketTypes, null, 2)
+  );
+  next();
+});
+
 // Thêm virtual field để tính số vé còn lại
 eventSchema.virtual("availableTickets").get(function (this: IEvent) {
   if (this.ticketTypes && this.ticketTypes.length > 0) {
@@ -202,34 +243,23 @@ eventSchema.set("toJSON", {
     delete ret.__v;
 
     // Xử lý cho các sub-documents trong ticketTypes
-    // Ở đây, ret.ticketTypes là một mảng các object subdocument từ Mongoose (có _id)
     if (ret.ticketTypes && Array.isArray(ret.ticketTypes)) {
-      ret.ticketTypes = ret.ticketTypes.map(
-        (
-          ticketTypeSubDoc: any /* Hoặc ITicketTypeSubdocument nếu an toàn */
-        ) => {
-          // Chuyển đổi từ ITicketTypeSubdocument sang ITicketTypeTransformed
-          const transformedTicketType: Partial<ITicketTypeTransformed> & {
-            _id?: any;
-          } = { ...ticketTypeSubDoc }; // Copy từ subDoc
+      ret.ticketTypes = ret.ticketTypes.map((ticketTypeSubDoc: any) => {
+        // Sử dụng .toObject() nếu là Mongoose subdocument instance để lấy plain object
+        // Nếu không, spread operator có thể hoạt động với plain object đã được Mongoose chuẩn bị cho 'ret'
+        const plainSubDoc =
+          ticketTypeSubDoc && typeof ticketTypeSubDoc.toObject === "function"
+            ? ticketTypeSubDoc.toObject()
+            : { ...ticketTypeSubDoc };
 
-          if (transformedTicketType._id) {
-            transformedTicketType.id = transformedTicketType._id.toString();
-            delete transformedTicketType._id;
-          }
-          // Xóa các trường Mongoose internal nếu có và không cần thiết cho client
-          // delete transformedTicketType.__v;
-          // delete transformedTicketType.ownerDocument;
-          // delete transformedTicketType.parent;
-
-          // Đảm bảo các trường khác đúng với ITicketTypeTransformed
-          // Ví dụ: nếu ITicketTypeSubdocument có nhiều trường hơn ITicketTypeTransformed mà client không cần
-          // thì ở đây có thể chỉ pick những trường cần thiết.
-          // Hiện tại, chúng khá tương đồng ngoại trừ _id/id.
-
-          return transformedTicketType as ITicketTypeTransformed; // Ép kiểu về kiểu cho client
+        if (plainSubDoc && plainSubDoc._id) {
+          // Kiểm tra plainSubDoc và plainSubDoc._id có tồn tại không
+          plainSubDoc.id = plainSubDoc._id.toString();
+          delete plainSubDoc._id;
         }
-      );
+        // Không cần xóa __v cho subdocuments trừ khi schema của subdocument có versionKey riêng
+        return plainSubDoc as ITicketTypeTransformed;
+      });
     }
 
     return ret;
