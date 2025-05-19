@@ -18,7 +18,6 @@ import {
   AlertTitle,
   AlertDescription,
   IconButton,
-  HStack,
   useDisclosure,
   Drawer,
   DrawerBody,
@@ -37,7 +36,7 @@ import {
   Icon,
   Tag,
 } from "@chakra-ui/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, RefObject } from "react";
 import {
   FiSearch,
   FiCalendar,
@@ -48,7 +47,6 @@ import {
   FiTag,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import EventCard from "../../components/event/EventCard";
 
 // Interface cho dữ liệu sự kiện
 interface SavedEvent {
@@ -553,7 +551,7 @@ const SavedEvents = () => {
         {/* AlertDialog xác nhận hủy lưu */}
         <AlertDialog
           isOpen={isDeleteDialogOpen}
-          leastDestructiveRef={cancelRef}
+          leastDestructiveRef={cancelRef as RefObject<HTMLButtonElement>}
           onClose={onDeleteDialogClose}
         >
           <AlertDialogOverlay>
