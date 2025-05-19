@@ -531,62 +531,42 @@ const EventDetail = () => {
             {/* Phần điều khiển: đăng ký và mua vé */}
             <Box w="full" display="flex" flexDirection="column" gap={4} mt={6}>
               {/* 
-                TODO: Khi có backend, điều kiện hiển thị nút sẽ như sau:
-                - Nếu sự kiện miễn phí: Chỉ hiển thị nút "Đăng Ký Tham Gia"
-                - Nếu sự kiện có phí: Chỉ hiển thị nút "Mua Vé"
-                - Nếu người dùng đã đăng ký:
-                  + Nếu sự kiện miễn phí: Hiển thị nút "Hủy Đăng Ký"
-                  + Nếu sự kiện có phí: Hiển thị nút "Xem Vé" 
-                
-                DEMO: Hiện tại hiển thị cả hai nút để dễ demo
+                Cập nhật logic hiển thị nút:
+                - Nếu sự kiện miễn phí (`event.isPaid === false`), hiển thị nút "Đăng ký tham gia". 
+                  Khi nhấn, sẽ điều hướng đến trang checkout (tương tự như Mua vé).
+                - Nếu sự kiện có phí (`event.isPaid === true`), hiển thị nút "Mua vé".
+                - Logic `isRegistered` vẫn giữ để xử lý việc "Hủy đăng ký".
               */}
 
-              {/* Nút đăng ký - luôn hiển thị trong chế độ demo */}
-              <Button
-                colorScheme={isRegistered ? "red" : "teal"}
-                size="lg"
-                width="full"
-                onClick={handleRegister}
-                leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
-                variant={isRegistered ? "solid" : "solid"}
-              >
-                {isRegistered ? "Hủy Đăng Ký" : "Đăng Ký Tham Gia"}
-              </Button>
-
-              {/* Nút mua vé - luôn hiển thị trong chế độ demo */}
-              <Button
-                colorScheme="blue"
-                size="lg"
-                width="full"
-                onClick={handleBuyTicket}
-                leftIcon={<FaShoppingCart />}
-              >
-                Mua Vé
-              </Button>
-
-              {/* Logic thông thường sẽ như sau:
-                {!event.isPaid ? (
-                  <Button
-                    colorScheme={isRegistered ? "red" : "teal"}
-                    size="lg"
-                    width="full"
-                    onClick={handleRegister}
-                    leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
-                  >
-                    {isRegistered ? "Hủy Đăng Ký" : "Đăng Ký Tham Gia"}
-                  </Button>
-                ) : (
-                  <Button
-                    colorScheme="blue"
-                    size="lg"
-                    width="full"
-                    onClick={handleBuyTicket}
-                    leftIcon={<FaShoppingCart />}
-                  >
-                    Mua Vé
-                  </Button>
-                )}
-              */}
+              {event.isPaid ? (
+                // === SỰ KIỆN CÓ PHÍ ===
+                <Button
+                  colorScheme="blue" // Có thể thay đổi nếu đã mua vé
+                  size="lg"
+                  width="full"
+                  onClick={handleBuyTicket} // Điều hướng đến /checkout
+                  leftIcon={<FaShoppingCart />}
+                  // TODO: Nếu người dùng đã mua vé này, nút nên là "Xem vé của bạn" hoặc tương tự
+                  // và điều hướng đến trang vé của tôi.
+                  // Cần kiểm tra trạng thái isRegistered hoặc một trạng thái cụ thể cho việc đã mua vé.
+                >
+                  {/* {isRegistered ? "Xem vé của bạn" : "Mua Vé"} */}
+                  Mua Vé
+                </Button>
+              ) : (
+                // === SỰ KIỆN MIỄN PHÍ ===
+                <Button
+                  colorScheme={isRegistered ? "red" : "teal"}
+                  size="lg"
+                  width="full"
+                  // Nếu chưa đăng ký, hành động "Đăng ký tham gia" sẽ mở trang checkout (giống Mua vé)
+                  // Nếu đã đăng ký, hành động là "Hủy đăng ký"
+                  onClick={isRegistered ? handleRegister : handleBuyTicket}
+                  leftIcon={isRegistered ? <FaTimes /> : <FaCalendarCheck />}
+                >
+                  {isRegistered ? "Hủy Đăng Ký" : "Đăng Ký Tham Gia"}
+                </Button>
+              )}
             </Box>
           </VStack>
         </Box>
