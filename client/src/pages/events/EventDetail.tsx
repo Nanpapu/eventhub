@@ -43,6 +43,11 @@ interface EventData {
   category: string;
   isPaid: boolean;
   price?: number;
+  ticketTypes?: {
+    id: string;
+    name: string;
+    price: number;
+  }[];
   organizer: {
     name: string;
     avatar?: string;
@@ -107,6 +112,7 @@ const EventDetail = () => {
           category: eventData.category || "Other",
           isPaid: Boolean(eventData.isPaid),
           price: eventData.price || 0,
+          ticketTypes: eventData.ticketTypes || [],
           organizer: eventData.organizer || {
             name: "Unknown Organizer",
             avatar:
@@ -147,6 +153,51 @@ const EventDetail = () => {
 
     fetchEventData();
   }, [id]);
+
+  // Hàm mới để xử lý hiển thị giá vé
+  const getDisplayPrice = () => {
+    if (!event) return "Đang tải...";
+
+    if (!event.isPaid) {
+      return "Miễn phí";
+    }
+
+    const paidTicketTypes =
+      event.ticketTypes?.filter((tt) => tt.price > 0) || [];
+    const freeTicketTypes =
+      event.ticketTypes?.filter((tt) => tt.price === 0) || [];
+
+    if (event.ticketTypes && event.ticketTypes.length > 0) {
+      if (paidTicketTypes.length === 0 && freeTicketTypes.length > 0) {
+        return "Miễn phí"; // Tất cả các loại vé đều miễn phí
+      }
+
+      if (paidTicketTypes.length === 1) {
+        return `${paidTicketTypes[0].price.toLocaleString("vi-VN")} VND`;
+      }
+
+      if (paidTicketTypes.length > 1) {
+        const prices = paidTicketTypes.map((tt) => tt.price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+
+        if (minPrice === maxPrice) {
+          return `${minPrice.toLocaleString("vi-VN")} VND`;
+        }
+        return `${minPrice.toLocaleString("vi-VN")} - ${maxPrice.toLocaleString(
+          "vi-VN"
+        )} VND`;
+      }
+    }
+
+    // Fallback: Nếu isPaid là true nhưng không có ticketTypes hoặc không có paidTicketTypes nào
+    // thì sử dụng event.price (nếu có và > 0), ngược lại là "Miễn phí"
+    if (event.price && event.price > 0) {
+      return `${event.price.toLocaleString("vi-VN")} VND`;
+    }
+
+    return "Miễn phí"; // Mặc định nếu không có thông tin giá cụ thể nào
+  };
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
@@ -427,11 +478,11 @@ const EventDetail = () => {
                 </VStack>
               </Flex>
 
-              {event.isPaid && (
+              {getDisplayPrice() !== "Miễn phí" && (
                 <Flex align="center" gap={2}>
                   <Box as={FiDollarSign} color={iconColor} />
                   <Text fontWeight="bold" color={textColor}>
-                    {event.price} VND
+                    {getDisplayPrice()}
                   </Text>
                 </Flex>
               )}
