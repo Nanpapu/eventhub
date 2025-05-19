@@ -157,7 +157,7 @@ const eventSchema = new Schema<IEvent>(
       type: Number,
       required: [true, "Max tickets per person is required"],
       min: 1,
-      default: 10,
+      default: 3,
     },
     ticketTypes: [ticketTypeSchema],
     tags: [
