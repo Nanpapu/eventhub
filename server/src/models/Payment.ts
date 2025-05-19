@@ -4,9 +4,9 @@ import mongoose from "mongoose";
 export interface IPayment extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
   eventId: mongoose.Types.ObjectId;
-  ticketId: mongoose.Types.ObjectId;
+  registrationId?: mongoose.Types.ObjectId;
   amount: number;
-  method: "credit_card" | "paypal" | "bank_transfer";
+  method: "credit_card" | "paypal" | "bank_transfer" | "DEMO_PURCHASE";
   status: "pending" | "completed" | "failed" | "refunded";
   transactionId?: string;
   createdAt: Date;
@@ -26,10 +26,9 @@ const PaymentSchema = new mongoose.Schema(
       ref: "Event",
       required: [true, "Event ID is required"],
     },
-    ticketId: {
+    registrationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Ticket",
-      required: [true, "Ticket ID is required"],
+      ref: "Registration",
     },
     amount: {
       type: Number,
@@ -38,7 +37,7 @@ const PaymentSchema = new mongoose.Schema(
     },
     method: {
       type: String,
-      enum: ["credit_card", "paypal", "bank_transfer"],
+      enum: ["credit_card", "paypal", "bank_transfer", "DEMO_PURCHASE"],
       required: [true, "Payment method is required"],
     },
     status: {

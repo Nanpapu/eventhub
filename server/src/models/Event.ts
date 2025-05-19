@@ -1,14 +1,30 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
-// Interface cho TicketType
-export interface ITicketType {
+// Interface cho TicketType SAU KHI toJSON transform (dùng cho client)
+export interface ITicketTypeTransformed {
+  id: string; // virtual 'id'
   name: string;
-  description: string;
+  description?: string;
+  price: number;
+  quantity: number; // Tổng số lượng ban đầu
+  availableQuantity: number; // Số lượng còn lại
+  startSaleDate?: Date;
+  endSaleDate?: Date;
+}
+
+// Interface cho TicketType subdocument TRƯỚC KHI toJSON transform (dùng trong server logic, có _id)
+// Nó cũng nên bao gồm các phương thức của mongoose.Types.Subdocument nếu bạn cần dùng
+export interface ITicketTypeSubdocument extends Types.Subdocument {
+  // Quan trọng: kế thừa Types.Subdocument
+  _id: Types.ObjectId; // Thêm _id ở đây
+  name: string;
+  description?: string;
   price: number;
   quantity: number;
-  startSaleDate: Date;
-  endSaleDate: Date;
-  soldQuantity: number;
+  availableQuantity: number;
+  startSaleDate?: Date;
+  endSaleDate?: Date;
+  // Không cần 'id' ở đây vì nó là subdocument Mongoose
 }
 
 // Interface cho Event document
@@ -28,16 +44,7 @@ export interface IEvent extends Document {
   price?: number;
   capacity: number;
   maxTicketsPerPerson: number;
-  ticketTypes: {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    availableQuantity: number;
-    startSaleDate?: Date;
-    endSaleDate?: Date;
-    description?: string;
-  }[];
+  ticketTypes: ITicketTypeSubdocument[]; // Sử dụng ITicketTypeSubdocument ở đây
   tags: string[];
   organizer: mongoose.Types.ObjectId;
   attendees: number;
@@ -195,17 +202,34 @@ eventSchema.set("toJSON", {
     delete ret.__v;
 
     // Xử lý cho các sub-documents trong ticketTypes
+    // Ở đây, ret.ticketTypes là một mảng các object subdocument từ Mongoose (có _id)
     if (ret.ticketTypes && Array.isArray(ret.ticketTypes)) {
-      ret.ticketTypes = ret.ticketTypes.map((ticketType: any) => {
-        const newTicketType = { ...ticketType }; // Tạo bản sao để tránh thay đổi trực tiếp
-        if (newTicketType._id) {
-          newTicketType.id = newTicketType._id.toString(); // Đổi _id thành id và đảm bảo là string
-          delete newTicketType._id;
+      ret.ticketTypes = ret.ticketTypes.map(
+        (
+          ticketTypeSubDoc: any /* Hoặc ITicketTypeSubdocument nếu an toàn */
+        ) => {
+          // Chuyển đổi từ ITicketTypeSubdocument sang ITicketTypeTransformed
+          const transformedTicketType: Partial<ITicketTypeTransformed> & {
+            _id?: any;
+          } = { ...ticketTypeSubDoc }; // Copy từ subDoc
+
+          if (transformedTicketType._id) {
+            transformedTicketType.id = transformedTicketType._id.toString();
+            delete transformedTicketType._id;
+          }
+          // Xóa các trường Mongoose internal nếu có và không cần thiết cho client
+          // delete transformedTicketType.__v;
+          // delete transformedTicketType.ownerDocument;
+          // delete transformedTicketType.parent;
+
+          // Đảm bảo các trường khác đúng với ITicketTypeTransformed
+          // Ví dụ: nếu ITicketTypeSubdocument có nhiều trường hơn ITicketTypeTransformed mà client không cần
+          // thì ở đây có thể chỉ pick những trường cần thiết.
+          // Hiện tại, chúng khá tương đồng ngoại trừ _id/id.
+
+          return transformedTicketType as ITicketTypeTransformed; // Ép kiểu về kiểu cho client
         }
-        // Bạn có thể xóa các trường không cần thiết khác của ticketType ở đây nếu muốn
-        // delete newTicketType.__v; // Subdocuments không có __v trừ khi bạn tạo schema riêng cho chúng và không tắt nó
-        return newTicketType;
-      });
+      );
     }
 
     return ret;

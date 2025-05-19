@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+import checkoutService from "../services/checkout.service"; // Import checkoutService
 // Giả sử bạn có User model và Event model để tương tác (nếu cần cho logic demo phức tạp hơn)
 // import User from '../models/User';
 // import Event from '../models/Event';
@@ -14,7 +15,7 @@ const processDemoPayment = async (
   res: Response
 ): Promise<void> => {
   // Lấy userId từ req.user (được thêm bởi middleware authenticate)
-  // const userId = (req.user as { id: string })?.id; // Type assertion
+  const userId = (req.user as { _id: mongoose.Types.ObjectId })?._id; // Lấy _id và đảm bảo kiểu ObjectId
 
   // Lấy thông tin từ request body
   const {
@@ -35,50 +36,49 @@ const processDemoPayment = async (
 
   // --- Input Validation (Cơ bản) ---
   if (!eventId || !quantity || !paymentMethodDetails || !fullName || !email) {
-    res
-      .status(400)
-      .json({
-        success: false,
-        message: "Missing required payment information.",
-      });
+    res.status(400).json({
+      success: false,
+      message: "Missing required payment information.",
+    });
     return;
   }
 
   // --- Demo Payment Logic ---
   try {
-    if (paymentMethodDetails.type === "DEMO_SUCCESS") {
-      // Giả lập tạo transactionId
-      const transactionId = `DEMO-TRX-${Date.now()}-${new mongoose.Types.ObjectId()
-        .toString()
-        .slice(-6)}`;
+    // Nếu user không tồn tại (ví dụ token hợp lệ nhưng user đã bị xóa)
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "User not authenticated or not found.",
+      });
+      return;
+    }
 
+    if (paymentMethodDetails.type === "DEMO_SUCCESS") {
       console.log(
-        `[Server CheckoutController] Demo payment SUCCESS for event ${eventId}, quantity ${quantity}. TxID: ${transactionId}`
+        `[Server CheckoutController] Processing REAL payment for event ${eventId}, quantity ${quantity}.`
       );
 
-      // TODO (Mở rộng Demo):
-      // 1. Kiểm tra sự kiện có tồn tại không (Event.findById(eventId))
-      // 2. Kiểm tra loại vé có tồn tại không và số lượng vé còn đủ không.
-      // 3. Giả lập việc "tạo vé" hoặc "giảm số lượng vé có sẵn".
-      //    Ví dụ: const event = await Event.findById(eventId);
-      //           if (event && ticketTypeId) {
-      //             const ticketType = event.ticketTypes.find(tt => tt.id === ticketTypeId);
-      //             if (ticketType && ticketType.availableQuantity >= quantity) {
-      //               ticketType.availableQuantity -= quantity;
-      //               // await event.save(); // Cần xử lý cẩn thận race condition nếu có nhiều request
-      //             } else {
-      //                // Xử lý hết vé
-      //             }
-      //           }
+      // Gọi service để xử lý nghiệp vụ
+      const purchaseResult = await checkoutService.processSuccessfulPurchase({
+        userId,
+        eventId,
+        ticketTypeId, // Đảm bảo ticketTypeId là string ID
+        quantity,
+        purchaserInfo: { fullName, email, phone },
+      });
 
+      // Trả về kết quả từ service
       res.status(200).json({
         success: true,
-        message: "Demo payment successful.",
-        transactionId,
-        eventId,
-        ticketTypeId,
-        quantity,
-        purchaser: { fullName, email, phone },
+        message: purchaseResult.message,
+        transactionId: purchaseResult.transactionId, // transactionId từ payment record
+        // Các thông tin khác client có thể cần từ purchaseResult
+        eventId, // Giữ lại để client không bị lỗi
+        ticketTypeId, // Giữ lại
+        quantity, // Giữ lại
+        purchaser: { fullName, email, phone }, // Giữ lại
+        // registrationId: purchaseResult.registrationId, // Có thể thêm nếu client cần
       });
     } else if (paymentMethodDetails.type === "DEMO_FAIL") {
       console.log(
@@ -112,12 +112,12 @@ const processDemoPayment = async (
     ) {
       res.status(400).json({ success: false, message: error.message });
     } else {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Internal server error during demo payment processing.",
-        });
+      res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Internal server error during demo payment processing.",
+      });
     }
   }
 };
