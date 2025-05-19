@@ -11,11 +11,9 @@ import {
   Flex,
   Badge,
   Button,
-  SimpleGrid,
   VStack,
   HStack,
   Stack,
-  Image,
   Icon,
   Divider,
   Alert,
@@ -23,8 +21,10 @@ import {
   AlertTitle,
   AlertDescription,
   Tag,
+  Spinner,
+  Center,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiCalendar,
   FiMapPin,
@@ -32,107 +32,30 @@ import {
   FiShare2,
   FiClock,
   FiList,
-  FiCheck,
   FiClock as FiHistory,
   FiX,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
+import userService from "../../services/user.service.ts";
 
-// Interface cho dữ liệu vé
+// Interface cho dữ liệu vé (đồng bộ với dữ liệu trả về từ API)
 interface Ticket {
   id: string;
-  eventId: number;
+  eventId: string;
   eventTitle: string;
   date: string;
   startTime: string;
   location: string;
+  address?: string;
   image: string;
   ticketType: string;
   price: number;
   purchaseDate: string;
-  qrCode: string;
-  status: "upcoming" | "past" | "canceled";
+  status: "upcoming" | "past" | "canceled" | "used";
+  ticketStatusOriginal?: "reserved" | "paid" | "cancelled" | "used";
+  eventCategory?: string;
 }
-
-// Dữ liệu mẫu cho vé
-const ticketsData: Ticket[] = [
-  {
-    id: "TK-2023-001",
-    eventId: 501,
-    eventTitle: "TechConf 2023",
-    date: "20/10/2023",
-    startTime: "09:00 AM",
-    location: "Convention Center",
-    image: "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg",
-    ticketType: "VIP",
-    price: 299.99,
-    purchaseDate: "05/09/2023",
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TK-2023-001",
-    status: "upcoming",
-  },
-  {
-    id: "TK-2023-002",
-    eventId: 502,
-    eventTitle: "Classical Music Night",
-    date: "15/10/2023",
-    startTime: "07:30 PM",
-    location: "Opera House",
-    image: "https://images.pexels.com/photos/7095506/pexels-photo-7095506.jpeg",
-    ticketType: "Standard",
-    price: 49.99,
-    purchaseDate: "01/09/2023",
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TK-2023-002",
-    status: "upcoming",
-  },
-  {
-    id: "TK-2023-003",
-    eventId: 503,
-    eventTitle: "Photography Workshop",
-    date: "05/09/2023",
-    startTime: "10:00 AM",
-    location: "Art Studio",
-    image: "https://images.pexels.com/photos/1591056/pexels-photo-1591056.jpeg",
-    ticketType: "Standard",
-    price: 25.0,
-    purchaseDate: "20/08/2023",
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TK-2023-003",
-    status: "past",
-  },
-  {
-    id: "TK-2023-004",
-    eventId: 504,
-    eventTitle: "AI Summit",
-    date: "10/08/2023",
-    startTime: "09:30 AM",
-    location: "Tech Campus",
-    image: "https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg",
-    ticketType: "Premium",
-    price: 199.99,
-    purchaseDate: "15/07/2023",
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TK-2023-004",
-    status: "past",
-  },
-  {
-    id: "TK-2023-005",
-    eventId: 505,
-    eventTitle: "Startup Meetup",
-    date: "25/08/2023",
-    startTime: "06:00 PM",
-    location: "Innovation Hub",
-    image: "https://images.pexels.com/photos/7515916/pexels-photo-7515916.jpeg",
-    ticketType: "Standard",
-    price: 0,
-    purchaseDate: "10/08/2023",
-    qrCode:
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TK-2023-005",
-    status: "canceled",
-  },
-];
 
 /**
  * Component hiển thị danh sách vé của người dùng
@@ -145,18 +68,45 @@ const MyTickets = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
 
-  // State lưu dữ liệu vé
-  const [tickets, setTickets] = useState<Ticket[]>(ticketsData);
+  // State lưu dữ liệu vé, trạng thái loading và lỗi
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const activeBg = useColorModeValue("teal.50", "teal.900");
   const activeColor = useColorModeValue("teal.600", "teal.200");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+
+  // useEffect để fetch vé khi component mount
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Giả sử userService.getMyTickets() là hàm gọi API GET /api/tickets/my-tickets
+        const fetchedTickets = await userService.getMyTickets();
+        // Đảm bảo rằng fetchedTickets luôn là một mảng trước khi set state
+        // Nếu fetchedTickets không phải là mảng (ví dụ: null, undefined từ API lỗi)
+        // thì sẽ set tickets thành một mảng rỗng để tránh lỗi .filter()
+        setTickets(Array.isArray(fetchedTickets) ? fetchedTickets : []);
+      } catch (err) {
+        console.error("Error fetching tickets:", err);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else if (typeof err === "string") {
+          setError(err);
+        } else {
+          setError("Không thể tải danh sách vé. Vui lòng thử lại sau.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, []);
 
   // Lọc vé theo tab và tìm kiếm
   const filteredTickets = tickets.filter((ticket) => {
@@ -208,27 +158,47 @@ const MyTickets = () => {
   // Tạo locationOptions cho SearchBar
   const locationOptions = tickets
     .map((ticket) => ticket.location)
-    .filter((location, index, self) => self.indexOf(location) === index) // Loại bỏ trùng lặp
+    .filter(
+      (location, index, self) => self.indexOf(location) === index && location
+    )
     .map((location) => ({ name: location }));
 
-  // Tạo danh mục (dummy) cho SearchBar
+  // Tạo danh mục (dummy) cho SearchBar - Bỏ đi vì không dùng
+  /*
   const categoryOptions = [
     { id: "all", name: "Tất cả loại vé" },
     { id: "standard", name: "Vé thường" },
     { id: "vip", name: "Vé VIP" },
     { id: "premium", name: "Vé Premium" },
   ];
+  */
 
-  // Function getCategoryName cho SearchBar
-  const getCategoryName = (id: string): string => {
-    const category = categoryOptions.find((cat) => cat.id === id);
-    return category ? category.name : id;
-  };
-
-  // Tạo appliedFilters để hiển thị badges khi có filter
+  // Tạo appliedFilters để hiển thị badges khi có filter - Bỏ đi vì không dùng
+  /*
   const appliedFilters = {
     location: locationFilter,
   };
+  */
+
+  // Xử lý khi đang loading
+  if (isLoading) {
+    return (
+      <Center h="300px">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  // Xử lý khi có lỗi
+  if (error) {
+    return (
+      <Alert status="error" borderRadius="md">
+        <AlertIcon />
+        <AlertTitle mr={2}>Lỗi!</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <Box>
@@ -252,7 +222,7 @@ const MyTickets = () => {
               <Icon as={FiList} fontSize="18px" mr={2} />
               <Text>Tất cả vé</Text>
               <Badge ml={2} colorScheme="blue" borderRadius="full">
-                {tickets.length}
+                {filteredTickets.length}
               </Badge>
             </Flex>
           </Tab>
@@ -267,7 +237,11 @@ const MyTickets = () => {
               <Icon as={FiCalendar} fontSize="18px" mr={2} />
               <Text>Sắp diễn ra</Text>
               <Badge ml={2} colorScheme="green" borderRadius="full">
-                {tickets.filter((t) => t.status === "upcoming").length}
+                {
+                  filteredTickets.filter(
+                    (ticket) => ticket.status === "upcoming"
+                  ).length
+                }
               </Badge>
             </Flex>
           </Tab>
@@ -282,7 +256,10 @@ const MyTickets = () => {
               <Icon as={FiHistory} fontSize="18px" mr={2} />
               <Text>Đã qua</Text>
               <Badge ml={2} colorScheme="gray" borderRadius="full">
-                {tickets.filter((t) => t.status === "past").length}
+                {
+                  filteredTickets.filter((ticket) => ticket.status === "past")
+                    .length
+                }
               </Badge>
             </Flex>
           </Tab>
@@ -296,7 +273,11 @@ const MyTickets = () => {
               <Icon as={FiX} fontSize="18px" mr={2} />
               <Text>Đã hủy</Text>
               <Badge ml={2} colorScheme="red" borderRadius="full">
-                {tickets.filter((t) => t.status === "canceled").length}
+                {
+                  filteredTickets.filter(
+                    (ticket) => ticket.status === "canceled"
+                  ).length
+                }
               </Badge>
             </Flex>
           </Tab>
@@ -314,9 +295,6 @@ const MyTickets = () => {
           showLocationFilter={true}
           showCategoryFilter={false}
           showPriceFilter={false}
-          appliedFilters={{
-            location: locationFilter,
-          }}
           mb={6}
           borderWidth="1px"
           borderColor={borderColor}
