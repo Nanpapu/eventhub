@@ -2,8 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 // Interface cho AttendeeInfo
 export interface IAttendeeInfo {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone?: string;
 }
@@ -53,14 +52,9 @@ const registrationSchema = new Schema<IRegistration>(
     },
     attendeeInfo: [
       {
-        firstName: {
+        name: {
           type: String,
-          required: [true, "First name is required"],
-          trim: true,
-        },
-        lastName: {
-          type: String,
-          required: [true, "Last name is required"],
+          required: [true, "Name is required"],
           trim: true,
         },
         email: {

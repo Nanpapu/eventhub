@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -23,6 +23,11 @@ import {
 import { useForm } from "react-hook-form";
 import { FaMoneyBillWave, FaSpinner, FaCheck } from "react-icons/fa";
 import checkoutService from "../../services/checkout.service";
+import { useAppSelector } from "../../app/hooks";
+import {
+  selectUser,
+  selectIsAuthenticated,
+} from "../../app/features/authSlice";
 
 interface CheckoutFormProps {
   event: {
@@ -89,7 +94,55 @@ export default function CheckoutForm({
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<FormValues>();
+
+  // Lấy thông tin người dùng từ Redux
+  const currentUser = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
+  // useEffect để tự động điền thông tin người dùng nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      // Chỉ reset nếu các trường trong form còn trống hoặc là giá trị mặc định
+      // Điều này cho phép người dùng chỉnh sửa sau khi tự động điền
+      const currentFormValues = getValues();
+      const defaultValues: Partial<FormValues> = {};
+
+      if (!currentFormValues.fullName && currentUser.name) {
+        defaultValues.fullName = currentUser.name;
+      }
+      if (!currentFormValues.email && currentUser.email) {
+        defaultValues.email = currentUser.email;
+      }
+      if (!currentFormValues.phone && currentUser.phone) {
+        // currentUser.phone có thể undefined
+        defaultValues.phone = currentUser.phone;
+      }
+
+      // Chỉ gọi reset nếu có ít nhất một giá trị được điền
+      // và các giá trị đó khác với giá trị hiện tại của form
+      // Hoặc khi form mới được render lần đầu và chưa có giá trị
+      const shouldReset =
+        Object.keys(defaultValues).length > 0 &&
+        ((!currentFormValues.fullName &&
+          !currentFormValues.email &&
+          !currentFormValues.phone) || // Form rỗng ban đầu
+          (defaultValues.fullName &&
+            defaultValues.fullName !== currentFormValues.fullName) ||
+          (defaultValues.email &&
+            defaultValues.email !== currentFormValues.email) ||
+          (defaultValues.phone &&
+            defaultValues.phone !== currentFormValues.phone));
+
+      if (shouldReset) {
+        reset({
+          ...currentFormValues, // Giữ lại các giá trị đã có hoặc người dùng đã nhập
+          ...defaultValues, // Ghi đè bằng thông tin user nếu có và form field đó rỗng
+        });
+      }
+    }
+  }, [isAuthenticated, currentUser, reset, getValues]);
 
   // Tính toán tổng tiền
   const getTicketPrice = () => {

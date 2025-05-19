@@ -125,9 +125,7 @@ class CheckoutService {
       // 6. Tạo bản ghi Registration
       const attendeeData: IAttendeeInfo[] = [
         {
-          firstName:
-            purchaserInfo.fullName.split(" ")[0] || purchaserInfo.fullName, // Tách đơn giản
-          lastName: purchaserInfo.fullName.split(" ").slice(1).join(" ") || "",
+          name: purchaserInfo.fullName, // Gán trực tiếp fullName vào name
           email: purchaserInfo.email,
           phone: purchaserInfo.phone,
         },

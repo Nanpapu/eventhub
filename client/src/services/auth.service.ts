@@ -45,6 +45,7 @@ export interface AuthResponse {
     role: string;
     avatar?: string;
     bio?: string;
+    phone?: string;
   };
 }
 
