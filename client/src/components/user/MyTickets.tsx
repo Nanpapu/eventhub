@@ -82,26 +82,37 @@ const MyTickets = () => {
   // useEffect để fetch vé khi component mount
   useEffect(() => {
     const fetchTickets = async () => {
+      console.log("[MyTickets] Starting to fetch tickets...");
       setIsLoading(true);
       setError(null);
       try {
-        // Giả sử userService.getMyTickets() là hàm gọi API GET /api/tickets/my-tickets
         const fetchedTickets = await userService.getMyTickets();
-        // Đảm bảo rằng fetchedTickets luôn là một mảng trước khi set state
-        // Nếu fetchedTickets không phải là mảng (ví dụ: null, undefined từ API lỗi)
-        // thì sẽ set tickets thành một mảng rỗng để tránh lỗi .filter()
+        console.log(
+          "[MyTickets] Fetched tickets from service:",
+          fetchedTickets
+        );
+
         setTickets(Array.isArray(fetchedTickets) ? fetchedTickets : []);
+        console.log("[MyTickets] State 'tickets' updated.");
       } catch (err) {
-        console.error("Error fetching tickets:", err);
+        console.error("[MyTickets] Error fetching tickets in component:", err);
         if (err instanceof Error) {
           setError(err.message);
+          console.log("[MyTickets] Error message set to state:", err.message);
         } else if (typeof err === "string") {
           setError(err);
+          console.log("[MyTickets] Error string set to state:", err);
         } else {
-          setError("Không thể tải danh sách vé. Vui lòng thử lại sau.");
+          const defaultError =
+            "Không thể tải danh sách vé. Vui lòng thử lại sau.";
+          setError(defaultError);
+          console.log("[MyTickets] Default error set to state:", defaultError);
         }
       } finally {
         setIsLoading(false);
+        console.log(
+          "[MyTickets] Finished fetching tickets, isLoading set to false."
+        );
       }
     };
 
@@ -109,6 +120,7 @@ const MyTickets = () => {
   }, []);
 
   // Lọc vé theo tab và tìm kiếm
+  console.log("[MyTickets] Current 'tickets' state before filtering:", tickets);
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch = ticket.eventTitle
       .toLowerCase()
@@ -182,6 +194,7 @@ const MyTickets = () => {
 
   // Xử lý khi đang loading
   if (isLoading) {
+    // console.log("[MyTickets] Rendering Loading Spinner."); // Di chuyển log ra ngoài JSX hoặc return null
     return (
       <Center h="300px">
         <Spinner size="xl" />
@@ -191,6 +204,7 @@ const MyTickets = () => {
 
   // Xử lý khi có lỗi
   if (error) {
+    // console.log("[MyTickets] Rendering Error Alert with message:", error); // Di chuyển log
     return (
       <Alert status="error" borderRadius="md">
         <AlertIcon />
@@ -305,6 +319,8 @@ const MyTickets = () => {
         <TabPanels>
           {/* Tab: Tất cả vé */}
           <TabPanel p={0}>
+            {/* Log trước khi kiểm tra filteredTickets.length */}
+            {/* {console.log("[MyTickets] Rendering 'Tất cả vé' tab. Filtered tickets length:", filteredTickets.length, "isLoading:", isLoading, "error:", error)} */}
             {filteredTickets.length > 0 ? (
               <VStack spacing={6} align="stretch">
                 {filteredTickets.map((ticket) => (
@@ -329,15 +345,20 @@ const MyTickets = () => {
 
           {/* Tab: Vé sắp diễn ra */}
           <TabPanel p={0}>
-            {filteredTickets.length > 0 ? (
+            {/* Log cho tab 'Sắp diễn ra' */}
+            {/* {console.log("[MyTickets] Rendering 'Sắp diễn ra' tab. Filtered tickets length:", filteredTickets.filter(t => t.status === 'upcoming').length)} */}
+            {filteredTickets.filter((ticket) => ticket.status === "upcoming")
+              .length > 0 ? (
               <VStack spacing={6} align="stretch">
-                {filteredTickets.map((ticket) => (
-                  <TicketCard
-                    key={ticket.id}
-                    ticket={ticket}
-                    onCancel={handleCancelTicket}
-                  />
-                ))}
+                {filteredTickets
+                  .filter((ticket) => ticket.status === "upcoming")
+                  .map((ticket) => (
+                    <TicketCard
+                      key={ticket.id}
+                      ticket={ticket}
+                      onCancel={handleCancelTicket}
+                    />
+                  ))}
               </VStack>
             ) : (
               <Alert status="info" borderRadius="md">
@@ -352,15 +373,20 @@ const MyTickets = () => {
 
           {/* Tab: Vé đã qua */}
           <TabPanel p={0}>
-            {filteredTickets.length > 0 ? (
+            {/* Log cho tab 'Đã qua' */}
+            {/* {console.log("[MyTickets] Rendering 'Đã qua' tab. Filtered tickets length:", filteredTickets.filter(t => t.status === 'past').length)} */}
+            {filteredTickets.filter((ticket) => ticket.status === "past")
+              .length > 0 ? (
               <VStack spacing={6} align="stretch">
-                {filteredTickets.map((ticket) => (
-                  <TicketCard
-                    key={ticket.id}
-                    ticket={ticket}
-                    onCancel={handleCancelTicket}
-                  />
-                ))}
+                {filteredTickets
+                  .filter((ticket) => ticket.status === "past")
+                  .map((ticket) => (
+                    <TicketCard
+                      key={ticket.id}
+                      ticket={ticket}
+                      onCancel={handleCancelTicket}
+                    />
+                  ))}
               </VStack>
             ) : (
               <Alert status="info" borderRadius="md">
@@ -375,15 +401,20 @@ const MyTickets = () => {
 
           {/* Tab: Vé đã hủy */}
           <TabPanel p={0}>
-            {filteredTickets.length > 0 ? (
+            {/* Log cho tab 'Đã hủy' */}
+            {/* {console.log("[MyTickets] Rendering 'Đã hủy' tab. Filtered tickets length:", filteredTickets.filter(t => t.status === 'canceled').length)} */}
+            {filteredTickets.filter((ticket) => ticket.status === "canceled")
+              .length > 0 ? (
               <VStack spacing={6} align="stretch">
-                {filteredTickets.map((ticket) => (
-                  <TicketCard
-                    key={ticket.id}
-                    ticket={ticket}
-                    onCancel={handleCancelTicket}
-                  />
-                ))}
+                {filteredTickets
+                  .filter((ticket) => ticket.status === "canceled")
+                  .map((ticket) => (
+                    <TicketCard
+                      key={ticket.id}
+                      ticket={ticket}
+                      onCancel={handleCancelTicket}
+                    />
+                  ))}
               </VStack>
             ) : (
               <Alert status="info" borderRadius="md">

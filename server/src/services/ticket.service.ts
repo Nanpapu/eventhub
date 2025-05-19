@@ -9,14 +9,22 @@ class TicketService {
    * @returns A promise that resolves to an array of tickets with populated event data.
    */
   async findUserTickets(userId: string): Promise<any[]> {
-    // Sẽ trả về mảng đã được transform
+    console.log("[TicketService] Finding tickets for userId:", userId);
     if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.error("[TicketService] Invalid user ID format:", userId);
       throw new Error("Invalid user ID format");
     }
 
-    const tickets = await Ticket.find({
-      userId: new mongoose.Types.ObjectId(userId),
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    console.log(
+      "[TicketService] Querying tickets for userId (ObjectId):",
+      userObjectId
+    );
+
+    const ticketsFromDB = await Ticket.find({
+      userId: userObjectId,
     })
+      // .populate<{ eventId: IEvent }>({ // Original populate
       .populate<{
         eventId: Pick<
           IEvent,
@@ -35,58 +43,78 @@ class TicketService {
       }>({
         path: "eventId",
         select:
-          "title date startTime location imageUrl isOnline onlineUrl address category organizer", // Chọn các trường cần từ Event
-        // Options để populate organizer từ event nếu cần
-        // populate: {
-        //   path: 'organizer',
-        //   select: 'name avatar' // Chọn các trường cần từ User (Organizer)
-        // }
+          "title date startTime location imageUrl isOnline onlineUrl address category organizer",
       })
-      .sort({ purchaseDate: -1 }); // Sắp xếp vé mới nhất lên đầu
+      .sort({ purchaseDate: -1 });
 
-    // Transform data to match client's expected Ticket interface and add computed status
-    return tickets.map((ticket) => {
-      const event = ticket.eventId as IEvent; // eventId đã được populate thành IEvent
+    console.log(
+      `[TicketService] Found ${ticketsFromDB.length} tickets in DB (before transform):`,
+      JSON.stringify(ticketsFromDB, null, 2)
+    );
 
-      // Xác định trạng thái "upcoming", "past" dựa trên ngày sự kiện
-      let displayStatus: "upcoming" | "past" | "canceled" | "used" = "upcoming";
-      const now = new Date();
-      const eventDate = new Date(event.date);
-      // Đặt giờ về 0 để so sánh ngày chính xác
-      now.setHours(0, 0, 0, 0);
-      eventDate.setHours(0, 0, 0, 0);
+    if (!ticketsFromDB || ticketsFromDB.length === 0) {
+      console.log("[TicketService] No tickets found in DB for this user.");
+      return []; // Trả về mảng rỗng nếu không có vé
+    }
 
-      if (ticket.status === "cancelled") {
-        displayStatus = "canceled";
-      } else if (ticket.status === "used") {
-        displayStatus = "used";
-      } else if (eventDate < now) {
-        displayStatus = "past";
-      }
-      // Nếu không rơi vào các trường hợp trên và status là "paid", nó sẽ là "upcoming"
+    const transformedTickets = ticketsFromDB
+      .map((ticket) => {
+        const event = ticket.eventId as IEvent; // eventId đã được populate thành IEvent
 
-      return {
-        id: ticket._id.toString(),
-        eventId: event._id.toString(), // Client đang dùng eventId là number/string, nên transform
-        eventTitle: event.title,
-        date: new Date(event.date).toLocaleDateString("vi-VN"), // Format date
-        startTime: event.startTime,
-        location: event.isOnline
-          ? event.onlineUrl || "Online Event"
-          : event.location,
-        address: event.isOnline ? "" : event.address, // Địa chỉ cho sự kiện offline
-        image: event.imageUrl,
-        ticketType: ticket.ticketTypeName,
-        price: ticket.price,
-        purchaseDate: new Date(ticket.purchaseDate).toLocaleDateString("vi-VN"), // Format date
-        // qrCode: `GENERATE_QR_FOR_${ticket._id.toString()}`, // Tạm thời client tự tạo
-        status: displayStatus, // Trạng thái tính toán cho client
-        ticketStatusOriginal: ticket.status, // Giữ lại status gốc từ DB nếu cần
-        // Thêm các thông tin khác nếu cần
-        eventCategory: event.category,
-        eventOrganizer: event.organizer, // Đây sẽ là ObjectId, cần populate thêm nếu muốn tên organizer
-      };
-    });
+        if (!event) {
+          console.warn(
+            `[TicketService] Ticket ${ticket._id} has no populated eventId. Skipping transformation for this ticket.`
+          );
+          // Có thể trả về một object lỗi hoặc bỏ qua vé này
+          // Hoặc xử lý theo cách khác tùy vào yêu cầu nghiệp vụ
+          return null; // Sẽ được filter ra sau
+        }
+
+        let displayStatus: "upcoming" | "past" | "canceled" | "used" =
+          "upcoming";
+        const now = new Date();
+        const eventDate = new Date(event.date);
+        now.setHours(0, 0, 0, 0);
+        eventDate.setHours(0, 0, 0, 0);
+
+        if (ticket.status === "cancelled") {
+          displayStatus = "canceled";
+        } else if (ticket.status === "used") {
+          displayStatus = "used";
+        } else if (eventDate < now) {
+          displayStatus = "past";
+        }
+
+        const transformed = {
+          id: ticket._id.toString(),
+          eventId: event._id.toString(),
+          eventTitle: event.title,
+          date: new Date(event.date).toLocaleDateString("vi-VN"),
+          startTime: event.startTime,
+          location: event.isOnline
+            ? event.onlineUrl || "Online Event"
+            : event.location,
+          address: event.isOnline ? "" : event.address,
+          image: event.imageUrl,
+          ticketType: ticket.ticketTypeName,
+          price: ticket.price,
+          purchaseDate: new Date(ticket.purchaseDate).toLocaleDateString(
+            "vi-VN"
+          ),
+          status: displayStatus,
+          ticketStatusOriginal: ticket.status,
+          eventCategory: event.category,
+          eventOrganizer: event.organizer,
+        };
+        // console.log(`[TicketService] Transformed ticket ${ticket._id}:`, JSON.stringify(transformed, null, 2)); // Log từng vé nếu cần debug sâu
+        return transformed;
+      })
+      .filter((ticket) => ticket !== null); // Loại bỏ các vé null (nếu có)
+
+    console.log(
+      `[TicketService] Returning ${transformedTickets.length} transformed tickets.`
+    );
+    return transformedTickets;
   }
 
   // Các hàm service khác cho vé...
