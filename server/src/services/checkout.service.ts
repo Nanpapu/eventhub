@@ -1,214 +1,180 @@
 // server/src/services/checkout.service.ts
-import mongoose from "mongoose";
-import Event from "../models/Event";
+import mongoose, { Types } from "mongoose";
+import Event, { IEvent, ITicketTypeSubdocument } from "../models/Event";
 import User from "../models/User"; // Cần thiết nếu bạn muốn lấy thêm thông tin user
-import Payment from "../models/Payment";
-import Registration from "../models/Registration";
-import Notification from "../models/Notification";
-import { IAttendeeInfo } from "../models/Registration"; // Import IAttendeeInfo
+import Payment, { IPayment } from "../models/Payment";
+import Registration, {
+  IRegistration,
+  IAttendeeInfo,
+} from "../models/Registration";
+import Notification, { INotification } from "../models/Notification";
+import Ticket, { ITicket } from "../models/Ticket";
 
 interface SuccessfulPurchaseParams {
-  userId: mongoose.Types.ObjectId;
+  userId: Types.ObjectId;
   eventId: string;
-  ticketTypeId: string; // ID của ticketType (string)
+  ticketTypeId: string;
   quantity: number;
   purchaserInfo: {
     fullName: string;
     email: string;
     phone?: string;
   };
-  // totalAmount: number; // Server nên tự tính lại dựa trên giá từ DB
+  // paymentMethod?: string; // Example: 'stripe', 'paypal' - can be added for more specific payment processing
+  // paymentDetails?: any; // Example: Stripe token, PayPal transaction ID
+}
+
+interface PurchaseResult {
+  registration: IRegistration;
+  payment: IPayment;
+  notification: INotification;
+  tickets: ITicket[];
 }
 
 class CheckoutService {
   /**
-   * Có thể thêm các phương thức xử lý nghiệp vụ thanh toán ở đây sau này.
-   * Ví dụ: recordTransaction, updateTicketAvailability, sendConfirmationEmail, v.v.
+   * Processes a successful purchase after payment confirmation.
+   * This function should be called after the payment gateway has confirmed the payment.
+   * It handles creating the registration, payment record, tickets, updating event stats, and sending notifications.
+   *
+   * IMPORTANT: This entire operation is performed within a MongoDB transaction
+   * to ensure data consistency. If any step fails, the entire transaction is rolled back.
    */
-  // Ví dụ một hàm có thể có trong tương lai:
-  // async verifyAndHoldTickets(eventId: string, ticketTypeId: string, quantity: number): Promise<boolean> {
-  //   // Logic kiểm tra và tạm giữ vé
-  //   console.log(`[CheckoutService] Verifying and holding ${quantity} of ticket type ${ticketTypeId} for event ${eventId}`);
-  //   // ...
-  //   return true; // or false
-  // }
-
-  /**
-   * Xử lý logic sau khi thanh toán thành công, bao gồm tạo các bản ghi DB.
-   */
-  async processSuccessfulPurchase(params: SuccessfulPurchaseParams) {
-    const { userId, eventId, ticketTypeId, quantity, purchaserInfo } = params;
-
+  async processSuccessfulPurchase(
+    params: SuccessfulPurchaseParams
+  ): Promise<PurchaseResult> {
     const session = await mongoose.startSession();
     session.startTransaction();
-
     try {
-      // 1. Lấy thông tin sự kiện và kiểm tra
-      const event = await Event.findById(eventId).session(session);
+      // Find event
+      const event = await Event.findById(params.eventId).session(session);
       if (!event) {
         throw new Error("Event not found.");
       }
       if (!event.published) {
+        // Assuming isPublished field exists
         throw new Error("Event is not currently published.");
       }
 
-      // Thêm kiểm tra cho ticketTypeId (đảm bảo nó là string hợp lệ)
-      if (typeof ticketTypeId !== "string" || !ticketTypeId.trim()) {
-        throw new Error(`Invalid Ticket Type ID provided: ${ticketTypeId}`);
-      }
-
-      // 2. Tìm đúng loại vé (ticketType) trong sự kiện
-      // Đảm bảo event.ticketTypes là mảng và có phần tử
-      if (!event.ticketTypes || event.ticketTypes.length === 0) {
-        throw new Error(
-          `Event '${event.title}' (ID: ${eventId}) has no ticket types defined or its ticketTypes array is empty.`
-        );
-      }
-
-      const selectedTicketType = event.ticketTypes.find(
-        // tt._id là ObjectId, ticketTypeId là string
-        (tt) => tt._id.toString() === ticketTypeId
+      // Find selected ticket type
+      const ticketTypeDetails = event.ticketTypes.find(
+        (tt) => tt._id.toString() === params.ticketTypeId
       );
 
-      if (!selectedTicketType) {
-        // Cung cấp thêm context cho lỗi
-        const availableTicketTypesInfo = event.ticketTypes
-          .map((tt) => `{ id: '${tt._id.toString()}', name: '${tt.name}' }`)
-          .join(", ");
-        throw new Error(
-          `Ticket type with ID '${ticketTypeId}' not found for event '${
-            event.title
-          }' (ID: ${eventId}). Available ticket types in DB for this event: [${
-            availableTicketTypesInfo ||
-            "None (this should not happen if previous check passed)"
-          }]`
-        );
+      if (!ticketTypeDetails) {
+        throw new Error("Invalid ticket type.");
       }
 
-      // 3. Kiểm tra số lượng vé còn lại và giới hạn mua
-      if (selectedTicketType.availableQuantity < quantity) {
-        throw new Error(
-          `Not enough tickets available for type "${selectedTicketType.name}". Only ${selectedTicketType.availableQuantity} left.`
-        );
+      // Check available quantity (critical: do this within the transaction)
+      if (ticketTypeDetails.availableQuantity < params.quantity) {
+        throw new Error("Not enough tickets available for the selected type.");
       }
-      if (quantity <= 0) {
+      if (params.quantity <= 0) {
         throw new Error("Quantity must be greater than zero.");
       }
-      if (quantity > event.maxTicketsPerPerson) {
+      // Assuming maxTicketsPerPerson field exists on event
+      if (
+        event.maxTicketsPerPerson &&
+        params.quantity > event.maxTicketsPerPerson
+      ) {
         throw new Error(
           `Cannot purchase more than ${event.maxTicketsPerPerson} tickets per order for this event.`
         );
       }
 
-      // 4. Tính tổng tiền (server-side)
-      const singleTicketPrice = selectedTicketType.price;
-      const totalAmount = singleTicketPrice * quantity;
-      // TODO: Thêm logic phí dịch vụ nếu có, ví dụ:
-      // const serviceFee = totalAmount * 0.05; // 5% service fee
-      // const finalAmount = totalAmount + serviceFee;
+      const totalAmount = ticketTypeDetails.price * params.quantity;
 
-      // 5. Tạo bản ghi Payment
-      const paymentTransactionId = `REAL-TRX-${Date.now()}-${new mongoose.Types.ObjectId()
-        .toString()
-        .slice(-6)}`;
-      const payment = new Payment({
-        userId,
-        eventId,
-        amount: totalAmount, // Sử dụng finalAmount nếu có phí dịch vụ
-        method: "DEMO_PURCHASE",
-        status: "completed",
-        transactionId: paymentTransactionId,
-        // registrationId sẽ được cập nhật sau khi registration được tạo, hoặc không cần nếu Registration đã có paymentId
-      });
-      await payment.save({ session });
-
-      // 6. Tạo bản ghi Registration
-      const attendeeData: IAttendeeInfo[] = [
-        {
-          name: purchaserInfo.fullName, // Gán trực tiếp fullName vào name
-          email: purchaserInfo.email,
-          phone: purchaserInfo.phone,
-        },
-      ];
-
-      const registration = new Registration({
-        event: eventId,
-        user: userId,
-        ticketType: selectedTicketType._id, // Lưu ObjectId của ticketType
-        quantity,
-        totalAmount, // Sử dụng finalAmount nếu có phí dịch vụ
-        attendeeInfo: attendeeData, // Client chỉ gửi 1 bộ thông tin người mua chính
-        status: "confirmed",
-        paymentStatus: "paid",
-        paymentId: payment._id,
-      });
-      await registration.save({ session });
-
-      // (Optional) Nếu Payment model có registrationId
-      // payment.registrationId = registration._id;
-      // await payment.save({ session });
-
-      // 7. Cập nhật Event: giảm số lượng vé và tăng số người tham dự
-      // Cách 1: Dùng $inc (an toàn hơn cho concurrency)
-      const updateResult = await Event.updateOne(
-        {
-          _id: eventId,
-          "ticketTypes._id": selectedTicketType._id, // So sánh ObjectId với ObjectId
-        },
-        {
-          $inc: {
-            "ticketTypes.$.availableQuantity": -quantity,
-            attendees: quantity,
+      // 1. Create Registration
+      const registrationData: Partial<IRegistration> = {
+        event: event._id as Types.ObjectId,
+        user: params.userId,
+        ticketType: ticketTypeDetails._id as Types.ObjectId,
+        quantity: params.quantity,
+        totalAmount: totalAmount,
+        attendeeInfo: [
+          {
+            name: params.purchaserInfo.fullName,
+            email: params.purchaserInfo.email,
+            phone: params.purchaserInfo.phone,
           },
-        },
-        { session }
-      );
+        ],
+        status: "confirmed", // Because payment is successful
+        paymentStatus: "paid",
+      };
+      const registration = new Registration(registrationData);
+      const savedRegistration = await registration.save({ session });
 
-      if (updateResult.modifiedCount === 0) {
-        // Có thể do vé đã bị người khác mua trong lúc xử lý, hoặc ID không đúng
-        // Kiểm tra lại availableQuantity trước khi throw lỗi này để chắc chắn
-        const freshEvent = await Event.findById(eventId).session(session);
-        const freshTicketType = freshEvent?.ticketTypes.find(
-          (tt) => tt._id.equals(selectedTicketType._id) // So sánh ObjectId với ObjectId
-        );
-        if (!freshTicketType || freshTicketType.availableQuantity < quantity) {
-          throw new Error(
-            "Failed to update event ticket quantity, possibly due to concurrent purchase or insufficient stock."
-          );
-        }
-        // Nếu không phải do hết vé, có thể là lỗi khác
-        // throw new Error("Failed to update event ticket quantity.");
+      // 2. Create Payment
+      const paymentData: Partial<IPayment> = {
+        userId: params.userId,
+        eventId: event._id as Types.ObjectId,
+        registrationId: savedRegistration._id as Types.ObjectId,
+        amount: totalAmount,
+        method: "DEMO_PURCHASE", // Or from params if available
+        status: "completed",
+        transactionId: `DEMO_TRANS_${new Types.ObjectId().toString()}`, // Mock transaction ID
+      };
+      const payment = new Payment(paymentData);
+      const savedPayment = await payment.save({ session }); // Assign to new variable
+
+      // Update registration with paymentId (if your schema needs it, ensure it's optional or handled)
+      // registration.paymentId = savedPayment._id; // This line might be problematic if paymentId is string
+      // registration.paymentMethod = savedPayment.method;
+      // await registration.save({ session }); // Save registration again if updated
+
+      // 3. Create individual Ticket records
+      const createdTickets: ITicket[] = [];
+      for (let i = 0; i < params.quantity; i++) {
+        const ticketData: Partial<ITicket> = {
+          eventId: event._id as Types.ObjectId,
+          userId: params.userId,
+          ticketTypeId: ticketTypeDetails._id.toString(),
+          ticketTypeName: ticketTypeDetails.name,
+          price: ticketTypeDetails.price,
+          quantity: 1, // Each Ticket document represents 1 ticket
+          status: "paid",
+          paymentId: savedPayment._id as Types.ObjectId,
+          purchaseDate: new Date(),
+        };
+        const ticket = new Ticket(ticketData);
+        const savedTicket = await ticket.save({ session });
+        createdTickets.push(savedTicket);
       }
 
-      // 8. Tạo Notification cho người dùng
-      const notification = new Notification({
-        user: userId,
-        title: `Mua vé thành công: ${event.title}`,
-        message: `Bạn đã mua thành công ${quantity} vé loại "${selectedTicketType.name}" cho sự kiện "${event.title}". Mã giao dịch: ${payment.transactionId}.`,
-        type: "payment",
-        relatedEvent: eventId,
-      });
-      await notification.save({ session });
+      // 4. Update available quantity in Event
+      ticketTypeDetails.availableQuantity -= params.quantity;
+      event.attendees = (event.attendees || 0) + params.quantity; // Update total attendees
+      // If you have a soldTickets field on ticketTypeDetails, update it too
+      // ticketTypeDetails.soldQuantity = (ticketTypeDetails.soldQuantity || 0) + params.quantity;
+      await event.save({ session });
+
+      // 5. Create Notification
+      const notificationData: Partial<INotification> = {
+        user: params.userId,
+        title: `Ticket Purchase Successful: ${event.title}`,
+        message: `You have successfully purchased ${params.quantity} x ${ticketTypeDetails.name} ticket(s) for ${event.title}. Transaction ID: ${savedPayment.transactionId}.`,
+        type: "payment" as const,
+        relatedEvent: event._id as Types.ObjectId,
+        isRead: false,
+      };
+      const notification = new Notification(notificationData);
+      const savedNotification = await notification.save({ session });
 
       await session.commitTransaction();
-
       return {
-        success: true,
-        message: "Purchase processed successfully.",
-        transactionId: payment.transactionId,
-        registrationId: registration._id,
-        eventTitle: event.title,
-        ticketTypeName: selectedTicketType.name,
-        quantityPurchased: quantity,
-        totalPaid: totalAmount, // Sử dụng finalAmount nếu có phí dịch vụ
+        registration: savedRegistration,
+        payment: savedPayment,
+        notification: savedNotification,
+        tickets: createdTickets,
       };
     } catch (error) {
       await session.abortTransaction();
-      console.error(
-        "[CheckoutService] Error processing successful purchase:",
-        error
-      );
-      throw error; // Ném lỗi để controller bắt và trả về cho client
+      console.error("Error during ticket purchase processing:", error);
+      // It's good practice to throw a custom error or re-throw the original with context
+      if (error instanceof Error) {
+        throw new Error(`Transaction failed: ${error.message}`);
+      }
+      throw new Error("Transaction failed due to an unknown error.");
     } finally {
       session.endSession();
     }
