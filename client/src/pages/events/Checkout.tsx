@@ -45,15 +45,16 @@ interface EventData {
   time: string;
   location: string;
   imageUrl: string;
-  price: number;
+  price: number; // Giá mặc định nếu không có ticketTypes
   organizer: string;
-  availableTickets: number;
-  maxPerOrder: number;
+  availableTickets: number; // Tổng số vé còn lại (fallback nếu không có ticketTypes)
+  maxPerOrder: number; // Số lượng tối đa mỗi đơn hàng (chung)
   ticketTypes?: {
     id: string;
     name: string;
     price: number;
     availableQuantity: number;
+    // maxPerOrder?: number; // Có thể thêm maxPerOrder cho từng loại vé nếu cần
   }[];
 }
 
@@ -141,6 +142,9 @@ export default function Checkout() {
             formattedData.ticketTypes.length > 0
           ) {
             setSelectedTicketType(formattedData.ticketTypes[0].id);
+            setTicketQuantity(1);
+          } else {
+            setTicketQuantity(1);
           }
         } else {
           console.error(
@@ -171,12 +175,58 @@ export default function Checkout() {
     fetchEventRealAPI();
   }, [eventId]);
 
+  // Tính toán số lượng vé tối đa có thể mua
+  const currentSelectedTicketInfo = event?.ticketTypes?.find(
+    (t) => t.id === selectedTicketType
+  );
+  const maxTicketsAvailableForOrder = currentSelectedTicketInfo
+    ? currentSelectedTicketInfo.availableQuantity
+    : event?.availableTickets || 0;
+
+  // Giới hạn chung của sự kiện cho mỗi đơn hàng
+  const eventMaxPerOrder = event?.maxPerOrder || Infinity; // Nếu không có thì coi như vô hạn
+
+  // Số lượng tối đa thực tế người dùng có thể chọn cho NumberInput
+  const maxAllowedForInput = Math.max(
+    0,
+    Math.min(maxTicketsAvailableForOrder, eventMaxPerOrder)
+  );
+
+  // Xử lý khi thay đổi loại vé
+  const handleTicketTypeChange = (newTicketTypeId: string) => {
+    setSelectedTicketType(newTicketTypeId);
+    // Tìm thông tin của loại vé mới
+    const newTypeInfo = event?.ticketTypes?.find(
+      (t) => t.id === newTicketTypeId
+    );
+    const newMaxAvailable = newTypeInfo
+      ? newTypeInfo.availableQuantity
+      : event?.availableTickets || 0;
+    const newMaxAllowed = Math.max(
+      0,
+      Math.min(newMaxAvailable, eventMaxPerOrder)
+    );
+
+    // Nếu số lượng hiện tại lớn hơn số lượng cho phép của loại vé mới (hoặc lớn hơn số lượng còn lại), reset về 1
+    // Hoặc nếu số lượng cho phép mới là 0, cũng reset về 1 (hoặc 0 nếu min là 0)
+    if (ticketQuantity > newMaxAllowed || newMaxAllowed === 0) {
+      setTicketQuantity(newMaxAllowed > 0 ? 1 : 0);
+    } else if (ticketQuantity === 0 && newMaxAllowed > 0) {
+      // Nếu đang là 0 mà loại vé mới có vé, đặt lại là 1
+      setTicketQuantity(1);
+    }
+    // Nếu không, giữ nguyên ticketQuantity hiện tại nếu nó vẫn hợp lệ
+  };
+
   // Xử lý khi bấm tiếp tục ở bước 1
   const handleContinueToPayment = () => {
-    if (ticketQuantity < 1) {
+    if (!event) return;
+
+    const currentTicketPrice = currentSelectedTicketInfo?.price ?? event.price;
+    if (currentTicketPrice === undefined) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng chọn ít nhất 1 vé",
+        description: "Không thể xác định giá vé.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -184,11 +234,11 @@ export default function Checkout() {
       return;
     }
 
+    // Nếu sự kiện có nhiều loại vé, phải chọn 1 loại vé
     if (
-      !selectedTicketType &&
-      event &&
       event.ticketTypes &&
-      event.ticketTypes.length > 0
+      event.ticketTypes.length > 0 &&
+      !selectedTicketType
     ) {
       toast({
         title: "Lỗi",
@@ -200,17 +250,11 @@ export default function Checkout() {
       return;
     }
 
-    // Kiểm tra số lượng vé còn lại
-    const availableTickets =
-      event?.ticketTypes && selectedTicketType
-        ? event.ticketTypes.find((t) => t.id === selectedTicketType)
-            ?.availableQuantity || 0
-        : event?.availableTickets || 0;
-
-    if (ticketQuantity > availableTickets) {
+    if (ticketQuantity < 1 && maxAllowedForInput > 0) {
+      // Chỉ báo lỗi nếu có thể mua được vé
       toast({
         title: "Lỗi",
-        description: `Không đủ vé (chỉ còn ${availableTickets} vé)`,
+        description: "Vui lòng chọn ít nhất 1 vé",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -218,10 +262,43 @@ export default function Checkout() {
       return;
     }
 
-    if (event && ticketQuantity > event.maxPerOrder) {
+    if (maxAllowedForInput === 0 && ticketQuantity > 0) {
+      toast({
+        title: "Thông báo",
+        description: "Loại vé này đã hết hoặc không có sẵn.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (ticketQuantity === 0 && maxAllowedForInput > 0) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng chọn số lượng vé.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (ticketQuantity > maxTicketsAvailableForOrder) {
+      toast({
+        title: "Lỗi",
+        description: `Không đủ vé (chỉ còn ${maxTicketsAvailableForOrder} vé)`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (ticketQuantity > eventMaxPerOrder) {
       toast({
         title: "Vượt quá giới hạn vé",
-        description: `Tối đa ${event.maxPerOrder} vé mỗi đơn hàng`,
+        description: `Tối đa ${eventMaxPerOrder} vé mỗi đơn hàng`,
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -364,30 +441,18 @@ export default function Checkout() {
                   Giá vé:
                 </Text>
                 <Text color={textColor}>
-                  {event.ticketTypes && selectedTicketType ? (
-                    <>
-                      {event.ticketTypes.find(
-                        (t) => t.id === selectedTicketType
-                      )?.price === 0 ? (
-                        "Miễn phí"
-                      ) : (
-                        <CurrencyDisplay
-                          amount={
-                            event.ticketTypes.find(
-                              (t) => t.id === selectedTicketType
-                            )?.price || 0
-                          }
-                        />
-                      )}
-                    </>
+                  {currentSelectedTicketInfo ? (
+                    currentSelectedTicketInfo.price === 0 ? (
+                      "Miễn phí"
+                    ) : (
+                      <CurrencyDisplay
+                        amount={currentSelectedTicketInfo.price}
+                      />
+                    )
+                  ) : event.price === 0 ? (
+                    "Miễn phí"
                   ) : (
-                    <>
-                      {event.price === 0 ? (
-                        "Miễn phí"
-                      ) : (
-                        <CurrencyDisplay amount={event.price} />
-                      )}
-                    </>
+                    <CurrencyDisplay amount={event.price} />
                   )}
                 </Text>
               </HStack>
@@ -396,12 +461,7 @@ export default function Checkout() {
                 <Text fontWeight="medium" color={textColor}>
                   Số vé còn lại:
                 </Text>
-                <Text color={textColor}>
-                  {event.ticketTypes && selectedTicketType
-                    ? event.ticketTypes.find((t) => t.id === selectedTicketType)
-                        ?.availableQuantity || 0
-                    : event.availableTickets}
-                </Text>
+                <Text color={textColor}>{maxTicketsAvailableForOrder}</Text>
               </HStack>
 
               {event.ticketTypes && event.ticketTypes.length > 0 && (
@@ -426,8 +486,16 @@ export default function Checkout() {
                             ? selectedTicketBgColor
                             : "transparent"
                         }
-                        cursor="pointer"
-                        onClick={() => setSelectedTicketType(ticket.id)}
+                        cursor={
+                          ticket.availableQuantity > 0
+                            ? "pointer"
+                            : "not-allowed"
+                        }
+                        opacity={ticket.availableQuantity > 0 ? 1 : 0.6}
+                        onClick={() =>
+                          ticket.availableQuantity > 0 &&
+                          handleTicketTypeChange(ticket.id)
+                        }
                       >
                         <Flex justify="space-between" align="center">
                           <VStack align="start" spacing={0}>
@@ -436,9 +504,15 @@ export default function Checkout() {
                             </Text>
                             <Text
                               fontSize="sm"
-                              color={ticketAvailableTextColor}
+                              color={
+                                ticket.availableQuantity > 0
+                                  ? ticketAvailableTextColor
+                                  : "red.400"
+                              }
                             >
-                              Còn {ticket.availableQuantity} vé
+                              {ticket.availableQuantity > 0
+                                ? `Còn ${ticket.availableQuantity} vé`
+                                : "Hết vé"}
                             </Text>
                           </VStack>
                           <Text fontWeight="bold" color={textColor}>
@@ -463,12 +537,13 @@ export default function Checkout() {
                 </Text>
                 <NumberInput
                   maxW={32}
-                  min={1}
-                  max={Math.min(event.availableTickets, event.maxPerOrder)}
+                  min={maxAllowedForInput > 0 ? 1 : 0}
+                  max={maxAllowedForInput}
                   value={ticketQuantity}
-                  onChange={(valueString) =>
-                    setTicketQuantity(parseInt(valueString))
+                  onChange={(valueString, valueNumber) =>
+                    setTicketQuantity(valueNumber)
                   }
+                  isDisabled={maxAllowedForInput === 0}
                 >
                   <NumberInputField />
                   <NumberInputStepper>
@@ -484,11 +559,8 @@ export default function Checkout() {
                 <Text>{t("checkout.total")}:</Text>
                 <CurrencyDisplay
                   amount={
-                    event.ticketTypes && selectedTicketType
-                      ? (event.ticketTypes.find(
-                          (t) => t.id === selectedTicketType
-                        )?.price || 0) * ticketQuantity
-                      : event.price * ticketQuantity
+                    (currentSelectedTicketInfo?.price ?? event.price ?? 0) *
+                    ticketQuantity
                   }
                 />
               </Flex>
@@ -501,6 +573,10 @@ export default function Checkout() {
                   colorScheme="teal"
                   rightIcon={<FaTicketAlt />}
                   onClick={handleContinueToPayment}
+                  isDisabled={
+                    isLoading ||
+                    (maxAllowedForInput === 0 && ticketQuantity === 0)
+                  }
                 >
                   {t("common.continue")}
                 </Button>
@@ -508,7 +584,7 @@ export default function Checkout() {
             </VStack>
           )}
 
-          {activeStep === 1 && (
+          {activeStep === 1 && event && (
             <CheckoutForm
               event={event}
               ticketQuantity={ticketQuantity}
@@ -518,7 +594,7 @@ export default function Checkout() {
             />
           )}
 
-          {activeStep === 2 && (
+          {activeStep === 2 && event && (
             <VStack
               spacing={6}
               align="stretch"

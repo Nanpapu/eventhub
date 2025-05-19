@@ -26,7 +26,9 @@ import {
   FaCcMastercard,
   FaCcPaypal,
   FaMoneyBillWave,
+  FaSpinner,
 } from "react-icons/fa";
+import checkoutService from "../../services/checkout.service";
 
 interface CheckoutFormProps {
   event: {
@@ -51,7 +53,12 @@ interface CheckoutFormProps {
   onCancel: () => void;
 }
 
-type PaymentMethod = "credit_card" | "paypal" | "bank_transfer";
+type PaymentMethod =
+  | "credit_card"
+  | "paypal"
+  | "bank_transfer"
+  | "demo_success"
+  | "demo_fail";
 
 type FormValues = {
   fullName: string;
@@ -77,7 +84,7 @@ export default function CheckoutForm({
   onCancel,
 }: CheckoutFormProps) {
   const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("credit_card");
+    useState<PaymentMethod>("demo_success");
   const [isProcessing, setIsProcessing] = useState(false);
   const toast = useToast();
   const formBg = useColorModeValue("white", "gray.800");
@@ -88,7 +95,10 @@ export default function CheckoutForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<FormValues>();
+
+  const formValues = watch();
 
   // Tính toán tổng tiền
   const getTicketPrice = () => {
@@ -116,30 +126,59 @@ export default function CheckoutForm({
   const total = subtotal + serviceFee;
 
   // Xử lý khi gửi form
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     setIsProcessing(true);
 
-    // Giả lập xử lý thanh toán với API
-    setTimeout(() => {
-      // Tạo ID giao dịch ngẫu nhiên
-      const transactionId = `TRX-${Math.random()
-        .toString(36)
-        .substring(2, 10)
-        .toUpperCase()}`;
+    const payload = {
+      eventId: event.id,
+      ticketTypeId: selectedTicketTypeId,
+      quantity: ticketQuantity,
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      paymentMethodDetails: {
+        type: paymentMethod === "demo_success" ? "DEMO_SUCCESS" : "DEMO_FAIL",
+      },
+    };
 
-      // Giả lập thành công
+    try {
+      console.log("[CheckoutForm] Submitting payment with payload:", payload);
+      // Gọi API service
+      const result = await checkoutService.processDemoPayment(payload);
+
+      if (result.success) {
+        toast({
+          title: "Thanh toán Demo thành công!",
+          description: `ID giao dịch của bạn là: ${result.transactionId}`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        reset();
+        onSuccess(result.transactionId); // Truyền transactionId từ API response
+      } else {
+        // Trường hợp này ít khi xảy ra nếu service đã throw error, nhưng để an toàn
+        toast({
+          title: "Thanh toán Demo thất bại",
+          description: result.message || "Có lỗi xảy ra từ phía server.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } catch (error: any) {
+      console.error("[CheckoutForm] Error during payment submission:", error);
       toast({
-        title: "Thanh toán thành công!",
-        description: `ID giao dịch của bạn là: ${transactionId}`,
-        status: "success",
+        title: "Lỗi xử lý thanh toán",
+        description:
+          error.message || "Không thể hoàn tất thanh toán vào lúc này.",
+        status: "error",
         duration: 5000,
         isClosable: true,
       });
-
+    } finally {
       setIsProcessing(false);
-      reset();
-      onSuccess(transactionId);
-    }, 2000);
+    }
   };
 
   // Xử lý hủy
@@ -171,6 +210,7 @@ export default function CheckoutForm({
             <Flex gap={4}>
               <Image
                 src={event.imageUrl}
+                fallbackSrc="/images/default-event-image.png"
                 alt={event.title}
                 w="100px"
                 h="100px"
@@ -179,15 +219,22 @@ export default function CheckoutForm({
               />
               <Box>
                 <Heading size="md">{event.title}</Heading>
-                <Text fontSize="sm" color="gray.500">
+                <Text
+                  fontSize="sm"
+                  color={useColorModeValue("gray.600", "gray.400")}
+                >
                   {event.date} • {event.time}
                 </Text>
-                <Text fontSize="sm" color="gray.500" mb={2}>
+                <Text
+                  fontSize="sm"
+                  color={useColorModeValue("gray.600", "gray.400")}
+                  mb={2}
+                >
                   {event.location}
                 </Text>
                 <Badge colorScheme="teal">
-                  {getTicketName()}: {ticketQuantity}{" "}
-                  {ticketQuantity > 1 ? "vé" : "vé"} x ${getTicketPrice()}
+                  {getTicketName()}: {ticketQuantity} vé x{" "}
+                  <Text as="span">${getTicketPrice()}</Text>
                 </Badge>
               </Box>
             </Flex>
@@ -204,6 +251,7 @@ export default function CheckoutForm({
                   {...register("fullName", {
                     required: "Vui lòng nhập họ tên đầy đủ",
                   })}
+                  placeholder="Nguyễn Văn A"
                 />
                 <FormErrorMessage>{errors.fullName?.message}</FormErrorMessage>
               </FormControl>
@@ -219,6 +267,7 @@ export default function CheckoutForm({
                       message: "Email không hợp lệ",
                     },
                   })}
+                  placeholder="example@email.com"
                 />
                 <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
               </FormControl>
@@ -226,207 +275,92 @@ export default function CheckoutForm({
               <FormControl isInvalid={!!errors.phone} isRequired>
                 <FormLabel>Số điện thoại</FormLabel>
                 <Input
+                  type="tel"
                   {...register("phone", {
                     required: "Vui lòng nhập số điện thoại",
                     pattern: {
-                      value: /^[0-9+-]+$/,
+                      value:
+                        /^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])[0-9]{7}$/,
                       message: "Số điện thoại không hợp lệ",
                     },
                   })}
+                  placeholder="09xxxxxxxx"
                 />
                 <FormErrorMessage>{errors.phone?.message}</FormErrorMessage>
               </FormControl>
 
               <Divider my={4} />
 
-              <Heading size="md">Phương thức thanh toán</Heading>
+              <Heading size="md">Phương thức thanh toán Demo</Heading>
+              <Text
+                fontSize="sm"
+                color={useColorModeValue("gray.600", "gray.400")}
+              >
+                Đây là giao diện demo. Chọn "Thành công" hoặc "Thất bại" để giả
+                lập kết quả.
+              </Text>
 
               <RadioGroup
                 onChange={(value) => setPaymentMethod(value as PaymentMethod)}
                 value={paymentMethod}
               >
-                <Stack direction="column" spacing={4}>
-                  <Radio value="credit_card">
+                <Stack
+                  direction={{ base: "column", md: "row" }}
+                  spacing={4}
+                  mt={2}
+                >
+                  <Radio value="demo_success" colorScheme="green">
                     <Flex align="center">
-                      <Text mr={2}>Thẻ tín dụng/ghi nợ</Text>
-                      <HStack spacing={1}>
-                        <FaCcVisa color="#1A1F71" size={24} />
-                        <FaCcMastercard color="#EB001B" size={24} />
-                      </HStack>
+                      <FaCheck style={{ marginRight: "8px" }} /> Thanh toán
+                      thành công (Demo)
                     </Flex>
                   </Radio>
-
-                  <Radio value="paypal">
+                  <Radio value="demo_fail" colorScheme="red">
                     <Flex align="center">
-                      <Text mr={2}>PayPal</Text>
-                      <FaCcPaypal color="#003087" size={24} />
-                    </Flex>
-                  </Radio>
-
-                  <Radio value="bank_transfer">
-                    <Flex align="center">
-                      <Text mr={2}>Chuyển khoản ngân hàng</Text>
-                      <FaMoneyBillWave color="green" size={20} />
+                      <FaMoneyBillWave style={{ marginRight: "8px" }} /> Thanh
+                      toán thất bại (Demo)
                     </Flex>
                   </Radio>
                 </Stack>
               </RadioGroup>
 
-              {paymentMethod === "credit_card" && (
-                <Box mt={4}>
-                  <VStack spacing={4} align="stretch">
-                    <FormControl isInvalid={!!errors.cardNumber} isRequired>
-                      <FormLabel>Số thẻ</FormLabel>
-                      <Input
-                        placeholder="XXXX XXXX XXXX XXXX"
-                        {...register("cardNumber", {
-                          required: "Vui lòng nhập số thẻ",
-                          pattern: {
-                            value: /^[0-9\s]{13,19}$/,
-                            message: "Số thẻ không hợp lệ",
-                          },
-                        })}
-                      />
-                      <FormErrorMessage>
-                        {errors.cardNumber?.message}
-                      </FormErrorMessage>
-                    </FormControl>
+              <Divider my={4} />
 
-                    <HStack>
-                      <FormControl isInvalid={!!errors.cardExpiry} isRequired>
-                        <FormLabel>Ngày hết hạn</FormLabel>
-                        <Input
-                          placeholder="MM/YY"
-                          {...register("cardExpiry", {
-                            required: "Vui lòng nhập ngày hết hạn",
-                            pattern: {
-                              value: /^(0[1-9]|1[0-2])\/([0-9]{2})$/,
-                              message: "Định dạng MM/YY",
-                            },
-                          })}
-                        />
-                        <FormErrorMessage>
-                          {errors.cardExpiry?.message}
-                        </FormErrorMessage>
-                      </FormControl>
-
-                      <FormControl isInvalid={!!errors.cardCvv} isRequired>
-                        <FormLabel>CVV</FormLabel>
-                        <Input
-                          type="password"
-                          placeholder="XXX"
-                          maxLength={4}
-                          {...register("cardCvv", {
-                            required: "Vui lòng nhập CVV",
-                            pattern: {
-                              value: /^[0-9]{3,4}$/,
-                              message: "CVV không hợp lệ",
-                            },
-                          })}
-                        />
-                        <FormErrorMessage>
-                          {errors.cardCvv?.message}
-                        </FormErrorMessage>
-                      </FormControl>
-                    </HStack>
-
-                    <FormControl isInvalid={!!errors.cardHolder} isRequired>
-                      <FormLabel>Tên chủ thẻ</FormLabel>
-                      <Input
-                        placeholder="Như trên thẻ"
-                        {...register("cardHolder", {
-                          required: "Vui lòng nhập tên chủ thẻ",
-                        })}
-                      />
-                      <FormErrorMessage>
-                        {errors.cardHolder?.message}
-                      </FormErrorMessage>
-                    </FormControl>
-                  </VStack>
-                </Box>
-              )}
-
-              {paymentMethod === "paypal" && (
-                <Box
-                  mt={4}
-                  p={4}
-                  bg="blue.50"
-                  color="blue.800"
-                  borderRadius="md"
-                >
-                  <Text>
-                    Bạn sẽ được chuyển hướng đến PayPal để hoàn tất thanh toán
-                    sau khi xác nhận.
+              <VStack spacing={2} align="stretch" fontSize="sm">
+                <HStack justify="space-between">
+                  <Text>Tạm tính ({ticketQuantity} vé):</Text>
+                  <Text fontWeight="medium">${subtotal.toLocaleString()}</Text>
+                </HStack>
+                <HStack justify="space-between">
+                  <Text>Phí dịch vụ (5%):</Text>
+                  <Text fontWeight="medium">
+                    ${serviceFee.toLocaleString()}
                   </Text>
-                </Box>
-              )}
-
-              {paymentMethod === "bank_transfer" && (
-                <Box
-                  mt={4}
-                  p={4}
-                  bg="green.50"
-                  color="green.800"
-                  borderRadius="md"
-                >
-                  <Text fontWeight="bold">Thông tin chuyển khoản:</Text>
-                  <Text>Ngân hàng: EventHub Bank</Text>
-                  <Text>Số tài khoản: 1234567890</Text>
-                  <Text>Chủ tài khoản: EventHub Inc.</Text>
-                  <Text mt={2}>
-                    Nội dung chuyển khoản: {event.id}-
-                    {Math.random().toString(36).substring(2, 10).toUpperCase()}
-                  </Text>
-                  <Text mt={2} fontStyle="italic">
-                    Vé của bạn sẽ được xác nhận sau khi chúng tôi nhận được
-                    thanh toán.
-                  </Text>
-                </Box>
-              )}
+                </HStack>
+                <HStack justify="space-between" fontWeight="bold" fontSize="md">
+                  <Text>Tổng cộng:</Text>
+                  <Text>${total.toLocaleString()}</Text>
+                </HStack>
+              </VStack>
 
               <Divider my={4} />
 
-              <FormControl>
-                <FormLabel>Mã giảm giá (nếu có)</FormLabel>
-                <Input {...register("promoCode")} />
-              </FormControl>
-
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderRadius="md"
-                borderColor={borderColor}
-                bg={useColorModeValue("gray.50", "gray.700")}
-              >
-                <Heading size="sm" mb={3}>
-                  Tóm tắt hóa đơn
-                </Heading>
-                <HStack justify="space-between" mb={2}>
-                  <Text>Vé ({ticketQuantity})</Text>
-                  <Text>${subtotal.toFixed(2)}</Text>
-                </HStack>
-                <HStack justify="space-between" mb={2}>
-                  <Text>Phí dịch vụ</Text>
-                  <Text>${serviceFee.toFixed(2)}</Text>
-                </HStack>
-                <Divider my={2} />
-                <HStack justify="space-between" fontWeight="bold">
-                  <Text>Tổng cộng</Text>
-                  <Text>${total.toFixed(2)}</Text>
-                </HStack>
-              </Box>
-
-              <HStack spacing={4} justify="flex-end" mt={4}>
-                <Button variant="ghost" onClick={handleCancel}>
-                  Hủy bỏ
+              <HStack justifyContent="flex-end" spacing={4}>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  isDisabled={isProcessing}
+                >
+                  Hủy
                 </Button>
                 <Button
                   type="submit"
                   colorScheme="teal"
                   isLoading={isProcessing}
-                  loadingText="Đang xử lý"
+                  spinner={<FaSpinner />}
+                  loadingText="Đang xử lý..."
                 >
-                  Thanh toán ${total.toFixed(2)}
+                  Hoàn tất thanh toán
                 </Button>
               </HStack>
             </VStack>
