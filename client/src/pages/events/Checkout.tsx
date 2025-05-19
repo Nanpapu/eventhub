@@ -334,7 +334,7 @@ export default function Checkout() {
       duration: 5000,
       isClosable: true,
     });
-    navigate(`/my-tickets`);
+    navigate(`/user/tickets`);
   };
 
   // Xử lý khi quay lại trang sự kiện

@@ -26,7 +26,12 @@ import {
   FiShare2,
   FiHeart,
 } from "react-icons/fi";
-import { FaTimes, FaCalendarCheck, FaShoppingCart } from "react-icons/fa";
+import {
+  FaTimes,
+  FaCalendarCheck,
+  FaShoppingCart,
+  FaTicketAlt,
+} from "react-icons/fa";
 import eventService from "../../services/event.service";
 
 // Interface cho dữ liệu sự kiện
@@ -478,14 +483,12 @@ const EventDetail = () => {
                 </VStack>
               </Flex>
 
-              {getDisplayPrice() !== "Miễn phí" && (
-                <Flex align="center" gap={2}>
-                  <Box as={FiDollarSign} color={iconColor} />
-                  <Text fontWeight="bold" color={textColor}>
-                    {getDisplayPrice()}
-                  </Text>
-                </Flex>
-              )}
+              <Flex align="center" gap={2}>
+                <Box as={FiDollarSign} color={iconColor} />
+                <Text fontWeight="bold" color={textColor}>
+                  {getDisplayPrice()}
+                </Text>
+              </Flex>
 
               <Flex align="center" gap={2}>
                 <Box as={FiUsers} color={iconColor} />
@@ -591,19 +594,27 @@ const EventDetail = () => {
 
               {event.isPaid ? (
                 // === SỰ KIỆN CÓ PHÍ ===
-                <Button
-                  colorScheme="blue" // Có thể thay đổi nếu đã mua vé
-                  size="lg"
-                  width="full"
-                  onClick={handleBuyTicket} // Điều hướng đến /checkout
-                  leftIcon={<FaShoppingCart />}
-                  // TODO: Nếu người dùng đã mua vé này, nút nên là "Xem vé của bạn" hoặc tương tự
-                  // và điều hướng đến trang vé của tôi.
-                  // Cần kiểm tra trạng thái isRegistered hoặc một trạng thái cụ thể cho việc đã mua vé.
-                >
-                  {/* {isRegistered ? "Xem vé của bạn" : "Mua Vé"} */}
-                  Mua Vé
-                </Button>
+                isRegistered ? (
+                  <Button
+                    colorScheme="green" // Màu sắc cho nút khi đã mua vé
+                    size="lg"
+                    width="full"
+                    onClick={() => navigate("/user/tickets")} // Điều hướng đến /user/tickets
+                    leftIcon={<FaTicketAlt />} // Biểu tượng vé
+                  >
+                    Xem vé của bạn
+                  </Button>
+                ) : (
+                  <Button
+                    colorScheme="blue"
+                    size="lg"
+                    width="full"
+                    onClick={handleBuyTicket} // Điều hướng đến /checkout
+                    leftIcon={<FaShoppingCart />}
+                  >
+                    Mua Vé
+                  </Button>
+                )
               ) : (
                 // === SỰ KIỆN MIỄN PHÍ ===
                 <Button
