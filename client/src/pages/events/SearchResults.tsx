@@ -464,54 +464,93 @@ const SearchResults = () => {
     );
   };
 
-  if (loading && filteredEvents.length === 0 && currentPage === 1 && !error) {
-    return (
-      <Box bg={useColorModeValue("white", "gray.900")} minH="100vh">
-        <Container maxW="container.xl" py={8}>
-          <SearchBar
-            keyword={tempKeyword}
-            setKeyword={setTempKeyword}
-            location={tempLocation}
-            setLocation={setTempLocation}
-            category={tempCategory}
-            setCategory={setTempCategory}
-            showFreeOnly={tempShowFreeOnly}
-            setShowFreeOnly={(value) => {
-              setTempShowFreeOnly(value);
-              if (value) setTempShowPaidOnly(false);
-            }}
-            showPaidOnly={tempShowPaidOnly}
-            setShowPaidOnly={(value) => {
-              setTempShowPaidOnly(value);
-              if (value) setTempShowFreeOnly(false);
-            }}
-            onSearch={handleApplySearch}
-            onReset={handleResetFilters}
-            categories={categories.map((cat) => ({
-              id: cat.id,
-              value: cat.id,
-              label: cat.name,
-            }))}
-            locations={locations.map((loc) => ({ name: loc }))}
-            showLocationFilter={true}
-            showCategoryFilter={true}
-            showPriceFilter={true}
-            appliedFilters={{
-              location: appliedLocation,
-              category: appliedCategory,
-              showFreeOnly: appliedShowFreeOnly,
-              showPaidOnly: appliedShowPaidOnly,
-            }}
-            getCategoryName={getCategoryName}
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Center h="200px">
+          <Spinner size="xl" />
+        </Center>
+      );
+    }
+
+    if (error) {
+      return (
+        <Center flexDirection="column" h="200px">
+          <Text color="red.500" mb={4}>
+            {error}
+          </Text>
+          {/* Nút Clear Filters khi có lỗi */}
+          {areFiltersApplied() && (
+            <Button
+              colorScheme="red" // Đổi màu thành đỏ
+              onClick={handleResetFilters}
+              leftIcon={<Icon as={FiX} />}
+              size="sm"
+            >
+              Clear Filters and Retry
+            </Button>
+          )}
+        </Center>
+      );
+    }
+
+    if (filteredEvents.length > 0) {
+      return (
+        <>
+          <Flex
+            justifyContent="space-between"
+            alignItems="center"
             mb={6}
-          />
-          <Center py={20}>
-            <Spinner size="xl" color="teal.500" thickness="4px" />
-          </Center>
-        </Container>
-      </Box>
+            p={4}
+            bg={useColorModeValue("gray.100", "gray.700")}
+            borderRadius="md"
+          >
+            <Text fontSize="lg" fontWeight="medium">
+              {totalEvents} event{totalEvents !== 1 ? "s" : ""} found
+              {appliedKeyword && ` for "${appliedKeyword}"`}
+              {appliedLocation && ` in "${appliedLocation}"`}
+              {appliedCategory &&
+                ` under "${getCategoryName(appliedCategory)}"`}
+              {areFiltersApplied()
+                ? " with applied filters"
+                : " without filters"}
+              .
+            </Text>
+            {/* Không còn nút Clear Filters ở đây nữa */}
+          </Flex>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={8}>
+            {filteredEvents.map((event) => (
+              <CustomEventCard key={event.id} event={event} />
+            ))}
+          </SimpleGrid>
+          {renderPaginationControls()}
+        </>
+      );
+    }
+
+    return (
+      <Center flexDirection="column" py={10} px={6} textAlign="center">
+        <Icon as={FiTag} boxSize={"50px"} color={"orange.300"} mb={4} />
+        <Heading as="h2" size="xl" mt={6} mb={2}>
+          No events found
+        </Heading>
+        <Text color={"gray.500"} mb={6}>
+          Sorry, we couldn't find any events matching your criteria.
+        </Text>
+        {areFiltersApplied() && (
+          <Button
+            colorScheme="red" // Đổi màu thành đỏ
+            onClick={handleResetFilters}
+            leftIcon={<Icon as={FiX} />}
+            size="lg"
+            mt={4}
+          >
+            Clear All Filters
+          </Button>
+        )}
+      </Center>
     );
-  }
+  };
 
   return (
     <Box bg={useColorModeValue("white", "gray.900")}>
@@ -564,96 +603,7 @@ const SearchResults = () => {
           mb={6}
         />
 
-        {error && (
-          <Box
-            textAlign="center"
-            py={4}
-            px={6}
-            mb={6}
-            bg="red.50"
-            color="red.600"
-            borderRadius="lg"
-            borderWidth="1px"
-            borderColor="red.200"
-          >
-            <Text>{error}</Text>
-          </Box>
-        )}
-
-        {loading && filteredEvents.length > 0 && (
-          <Center
-            py={10}
-            bg={sectionBg}
-            borderRadius="lg"
-            my={6}
-            borderWidth="1px"
-            borderColor={borderColor}
-          >
-            <Spinner size="lg" color="teal.500" />
-          </Center>
-        )}
-
-        {!loading && filteredEvents.length === 0 && !error && (
-          <Box
-            textAlign="center"
-            py={10}
-            bg={sectionBg}
-            borderRadius="lg"
-            p={8}
-            borderWidth="1px"
-            borderColor={borderColor}
-            my={6}
-          >
-            <Heading size="md" mb={4} color={textColor}>
-              Không tìm thấy sự kiện nào
-            </Heading>
-            <Text mb={6} color={textColor}>
-              Hãy thử điều chỉnh bộ lọc của bạn hoặc xóa bộ lọc hiện tại.
-            </Text>
-            {areFiltersApplied() && (
-              <Button colorScheme="teal" onClick={handleResetFilters}>
-                Xóa tất cả bộ lọc
-              </Button>
-            )}
-          </Box>
-        )}
-
-        {filteredEvents.length > 0 && (
-          <Box
-            bg={sectionBg}
-            p={{ base: 3, md: 6 }}
-            borderRadius="lg"
-            my={6}
-            borderWidth="1px"
-            borderColor={borderColor}
-          >
-            <Flex
-              justify="space-between"
-              align="center"
-              mb={6}
-              px={{ base: 2, md: 0 }}
-            >
-              <Text color={textColor}>{totalEvents} sự kiện được tìm thấy</Text>
-              {areFiltersApplied() && (
-                <Button
-                  variant="outline"
-                  colorScheme="teal"
-                  size="sm"
-                  leftIcon={<FiX />}
-                  onClick={handleResetFilters}
-                >
-                  Xóa bộ lọc
-                </Button>
-              )}
-            </Flex>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-              {filteredEvents.map((event) => (
-                <CustomEventCard key={event.id} event={event} />
-              ))}
-            </SimpleGrid>
-            {renderPaginationControls()}
-          </Box>
-        )}
+        {renderContent()}
       </Container>
     </Box>
   );
