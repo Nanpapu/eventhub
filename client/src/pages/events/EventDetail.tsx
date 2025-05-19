@@ -265,8 +265,8 @@ const EventDetail = () => {
     */
 
     // DEMO: Chỉ chuyển hướng đến trang thanh toán giả lập
-    if (id) {
-      navigate(`/events/${id}/checkout`);
+    if (event && event.id) {
+      navigate(`/events/${event.id}/checkout`);
       toast({
         title: "Chuyển đến thanh toán",
         description: "Hoàn tất thanh toán để đảm bảo đăng ký của bạn.",

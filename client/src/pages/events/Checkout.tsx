@@ -35,6 +35,7 @@ import { FaCheck, FaTicketAlt, FaEnvelope } from "react-icons/fa";
 import CheckoutForm from "../../components/checkout/CheckoutForm";
 import { useTranslation } from "react-i18next";
 import { CurrencyDisplay } from "../../components/common";
+import eventService from "../../services/event.service";
 
 // Định nghĩa interface cho event
 interface EventData {
@@ -56,116 +57,13 @@ interface EventData {
   }[];
 }
 
-// Giả lập dữ liệu sự kiện (trong thực tế sẽ fetch từ API)
-const mockEvents: EventData[] = [
-  {
-    id: "1",
-    title: "Tech Conference 2023",
-    date: "Dec 15, 2023",
-    time: "09:00 AM - 05:00 PM",
-    location: "Convention Center, New York",
-    imageUrl:
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
-    price: 49.99,
-    organizer: "TechEvents Inc.",
-    availableTickets: 122,
-    maxPerOrder: 10,
-    ticketTypes: [
-      {
-        id: "early-bird",
-        name: "Early Bird",
-        price: 29.99,
-        availableQuantity: 22,
-      },
-      {
-        id: "standard",
-        name: "Standard",
-        price: 49.99,
-        availableQuantity: 80,
-      },
-      {
-        id: "vip",
-        name: "VIP",
-        price: 99.99,
-        availableQuantity: 20,
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "JavaScript Workshop",
-    date: "Nov 20, 2023",
-    time: "10:00 AM - 04:00 PM",
-    location: "Online Event",
-    imageUrl:
-      "https://images.unsplash.com/photo-1594904351111-a072f80b1a71?w=500&auto=format",
-    price: 29.99,
-    organizer: "Coding Academy",
-    availableTickets: 43,
-    maxPerOrder: 3,
-    ticketTypes: [
-      {
-        id: "standard",
-        name: "Standard",
-        price: 29.99,
-        availableQuantity: 30,
-      },
-      {
-        id: "premium",
-        name: "Premium (includes code review)",
-        price: 49.99,
-        availableQuantity: 13,
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Music Festival",
-    date: "Aug 10, 2023",
-    time: "11:00 AM - 11:00 PM",
-    location: "Central Park, New York",
-    imageUrl:
-      "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&auto=format",
-    price: 89.99,
-    organizer: "Music Events Co.",
-    availableTickets: 378,
-    maxPerOrder: 6,
-  },
-  {
-    id: "4",
-    title: "Data Science Meetup",
-    date: "Sep 5, 2023",
-    time: "06:00 PM - 09:00 PM",
-    location: "Community Center, Boston",
-    imageUrl:
-      "https://images.unsplash.com/photo-1551818255-e6e10975bc17?w=500&auto=format",
-    price: 0,
-    organizer: "Data Science Hub",
-    availableTickets: 65,
-    maxPerOrder: 2,
-  },
-  {
-    id: "5",
-    title: "Business Networking Event",
-    date: "Dec 28, 2023",
-    time: "07:00 PM - 10:00 PM",
-    location: "Grand Hotel, Chicago",
-    imageUrl:
-      "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=500&auto=format",
-    price: 79.99,
-    organizer: "Business Network Association",
-    availableTickets: 87,
-    maxPerOrder: 4,
-  },
-];
-
 /**
  * Trang thanh toán cho việc mua vé sự kiện
  * Quy trình 3 bước: chọn vé, thanh toán, xác nhận
  */
 export default function Checkout() {
   const { t } = useTranslation();
-  const { eventId } = useParams();
+  const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const [event, setEvent] = useState<EventData | null>(null);
@@ -176,6 +74,7 @@ export default function Checkout() {
   );
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Các bước trong quy trình thanh toán
   const steps = [
@@ -203,25 +102,60 @@ export default function Checkout() {
   const successIconColor = useColorModeValue("green.700", "green.200");
   const confirmBoxBg = useColorModeValue("white", "gray.700");
 
-  // Tải dữ liệu sự kiện
+  // Tải dữ liệu sự kiện từ API
   useEffect(() => {
-    const fetchEvent = async () => {
-      setIsLoading(true);
-      // Giả lập gọi API để lấy dữ liệu
-      setTimeout(() => {
-        const foundEvent = mockEvents.find((e) => e.id === eventId);
-        if (foundEvent) {
-          setEvent(foundEvent);
-          // Tự động chọn loại vé đầu tiên nếu có
-          if (foundEvent.ticketTypes && foundEvent.ticketTypes.length > 0) {
-            setSelectedTicketType(foundEvent.ticketTypes[0].id);
-          }
-        }
+    const fetchEventRealAPI = async () => {
+      console.log(
+        "[Checkout.tsx] Attempting to fetch event with ID from URL params:",
+        eventId
+      );
+
+      if (!eventId) {
+        console.error("[Checkout.tsx] No eventId found in URL params.");
+        setError("Không tìm thấy mã sự kiện trong đường dẫn.");
         setIsLoading(false);
-      }, 800);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await eventService.getEventById(eventId);
+        console.log("[Checkout.tsx] API response for event:", data);
+
+        if (data) {
+          const formattedData: EventData = {
+            ...data,
+            date: data.date
+              ? new Date(data.date).toLocaleDateString("vi-VN")
+              : "N/A",
+          };
+          setEvent(formattedData);
+          if (
+            formattedData.ticketTypes &&
+            formattedData.ticketTypes.length > 0
+          ) {
+            setSelectedTicketType(formattedData.ticketTypes[0].id);
+          }
+        } else {
+          console.error(
+            "[Checkout.tsx] Event not found by API, eventId:",
+            eventId
+          );
+          setError("Sự kiện không tồn tại hoặc đã bị xóa.");
+        }
+      } catch (err: any) {
+        console.error("[Checkout.tsx] Error fetching event:", err);
+        setError(
+          err.response?.data?.message ||
+            "Có lỗi xảy ra khi tải thông tin sự kiện."
+        );
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchEvent();
+    fetchEventRealAPI();
   }, [eventId]);
 
   // Xử lý khi bấm tiếp tục ở bước 1
@@ -321,14 +255,16 @@ export default function Checkout() {
     );
   }
 
-  if (!event) {
+  if (error || !event) {
     return (
       <Container maxW="4xl" py={8}>
         <Alert status="error" borderRadius="md">
           <AlertIcon />
-          <AlertTitle>Không tìm thấy sự kiện</AlertTitle>
+          <AlertTitle>
+            {error ? "Có lỗi xảy ra" : "Không tìm thấy sự kiện"}
+          </AlertTitle>
           <AlertDescription>
-            Sự kiện này không tồn tại hoặc đã bị xóa
+            {error || "Sự kiện này không tồn tại hoặc đã bị xóa."}
           </AlertDescription>
         </Alert>
         <Button mt={4} onClick={() => navigate("/events")}>

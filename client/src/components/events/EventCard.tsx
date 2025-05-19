@@ -66,7 +66,7 @@ const EventCardComponent: React.FC<EventCardProps> = ({ event }) => {
           width="100%"
           height="180px"
           objectFit="cover"
-          fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
+          fallbackSrc="/images/default-event-image.png"
         />
         <Box position="absolute" top={2} right={2}>
           {event.isPaid ? (
