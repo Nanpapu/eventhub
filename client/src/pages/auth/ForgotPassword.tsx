@@ -20,7 +20,7 @@ import {
   CloseButton,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
@@ -33,7 +33,6 @@ interface ForgotPasswordFormValues {
 
 const ForgotPassword = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
@@ -63,10 +62,17 @@ const ForgotPassword = () => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = t("common.unknownError");
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const responseError = error.response as { data?: { message?: string } };
+        if (responseError.data && responseError.data.message) {
+          errorMessage = responseError.data.message;
+        }
+      }
       toast({
         title: t("auth.forgotPassword.resetLinkFailed"),
-        description: error.response?.data?.message || t("common.unknownError"),
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -160,7 +166,7 @@ const ForgotPassword = () => {
 
               <Button
                 as={Link}
-                to="/auth/login"
+                to="/login"
                 variant="link"
                 colorScheme="teal"
                 size="sm"

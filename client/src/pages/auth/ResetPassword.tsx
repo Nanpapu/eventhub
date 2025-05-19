@@ -7,7 +7,6 @@ import {
   Heading,
   Input,
   Stack,
-  Text,
   FormErrorMessage,
   useToast,
   InputGroup,
@@ -90,10 +89,17 @@ const ResetPassword = () => {
 
       // Chuyển hướng đến trang đăng nhập
       navigate("/login");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = t("common.unknownError");
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const responseError = error.response as { data?: { message?: string } };
+        if (responseError.data && responseError.data.message) {
+          errorMessage = responseError.data.message;
+        }
+      }
       toast({
         title: t("auth.resetPassword.resetFailed"),
-        description: error.response?.data?.message || t("common.unknownError"),
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -204,7 +210,7 @@ const ResetPassword = () => {
 
               <Button
                 as={Link}
-                to="/auth/login"
+                to="/login"
                 variant="link"
                 colorScheme="teal"
                 size="sm"
