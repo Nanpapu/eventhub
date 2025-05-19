@@ -102,6 +102,11 @@ export default function Checkout() {
   const successIconColor = useColorModeValue("green.700", "green.200");
   const confirmBoxBg = useColorModeValue("white", "gray.700");
 
+  // Màu cho ticket type selection
+  const selectedTicketBorderColor = useColorModeValue("teal.500", "teal.300");
+  const selectedTicketBgColor = useColorModeValue("teal.50", "teal.900");
+  const ticketAvailableTextColor = useColorModeValue("gray.500", "gray.400");
+
   // Tải dữ liệu sự kiện từ API
   useEffect(() => {
     const fetchEventRealAPI = async () => {
@@ -144,12 +149,20 @@ export default function Checkout() {
           );
           setError("Sự kiện không tồn tại hoặc đã bị xóa.");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[Checkout.tsx] Error fetching event:", err);
-        setError(
-          err.response?.data?.message ||
-            "Có lỗi xảy ra khi tải thông tin sự kiện."
-        );
+        let message = "Có lỗi xảy ra khi tải thông tin sự kiện.";
+        if (typeof err === "object" && err !== null && "response" in err) {
+          const axiosError = err as {
+            response?: { data?: { message?: string } };
+          };
+          if (axiosError.response?.data?.message) {
+            message = axiosError.response.data.message;
+          }
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -405,12 +418,12 @@ export default function Checkout() {
                         borderRadius="md"
                         borderColor={
                           selectedTicketType === ticket.id
-                            ? useColorModeValue("teal.500", "teal.300")
+                            ? selectedTicketBorderColor
                             : borderColor
                         }
                         bg={
                           selectedTicketType === ticket.id
-                            ? useColorModeValue("teal.50", "teal.900")
+                            ? selectedTicketBgColor
                             : "transparent"
                         }
                         cursor="pointer"
@@ -423,7 +436,7 @@ export default function Checkout() {
                             </Text>
                             <Text
                               fontSize="sm"
-                              color={useColorModeValue("gray.500", "gray.400")}
+                              color={ticketAvailableTextColor}
                             >
                               Còn {ticket.availableQuantity} vé
                             </Text>
