@@ -7,35 +7,22 @@ import {
   SimpleGrid,
   Text,
   HStack,
-  Badge,
   useColorModeValue,
-  Image,
-  Tag,
   Icon,
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { useState, useEffect, useCallback, memo, useMemo } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { FiMapPin, FiX, FiCalendar, FiTag } from "react-icons/fi";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { FiX, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
 import eventService, { EventFilter } from "../../services/event.service";
-// import { useTranslation } from "react-i18next"; // Biến t không được sử dụng, có thể xóa hoặc comment
+import {
+  getCategoryName,
+  categories as allCategories,
+} from "../../utils/categoryUtils";
+import { EventCard, EventCardData } from "../../components/events/EventCard";
 
-// Định nghĩa interface cho event để có type checking
-interface EventData {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  imageUrl: string;
-  category: string;
-  isPaid: boolean;
-  address: string;
-}
-
-// API event response interface
 interface EventResponse {
   id: string;
   title: string;
@@ -46,10 +33,9 @@ interface EventResponse {
   category: string;
   isPaid: boolean;
   address: string;
-  [key: string]: string | number | boolean | Date; // Thay thế any bằng union type cụ thể hơn
+  [key: string]: string | number | boolean | Date;
 }
 
-// Danh sách địa điểm mẫu
 const locations = [
   "TP. Hồ Chí Minh",
   "Hà Nội",
@@ -59,117 +45,12 @@ const locations = [
   "Nha Trang",
 ];
 
-// Danh sách categories
-const categories = [
-  { id: "conference", name: "Hội nghị" },
-  { id: "workshop", name: "Hội thảo" },
-  { id: "meetup", name: "Gặp gỡ" },
-  { id: "networking", name: "Kết nối" },
-  { id: "music", name: "Âm nhạc" },
-  { id: "exhibition", name: "Triển lãm" },
-  { id: "food", name: "Ẩm thực" },
-  { id: "sports", name: "Thể thao" },
-  { id: "tech", name: "Công nghệ" },
-  { id: "education", name: "Giáo dục" },
-  { id: "health", name: "Sức khỏe" },
-  { id: "art", name: "Nghệ thuật" },
-  { id: "business", name: "Kinh doanh" },
-  { id: "other", name: "Khác" },
-];
-
-// Function để lấy tên category từ id
-const getCategoryName = (categoryId: string): string => {
-  const category = categories.find((cat) => cat.id === categoryId);
-  return category ? category.name : "Khác";
-};
-
-// Custom EventCard component tương tự như ở trang Home
-const CustomEventCard = memo(({ event }: { event: EventData }) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const tagBg = useColorModeValue("teal.50", "teal.900");
-  const tagColor = useColorModeValue("teal.600", "teal.200");
-  const locationColor = useColorModeValue("gray.600", "gray.400");
-
-  return (
-    <Box
-      as={Link}
-      to={`/events/${event.id}`}
-      borderRadius="lg"
-      overflow="hidden"
-      bg={cardBg}
-      borderWidth="1px"
-      borderColor={borderColor}
-      _hover={{
-        transform: "translateY(-5px)",
-        boxShadow: "lg",
-        bg: cardHoverBg,
-      }}
-      transition="all 0.3s"
-      sx={{ textDecoration: "none" }}
-    >
-      <Box position="relative">
-        <Image
-          src={event.imageUrl}
-          alt={event.title}
-          width="100%"
-          height="180px"
-          objectFit="cover"
-          fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
-        />
-        <Box position="absolute" top={2} right={2}>
-          {event.isPaid ? (
-            <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
-              Trả phí
-            </Badge>
-          ) : (
-            <Badge colorScheme="green" py={1} px={2} borderRadius="md">
-              Miễn phí
-            </Badge>
-          )}
-        </Box>
-      </Box>
-
-      <Box p={4}>
-        <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
-          <Icon as={FiTag} mr={1} />
-          {getCategoryName(event.category)}
-        </Tag>
-
-        <Heading as="h3" size="md" mb={2} noOfLines={2}>
-          {event.title}
-        </Heading>
-
-        <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
-          {event.description}
-        </Text>
-
-        <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
-          <Icon as={FiCalendar} mr={2} />
-          <Text>{event.date}</Text>
-        </Flex>
-
-        <Flex fontSize="sm" color={locationColor} align="center">
-          <Icon as={FiMapPin} mr={2} />
-          <Text>{event.location}</Text>
-        </Flex>
-      </Box>
-    </Box>
-  );
-});
-
 const SearchResults = () => {
-  // Màu sắc theo theme
-  const bgColor = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const sectionBg = useColorModeValue("gray.50", "gray.800");
+  const resultsInfoBg = useColorModeValue("gray.100", "gray.700");
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State cho các filter đã được áp dụng để fetch dữ liệu
   const [appliedKeyword, setAppliedKeyword] = useState(
     () => searchParams.get("keyword") || ""
   );
@@ -189,21 +70,19 @@ const SearchResults = () => {
     parseInt(searchParams.get("page") || "1", 10)
   );
 
-  // State cho các giá trị đang được chọn trong SearchBar (chưa áp dụng)
   const [tempKeyword, setTempKeyword] = useState(appliedKeyword);
   const [tempLocation, setTempLocation] = useState(appliedLocation);
   const [tempCategory, setTempCategory] = useState(appliedCategory);
   const [tempShowFreeOnly, setTempShowFreeOnly] = useState(appliedShowFreeOnly);
   const [tempShowPaidOnly, setTempShowPaidOnly] = useState(appliedShowPaidOnly);
 
-  const [filteredEvents, setFilteredEvents] = useState<EventData[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventCardData[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const eventsPerPage = 6;
 
-  // Hàm kiểm tra xem có filter nào đang được áp dụng không
   const areFiltersApplied = useCallback(() => {
     return !!(
       appliedKeyword ||
@@ -246,7 +125,7 @@ const SearchResults = () => {
         console.log("[fetchAndFilterEvents] API Response received:", response);
 
         if (response && response.events && response.pagination) {
-          const formattedEvents: EventData[] = response.events.map(
+          const formattedEvents: EventCardData[] = response.events.map(
             (event: EventResponse) => ({
               id: event.id,
               title: event.title,
@@ -256,7 +135,6 @@ const SearchResults = () => {
               imageUrl: event.imageUrl,
               category: event.category,
               isPaid: event.isPaid,
-              address: event.address,
             })
           );
           setFilteredEvents(formattedEvents);
@@ -290,7 +168,6 @@ const SearchResults = () => {
     [eventsPerPage]
   );
 
-  // Effect để fetch dữ liệu khi filter hoặc page thay đổi
   useEffect(() => {
     const currentFilters: EventFilter = {
       keyword: appliedKeyword,
@@ -308,7 +185,6 @@ const SearchResults = () => {
     );
     fetchAndFilterEvents(currentPage, currentFilters);
 
-    // Cập nhật URL params
     const newSearchParams = new URLSearchParams();
     if (appliedKeyword) newSearchParams.set("keyword", appliedKeyword);
     if (appliedLocation) newSearchParams.set("location", appliedLocation);
@@ -322,9 +198,7 @@ const SearchResults = () => {
       newSearchParams.delete("page");
     }
 
-    // Chỉ gọi setSearchParams nếu có sự thay đổi thực sự
-    // Lấy search string hiện tại từ window.location để so sánh chính xác hơn
-    const currentSearchString = window.location.search.substring(1); // Bỏ dấu '?'
+    const currentSearchString = window.location.search.substring(1);
     if (newSearchParams.toString() !== currentSearchString) {
       console.log(
         "[useEffect appliedFilters/currentPage] Updating URL Search Params:",
@@ -396,7 +270,7 @@ const SearchResults = () => {
   }, []);
 
   const locationOptions = locations.map((loc) => ({ name: loc }));
-  const categoryOptions = categories.map((cat) => ({
+  const categoryOptions = allCategories.map((cat) => ({
     id: cat.id,
     name: cat.name,
   }));
@@ -479,10 +353,9 @@ const SearchResults = () => {
           <Text color="red.500" mb={4}>
             {error}
           </Text>
-          {/* Nút Clear Filters khi có lỗi */}
           {areFiltersApplied() && (
             <Button
-              colorScheme="red" // Đổi màu thành đỏ
+              colorScheme="red"
               onClick={handleResetFilters}
               leftIcon={<Icon as={FiX} />}
               size="sm"
@@ -502,7 +375,7 @@ const SearchResults = () => {
             alignItems="center"
             mb={6}
             p={4}
-            bg={useColorModeValue("gray.100", "gray.700")}
+            bg={resultsInfoBg}
             borderRadius="md"
           >
             <Text fontSize="lg" fontWeight="medium">
@@ -516,11 +389,10 @@ const SearchResults = () => {
                 : " without filters"}
               .
             </Text>
-            {/* Không còn nút Clear Filters ở đây nữa */}
           </Flex>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={8}>
             {filteredEvents.map((event) => (
-              <CustomEventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} />
             ))}
           </SimpleGrid>
           {renderPaginationControls()}
@@ -539,7 +411,7 @@ const SearchResults = () => {
         </Text>
         {areFiltersApplied() && (
           <Button
-            colorScheme="red" // Đổi màu thành đỏ
+            colorScheme="red"
             onClick={handleResetFilters}
             leftIcon={<Icon as={FiX} />}
             size="lg"

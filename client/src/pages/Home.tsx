@@ -9,17 +9,14 @@ import {
   Text,
   VStack,
   useColorModeValue,
-  Tag,
-  Icon,
-  Badge,
   Spinner,
 } from "@chakra-ui/react";
-import { FiArrowRight, FiCalendar, FiMapPin, FiTag } from "react-icons/fi";
+import { FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { formatDate } from "../utils/formatters";
+import { EventCard, EventCardData } from "../components/events/EventCard";
 
 // Danh sách categories
 const categories = [
@@ -149,7 +146,7 @@ const API_URL = "http://localhost:5000/api";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<EventData[]>([]);
+  const [events, setEvents] = useState<EventCardData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,18 +159,19 @@ const Home = () => {
         const response = await axios.get(`${API_URL}/events?limit=6`);
 
         if (response.data.success) {
-          // Chuyển đổi dữ liệu từ API để phù hợp với interface
-          const formattedEvents = response.data.events.map((event: any) => ({
-            id: event.id,
-            title: event.title,
-            description: event.description,
-            date: new Date(event.date).toLocaleDateString("vi-VN"),
-            location: event.location,
-            imageUrl: event.imageUrl,
-            category: event.category,
-            isPaid: event.isPaid,
-            organizer: event.organizer,
-          }));
+          // Chuyển đổi dữ liệu từ API để phù hợp với interface EventCardData
+          const formattedEvents: EventCardData[] = response.data.events.map(
+            (event: any) => ({
+              id: event.id,
+              title: event.title,
+              description: event.description,
+              date: new Date(event.date).toLocaleDateString("vi-VN"),
+              location: event.location,
+              imageUrl: event.imageUrl,
+              category: event.category,
+              isPaid: event.isPaid,
+            })
+          );
 
           setEvents(formattedEvents);
         } else {
@@ -195,96 +193,10 @@ const Home = () => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const sectionBg = useColorModeValue("gray.50", "gray.800");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
-  const tagBg = useColorModeValue("teal.50", "teal.900");
-  const tagColor = useColorModeValue("teal.600", "teal.200");
 
   // Handler cho nút "Tạo sự kiện"
   const handleCreateEvent = () => {
-    // TODO: Khi có backend, thêm logic kiểm tra đăng nhập và quyền ở đây
-    // Ví dụ:
-    // if (!isLoggedIn) {
-    //   navigate("/login?redirect=/create-event");
-    // } else if (!hasOrganizerPermission) {
-    //   navigate("/become-organizer");
-    // } else {
-    //   navigate("/create-event");
-    // }
-
-    // Tạm thời, chỉ điều hướng đến trang đăng ký organizer khi chưa có backend
     navigate("/become-organizer");
-  };
-
-  // Tùy chỉnh EventCard component
-  const CustomEventCard = ({ event }: { event: EventData }) => {
-    const locationColor = useColorModeValue("gray.600", "gray.400");
-
-    return (
-      <Box
-        as={Link}
-        to={`/events/${event.id}`}
-        borderRadius="lg"
-        overflow="hidden"
-        bg={cardBg}
-        borderWidth="1px"
-        borderColor={borderColor}
-        _hover={{
-          transform: "translateY(-5px)",
-          boxShadow: "lg",
-          bg: cardHoverBg,
-        }}
-        transition="all 0.3s"
-        sx={{ textDecoration: "none" }}
-      >
-        <Box position="relative">
-          <Image
-            src={event.imageUrl}
-            alt={event.title}
-            width="100%"
-            height="180px"
-            objectFit="cover"
-            fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
-          />
-          <Box position="absolute" top={2} right={2}>
-            {event.isPaid ? (
-              <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
-                Trả phí
-              </Badge>
-            ) : (
-              <Badge colorScheme="green" py={1} px={2} borderRadius="md">
-                Miễn phí
-              </Badge>
-            )}
-          </Box>
-        </Box>
-
-        <Box p={4}>
-          <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
-            <Icon as={FiTag} mr={1} />
-            {getCategoryName(event.category)}
-          </Tag>
-
-          <Heading as="h3" size="md" mb={2} noOfLines={2}>
-            {event.title}
-          </Heading>
-
-          <Text fontSize="sm" color={textColor} mb={3} noOfLines={2}>
-            {event.description}
-          </Text>
-
-          <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
-            <Icon as={FiCalendar} mr={2} />
-            <Text>{event.date}</Text>
-          </Flex>
-
-          <Flex fontSize="sm" color={locationColor} align="center">
-            <Icon as={FiMapPin} mr={2} />
-            <Text>{event.location}</Text>
-          </Flex>
-        </Box>
-      </Box>
-    );
   };
 
   return (
@@ -424,7 +336,7 @@ const Home = () => {
                   w="100%"
                 >
                   {events.map((event) => (
-                    <CustomEventCard key={event.id} event={event} />
+                    <EventCard key={event.id} event={event} />
                   ))}
                 </SimpleGrid>
               )}

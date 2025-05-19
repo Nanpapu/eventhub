@@ -1,122 +1,118 @@
 import {
   Box,
-  Image,
-  Heading,
-  Text,
-  Flex,
-  Button,
   Badge,
+  Flex,
+  Heading,
+  Icon,
+  Image,
+  Tag,
+  Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { FiCalendar, FiMapPin } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { FiCalendar, FiMapPin, FiTag } from "react-icons/fi";
+import { memo } from "react";
+import { getCategoryName } from "../../utils/categoryUtils"; // Đường dẫn này giả định utils nằm cùng cấp với components
 
-// Định nghĩa kiểu dữ liệu cho sự kiện
-export interface EventType {
-  id: number;
+// Định nghĩa interface cho props của EventCard
+export interface EventCardData {
+  id: string;
   title: string;
   description: string;
-  date: string;
+  date: string; // Nên là chuỗi đã được format sẵn
   location: string;
-  image: string;
-  category: string;
+  imageUrl: string;
+  category: string; // ID của category
   isPaid: boolean;
-  price?: number;
+  // address?: string; // Hiện tại không được sử dụng trong JSX của card
 }
 
 interface EventCardProps {
-  event: EventType;
+  event: EventCardData;
 }
 
-/**
- * Component hiển thị thông tin tóm tắt của một sự kiện dưới dạng card
- * @param event - Thông tin sự kiện cần hiển thị
- */
-export const EventCard = ({ event }: EventCardProps) => {
+const EventCardComponent: React.FC<EventCardProps> = ({ event }) => {
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardHoverBg = useColorModeValue("gray.50", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const tagBg = useColorModeValue("teal.50", "teal.900");
+  const tagColor = useColorModeValue("teal.600", "teal.200");
+  const locationColor = useColorModeValue("gray.600", "gray.400");
+
   return (
     <Box
-      maxW="sm"
-      borderWidth="1px"
+      as={Link}
+      to={`/events/${event.id}`}
       borderRadius="lg"
       overflow="hidden"
-      boxShadow="md"
-      transition="transform 0.3s"
-      _hover={{ transform: "translateY(-5px)" }}
-      bg="white"
+      bg={cardBg}
+      borderWidth="1px"
+      borderColor={borderColor}
+      _hover={{
+        transform: "translateY(-5px)",
+        boxShadow: "lg",
+        bg: cardHoverBg,
+      }}
+      transition="all 0.3s"
+      sx={{ textDecoration: "none" }} // Đảm bảo Link không có gạch chân
+      display="flex" // Thêm để đảm bảo chiều cao đồng nhất nếu nội dung khác nhau
+      flexDirection="column" // Sắp xếp nội dung theo cột
     >
-      {/* Phần hình ảnh sự kiện */}
       <Box position="relative">
         <Image
-          src={event.image}
+          src={event.imageUrl}
           alt={event.title}
-          height="200px"
           width="100%"
+          height="180px"
           objectFit="cover"
+          fallbackSrc="https://via.placeholder.com/400x300?text=Event+Image"
         />
-
-        {/* Badge hiển thị loại sự kiện và thông tin giá */}
-        <Box position="absolute" top={2} right={2} display="flex" gap={1}>
-          <Badge
-            colorScheme="teal"
-            fontSize="xs"
-            textTransform="capitalize"
-            borderRadius="md"
-            px={2}
-            py={1}
-          >
-            {event.category}
-          </Badge>
-          <Badge
-            colorScheme={event.isPaid ? "purple" : "green"}
-            fontSize="xs"
-            borderRadius="md"
-            px={2}
-            py={1}
-          >
-            {event.isPaid ? "Có phí" : "Miễn phí"}
-          </Badge>
+        <Box position="absolute" top={2} right={2}>
+          {event.isPaid ? (
+            <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
+              Trả phí
+            </Badge>
+          ) : (
+            <Badge colorScheme="green" py={1} px={2} borderRadius="md">
+              Miễn phí
+            </Badge>
+          )}
         </Box>
       </Box>
 
-      {/* Phần nội dung thông tin */}
-      <Box p={5}>
-        {/* Tiêu đề sự kiện */}
-        <Heading size="md" my={2} noOfLines={2}>
+      <Box p={4} flexGrow={1} display="flex" flexDirection="column">
+        {" "}
+        {/* Thêm flexGrow và display flex để nội dung co giãn */}
+        <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
+          <Icon as={FiTag} mr={1} />
+          {getCategoryName(event.category)}
+        </Tag>
+        <Heading as="h3" size="md" mb={2} noOfLines={2} flexShrink={0}>
+          {" "}
+          {/* Ngăn Heading co lại */}
           {event.title}
         </Heading>
-
-        {/* Mô tả ngắn */}
-        <Text noOfLines={2} mb={3} fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color={textColor} mb={3} noOfLines={2} flexGrow={1}>
+          {" "}
+          {/* Cho phép Text co giãn */}
           {event.description}
         </Text>
-
-        {/* Thông tin thời gian */}
-        <Flex align="center" color="gray.500" fontSize="sm" mb={2}>
-          <FiCalendar />
-          <Text ml={2}>{event.date}</Text>
-        </Flex>
-
-        {/* Thông tin địa điểm */}
-        <Flex align="center" color="gray.500" fontSize="sm" mb={4}>
-          <FiMapPin />
-          <Text ml={2} noOfLines={1}>
-            {event.location}
-          </Text>
-        </Flex>
-
-        {/* Nút xem chi tiết */}
-        <Button
-          as={Link}
-          to={`/events/${event.id}`}
-          colorScheme="teal"
-          width="full"
-          size="sm"
-          sx={{ textDecoration: "none" }}
-        >
-          Xem Chi Tiết
-        </Button>
+        <Box mt="auto">
+          {" "}
+          {/* Đẩy phần date và location xuống dưới cùng */}
+          <Flex fontSize="sm" color={locationColor} align="center" mb={2}>
+            <Icon as={FiCalendar} mr={2} />
+            <Text>{event.date}</Text>
+          </Flex>
+          <Flex fontSize="sm" color={locationColor} align="center">
+            <Icon as={FiMapPin} mr={2} />
+            <Text>{event.location}</Text>
+          </Flex>
+        </Box>
       </Box>
     </Box>
   );
 };
 
-export default EventCard;
+export const EventCard = memo(EventCardComponent);
