@@ -84,7 +84,14 @@ const EventCardComponent: React.FC<EventCardProps> = ({ event }) => {
       <Box p={4} flexGrow={1} display="flex" flexDirection="column">
         {" "}
         {/* Thêm flexGrow và display flex để nội dung co giãn */}
-        <Tag size="sm" bg={tagBg} color={tagColor} mb={2} borderRadius="full">
+        <Tag
+          size="sm"
+          bg={tagBg}
+          color={tagColor}
+          mb={2}
+          borderRadius="full"
+          alignSelf="flex-start"
+        >
           <Icon as={FiTag} mr={1} />
           {getCategoryName(event.category)}
         </Tag>
