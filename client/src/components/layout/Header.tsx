@@ -38,7 +38,6 @@ import {
   MdExitToApp,
 } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { NotificationBell } from "../notification";
 import ColorModeToggle from "../common/ColorModeToggle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
@@ -49,37 +48,6 @@ import {
   selectUser,
 } from "../../app/features/authSlice";
 
-// Demo login function (sẽ bị xóa khi tích hợp auth hoàn toàn)
-const useDemoAuth = () => {
-  // Đây là một hook tạm thời chỉ cho mục đích demo
-  const [demoUser, setDemoUser] = useState<{
-    name: string;
-    email: string;
-    avatar: string;
-    role: "user" | "organizer" | "admin";
-  } | null>(null);
-
-  const login = () => {
-    setDemoUser({
-      name: "John Doe",
-      email: "john@example.com",
-      avatar: "https://bit.ly/3Q3eQvj",
-      role: "user",
-    });
-  };
-
-  const loginAsOrganizer = () => {
-    setDemoUser({
-      name: "Event Manager",
-      email: "organizer@example.com",
-      avatar: "https://bit.ly/3R7HRgG",
-      role: "organizer",
-    });
-  };
-
-  return { demoUser, login, loginAsOrganizer, setDemoUser }; // Chỉ trả về state và các hàm liên quan đến auth demo
-};
-
 export default function Header() {
   const { isOpen, onToggle } = useDisclosure();
   const navigate = useNavigate();
@@ -87,15 +55,12 @@ export default function Header() {
   const dispatch = useAppDispatch();
 
   // Lấy thông tin về người dùng từ Redux store
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const user = useAppSelector(selectUser);
-
-  // Demo functions cho nút "Đăng nhập Demo"
-  const { demoUser, login, loginAsOrganizer, setDemoUser } = useDemoAuth();
+  const isAuthenticatedRedux = useAppSelector(selectIsAuthenticated);
+  const userRedux = useAppSelector(selectUser);
 
   // Kết hợp user thật từ Redux với user demo (ưu tiên user thật)
-  const currentUser = user || demoUser;
-  const isUserAuthenticated = isAuthenticated || !!demoUser;
+  const currentUser = userRedux;
+  const isUserAuthenticated = isAuthenticatedRedux;
 
   // Màu sắc theo theme cho Header
   const bgColor = useColorModeValue("white", "gray.900");
@@ -107,14 +72,14 @@ export default function Header() {
 
   // Xử lý đăng xuất
   const handleLogout = () => {
-    if (demoUser) {
-      // Nếu là user demo, reset state local bằng cách gọi setDemoUser(null)
-      setDemoUser(null);
-      window.location.reload(); // Reload trang để reset state demo
-    } else {
-      // Nếu là user thật, dispatch action logout
-      dispatch(logout());
-    }
+    // if (demoUser) {
+    //   // Nếu là user demo, reset state local bằng cách gọi setDemoUser(null)
+    //   setDemoUser(null);
+    //   window.location.reload(); // Reload trang để reset state demo
+    // } else {
+    // Nếu là user thật, dispatch action logout
+    dispatch(logout());
+    // }
 
     toast({
       title: "Đăng xuất thành công",
@@ -123,30 +88,6 @@ export default function Header() {
       isClosable: true,
     });
     navigate("/");
-  };
-
-  // Demo đăng nhập nhanh (chỉ để test UI)
-  const quickLogin = () => {
-    login();
-    toast({
-      title: "Đăng nhập thành công (Demo)",
-      description: "Chào mừng đến với EventHub",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-  };
-
-  // Demo đăng nhập nhanh với vai trò organizer
-  const quickLoginAsOrganizer = () => {
-    loginAsOrganizer();
-    toast({
-      title: "Đăng nhập thành công - Bảng điều khiển tổ chức (Demo)",
-      description: "Chào mừng đến với EventHub",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
   };
 
   // Lọc NAV_ITEMS dựa trên vai trò người dùng
@@ -408,26 +349,6 @@ export default function Header() {
                   Đăng ký
                 </Button>
               </Stack>
-
-              {/* UI Demo: Nút đăng nhập nhanh */}
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  size="sm"
-                  colorScheme="gray"
-                  variant="ghost"
-                >
-                  Đăng nhập Demo
-                </MenuButton>
-                <MenuList>
-                  <MenuItem onClick={quickLogin}>
-                    Đăng nhập dưới dạng người dùng
-                  </MenuItem>
-                  <MenuItem onClick={quickLoginAsOrganizer}>
-                    Đăng nhập dưới dạng nhà tổ chức
-                  </MenuItem>
-                </MenuList>
-              </Menu>
             </>
           )}
         </Stack>
