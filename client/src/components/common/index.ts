@@ -3,7 +3,6 @@ export { default as ScrollToTop } from "./ScrollToTop";
 
 // Các component UI chung
 export { default as ColorModeToggle } from "./ColorModeToggle";
-export { default as LanguageSwitcher } from "./LanguageSwitcher";
 export { default as SearchBar } from "./SearchBar";
 
 // Các component định dạng

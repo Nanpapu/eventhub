@@ -40,7 +40,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { NotificationBell } from "../notification";
 import ColorModeToggle from "../common/ColorModeToggle";
-import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   logout,
@@ -100,7 +99,7 @@ export default function Header() {
     } else {
       // Nếu người dùng chưa xác thực, lọc bỏ mục "Tạo sự kiện".
       // Sử dụng labelKey để xác định mục cần lọc một cách chính xác hơn.
-      return NAV_ITEMS.filter((item) => item.labelKey !== "events.createEvent");
+      return NAV_ITEMS.filter((item) => item.label !== "Tạo sự kiện");
     }
   };
 
@@ -161,27 +160,10 @@ export default function Header() {
           spacing={3}
           align="center"
         >
-          <LanguageSwitcher />
           <ColorModeToggle />
 
           {isUserAuthenticated ? (
             <>
-              {/* Nút "Tạo sự kiện" riêng biệt đã được yêu cầu ẩn đi */}
-              {/* {isUserAuthenticated && (
-                <Button
-                  as={Link}
-                  to="/create-event" // Sẽ được điều chỉnh ở NAV_ITEMS
-                  display={{ base: "none", md: "inline-flex" }}
-                  fontSize="sm"
-                  fontWeight={600}
-                  leftIcon={<MdAdd />}
-                  colorScheme="teal"
-                  variant="outline"
-                >
-                  Tạo sự kiện
-                </Button>
-              )} */}
-
               <Box display={{ base: "none", md: "flex" }}>
                 <NotificationBell />
               </Box>
@@ -381,7 +363,7 @@ const DesktopNav = ({ navItems, currentUser }: DesktopNavProps) => {
         let navHref = navItem.href ?? "#";
 
         // Điều chỉnh href cho mục "Tạo sự kiện"
-        if (navItem.labelKey === "events.createEvent") {
+        if (navItem.label === "Tạo sự kiện") {
           if (currentUser?.role === "organizer") {
             navHref = "/create-event";
           } else {
@@ -472,7 +454,7 @@ const DesktopSubNav = ({
 
   let itemHref = href ?? "#";
   // Điều chỉnh href cho mục "Tạo sự kiện"
-  if (labelKey === "events.createEvent" && !children) {
+  if (labelKey === "Tạo sự kiện" && !children) {
     if (currentUser?.role === "organizer") {
       itemHref = "/create-event";
     } else {
@@ -551,7 +533,6 @@ const MobileNavItem = ({
   label,
   children,
   href,
-  labelKey,
   currentUser,
 }: Omit<NavItem, "subLabel" | "subLabelKey"> & {
   currentUser: UserForHeader | null;
@@ -564,7 +545,7 @@ const MobileNavItem = ({
 
   let itemHref = href ?? "#";
   // Điều chỉnh href cho mục "Tạo sự kiện"
-  if (labelKey === "events.createEvent") {
+  if (label === "Tạo sự kiện") {
     if (currentUser?.role === "organizer") {
       itemHref = "/create-event";
     } else {
@@ -653,18 +634,14 @@ interface UserForHeader {
 const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Sự kiện",
-    labelKey: "events.events",
     children: [
       {
         label: "Tất cả sự kiện",
-        labelKey: "common.all",
         subLabel: "Tìm sự kiện gần bạn",
-        subLabelKey: "events.searchEvents",
         href: "/events",
       },
       {
         label: "Danh mục",
-        labelKey: "events.category",
         subLabel: "Duyệt sự kiện theo danh mục",
         href: "/events/categories",
       },
@@ -672,27 +649,22 @@ const NAV_ITEMS: Array<NavItem> = [
   },
   {
     label: "Tạo sự kiện",
-    labelKey: "events.createEvent",
   },
   {
     label: "Về chúng tôi",
-    labelKey: "footer.about",
     children: [
       {
-        label: "Về chúng tôi",
-        labelKey: "footer.about",
+        label: "Về EventHub",
         subLabel: "Tìm hiểu thêm về EventHub",
         href: "/about",
       },
       {
         label: "Liên hệ",
-        labelKey: "footer.contact",
         subLabel: "Gửi câu hỏi hoặc ý kiến đóng góp",
         href: "/contact",
       },
       {
-        label: "Bộ hồ sơ báo chí",
-        labelKey: "footer.press",
+        label: "Hồ sơ báo chí",
         subLabel: "Thông tin cho báo chí",
         href: "/press",
       },
@@ -700,17 +672,14 @@ const NAV_ITEMS: Array<NavItem> = [
   },
   {
     label: "Chính sách",
-    labelKey: "footer.policies",
     children: [
       {
         label: "Chính sách bảo mật",
-        labelKey: "footer.privacy",
         subLabel: "Cách chúng tôi bảo vệ dữ liệu của bạn",
         href: "/privacy",
       },
       {
         label: "Điều khoản dịch vụ",
-        labelKey: "footer.terms",
         subLabel: "Quy định sử dụng dịch vụ",
         href: "/terms",
       },
@@ -718,23 +687,19 @@ const NAV_ITEMS: Array<NavItem> = [
   },
   {
     label: "Trợ giúp",
-    labelKey: "footer.faq",
     children: [
       {
         label: "Trung tâm trợ giúp",
-        labelKey: "footer.help",
         subLabel: "Giải đáp các câu hỏi phổ biến",
         href: "/help",
       },
       {
         label: "Trở thành nhà tổ chức",
-        labelKey: "footer.becomeOrganizer",
         subLabel: "Tạo và quản lý sự kiện của riêng bạn",
         href: "/become-organizer",
       },
       {
         label: "Cộng đồng",
-        labelKey: "footer.community",
         subLabel: "Tham gia cộng đồng EventHub",
         href: "/community",
       },

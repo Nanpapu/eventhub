@@ -156,25 +156,25 @@ export default function Footer() {
             </Text>
             <Stack direction={"row"} spacing={4}>
               <SocialButton
-                label={"Facebook"}
+                label={"Facebook của EventHub"}
                 href={"https://facebook.com/eventhubvn"}
               >
                 <FaFacebookF />
               </SocialButton>
               <SocialButton
-                label={"Twitter"}
+                label={"Twitter của EventHub"}
                 href={"https://twitter.com/eventhubvn"}
               >
                 <FaTwitter />
               </SocialButton>
               <SocialButton
-                label={"YouTube"}
+                label={"YouTube của EventHub"}
                 href={"https://youtube.com/eventhubvn"}
               >
                 <FaYoutube />
               </SocialButton>
               <SocialButton
-                label={"Instagram"}
+                label={"Instagram của EventHub"}
                 href={"https://instagram.com/eventhubvn"}
               >
                 <FaInstagram />
