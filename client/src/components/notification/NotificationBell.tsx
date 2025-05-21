@@ -83,8 +83,11 @@ const NotificationBell = () => {
           // Không chuyển hướng cho thông báo hệ thống
           break;
         default:
-          // Mặc định chuyển đến trang thông báo
-          navigate("/notifications");
+          // Mặc định không làm gì cả, vì trang notifications đã bị xóa
+          console.log(
+            "Notification clicked, no specific redirect:",
+            notification
+          );
       }
     }
   };
@@ -148,9 +151,9 @@ const NotificationBell = () => {
         {/* Popover hiển thị danh sách thông báo */}
         <Portal>
           <PopoverContent
-            width="350px"
+            width={{ base: "90vw", md: "450px" }}
             maxWidth="90vw"
-            maxHeight="80vh"
+            maxHeight="calc(100vh - 120px)"
             shadow="xl"
             border="1px solid"
             borderColor={popoverBorderColor}

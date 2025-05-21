@@ -34,7 +34,6 @@ import {
   MdConfirmationNumber,
   MdBookmark,
   MdStars,
-  MdNotifications,
   MdExitToApp,
 } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
@@ -246,13 +245,6 @@ export default function Header() {
                     </>
                   )}
 
-                  <MenuItem
-                    as={Link}
-                    to="/notifications"
-                    icon={<Icon as={MdNotifications} mr={2} />}
-                  >
-                    Thông báo
-                  </MenuItem>
                   <MenuDivider />
                   <MenuItem
                     onClick={handleLogout}

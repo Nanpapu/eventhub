@@ -16,7 +16,6 @@ import Checkout from "./events/Checkout";
 // User pages
 import Profile from "./user/Profile";
 import MyEvents from "./user/MyEvents";
-import Notifications from "./user/Notifications";
 import MyTickets from "./user/MyTickets";
 import SavedEvents from "./user/SavedEvents";
 import UserDashboard from "./user/UserDashboard";
@@ -43,7 +42,6 @@ export {
   Checkout,
   Profile,
   MyEvents,
-  Notifications,
   Dashboard,
   EventAttendees,
   EventCheckIn,

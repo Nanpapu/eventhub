@@ -71,7 +71,6 @@ export interface Notification {
 // Props cho component NotificationList
 interface NotificationListProps {
   maxNotifications?: number;
-  showViewAllButton?: boolean;
   onMarkAllAsRead?: () => void;
   onItemClick?: (notification: Notification) => void;
   isHeaderVisible?: boolean;
@@ -86,7 +85,6 @@ const MotionBox = motion(Box);
  */
 const NotificationList = ({
   maxNotifications,
-  showViewAllButton = true,
   onMarkAllAsRead,
   onItemClick,
   isHeaderVisible = true,
@@ -456,7 +454,7 @@ const NotificationList = ({
         <VStack
           spacing={0}
           align="stretch"
-          maxH="400px"
+          maxH={{ base: "calc(100vh - 200px)", md: "500px" }}
           overflowY="auto"
           ref={scrollRef}
           css={{
@@ -617,29 +615,6 @@ const NotificationList = ({
             </SlideFade>
           ))}
         </VStack>
-      )}
-
-      {showViewAllButton && notifications.length > (maxNotifications || 0) && (
-        <Flex
-          justify="center"
-          p={3}
-          borderTop="1px solid"
-          borderColor={borderColor}
-          bg={useColorModeValue("gray.50", "gray.900")}
-        >
-          <Button
-            as={Link}
-            to="/notifications"
-            variant="ghost"
-            size="sm"
-            width="100%"
-            rightIcon={<FiChevronRight />}
-            color="teal.500"
-            _hover={{ bg: "teal.50", color: "teal.600" }}
-          >
-            Xem tất cả ({notifications.length})
-          </Button>
-        </Flex>
       )}
     </Box>
   );
