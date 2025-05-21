@@ -21,9 +21,9 @@ import {
   MenuItem,
   MenuDivider,
   useToast,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import {
-  MdAdd,
   MdMenu as HamburgerIcon,
   MdClose as CloseIcon,
   MdKeyboardArrowDown as ChevronDownIcon,
@@ -77,7 +77,7 @@ const useDemoAuth = () => {
     });
   };
 
-  return { demoUser, login, loginAsOrganizer };
+  return { demoUser, login, loginAsOrganizer, setDemoUser }; // Chỉ trả về state và các hàm liên quan đến auth demo
 };
 
 export default function Header() {
@@ -91,15 +91,15 @@ export default function Header() {
   const user = useAppSelector(selectUser);
 
   // Demo functions cho nút "Đăng nhập Demo"
-  const { demoUser, login, loginAsOrganizer } = useDemoAuth();
+  const { demoUser, login, loginAsOrganizer, setDemoUser } = useDemoAuth();
 
   // Kết hợp user thật từ Redux với user demo (ưu tiên user thật)
   const currentUser = user || demoUser;
   const isUserAuthenticated = isAuthenticated || !!demoUser;
 
-  // Màu sắc theo theme
+  // Màu sắc theo theme cho Header
   const bgColor = useColorModeValue("white", "gray.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const borderColorHeader = useColorModeValue("gray.200", "gray.700"); // Đổi tên để tránh xung đột
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const logoColor = useColorModeValue("teal.600", "teal.300");
@@ -107,9 +107,8 @@ export default function Header() {
   // Xử lý đăng xuất
   const handleLogout = () => {
     if (demoUser) {
-      // Nếu là user demo, reset state local
-      useDemoAuth().login = () => {};
-      useDemoAuth().loginAsOrganizer = () => {};
+      // Nếu là user demo, reset state local bằng cách gọi setDemoUser(null)
+      setDemoUser(null);
       window.location.reload(); // Reload trang để reset state demo
     } else {
       // Nếu là user thật, dispatch action logout
@@ -150,32 +149,21 @@ export default function Header() {
   };
 
   // Lọc NAV_ITEMS dựa trên vai trò người dùng
-  const getFilteredNavItems = (userRole?: string) => {
+  const getFilteredNavItems = (isAuthenticatedUser: boolean) => {
     // Tạo bản sao của NAV_ITEMS để không thay đổi mảng gốc
-    let items = [...NAV_ITEMS].filter((item) => item.label !== "Tạo sự kiện");
-
-    if (userRole === "organizer") {
-      const createEventItem: NavItem = {
-        label: "Tạo sự kiện",
-        labelKey: "events.createEvent",
-        href: "/create-event",
-      };
-      // Tìm vị trí của mục "Sự kiện" để chèn "Tạo sự kiện" ngay sau đó
-      const eventsItemIndex = items.findIndex(
-        (item) => item.labelKey === "events.events"
-      );
-      if (eventsItemIndex !== -1) {
-        items.splice(eventsItemIndex + 1, 0, createEventItem);
-      } else {
-        // Nếu không tìm thấy mục "Sự kiện", thêm vào cuối (hoặc một vị trí hợp lý khác)
-        items.push(createEventItem);
-      }
+    if (isAuthenticatedUser) {
+      // Nếu người dùng đã xác thực, trả về tất cả các mục NAV_ITEMS gốc.
+      // Mục "Tạo sự kiện" đã có sẵn trong NAV_ITEMS (được định nghĩa ở dưới) và sẽ được hiển thị.
+      return [...NAV_ITEMS];
+    } else {
+      // Nếu người dùng chưa xác thực, lọc bỏ mục "Tạo sự kiện".
+      // Sử dụng labelKey để xác định mục cần lọc một cách chính xác hơn.
+      return NAV_ITEMS.filter((item) => item.labelKey !== "events.createEvent");
     }
-    return items;
   };
 
   // Lấy danh sách NAV_ITEMS đã được lọc
-  const filteredNavItems = getFilteredNavItems(currentUser?.role);
+  const filteredNavItems = getFilteredNavItems(isUserAuthenticated);
 
   return (
     <Box position="sticky" top={0} zIndex={10}>
@@ -187,7 +175,7 @@ export default function Header() {
         px={{ base: 4 }}
         borderBottom={1}
         borderStyle={"solid"}
-        borderColor={borderColor}
+        borderColor={borderColorHeader} // Sử dụng borderColorHeader
         align={"center"}
         boxShadow="sm"
       >
@@ -220,7 +208,7 @@ export default function Header() {
           </ChakraLink>
 
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
-            <DesktopNav navItems={filteredNavItems} />
+            <DesktopNav navItems={filteredNavItems} currentUser={currentUser} />
           </Flex>
         </Flex>
 
@@ -236,10 +224,11 @@ export default function Header() {
 
           {isUserAuthenticated ? (
             <>
-              {currentUser?.role === "organizer" && (
+              {/* Nút "Tạo sự kiện" riêng biệt đã được yêu cầu ẩn đi */}
+              {/* {isUserAuthenticated && (
                 <Button
                   as={Link}
-                  to="/create-event"
+                  to="/create-event" // Sẽ được điều chỉnh ở NAV_ITEMS
                   display={{ base: "none", md: "inline-flex" }}
                   fontSize="sm"
                   fontWeight={600}
@@ -249,7 +238,7 @@ export default function Header() {
                 >
                   Tạo sự kiện
                 </Button>
-              )}
+              )} */}
 
               <Box display={{ base: "none", md: "flex" }}>
                 <NotificationBell />
@@ -352,25 +341,48 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Button
-                as={Link}
-                fontSize={"sm"}
-                fontWeight={400}
-                variant={"link"}
-                to={"/login"}
-              >
-                Đăng nhập
-              </Button>
-              <Button
-                as={Link}
+              <ButtonGroup
+                spacing={2}
                 display={{ base: "none", md: "inline-flex" }}
-                fontSize={"sm"}
-                fontWeight={600}
-                to={"/register"}
-                colorScheme="teal"
               >
-                Đăng ký
-              </Button>
+                <Button as={Link} to="/login" variant="ghost" size="sm">
+                  Đăng nhập
+                </Button>
+                <Button
+                  as={Link}
+                  to="/register"
+                  variant="outline"
+                  colorScheme="teal"
+                  size="sm"
+                >
+                  Đăng ký
+                </Button>
+              </ButtonGroup>
+              <Stack
+                direction="row"
+                spacing={2}
+                display={{ base: "inline-flex", md: "none" }}
+              >
+                <Button
+                  as={Link}
+                  to="/login"
+                  variant="ghost"
+                  size="sm"
+                  flex={1}
+                >
+                  Đăng nhập
+                </Button>
+                <Button
+                  as={Link}
+                  to="/register"
+                  variant="outline"
+                  colorScheme="teal"
+                  size="sm"
+                  flex={1}
+                >
+                  Đăng ký
+                </Button>
+              </Stack>
 
               {/* UI Demo: Nút đăng nhập nhanh - Chỉ để test, sẽ bị xóa khi tích hợp auth thực tế */}
               <Menu>
@@ -397,24 +409,39 @@ export default function Header() {
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
-        <MobileNav navItems={filteredNavItems} />
+        <MobileNav navItems={filteredNavItems} currentUser={currentUser} />
       </Collapse>
     </Box>
   );
 }
 
-const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
-  // Màu sắc theo theme
+interface DesktopNavProps {
+  navItems: Array<NavItem>;
+  currentUser: UserForHeader | null;
+}
+
+const DesktopNav = ({ navItems, currentUser }: DesktopNavProps) => {
+  // Màu sắc theo theme cho DesktopNav (bao gồm cả Popover)
   const linkColor = useColorModeValue("gray.800", "gray.100");
   const linkHoverColor = useColorModeValue("teal.600", "teal.300");
   const popoverContentBgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const borderColorPopover = useColorModeValue("gray.200", "gray.700"); // Đổi tên để tránh xung đột
 
   return (
     <Stack direction={"row"} spacing={4}>
       {navItems.map((navItem) => {
         // Sử dụng tên Tiếng Việt trực tiếp
         const displayLabel = navItem.label;
+        let navHref = navItem.href ?? "#";
+
+        // Điều chỉnh href cho mục "Tạo sự kiện"
+        if (navItem.labelKey === "events.createEvent") {
+          if (currentUser?.role === "organizer") {
+            navHref = "/create-event";
+          } else {
+            navHref = "/become-organizer";
+          }
+        }
 
         return (
           <Box key={navItem.label}>
@@ -423,7 +450,7 @@ const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
                 <ChakraLink
                   as={Link}
                   p={2}
-                  to={navItem.href ?? "#"}
+                  to={navHref}
                   fontSize={"sm"}
                   fontWeight={500}
                   color={linkColor}
@@ -445,7 +472,7 @@ const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
                   rounded={"xl"}
                   minW={"sm"}
                   borderWidth="1px"
-                  borderColor={borderColor}
+                  borderColor={borderColorPopover} // Sử dụng borderColorPopover
                 >
                   <Stack>
                     {navItem.children.map((child) => {
@@ -455,8 +482,12 @@ const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
                       return (
                         <DesktopSubNav
                           key={child.label}
-                          {...child}
+                          label={child.label}
+                          labelKey={child.labelKey}
+                          href={child.href}
+                          subLabel={child.subLabel}
                           displayLabel={childDisplayLabel}
+                          currentUser={currentUser}
                         />
                       );
                     })}
@@ -471,24 +502,42 @@ const DesktopNav = ({ navItems }: { navItems: Array<NavItem> }) => {
   );
 };
 
-interface DesktopSubNavProps
-  extends Omit<NavItem, "label" | "labelKey" | "subLabelKey"> {
+interface DesktopSubNavProps {
+  label: string;
+  labelKey?: string;
+  subLabel?: string;
+  href?: string;
+  children?: Array<NavItem>;
   displayLabel: string;
+  currentUser: UserForHeader | null;
 }
 
 const DesktopSubNav = ({
   displayLabel,
   href,
   subLabel,
+  children,
+  labelKey,
+  currentUser,
 }: DesktopSubNavProps) => {
   // Sử dụng subLabel trực tiếp thay vì qua i18n
   const hoverBg = useColorModeValue("gray.50", "gray.700");
   const subLabelText = subLabel;
 
+  let itemHref = href ?? "#";
+  // Điều chỉnh href cho mục "Tạo sự kiện"
+  if (labelKey === "events.createEvent" && !children) {
+    if (currentUser?.role === "organizer") {
+      itemHref = "/create-event";
+    } else {
+      itemHref = "/become-organizer";
+    }
+  }
+
   return (
     <ChakraLink
       as={Link}
-      to={href ?? "#"}
+      to={itemHref}
       role={"group"}
       display={"block"}
       p={2}
@@ -522,9 +571,15 @@ const DesktopSubNav = ({
   );
 };
 
-const MobileNav = ({ navItems }: { navItems: Array<NavItem> }) => {
+const MobileNav = ({
+  navItems,
+  currentUser,
+}: {
+  navItems: Array<NavItem>;
+  currentUser: UserForHeader | null;
+}) => {
   const bgColor = useColorModeValue("white", "gray.900");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.700"); // Đây là borderColor cho MobileNav Stack
 
   return (
     <Stack
@@ -533,10 +588,14 @@ const MobileNav = ({ navItems }: { navItems: Array<NavItem> }) => {
       display={{ md: "none" }}
       borderWidth="0 0 1px 0"
       borderStyle="solid"
-      borderColor={borderColor}
+      borderColor={borderColor} // Sử dụng borderColor này
     >
       {navItems.map((navItem) => (
-        <MobileNavItem key={navItem.label} {...navItem} />
+        <MobileNavItem
+          key={navItem.label}
+          {...navItem}
+          currentUser={currentUser}
+        />
       ))}
     </Stack>
   );
@@ -546,26 +605,42 @@ const MobileNavItem = ({
   label,
   children,
   href,
-}: Omit<NavItem, "labelKey" | "subLabel" | "subLabelKey">) => {
+  labelKey,
+  currentUser,
+}: Omit<NavItem, "subLabel" | "subLabelKey"> & {
+  currentUser: UserForHeader | null;
+}) => {
   const { isOpen, onToggle } = useDisclosure();
   // Sử dụng label trực tiếp thay vì qua i18n
   const itemLabel = label;
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
+  const borderColorMobileNavItem = useColorModeValue("gray.200", "gray.700");
+  const textColorMobileNavItem = useColorModeValue("gray.800", "gray.100");
+
+  let itemHref = href ?? "#";
+  // Điều chỉnh href cho mục "Tạo sự kiện"
+  if (labelKey === "events.createEvent") {
+    if (currentUser?.role === "organizer") {
+      itemHref = "/create-event";
+    } else {
+      itemHref = "/become-organizer";
+    }
+  }
 
   return (
     <Stack spacing={4} onClick={children && onToggle}>
       <Flex
         py={2}
         as={Link}
-        to={href ?? "#"}
+        to={itemHref} // Sử dụng itemHref đã điều chỉnh
         justify={"space-between"}
         align={"center"}
         _hover={{
           textDecoration: "none",
         }}
       >
-        <Text fontWeight={600} color={textColor}>
+        <Text fontWeight={600} color={textColorMobileNavItem}>
+          {" "}
+          {/* Sử dụng textColorMobileNavItem */}
           {itemLabel}
         </Text>
         {children && (
@@ -575,7 +650,7 @@ const MobileNavItem = ({
             transform={isOpen ? "rotate(180deg)" : ""}
             w={6}
             h={6}
-            color={textColor}
+            color={textColorMobileNavItem} // Sử dụng textColorMobileNavItem
           />
         )}
       </Flex>
@@ -586,7 +661,7 @@ const MobileNavItem = ({
           pl={4}
           borderLeft={1}
           borderStyle={"solid"}
-          borderColor={borderColor}
+          borderColor={borderColorMobileNavItem} // Sử dụng borderColorMobileNavItem
           align={"start"}
         >
           {children &&
@@ -598,7 +673,7 @@ const MobileNavItem = ({
                   as={Link}
                   py={2}
                   to={child.href ?? "#"}
-                  color={textColor}
+                  color={textColorMobileNavItem} // Sử dụng textColorMobileNavItem
                   _hover={{
                     color: "teal.500",
                   }}
@@ -620,6 +695,13 @@ interface NavItem {
   subLabelKey?: string;
   children?: Array<NavItem>;
   href?: string;
+}
+
+interface UserForHeader {
+  name: string;
+  email: string;
+  avatar?: string;
+  role?: string;
 }
 
 const NAV_ITEMS: Array<NavItem> = [
@@ -645,7 +727,6 @@ const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Tạo sự kiện",
     labelKey: "events.createEvent",
-    href: "/create-event",
   },
   {
     label: "Về chúng tôi",
