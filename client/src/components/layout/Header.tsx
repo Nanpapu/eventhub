@@ -99,10 +99,11 @@ export default function Header() {
 
   // Màu sắc theo theme cho Header
   const bgColor = useColorModeValue("white", "gray.900");
-  const borderColorHeader = useColorModeValue("gray.200", "gray.700"); // Đổi tên để tránh xung đột
+  const borderColorHeader = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
   const logoColor = useColorModeValue("teal.600", "teal.300");
+  const buttonHoverBg = useColorModeValue("gray.100", "gray.700");
 
   // Xử lý đăng xuất
   const handleLogout = () => {
@@ -175,9 +176,9 @@ export default function Header() {
         px={{ base: 4 }}
         borderBottom={1}
         borderStyle={"solid"}
-        borderColor={borderColorHeader} // Sử dụng borderColorHeader
+        borderColor={borderColorHeader}
         align={"center"}
-        boxShadow="sm"
+        boxShadow="md"
       >
         <Flex
           flex={{ base: 1, md: "auto" }}
@@ -216,7 +217,7 @@ export default function Header() {
           flex={{ base: 1, md: 0 }}
           justify={"flex-end"}
           direction={"row"}
-          spacing={6}
+          spacing={3}
           align="center"
         >
           <LanguageSwitcher />
@@ -263,7 +264,7 @@ export default function Header() {
                     }}
                   />
                 </MenuButton>
-                <MenuList>
+                <MenuList boxShadow="lg">
                   <Text px={3} py={2} fontWeight="bold">
                     {currentUser?.name}
                   </Text>
@@ -344,16 +345,30 @@ export default function Header() {
               <ButtonGroup
                 spacing={2}
                 display={{ base: "none", md: "inline-flex" }}
+                alignItems="center"
               >
-                <Button as={Link} to="/login" variant="ghost" size="sm">
+                <Button
+                  as={Link}
+                  to="/login"
+                  variant="ghost"
+                  size="sm"
+                  fontWeight="500"
+                  color={secondaryTextColor}
+                  _hover={{ bg: buttonHoverBg }}
+                >
                   Đăng nhập
                 </Button>
                 <Button
                   as={Link}
                   to="/register"
-                  variant="outline"
+                  variant="solid"
                   colorScheme="teal"
+                  bg="teal.500"
+                  _hover={{ bg: "teal.600", boxShadow: "sm" }}
                   size="sm"
+                  px={4}
+                  borderRadius="md"
+                  fontWeight="500"
                 >
                   Đăng ký
                 </Button>
@@ -361,7 +376,9 @@ export default function Header() {
               <Stack
                 direction="row"
                 spacing={2}
-                display={{ base: "inline-flex", md: "none" }}
+                display={{ base: "flex", md: "none" }}
+                alignItems="center"
+                flex={1}
               >
                 <Button
                   as={Link}
@@ -369,22 +386,30 @@ export default function Header() {
                   variant="ghost"
                   size="sm"
                   flex={1}
+                  fontWeight="500"
+                  color={secondaryTextColor}
+                  _hover={{ bg: buttonHoverBg }}
                 >
                   Đăng nhập
                 </Button>
                 <Button
                   as={Link}
                   to="/register"
-                  variant="outline"
+                  variant="solid"
                   colorScheme="teal"
+                  bg="teal.500"
+                  _hover={{ bg: "teal.600", boxShadow: "sm" }}
                   size="sm"
                   flex={1}
+                  px={4}
+                  borderRadius="md"
+                  fontWeight="500"
                 >
                   Đăng ký
                 </Button>
               </Stack>
 
-              {/* UI Demo: Nút đăng nhập nhanh - Chỉ để test, sẽ bị xóa khi tích hợp auth thực tế */}
+              {/* UI Demo: Nút đăng nhập nhanh */}
               <Menu>
                 <MenuButton
                   as={Button}
