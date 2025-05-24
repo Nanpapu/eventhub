@@ -236,8 +236,7 @@ const EventDetail = () => {
     const isCreator = userId === creatorId;
     console.log("Is creator:", isCreator);
 
-    // Tạm thời trả về true để kiểm tra nút có hiện đúng không
-    return true; // Để test, sau đó sẽ đổi lại thành isCreator
+    return isCreator;
   };
 
   // Xử lý đăng ký tham gia sự kiện
