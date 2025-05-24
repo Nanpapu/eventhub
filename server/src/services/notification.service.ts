@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Notification, { INotification } from "../models/Notification";
 import { IEvent } from "../models/Event"; // Import IEvent nếu cần truy cập các trường của event
+import { format } from "date-fns";
 
 // Interface cho dữ liệu tùy chỉnh trong thông báo (mở rộng nếu cần cho các type khác)
 interface NotificationCustomData {
@@ -12,12 +13,21 @@ interface NotificationCustomData {
   updatedFields?: string[];
   eventTime?: string;
   eventDate?: string; // Thêm eventDate cho reminder
+  reminderTypeSent?: "1day" | "3days" | "2hour"; // Thêm "2hour"
+  cancellationReason?: string; // Thêm lý do hủy vé
+  ticketInfo?: string; // Thêm thông tin vé bị hủy
   [key: string]: any;
 }
 
 class NotificationService {
   /**
-   * Tạo thông báo xác nhận mua vé
+   * Tạo thông báo xác nhận vé thành công cho người dùng.
+   * @param userId - ID của người dùng đã mua vé.
+   * @param event - Thông tin sự kiện.
+   * @param ticketTypeName - Tên loại vé.
+   * @param quantity - Số lượng vé.
+   * @param transactionId - ID giao dịch.
+   * @param ticketId - (Tùy chọn) ID của vé cụ thể nếu có.
    */
   async createTicketConfirmationNotification(
     userId: mongoose.Types.ObjectId,
@@ -27,30 +37,35 @@ class NotificationService {
     transactionId: string,
     ticketId?: string
   ): Promise<INotification | null> {
+    const title = `Xác nhận vé thành công cho sự kiện "${event.title}"!`;
+    const message = `Cảm ơn bạn đã đăng ký tham gia sự kiện "${event.title}". Bạn đã mua thành công ${quantity} vé loại ${ticketTypeName}. Mã giao dịch của bạn là: ${transactionId}.`;
+    const notificationDetails: Partial<INotification> = {
+      user: userId,
+      title,
+      message,
+      type: "ticket_confirmation",
+      relatedEvent: event._id as mongoose.Types.ObjectId,
+      isRead: false,
+      data: {
+        eventId: (event._id as mongoose.Types.ObjectId).toString(),
+        eventTitle: event.title,
+        ticketId: ticketId, // Lưu ID vé nếu có
+        transactionId: transactionId,
+        quantity: quantity,
+        ticketTypeName: ticketTypeName,
+      },
+    };
+
     try {
-      const notificationDetails: Partial<INotification> = {
-        user: userId,
-        title: `Mua vé thành công: ${event.title}`,
-        message: `Bạn đã mua thành công ${quantity} vé ${ticketTypeName} cho sự kiện ${event.title}. Mã giao dịch: ${transactionId}.`,
-        type: "ticket_confirmation",
-        relatedEvent: event._id as any as mongoose.Types.ObjectId,
-        isRead: false,
-        data: {
-          eventId: (event._id as any).toString(),
-          eventTitle: event.title,
-          ticketId: ticketId,
-        } as NotificationCustomData,
-      };
       const newNotification = new Notification(notificationDetails);
       await newNotification.save();
       console.log(
-        "[NotificationService] Ticket confirmation notification created for user:",
-        userId
+        `[NotificationService] Ticket confirmation notification created for user: ${userId}`
       );
       return newNotification;
     } catch (error) {
       console.error(
-        "[NotificationService] Error creating ticket confirmation notification:",
+        `[NotificationService] Error creating ticket confirmation notification for user ${userId}:`,
         error
       );
       return null;
@@ -58,230 +73,261 @@ class NotificationService {
   }
 
   /**
-   * Tạo thông báo khi thông tin sự kiện được cập nhật
-   * @param affectedUserIds - Mảng ID của người dùng bị ảnh hưởng (ví dụ: đã đăng ký sự kiện)
-   * @param event - Thông tin sự kiện đã cập nhật
-   * @param updatedFieldsText - Mô tả những gì đã thay đổi (ví dụ: "thời gian và địa điểm")
+   * Tạo thông báo khi cập nhật về sự kiện (ví dụ: thay đổi thời gian, địa điểm, hủy sự kiện).
+   * @param affectedUserIds - Danh sách ID người dùng bị ảnh hưởng (ví dụ: đã đăng ký hoặc lưu sự kiện).
+   * @param event - Thông tin sự kiện đã cập nhật.
+   * @param updatedFieldsText - Mô tả các trường đã thay đổi (ví dụ: "thời gian và địa điểm", "sự kiện đã bị hủy").
    */
   async createEventUpdateNotifications(
     affectedUserIds: mongoose.Types.ObjectId[],
     event: IEvent,
     updatedFieldsText: string
   ): Promise<void> {
-    if (new Date(event.date) < new Date()) {
-      console.log(
-        `[NotificationService] Event ${event.title} has already passed. No update notifications sent.`
-      );
+    if (!affectedUserIds || affectedUserIds.length === 0) {
       return;
     }
 
-    const notificationsPromises = affectedUserIds.map((userId) => {
-      const notificationDetails: Partial<INotification> = {
+    const title = `Cập nhật quan trọng về sự kiện "${event.title}"`;
+    const message = `Sự kiện "${event.title}" bạn quan tâm đã có cập nhật mới: ${updatedFieldsText}. Vui lòng kiểm tra chi tiết.`;
+    const type = "event_update"; // Hoặc "event_cancelled" nếu sự kiện bị hủy hoàn toàn
+    const data: NotificationCustomData = {
+      eventId: (event._id as mongoose.Types.ObjectId).toString(),
+      eventTitle: event.title,
+      updatedFields: updatedFieldsText.split(", "), // Tách các trường nếu có nhiều
+    };
+
+    try {
+      const notificationsToCreate = affectedUserIds.map((userId) => ({
         user: userId,
-        title: `Cập nhật sự kiện: ${event.title}`,
-        message: `Thông tin sự kiện "${event.title}" bạn quan tâm đã được cập nhật: ${updatedFieldsText}. Vui lòng kiểm tra chi tiết.`,
-        type: "event_update",
-        relatedEvent: event._id as any as mongoose.Types.ObjectId,
+        title,
+        message,
+        type,
+        relatedEvent: event._id as mongoose.Types.ObjectId,
         isRead: false,
-        data: {
-          eventId: (event._id as any).toString(),
-          eventTitle: event.title,
-          updatedFields: updatedFieldsText.split(", "), // Giả sử updatedFieldsText là "field1, field2"
-        } as NotificationCustomData,
-      };
-      const newNotification = new Notification(notificationDetails);
-      return newNotification
-        .save()
-        .then(() =>
-          console.log(
-            "[NotificationService] Event update notification created for user:",
-            userId
-          )
-        )
-        .catch((error) =>
-          console.error(
-            `[NotificationService] Error creating event update notification for user ${userId}:`,
-            error
-          )
+        data,
+      }));
+
+      if (notificationsToCreate.length > 0) {
+        await Notification.insertMany(notificationsToCreate);
+        console.log(
+          `Sent event update notifications for event ${event.title} to ${notificationsToCreate.length} users.`
         );
-    });
-    await Promise.all(notificationsPromises);
+      }
+    } catch (error) {
+      console.error("Error creating bulk event update notifications:", error);
+    }
   }
 
   /**
-   * Tạo thông báo nhắc nhở sự kiện sắp diễn ra
-   * @param affectedUserIds - Mảng ID của người dùng bị ảnh hưởng
-   * @param event - Thông tin sự kiện
+   * Gửi thông báo nhắc nhở sự kiện (chung).
+   * @param affectedUserIds - Danh sách ID người dùng sẽ nhận thông báo.
+   * @param event - Thông tin sự kiện.
    */
   async createEventReminderNotifications(
     affectedUserIds: mongoose.Types.ObjectId[],
     event: IEvent
   ): Promise<void> {
-    if (new Date(event.date) < new Date()) {
-      console.log(
-        `[NotificationService] Event ${event.title} has already passed. No reminder notifications sent.`
-      );
-      return;
-    }
-    const eventDateFormatted = new Date(event.date).toLocaleDateString(
-      "vi-VN",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }
-    );
+    // This function might be deprecated or refactored if sendEventReminderIfNeeded handles all cases.
+    // For now, let's assume it's still used for general reminders, and specific timed reminders
+    // are handled by sendEventReminderIfNeeded directly from the cron job.
+    const title = `Nhắc nhở: Sự kiện "${event.title}" sắp diễn ra!`;
+    const message = `Đừng quên sự kiện "${
+      event.title
+    }" sẽ diễn ra vào ngày ${format(new Date(event.date), "dd/MM/yyyy")} lúc ${
+      event.startTime
+    }. Chuẩn bị sẵn sàng nhé!`;
+    const type = "event_reminder";
+    const data: NotificationCustomData = {
+      eventId: (event._id as mongoose.Types.ObjectId).toString(),
+      eventTitle: event.title,
+      eventDate: format(new Date(event.date), "dd/MM/yyyy"),
+      eventTime: event.startTime,
+    };
 
-    const notificationsPromises = affectedUserIds.map((userId) => {
-      const notificationDetails: Partial<INotification> = {
+    try {
+      const notificationsToCreate = affectedUserIds.map((userId) => ({
         user: userId,
-        title: `Nhắc nhở: ${event.title} sắp diễn ra!`,
-        message: `Đừng quên! Sự kiện "${event.title}" sẽ bắt đầu vào lúc ${event.startTime}, ngày ${eventDateFormatted}.`,
-        type: "event_reminder",
-        relatedEvent: event._id as any as mongoose.Types.ObjectId,
+        title,
+        message,
+        type,
+        relatedEvent: event._id as mongoose.Types.ObjectId,
         isRead: false,
-        data: {
-          eventId: (event._id as any).toString(),
-          eventTitle: event.title,
-          eventTime: event.startTime,
-          eventDate: event.date.toString(), // Giữ dạng ISO string hoặc timestamp cho xử lý logic nếu cần
-        } as NotificationCustomData,
-      };
-      const newNotification = new Notification(notificationDetails);
-      return newNotification
-        .save()
-        .then(() =>
-          console.log(
-            "[NotificationService] Event reminder notification created for user:",
-            userId
-          )
-        )
-        .catch((error) =>
-          console.error(
-            `[NotificationService] Error creating event reminder notification for user ${userId}:`,
-            error
-          )
+        data,
+      }));
+
+      if (notificationsToCreate.length > 0) {
+        await Notification.insertMany(notificationsToCreate);
+        console.log(
+          `Sent general event reminders for event ${event.title} to ${notificationsToCreate.length} users.`
         );
-    });
-    await Promise.all(notificationsPromises);
+      }
+    } catch (error) {
+      console.error("Error creating bulk event reminder notifications:", error);
+    }
   }
 
   /**
-   * Gửi thông báo nhắc nhở nếu cần thiết (kiểm tra tránh gửi trùng lặp).
-   * @param userIds - Danh sách ID người dùng cần thông báo.
+   * Gửi thông báo nhắc nhở sự kiện nếu cần thiết.
+   * Kiểm tra xem thông báo nhắc nhở với loại cụ thể (1day, 3days, 2hour) đã được gửi chưa.
+   * @param userIds - Danh sách ID người dùng sẽ nhận thông báo.
    * @param event - Thông tin sự kiện.
-   * @param reminderType - Loại nhắc nhở ('1day' hoặc '3days').
+   * @param reminderType - Loại nhắc nhở ("1day", "3days", "2hour").
    */
   async sendEventReminderIfNeeded(
     userIds: mongoose.Types.ObjectId[],
     event: IEvent,
-    reminderType: "1day" | "3days"
+    reminderType: "1day" | "3days" | "2hour"
   ): Promise<void> {
-    if (new Date(event.date) < new Date()) {
-      console.log(
-        `[NotificationService] Event ${event.title} has already passed. No ${reminderType} reminder notifications sent.`
-      );
+    if (!userIds || userIds.length === 0) {
       return;
     }
 
-    const now = new Date();
-    let checkWindowHours = 0;
+    let title = "";
+    let message = "";
+    const eventDateTime = new Date(event.date);
+    const eventTime = event.startTime; // Assuming startTime is like "HH:mm"
 
-    if (reminderType === "1day") {
-      // Cho phép gửi nếu chưa có nhắc nhở "1day" trong 23 giờ qua
-      checkWindowHours = 23;
-    } else if (reminderType === "3days") {
-      // Cho phép gửi nếu chưa có nhắc nhở "3days" trong 71 giờ qua (3 ngày - 1 giờ)
-      checkWindowHours = 71;
+    // Adjust date part of eventDateTime based on event.date (which is already a Date object from IEvent)
+    // And time part from event.startTime
+    const [hours, minutes] = event.startTime.split(":").map(Number);
+    eventDateTime.setHours(hours, minutes, 0, 0);
+
+    switch (reminderType) {
+      case "1day":
+        title = `Sự kiện "${event.title}" diễn ra vào ngày mai!`;
+        message = `Đừng quên, sự kiện "${
+          event.title
+        }" sẽ bắt đầu vào lúc ${eventTime} ngày mai, ${format(
+          eventDateTime,
+          "dd/MM/yyyy"
+        )}. Chuẩn bị sẵn sàng nhé!`;
+        break;
+      case "3days":
+        title = `Còn 3 ngày nữa là đến sự kiện "${event.title}"!`;
+        message = `Sự kiện "${
+          event.title
+        }" bạn quan tâm sẽ diễn ra sau 3 ngày nữa, vào lúc ${eventTime} ngày ${format(
+          eventDateTime,
+          "dd/MM/yyyy"
+        )}. Đừng bỏ lỡ!`;
+        break;
+      case "2hour":
+        title = `Sự kiện "${event.title}" sắp bắt đầu!`;
+        message = `Chỉ còn khoảng 2 giờ nữa, sự kiện "${
+          event.title
+        }" sẽ bắt đầu lúc ${eventTime} hôm nay (${format(
+          eventDateTime,
+          "dd/MM/yyyy"
+        )}). Đừng bỏ lỡ nhé!`;
+        break;
+      default:
+        console.warn(`Unknown reminder type: ${reminderType}`);
+        return;
     }
 
-    const recentlySentUserIds = new Set<string>();
+    const data: NotificationCustomData = {
+      eventId: (event._id as mongoose.Types.ObjectId).toString(),
+      eventTitle: event.title,
+      eventDate: format(eventDateTime, "dd/MM/yyyy"),
+      eventTime: eventTime,
+      reminderTypeSent: reminderType,
+    };
 
-    if (checkWindowHours > 0) {
-      const checkSince = new Date(
-        now.getTime() - checkWindowHours * 60 * 60 * 1000
-      );
-      // Tìm các thông báo nhắc nhở đã gửi gần đây cho sự kiện này
-      const recentReminders = await Notification.find({
-        relatedEvent: event._id,
-        type: "event_reminder",
-        user: { $in: userIds },
-        createdAt: { $gte: checkSince },
-        // Thêm một cách để lọc rõ hơn loại reminder nếu cần, ví dụ qua data object
-        // 'data.reminderType': reminderType
-      }).select("user data"); // Chỉ lấy user và data để kiểm tra
+    const notificationsToCreate = [];
 
-      recentReminders.forEach((reminder) => {
-        // Kiểm tra xem 'data' có tồn tại và có 'reminderTypeSent' không
-        if (reminder.data && reminder.data.reminderTypeSent === reminderType) {
-          recentlySentUserIds.add(reminder.user.toString());
-        }
+    for (const userId of userIds) {
+      // Kiểm tra xem thông báo nhắc nhở loại này đã được gửi cho người dùng này chưa
+      const existingNotification = await Notification.findOne({
+        user: userId,
+        relatedEvent: event._id as mongoose.Types.ObjectId,
+        "data.reminderTypeSent": reminderType,
       });
-    }
 
-    const userIdsToSend = userIds.filter(
-      (id) => !recentlySentUserIds.has(id.toString())
-    );
-
-    if (userIdsToSend.length > 0) {
-      console.log(
-        `[NotificationService] Preparing to send ${reminderType} reminders for event '${event.title}' to ${userIdsToSend.length} users.`
-      );
-      // Tạo thông báo, thêm reminderType vào data để có thể kiểm tra sau này
-      const eventDateFormatted = new Date(event.date).toLocaleDateString(
-        "vi-VN",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }
-      );
-
-      const notificationsPromises = userIdsToSend.map((userId) => {
-        const notificationDetails: Partial<INotification> = {
+      if (!existingNotification) {
+        notificationsToCreate.push({
           user: userId,
-          title: `Nhắc nhở: ${event.title} sắp diễn ra!`,
-          message: `Đừng quên! Sự kiện \"${event.title}\" sẽ bắt đầu vào lúc ${
-            event.startTime
-          }, ngày ${eventDateFormatted}. (${
-            reminderType === "1day" ? "Ngày mai" : "Trong 3 ngày tới"
-          })`,
-          type: "event_reminder",
-          relatedEvent: event._id as any as mongoose.Types.ObjectId,
+          title,
+          message,
+          type: "event_reminder" as INotification["type"],
+          relatedEvent: event._id as mongoose.Types.ObjectId,
           isRead: false,
-          data: {
-            eventId: (event._id as any).toString(),
-            eventTitle: event.title,
-            eventTime: event.startTime,
-            eventDate: event.date.toString(),
-            reminderTypeSent: reminderType, // Lưu loại nhắc nhở đã gửi
-          } as NotificationCustomData,
-        };
-        const newNotification = new Notification(notificationDetails);
-        return newNotification
-          .save()
-          .then(() =>
-            console.log(
-              `[NotificationService] ${reminderType} reminder for event ${event.title} created for user: ${userId}`
-            )
-          )
-          .catch((error) =>
-            console.error(
-              `[NotificationService] Error creating ${reminderType} reminder for user ${userId} & event ${event.title}:`,
-              error
-            )
-          );
-      });
-      await Promise.all(notificationsPromises);
-    } else {
-      console.log(
-        `[NotificationService] No new users to send ${reminderType} reminders for event '${event.title}'. All relevant users already reminded recently.`
-      );
+          data,
+        });
+      }
+    }
+
+    if (notificationsToCreate.length > 0) {
+      try {
+        await Notification.insertMany(notificationsToCreate);
+        console.log(
+          `Sent ${reminderType} reminders for event ${event.title} to ${notificationsToCreate.length} users.`
+        );
+      } catch (error) {
+        console.error(
+          `Error creating bulk ${reminderType} event reminder notifications:`,
+          error
+        );
+      }
     }
   }
 
   /**
-   * Lấy danh sách thông báo cho người dùng, hỗ trợ phân trang
+   * Tạo thông báo khi vé hoặc đăng ký bị hủy bởi người tổ chức.
+   * @param userId - ID của người dùng có vé bị hủy.
+   * @param event - Thông tin sự kiện liên quan.
+   * @param ticketInfo - Thông tin về vé/đăng ký đã bị hủy (ví dụ: loại vé, mã vé).
+   * @param reason - (Tùy chọn) Lý do hủy từ người tổ chức.
+   */
+  async createTicketCancellationByOrganizerNotification(
+    userId: mongoose.Types.ObjectId,
+    event: IEvent,
+    ticketInfo: string, // Ví dụ: "Vé VIP - Mã: ABC123" hoặc "Đăng ký tham gia"
+    reason?: string
+  ): Promise<INotification | null> {
+    const title = `Vé của bạn cho sự kiện "${event.title}" đã bị hủy`;
+    let message = `Rất tiếc, ${ticketInfo} của bạn cho sự kiện "${
+      event.title
+    }" (diễn ra vào ${format(new Date(event.date), "dd/MM/yyyy")} lúc ${
+      event.startTime
+    }) đã bị hủy bởi ban tổ chức.`;
+    if (reason) {
+      message += ` Lý do: ${reason}.`;
+    }
+    message += " Vui lòng liên hệ ban tổ chức để biết thêm chi tiết.";
+
+    const notificationDetails: Partial<INotification> = {
+      user: userId,
+      title,
+      message,
+      type: "system_message" as INotification["type"],
+      relatedEvent: event._id as mongoose.Types.ObjectId,
+      isRead: false,
+      data: {
+        eventId: (event._id as mongoose.Types.ObjectId).toString(),
+        eventTitle: event.title,
+        cancellationReason: reason,
+        ticketInfo,
+      },
+    };
+
+    try {
+      const newNotification = new Notification(notificationDetails);
+      await newNotification.save();
+      console.log(
+        `[NotificationService] Ticket cancellation by organizer notification created for user: ${userId}, event: ${event.title}`
+      );
+      return newNotification;
+    } catch (error) {
+      console.error(
+        `[NotificationService] Error creating ticket cancellation by organizer notification for user ${userId}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Lấy danh sách thông báo của người dùng, có phân trang
    * @param userId - ID của người dùng
    * @param page - Trang hiện tại
    * @param limit - Số lượng thông báo mỗi trang
@@ -298,27 +344,31 @@ class NotificationService {
     pages: number;
     currentPage: number;
   }> {
-    try {
-      const queryOptions: any = { user: userId };
-      if (isRead !== undefined) {
-        queryOptions.isRead = isRead;
-      }
+    const skip = (page - 1) * limit;
+    const query: any = { user: userId };
+    if (isRead !== undefined) {
+      query.isRead = isRead;
+    }
 
-      const skip = (page - 1) * limit;
-      const totalNotifications = await Notification.countDocuments(
-        queryOptions
-      );
-      const notifications = await Notification.find(queryOptions)
-        .sort({ createdAt: -1 }) // Sắp xếp mới nhất lên đầu
+    try {
+      const notifications = await Notification.find(query)
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("relatedEvent", "title date startTime imageUrl") // Lấy thêm một vài thông tin sự kiện nếu cần
-        .exec();
+        .populate("relatedEvent", "title date") // Populate thêm thông tin sự kiện nếu cần
+        .lean(); // Sử dụng lean() để trả về plain JS objects
+
+      const totalNotifications = await Notification.countDocuments(query);
+      const totalPages = Math.ceil(totalNotifications / limit);
 
       return {
-        notifications,
+        notifications: notifications.map((n) => ({
+          ...n,
+          id: n._id.toString(), // Đảm bảo có trường id
+          timestamp: n.createdAt, // Sử dụng createdAt làm timestamp chính
+        })),
         total: totalNotifications,
-        pages: Math.ceil(totalNotifications / limit),
+        pages: totalPages,
         currentPage: page,
       };
     } catch (error) {
@@ -326,12 +376,12 @@ class NotificationService {
         "[NotificationService] Error fetching notifications:",
         error
       );
-      throw error; // Re-throw lỗi để controller có thể xử lý
+      throw error;
     }
   }
 
   /**
-   * Lấy số lượng thông báo chưa đọc cho người dùng
+   * Lấy số lượng thông báo chưa đọc
    * @param userId - ID của người dùng
    */
   async getUnreadCount(userId: mongoose.Types.ObjectId): Promise<number> {
@@ -364,11 +414,17 @@ class NotificationService {
         { _id: notificationId, user: userId },
         { isRead: true },
         { new: true } // Trả về document đã được cập nhật
-      );
-      return notification;
+      ).lean();
+      if (notification) {
+        console.log(
+          `[NotificationService] Notification ${notificationId} marked as read for user ${userId}`
+        );
+        return { ...notification, id: notification._id.toString() };
+      }
+      return null;
     } catch (error) {
       console.error(
-        "[NotificationService] Error marking notification as read:",
+        `[NotificationService] Error marking notification ${notificationId} as read:`,
         error
       );
       throw error;
@@ -387,10 +443,13 @@ class NotificationService {
         { user: userId, isRead: false },
         { isRead: true }
       );
+      console.log(
+        `[NotificationService] Marked all unread notifications as read for user ${userId}. Count: ${result.modifiedCount}`
+      );
       return { modifiedCount: result.modifiedCount };
     } catch (error) {
       console.error(
-        "[NotificationService] Error marking all notifications as read:",
+        `[NotificationService] Error marking all notifications as read for user ${userId}:`,
         error
       );
       throw error;
@@ -410,11 +469,17 @@ class NotificationService {
       const notification = await Notification.findOneAndDelete({
         _id: notificationId,
         user: userId,
-      });
-      return notification; // Trả về thông báo đã xóa, hoặc null nếu không tìm thấy/không được phép
+      }).lean();
+      if (notification) {
+        console.log(
+          `[NotificationService] Notification ${notificationId} deleted for user ${userId}`
+        );
+        return { ...notification, id: notification._id.toString() };
+      }
+      return null;
     } catch (error) {
       console.error(
-        "[NotificationService] Error deleting notification:",
+        `[NotificationService] Error deleting notification ${notificationId}:`,
         error
       );
       throw error;

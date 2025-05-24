@@ -153,92 +153,115 @@ const eventService = {
    * Cập nhật thông tin sự kiện
    */
   async updateEvent(id: string, data: UpdateEventData) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Event ID không hợp lệ");
-    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const event = await Event.findById(id).session(session);
+      if (!event) {
+        throw new Error("Event not found");
+      }
 
-    const originalEvent = await Event.findById(id).lean();
-    if (!originalEvent) {
-      throw new Error("Không tìm thấy sự kiện");
-    }
+      // Lưu lại thông tin cũ để so sánh
+      const oldEventData = {
+        date: new Date(event.date).toISOString(), // So sánh ISO string cho dễ
+        startTime: event.startTime,
+        location: event.location,
+        address: event.address,
+        isOnline: event.isOnline,
+        onlineUrl: event.onlineUrl,
+        published: event.published, // Theo dõi cả trạng thái publish/unpublish
+      };
 
-    const updatedEvent = await Event.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
-    });
+      // Cập nhật sự kiện
+      Object.assign(event, data);
 
-    if (!updatedEvent) {
-      throw new Error("Không thể cập nhật sự kiện");
-    }
+      // Xử lý ticketTypes nếu có trong data
+      if (data.ticketTypes && data.ticketTypes.length > 0) {
+        event.ticketTypes = data.ticketTypes.map((tt) => ({
+          ...tt,
+          _id: tt._id || new mongoose.Types.ObjectId(), // Tạo ID nếu là ticket type mới
+          availableQuantity: tt.quantity, // Mặc định availableQuantity bằng quantity khi tạo/cập nhật
+        })) as any; // Cần ép kiểu ở đây do mongoose subdocument
+      }
+      // Nếu không có ticketTypes trong data và sự kiện đang miễn phí, đảm bảo ticketTypes rỗng
+      else if (!data.isPaid) {
+        event.ticketTypes = [];
+      }
 
-    if (new Date(updatedEvent.date) > new Date()) {
-      const changes: string[] = [];
-      if (originalEvent.title !== updatedEvent.title)
-        changes.push(`tiêu đề (mới: ${updatedEvent.title})`);
-      if (originalEvent.description !== updatedEvent.description)
-        changes.push("mô tả");
+      // Nếu isPaid thay đổi từ true sang false, xóa giá và ticketTypes
+      if (data.isPaid === false && oldEventData.isPaid === true) {
+        event.price = undefined;
+        event.ticketTypes = [];
+      }
+
+      // Nếu isPaid thay đổi từ false sang true và không có price, đặt giá mặc định (ví dụ 0 hoặc yêu cầu nhập)
       if (
-        new Date(originalEvent.date).toISOString() !==
-        new Date(updatedEvent.date).toISOString()
+        data.isPaid === true &&
+        oldEventData.isPaid === false &&
+        !event.price &&
+        (!event.ticketTypes || event.ticketTypes.length === 0)
+      ) {
+        // event.price = 0; // Hoặc throw error yêu cầu nhập giá/ticket type
+        // Hoặc dựa vào logic từ data.price nếu được gửi lên
+      }
+
+      const updatedEvent = await event.save({ session });
+
+      // ---- Logic gửi thông báo cập nhật cho người dùng đã lưu sự kiện ----
+      const changedFields: string[] = [];
+      if (new Date(updatedEvent.date).toISOString() !== oldEventData.date)
+        changedFields.push("ngày diễn ra");
+      if (updatedEvent.startTime !== oldEventData.startTime)
+        changedFields.push("thời gian bắt đầu");
+      if (updatedEvent.location !== oldEventData.location)
+        changedFields.push("địa điểm");
+      if (updatedEvent.address !== oldEventData.address)
+        changedFields.push("địa chỉ cụ thể");
+      if (updatedEvent.isOnline !== oldEventData.isOnline)
+        changedFields.push("hình thức tổ chức (online/offline)");
+      if (
+        updatedEvent.onlineUrl !== oldEventData.onlineUrl &&
+        updatedEvent.isOnline
       )
-        changes.push(
-          `ngày diễn ra (mới: ${new Date(updatedEvent.date).toLocaleDateString(
-            "vi-VN"
-          )})`
-        );
-      if (originalEvent.startTime !== updatedEvent.startTime)
-        changes.push(`giờ bắt đầu (mới: ${updatedEvent.startTime})`);
-      if (originalEvent.endTime !== updatedEvent.endTime)
-        changes.push(`giờ kết thúc (mới: ${updatedEvent.endTime})`);
-      if (originalEvent.location !== updatedEvent.location)
-        changes.push(`địa điểm (mới: ${updatedEvent.location})`);
-      if (originalEvent.address !== updatedEvent.address)
-        changes.push(`địa chỉ (mới: ${updatedEvent.address})`);
-      if (originalEvent.isOnline !== updatedEvent.isOnline)
-        changes.push(
-          updatedEvent.isOnline ? "hình thức trực tuyến" : "hình thức trực tiếp"
-        );
-      if (originalEvent.onlineUrl !== updatedEvent.onlineUrl)
-        changes.push(
-          `đường dẫn trực tuyến (mới: ${updatedEvent.onlineUrl || "N/A"})`
-        );
-      if (originalEvent.imageUrl !== updatedEvent.imageUrl)
-        changes.push("hình ảnh sự kiện");
-      if (originalEvent.category !== updatedEvent.category)
-        changes.push(`danh mục (mới: ${updatedEvent.category})`);
-      if (originalEvent.published !== updatedEvent.published)
-        changes.push(
-          updatedEvent.published
-            ? "trạng thái công khai"
-            : "trạng thái riêng tư"
-        );
+        changedFields.push("đường dẫn sự kiện online");
+      // Kiểm tra nếu sự kiện bị hủy (ví dụ: published chuyển từ true sang false)
+      if (updatedEvent.published === false && oldEventData.published === true) {
+        changedFields.push("sự kiện đã bị hủy"); // Hoặc một thông điệp cụ thể hơn
+      }
 
-      if (changes.length > 0) {
-        const updatedFieldsText = changes.join(", ");
+      if (changedFields.length > 0) {
+        const usersWhoSavedEvent = await User.find({
+          savedEvents: updatedEvent._id as mongoose.Types.ObjectId,
+        }).select("_id");
 
-        const registrations = await Registration.find({
-          event: updatedEvent._id,
-        })
-          .select("user -_id")
-          .lean();
-        const userIds = registrations
-          .map((reg) => reg.user as mongoose.Types.ObjectId)
-          .filter((userId) => userId);
+        if (usersWhoSavedEvent.length > 0) {
+          const userIds = usersWhoSavedEvent.map((user) => user._id);
+          let updateMessage = changedFields.join(", ");
+          if (
+            updatedEvent.published === false &&
+            oldEventData.published === true
+          ) {
+            // Nếu sự kiện bị hủy, thông báo rõ hơn
+            updateMessage = "sự kiện đã bị hủy hoặc không còn được công khai.";
+          }
 
-        if (userIds.length > 0) {
-          console.log(
-            `[EventService] Event ${updatedEvent.title} updated. Fields changed: ${updatedFieldsText}. Notifying ${userIds.length} users.`
-          );
           await notificationService.createEventUpdateNotifications(
             userIds,
             updatedEvent,
-            updatedFieldsText
+            updateMessage
           );
         }
       }
-    }
+      // ---- Kết thúc logic gửi thông báo ----
 
-    return updatedEvent;
+      await session.commitTransaction();
+      return updatedEvent;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   },
 
   /**
@@ -469,6 +492,63 @@ const eventService = {
       throw new Error("User not found");
     }
     return user.savedEvents || [];
+  },
+
+  // Hủy sự kiện (ví dụ: unpublish)
+  async cancelEvent(
+    eventId: string,
+    organizerId: string
+  ): Promise<IEvent | null> {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const event = await Event.findOne({
+        _id: eventId,
+        organizer: organizerId,
+      });
+      if (!event) {
+        throw new Error("Event not found or you are not the organizer.");
+      }
+
+      if (!event.published) {
+        // throw new Error("Event is already unpublished."); // Hoặc chỉ bỏ qua
+        await session.abortTransaction();
+        return event; // Trả về sự kiện hiện tại nếu nó đã unpublish
+      }
+
+      const oldPublishedStatus = event.published;
+      event.published = false;
+      const updatedEvent = await event.save({ session });
+
+      // Gửi thông báo cho người dùng đã lưu
+      if (oldPublishedStatus === true) {
+        // Chỉ gửi nếu trước đó nó published
+        const usersWhoSavedEvent = await User.find({
+          savedEvents: updatedEvent._id as mongoose.Types.ObjectId,
+        }).select("_id");
+
+        if (usersWhoSavedEvent.length > 0) {
+          const userIds = usersWhoSavedEvent.map((user) => user._id);
+          await notificationService.createEventUpdateNotifications(
+            userIds,
+            updatedEvent,
+            "sự kiện đã bị hủy hoặc không còn được công khai."
+          );
+        }
+      }
+
+      // TODO: Cân nhắc gửi thông báo cho người đã mua vé về việc sự kiện bị hủy
+      // Ví dụ: Lấy danh sách registrations cho eventId, rồi gửi thông báo cho từng user.
+      // Điều này có thể cần một hàm riêng trong notificationService.
+
+      await session.commitTransaction();
+      return updatedEvent;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   },
 };
 

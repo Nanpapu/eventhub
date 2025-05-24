@@ -66,6 +66,7 @@ export interface Notification {
     userId?: string;
     link?: string;
     reminderTypeSent?: "1day" | "3days";
+    cancellationReason?: string;
     [key: string]: string | number | boolean | undefined | null;
   };
   user?: string;
@@ -347,7 +348,13 @@ const NotificationList = ({
   };
 
   // Hàm lấy icon dựa trên loại thông báo
-  const getNotificationIcon = (type: NotificationType) => {
+  const getNotificationIcon = (
+    type: NotificationType,
+    data?: NotificationCustomData
+  ) => {
+    if (type === "system_message" && data?.cancellationReason) {
+      return FiAlertCircle; // Icon cho hủy vé
+    }
     switch (type) {
       case "event_reminder":
         return FiClock;
@@ -369,8 +376,12 @@ const NotificationList = ({
 
   // Hàm lấy màu dựa trên loại thông báo
   const getNotificationColorName = (
-    type: NotificationType
+    type: NotificationType,
+    data?: NotificationCustomData
   ): keyof typeof iconColorsDynamic => {
+    if (type === "system_message" && data?.cancellationReason) {
+      return "red"; // Màu cho hủy vé
+    }
     switch (type) {
       case "event_reminder":
         return "blue";
@@ -395,6 +406,10 @@ const NotificationList = ({
     const { type, data } = notification;
 
     if (!data) return "#";
+
+    if (type === "system_message" && data.cancellationReason && data.eventId) {
+      return `/events/${data.eventId}`; // Dẫn đến trang sự kiện nếu vé bị hủy
+    }
 
     switch (type) {
       case "event_reminder":
@@ -561,7 +576,10 @@ const NotificationList = ({
           }}
         >
           {displayedNotifications.map((notification, index) => {
-            const colorName = getNotificationColorName(notification.type);
+            const colorName = getNotificationColorName(
+              notification.type,
+              notification.data as NotificationCustomData
+            );
             const iconColor = iconColorsDynamic[colorName];
             const iconBgColor = iconBgColorsDynamic[colorName];
             const borderLeftColorVal = borderLeftColorsDynamic[colorName];
@@ -599,7 +617,10 @@ const NotificationList = ({
                       boxShadow="sm"
                     >
                       <Icon
-                        as={getNotificationIcon(notification.type)}
+                        as={getNotificationIcon(
+                          notification.type,
+                          notification.data as NotificationCustomData
+                        )}
                         fontSize="xl"
                       />
                     </Box>

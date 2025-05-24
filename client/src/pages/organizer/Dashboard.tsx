@@ -11,7 +11,6 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow,
   Table,
   Thead,
   Tbody,
@@ -40,9 +39,10 @@ import {
   ModalCloseButton,
   Tooltip,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   FaCalendarAlt,
   FaUsers,
@@ -50,20 +50,10 @@ import {
   FaEdit,
   FaTrash,
   FaPlus,
-  FaChartLine,
-  FaUndo,
   FaQrcode,
 } from "react-icons/fa";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  TooltipProps,
-} from "recharts";
+import { useAppDispatch } from "../../app/hooks";
+// import { fetchUserEvents } from "../../app/features/eventSlice"; // Sẽ cần thêm vào sau khi có API
 
 // Định nghĩa các kiểu dữ liệu
 interface Event {
@@ -73,264 +63,121 @@ interface Event {
   location: string;
   isOnline: boolean;
   imageUrl: string;
-  totalTickets: number;
-  soldTickets: number;
+  totalTickets?: number;
+  soldTickets?: number;
   status: "upcoming" | "ongoing" | "past" | "cancelled";
-  revenue: number;
+  revenue?: number;
 }
 
 interface Analytics {
   totalEvents: number;
   upcomingEvents: number;
   pastEvents: number;
-  totalAttendeesMonth: number;
-  totalRevenue: number;
-  revenueGrowth: number;
-  attendeesGrowth: number;
-  eventsByMonth: { name: string; events: number }[];
 }
-
-// Custom tooltip cho biểu đồ
-const CustomTooltip = ({
-  active,
-  payload,
-  label,
-}: TooltipProps<number, string>) => {
-  const tooltipBg = useColorModeValue("white", "gray.800");
-  const tooltipBorder = useColorModeValue("gray.200", "gray.600");
-  const tooltipText = useColorModeValue("gray.800", "gray.100");
-
-  if (active && payload && payload.length) {
-    return (
-      <Box
-        bg={tooltipBg}
-        p={2}
-        boxShadow="sm"
-        borderRadius="md"
-        border="1px solid"
-        borderColor={tooltipBorder}
-      >
-        <Text fontWeight="bold" color={tooltipText}>
-          {label}
-        </Text>
-        {payload.map((entry, index) => (
-          <Text
-            key={`tooltip-${index}`}
-            color={entry.color}
-            fontWeight="medium"
-          >
-            {entry.name}: {entry.value}
-          </Text>
-        ))}
-      </Box>
-    );
-  }
-  return null;
-};
-
-// Biểu đồ cột hiển thị sự kiện theo tháng
-const MonthlyEventsChart = ({
-  data,
-}: {
-  data: { name: string; events: number }[];
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 300 });
-  const chartGridColor = useColorModeValue("#e0e0e0", "#4a5568");
-  const chartAxisColor = useColorModeValue("#666", "#cbd5e0");
-  const labelColor = useColorModeValue("#2D3748", "#E2E8F0");
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setDimensions({
-        width: containerRef.current.clientWidth,
-        height: 300,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: 300,
-        });
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  if (dimensions.width === 0) return <Box ref={containerRef} h="300px"></Box>;
-
-  // Hiển thị biểu đồ cột
-  return (
-    <Box ref={containerRef} h="300px">
-      <ResponsiveContainer>
-        <BarChart
-          width={dimensions.width}
-          height={dimensions.height}
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
-          <XAxis dataKey="name" stroke={chartAxisColor} />
-          <YAxis
-            stroke={chartAxisColor}
-            allowDecimals={false}
-            domain={[0, "dataMax + 1"]}
-          />
-          <RechartsTooltip content={<CustomTooltip />} />
-          <Bar
-            dataKey="events"
-            fill="#38B2AC"
-            name="Số sự kiện"
-            label={{
-              position: "top",
-              fill: labelColor,
-              formatter: (value: number) => (value > 0 ? value : ""),
-            }}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </Box>
-  );
-};
 
 const Dashboard = () => {
   const toast = useToast();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [eventToCancel, setEventToCancel] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Dữ liệu mẫu (sẽ được thay thế bằng API calls)
-  const analytics: Analytics = {
-    totalEvents: 12,
-    upcomingEvents: 5,
-    pastEvents: 7,
-    totalAttendeesMonth: 345,
-    totalRevenue: 4250,
-    revenueGrowth: 12.5,
-    attendeesGrowth: 8.3,
-    eventsByMonth: [
-      { name: "Jan", events: 2 },
-      { name: "Feb", events: 3 },
-      { name: "Mar", events: 5 },
-      { name: "Apr", events: 4 },
-      { name: "May", events: 2 },
-      { name: "Jun", events: 1 },
-      { name: "Jul", events: 3 },
-      { name: "Aug", events: 2 },
-      { name: "Sep", events: 4 },
-      { name: "Oct", events: 6 },
-      { name: "Nov", events: 3 },
-      { name: "Dec", events: 1 },
-    ],
-  };
+  // Trạng thái dữ liệu
+  const [events, setEvents] = useState<Event[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics>({
+    totalEvents: 0,
+    upcomingEvents: 0,
+    pastEvents: 0,
+  });
 
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: "1",
-      title: "Tech Conference 2023",
-      date: new Date("2023-12-15"),
-      location: "Convention Center, New York",
-      isOnline: false,
-      imageUrl:
-        "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
-      totalTickets: 500,
-      soldTickets: 378,
-      status: "upcoming",
-      revenue: 18900,
-    },
-    {
-      id: "2",
-      title: "JavaScript Workshop",
-      date: new Date("2023-11-20"),
-      location: "https://zoom.us/j/123456789",
-      isOnline: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1594904351111-a072f80b1a71?w=500&auto=format",
-      totalTickets: 100,
-      soldTickets: 87,
-      status: "ongoing",
-      revenue: 2610,
-    },
-    {
-      id: "3",
-      title: "Music Festival",
-      date: new Date("2023-08-10"),
-      location: "Central Park, New York",
-      isOnline: false,
-      imageUrl:
-        "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&auto=format",
-      totalTickets: 1000,
-      soldTickets: 750,
-      status: "past",
-      revenue: 37500,
-    },
-    {
-      id: "4",
-      title: "Data Science Meetup",
-      date: new Date("2023-09-05"),
-      location: "Community Center, Boston",
-      isOnline: false,
-      imageUrl:
-        "https://images.unsplash.com/photo-1551818255-5973dc0f32e7?w=500&auto=format",
-      totalTickets: 150,
-      soldTickets: 120,
-      status: "past",
-      revenue: 3600,
-    },
-    {
-      id: "5",
-      title: "Business Networking Event",
-      date: new Date("2023-12-28"),
-      location: "Grand Hotel, Chicago",
-      isOnline: false,
-      imageUrl:
-        "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=500&auto=format",
-      totalTickets: 200,
-      soldTickets: 65,
-      status: "upcoming",
-      revenue: 3250,
-    },
-    {
-      id: "6",
-      title: "AI Conference",
-      date: new Date("2023-10-15"),
-      location: "Tech Hub, San Francisco",
-      isOnline: false,
-      imageUrl:
-        "https://images.unsplash.com/photo-1591115765373-5207764f72e4?w=500&auto=format",
-      totalTickets: 300,
-      soldTickets: 245,
-      status: "ongoing",
-      revenue: 12250,
-    },
-    {
-      id: "7",
-      title: "Webinar Marketing Digital",
-      date: new Date("2023-11-05"),
-      location: "https://zoom.us/j/987654321",
-      isOnline: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&auto=format",
-      totalTickets: 150,
-      soldTickets: 110,
-      status: "cancelled",
-      revenue: 2200,
-    },
-  ]);
+  // Tải dữ liệu sự kiện từ API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Trong phiên bản sau, thay thế bằng API thực:
+        // const response = await dispatch(fetchUserEvents()).unwrap();
+
+        // Demo data - sẽ được thay thế bằng API
+        setTimeout(() => {
+          // Khai báo với kiểu dữ liệu rõ ràng cho mảng
+          const demoEvents: Array<Event> = [
+            {
+              id: "1",
+              title: "Tech Conference 2023",
+              date: new Date("2023-12-15"),
+              location: "Convention Center, New York",
+              isOnline: false,
+              imageUrl:
+                "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
+              totalTickets: 500,
+              soldTickets: 378,
+              status: "upcoming", // Literal type
+              revenue: 18900,
+            },
+            {
+              id: "2",
+              title: "JavaScript Workshop",
+              date: new Date("2023-11-20"),
+              location: "https://zoom.us/j/123456789",
+              isOnline: true,
+              imageUrl:
+                "https://images.unsplash.com/photo-1594904351111-a072f80b1a71?w=500&auto=format",
+              totalTickets: 100,
+              soldTickets: 87,
+              status: "ongoing", // Literal type
+              revenue: 2610,
+            },
+            {
+              id: "3",
+              title: "Music Festival",
+              date: new Date("2023-08-10"),
+              location: "Central Park, New York",
+              isOnline: false,
+              imageUrl:
+                "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&auto=format",
+              totalTickets: 1000,
+              soldTickets: 750,
+              status: "past", // Literal type
+              revenue: 37500,
+            },
+          ] as Event[]; // Type assertion
+
+          setEvents(demoEvents);
+
+          // Cập nhật analytics
+          const stats: Analytics = {
+            totalEvents: demoEvents.length,
+            upcomingEvents: demoEvents.filter((e) => e.status === "upcoming")
+              .length,
+            pastEvents: demoEvents.filter((e) => e.status === "past").length,
+          };
+          setAnalytics(stats);
+
+          setIsLoading(false);
+        }, 1000);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+        toast({
+          title: "Không thể tải dữ liệu",
+          description: "Đã xảy ra lỗi khi tải dữ liệu sự kiện.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [dispatch, toast]);
 
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
   const ongoingEvents = events.filter((event) => event.status === "ongoing");
   const pastEvents = events.filter((event) => event.status === "past");
-  const cancelledEvents = events.filter(
-    (event) => event.status === "cancelled"
-  );
 
   // Chuyển đến trang chỉnh sửa sự kiện
   const handleEditEvent = (eventId: string) => {
@@ -352,45 +199,44 @@ const Dashboard = () => {
   };
 
   // Xử lý hủy sự kiện sau khi xác nhận
-  const handleCancelConfirmed = () => {
+  const handleCancelConfirmed = async () => {
     if (!eventToCancel) return;
 
-    // Thay vì xóa, cập nhật trạng thái thành "cancelled"
-    const updatedEvents = events.map((event) =>
-      event.id === eventToCancel
-        ? { ...event, status: "cancelled" as const }
-        : event
-    );
-    setEvents(updatedEvents);
+    try {
+      // Trong tương lai, sẽ gọi API để hủy sự kiện
+      // await cancelEvent(eventToCancel);
 
-    toast({
-      title: "Đã hủy sự kiện",
-      description:
-        "Sự kiện đã được hủy thành công. Người đăng ký sẽ được thông báo.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      // Cập nhật trạng thái UI
+      const updatedEvents = events.map((event) =>
+        event.id === eventToCancel
+          ? { ...event, status: "cancelled" as const }
+          : event
+      );
+      setEvents(updatedEvents);
 
-    onClose();
-    setEventToCancel(null);
-  };
-
-  // Khôi phục sự kiện đã hủy
-  const handleRestoreEvent = (eventId: string) => {
-    const updatedEvents = events.map((event) =>
-      event.id === eventId ? { ...event, status: "upcoming" as const } : event
-    );
-    setEvents(updatedEvents);
-
-    toast({
-      title: "Đã khôi phục sự kiện",
-      description:
-        "Sự kiện đã được khôi phục thành công và hiển thị lại trong mục sự kiện sắp tới.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      toast({
+        title: "Đã hủy sự kiện",
+        description: "Sự kiện đã được hủy thành công.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể hủy sự kiện. Vui lòng thử lại sau.";
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      onClose();
+      setEventToCancel(null);
+    }
   };
 
   // Màu sắc cho giao diện
@@ -401,19 +247,28 @@ const Dashboard = () => {
   const cancelBtnColor = useColorModeValue("red.600", "red.200");
   const cancelBtnHoverBg = useColorModeValue("red.100", "red.800");
 
+  if (isLoading) {
+    return (
+      <Container maxW="7xl" py={8}>
+        <Flex direction="column" align="center" justify="center" minH="60vh">
+          <Spinner size="xl" color="teal.500" thickness="4px" />
+          <Text mt={4}>Đang tải dữ liệu...</Text>
+        </Flex>
+      </Container>
+    );
+  }
+
   return (
     <Container maxW="7xl" py={8}>
       <Box mb={6}>
         <Heading as="h1" size="xl" mb={2}>
           Bảng Điều Khiển Nhà Tổ Chức
         </Heading>
-        <Text color="gray.500">
-          Quản lý sự kiện và phân tích hiệu suất của bạn
-        </Text>
+        <Text color="gray.500">Quản lý sự kiện và xem thông tin tổng quan</Text>
       </Box>
 
-      {/* Thống kê tổng quan */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mb={8}>
+      {/* Thống kê tổng quan đơn giản */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
@@ -439,14 +294,9 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Tổng Số Người Tham Gia</StatLabel>
-              <StatNumber>{analytics.totalAttendeesMonth}</StatNumber>
-              <StatHelpText>
-                <StatArrow
-                  type={analytics.attendeesGrowth > 0 ? "increase" : "decrease"}
-                />
-                {Math.abs(analytics.attendeesGrowth)}% so với tháng trước
-              </StatHelpText>
+              <StatLabel fontWeight="medium">Sự Kiện Sắp Tới</StatLabel>
+              <StatNumber>{analytics.upcomingEvents}</StatNumber>
+              <StatHelpText>Cần chuẩn bị</StatHelpText>
             </Box>
             <Box
               bg="blue.500"
@@ -466,16 +316,9 @@ const Dashboard = () => {
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
-              <StatLabel fontWeight="medium">Tổng Doanh Thu</StatLabel>
-              <StatNumber>
-                ${analytics.totalRevenue.toLocaleString()}
-              </StatNumber>
-              <StatHelpText>
-                <StatArrow
-                  type={analytics.revenueGrowth > 0 ? "increase" : "decrease"}
-                />
-                {Math.abs(analytics.revenueGrowth)}% so với tháng trước
-              </StatHelpText>
+              <StatLabel fontWeight="medium">Sự Kiện Đã Qua</StatLabel>
+              <StatNumber>{analytics.pastEvents}</StatNumber>
+              <StatHelpText>Đã hoàn thành</StatHelpText>
             </Box>
             <Box
               bg="green.500"
@@ -493,14 +336,6 @@ const Dashboard = () => {
         </Stat>
       </SimpleGrid>
 
-      {/* Biểu đồ phân tích */}
-      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={8}>
-        <Heading size="md" mb={4}>
-          Số Sự Kiện Theo Tháng
-        </Heading>
-        <MonthlyEventsChart data={analytics.eventsByMonth} />
-      </Box>
-
       {/* Tabs cho quản lý sự kiện */}
       <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
         <Tabs colorScheme="teal" isFitted variant="enclosed">
@@ -508,7 +343,6 @@ const Dashboard = () => {
             <Tab fontWeight="medium">Sự Kiện Sắp Tới</Tab>
             <Tab fontWeight="medium">Sự Kiện Đang Diễn Ra</Tab>
             <Tab fontWeight="medium">Sự Kiện Đã Qua</Tab>
-            <Tab fontWeight="medium">Sự Kiện Đã Hủy</Tab>
           </TabList>
 
           <TabPanels>
@@ -536,7 +370,6 @@ const Dashboard = () => {
                       <Th>Sự Kiện</Th>
                       <Th>Ngày</Th>
                       <Th>Bán Vé</Th>
-                      <Th>Doanh Thu</Th>
                       <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
@@ -577,26 +410,29 @@ const Dashboard = () => {
                           })}
                         </Td>
                         <Td>
-                          <VStack align="start" spacing={1}>
-                            <Text>
-                              {event.soldTickets}/{event.totalTickets} (
-                              {Math.round(
-                                (event.soldTickets / event.totalTickets) * 100
-                              )}
-                              %)
-                            </Text>
-                            <Progress
-                              value={
-                                (event.soldTickets / event.totalTickets) * 100
-                              }
-                              size="sm"
-                              colorScheme="teal"
-                              w="100%"
-                              borderRadius="full"
-                            />
-                          </VStack>
+                          {event.soldTickets && event.totalTickets ? (
+                            <VStack align="start" spacing={1}>
+                              <Text>
+                                {event.soldTickets}/{event.totalTickets} (
+                                {Math.round(
+                                  (event.soldTickets / event.totalTickets) * 100
+                                )}
+                                %)
+                              </Text>
+                              <Progress
+                                value={
+                                  (event.soldTickets / event.totalTickets) * 100
+                                }
+                                size="sm"
+                                colorScheme="teal"
+                                w="100%"
+                                borderRadius="full"
+                              />
+                            </VStack>
+                          ) : (
+                            <Text>--</Text>
+                          )}
                         </Td>
-                        <Td>${event.revenue.toLocaleString()}</Td>
                         <Td>
                           <HStack spacing={1}>
                             <Tooltip label="Chỉnh sửa sự kiện">
@@ -646,7 +482,6 @@ const Dashboard = () => {
                       <Th>Sự Kiện</Th>
                       <Th>Ngày</Th>
                       <Th>Bán Vé</Th>
-                      <Th>Doanh Thu</Th>
                       <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
@@ -693,26 +528,20 @@ const Dashboard = () => {
                           })}
                         </Td>
                         <Td>
-                          <VStack align="start" spacing={1}>
-                            <Text>
-                              {event.soldTickets}/{event.totalTickets} (
-                              {Math.round(
-                                (event.soldTickets / event.totalTickets) * 100
-                              )}
-                              %)
-                            </Text>
-                            <Progress
-                              value={
-                                (event.soldTickets / event.totalTickets) * 100
-                              }
-                              size="sm"
-                              colorScheme="teal"
-                              w="100%"
-                              borderRadius="full"
-                            />
-                          </VStack>
+                          {event.soldTickets && event.totalTickets ? (
+                            <VStack align="start" spacing={1}>
+                              <Text>
+                                {event.soldTickets}/{event.totalTickets} (
+                                {Math.round(
+                                  (event.soldTickets / event.totalTickets) * 100
+                                )}
+                                %)
+                              </Text>
+                            </VStack>
+                          ) : (
+                            <Text>--</Text>
+                          )}
                         </Td>
-                        <Td>${event.revenue.toLocaleString()}</Td>
                         <Td>
                           <HStack spacing={1}>
                             <Tooltip label="Điểm danh người tham gia">
@@ -725,34 +554,6 @@ const Dashboard = () => {
                                 onClick={() =>
                                   navigate(
                                     `/organizer/events/${event.id}/check-in`
-                                  )
-                                }
-                              />
-                            </Tooltip>
-                            <Tooltip label="Xem phân tích">
-                              <IconButton
-                                aria-label="Phân tích"
-                                icon={<FaChartLine />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="green"
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/analytics`
-                                  )
-                                }
-                              />
-                            </Tooltip>
-                            <Tooltip label="Quản lý người tham gia">
-                              <IconButton
-                                aria-label="Người tham gia"
-                                icon={<FaUsers />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="purple"
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/attendees`
                                   )
                                 }
                               />
@@ -781,7 +582,6 @@ const Dashboard = () => {
                       <Th>Sự Kiện</Th>
                       <Th>Ngày</Th>
                       <Th>Người Tham Gia</Th>
-                      <Th>Doanh Thu</Th>
                       <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
@@ -827,130 +627,15 @@ const Dashboard = () => {
                             day: "numeric",
                           })}
                         </Td>
-                        <Td>{event.soldTickets}</Td>
-                        <Td>${event.revenue.toLocaleString()}</Td>
+                        <Td>{event.soldTickets || "--"}</Td>
                         <Td>
-                          <HStack spacing={1}>
-                            <Tooltip label="Xem phân tích">
-                              <IconButton
-                                aria-label="Phân tích"
-                                icon={<FaChartLine />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="green"
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/analytics`
-                                  )
-                                }
-                              />
-                            </Tooltip>
-                            <Tooltip label="Xem người tham gia">
-                              <IconButton
-                                aria-label="Người tham gia"
-                                icon={<FaUsers />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="purple"
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/attendees`
-                                  )
-                                }
-                              />
-                            </Tooltip>
-                          </HStack>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              )}
-            </TabPanel>
-
-            {/* Tab sự kiện đã hủy */}
-            <TabPanel p={0}>
-              <Heading size="md" mb={4}>
-                Sự Kiện Đã Hủy
-              </Heading>
-
-              {cancelledEvents.length === 0 ? (
-                <Text py={4}>Bạn không có sự kiện đã hủy nào.</Text>
-              ) : (
-                <Table variant="simple">
-                  <Thead bg={tableHeaderBg}>
-                    <Tr>
-                      <Th>Sự Kiện</Th>
-                      <Th>Ngày</Th>
-                      <Th>Đã Bán</Th>
-                      <Th>Doanh Thu</Th>
-                      <Th>Thao Tác</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {cancelledEvents.map((event) => (
-                      <Tr key={event.id} opacity={0.7}>
-                        <Td>
-                          <HStack>
-                            <Image
-                              src={event.imageUrl}
-                              alt={event.title}
-                              boxSize="40px"
-                              borderRadius="md"
-                              objectFit="cover"
-                              opacity={0.6}
-                            />
-                            <VStack align="start" spacing={0}>
-                              <Flex align="center">
-                                <Text fontWeight="medium" mr={2}>
-                                  {event.title}
-                                </Text>
-                                <Badge colorScheme="red">Đã hủy</Badge>
-                              </Flex>
-                              <Text fontSize="xs" color="gray.500">
-                                {event.isOnline
-                                  ? "Sự Kiện Trực Tuyến"
-                                  : event.location}
-                              </Text>
-                            </VStack>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          {event.date.toLocaleDateString("vi-VN", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </Td>
-                        <Td>{event.soldTickets}</Td>
-                        <Td>${event.revenue.toLocaleString()}</Td>
-                        <Td>
-                          <HStack spacing={1}>
-                            <Tooltip label="Khôi phục sự kiện">
-                              <IconButton
-                                aria-label="Khôi phục sự kiện"
-                                icon={<FaUndo />}
-                                size="sm"
-                                variant="solid"
-                                colorScheme="blue"
-                                onClick={() => handleRestoreEvent(event.id)}
-                              />
-                            </Tooltip>
-                            <Tooltip label="Xem người tham gia">
-                              <IconButton
-                                aria-label="Người tham gia"
-                                icon={<FaUsers />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="purple"
-                                onClick={() =>
-                                  navigate(
-                                    `/organizer/events/${event.id}/attendees`
-                                  )
-                                }
-                              />
-                            </Tooltip>
-                          </HStack>
+                          <Link
+                            as={RouterLink}
+                            to={`/events/${event.id}`}
+                            color="teal.500"
+                          >
+                            Xem chi tiết
+                          </Link>
                         </Td>
                       </Tr>
                     ))}
