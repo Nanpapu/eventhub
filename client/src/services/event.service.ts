@@ -185,6 +185,26 @@ const eventService = {
       throw error;
     }
   },
+
+  // Thêm phương thức này sau các phương thức hiện có
+  async getEventForEdit(eventId: string) {
+    try {
+      const response = await api.get(`/events/${eventId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Thêm phương thức này sau phương thức getEventForEdit
+  async deleteEvent(eventId: string) {
+    try {
+      const response = await api.delete(`/events/${eventId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default eventService;

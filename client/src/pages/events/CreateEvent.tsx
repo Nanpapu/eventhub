@@ -83,6 +83,8 @@ import {
   selectEventError,
   selectCreateSuccess,
   resetEventState,
+  fetchEventForEdit,
+  deleteEvent,
 } from "../../app/features/eventSlice";
 import { CreateEventData } from "../../services/event.service";
 import {
@@ -117,6 +119,17 @@ interface EventFormData {
   image: string;
   imageFile?: File | null; // Thêm imageFile để xử lý upload
   tags: string[];
+}
+
+// Interface cho TicketType từ API
+interface ApiTicketType {
+  _id?: string;
+  id?: string;
+  name: string;
+  price: number;
+  quantity: number;
+  description?: string;
+  availableQuantity?: number;
 }
 
 // Dữ liệu cho các lựa chọn form
@@ -1169,74 +1182,82 @@ const CreateEvent = () => {
     if (editMode && eventId && !isDataLoaded) {
       const loadEventData = async () => {
         try {
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          const mockEventData: EventFormData = {
-            id: eventId,
-            title: "Tech Conference 2023 (Loaded)",
-            description: "Join us for a hands-on workshop...",
-            category: "Hội nghị",
-            date: "2023-12-15",
-            startTime: "09:00",
-            endTime: "16:00",
-            location: "Convention Center",
-            address: "123 Main St, New York, NY",
-            isOnline: false,
-            onlineUrl: "",
-            capacity: 500,
-            maxTicketsPerPerson: 1,
-            isPaid: true,
-            price: undefined,
-            ticketTypes: [
-              {
-                id: "early-bird",
-                name: "Early Bird",
-                price: 19.99,
-                quantity: 100,
-                description: "",
-              },
-              {
-                id: "standard",
-                name: "Standard",
-                price: 29.99,
-                quantity: 300,
-                description: "",
-              },
-              {
-                id: "vip",
-                name: "VIP",
-                price: 49.99,
-                quantity: 100,
-                description: "",
-              },
-            ],
-            image:
-              "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
-            imageFile: null,
-            tags: ["tech", "web development", "design", "networking"],
-          };
-          setFormData(mockEventData);
-          setIsDataLoaded(true);
+          dispatch(fetchEventForEdit(eventId))
+            .unwrap()
+            .then((eventData) => {
+              // Chuyển đổi dữ liệu từ API sang định dạng form
+              const formattedData: EventFormData = {
+                id: eventData._id || eventData.id,
+                title: eventData.title || "",
+                description: eventData.description || "",
+                category: eventData.category || "",
+                date: eventData.date
+                  ? new Date(eventData.date).toISOString().split("T")[0]
+                  : "",
+                startTime: eventData.startTime || "",
+                endTime: eventData.endTime || "",
+                location: eventData.location || "",
+                address: eventData.address || "",
+                isOnline: eventData.isOnline || false,
+                onlineUrl: eventData.onlineUrl || "",
+                capacity: eventData.capacity || 100,
+                maxTicketsPerPerson: eventData.maxTicketsPerPerson || 1,
+                isPaid: eventData.isPaid || false,
+                price: eventData.price,
+                ticketTypes: Array.isArray(eventData.ticketTypes)
+                  ? eventData.ticketTypes.map((ticket: ApiTicketType) => ({
+                      id:
+                        ticket._id ||
+                        ticket.id ||
+                        `ticket-${Date.now()}-${Math.random()}`,
+                      name: ticket.name || "",
+                      price: ticket.price || 0,
+                      quantity: ticket.quantity || 0,
+                      description: ticket.description || "",
+                    }))
+                  : [],
+                image:
+                  eventData.imageUrl ||
+                  "https://via.placeholder.com/800x400?text=Event+Image",
+                imageFile: null,
+                tags: eventData.tags || [],
+              };
+
+              setFormData(formattedData);
+              setIsDataLoaded(true);
+              toast({
+                title: "Đã tải dữ liệu sự kiện",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+              });
+            })
+            .catch((error) => {
+              console.error("Error loading event data:", error);
+              const errorMessage =
+                error instanceof Error
+                  ? error.message
+                  : "Không thể tải dữ liệu sự kiện";
+
+              toast({
+                title: "Lỗi khi tải sự kiện",
+                description: errorMessage,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+              });
+              navigate("/create-event");
+            });
+        } catch (error: unknown) {
+          console.error("Error dispatching fetchEventForEdit:", error);
+          const errorMessage =
+            error instanceof Error ? error.message : "Không thể tải dữ liệu";
+
           toast({
-            title: "Đã tải dữ liệu sự kiện",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        } catch (loadError: unknown) {
-          console.error("Error loading event data:", loadError);
-          let errorMessage = "Không thể tải dữ liệu";
-          if (
-            typeof loadError === "object" &&
-            loadError !== null &&
-            "message" in loadError
-          ) {
-            errorMessage = (loadError as { message: string }).message;
-          }
-          toast({
-            title: "Lỗi khi tải sự kiện",
+            title: "Lỗi",
             description: errorMessage,
             status: "error",
-            duration: 5000,
+            duration: 4000,
             isClosable: true,
           });
           navigate("/create-event");
@@ -1260,7 +1281,15 @@ const CreateEvent = () => {
         }));
       }
     }
-  }, [editMode, eventId, toast, navigate, isDataLoaded, formData.isPaid]);
+  }, [
+    editMode,
+    eventId,
+    toast,
+    navigate,
+    isDataLoaded,
+    formData.isPaid,
+    dispatch,
+  ]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -1613,33 +1642,87 @@ const CreateEvent = () => {
       published: true,
     };
 
-    if (apiData.onlineUrl === "" || apiData.onlineUrl === undefined) {
-      // Nếu onlineUrl là undefined do isOnline false, nó đã là undefined rồi.
-      // Nếu isOnline true nhưng onlineUrl rỗng, validateStep nên bắt lỗi này.
-      // Dòng delete này có thể cần hoặc không tùy thuộc yêu cầu API khi onlineUrl rỗng.
-      // Giả sử API sẽ bỏ qua trường undefined, không cần delete tường minh.
-      // Nếu API coi chuỗi rỗng là lỗi, validateStep phải đảm bảo nó không rỗng khi isOnline=true
+    if (apiData.onlineUrl === "") {
+      delete apiData.onlineUrl;
     }
 
-    if (editMode && id) {
-      console.log("Updating event:", { ...apiData, id });
-      dispatch(createEvent({ ...apiData, id }));
-    } else {
-      console.log("Creating event:", apiData);
-      dispatch(createEvent(apiData));
+    try {
+      if (editMode && id) {
+        console.log("Updating event:", { ...apiData, id });
+        await dispatch(createEvent({ ...apiData, id })).unwrap();
+        toast({
+          title: "Sự kiện đã cập nhật",
+          description: "Sự kiện của bạn đã được cập nhật thành công",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        navigate(`/events/${id}`);
+      } else {
+        console.log("Creating event:", apiData);
+        const result = await dispatch(createEvent(apiData)).unwrap();
+        toast({
+          title: "Sự kiện đã tạo",
+          description: "Sự kiện của bạn đã được tạo thành công",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        navigate(`/events/${result.event?._id || result.event?.id}`);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Có lỗi xảy ra khi xử lý sự kiện";
+
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
     }
   };
 
   const confirmDeleteEvent = () => onOpen();
-  const handleDeleteEvent = () => {
-    toast({
-      title: "Sự kiện đã được xóa (Mô phỏng)",
-      status: "info",
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
-    navigate("/user/events");
+  const handleDeleteEvent = async () => {
+    if (!formData.id) {
+      toast({
+        title: "Lỗi",
+        description: "Không tìm thấy ID sự kiện để xóa",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      await dispatch(deleteEvent(formData.id)).unwrap();
+      toast({
+        title: "Sự kiện đã được xóa",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose();
+      navigate("/organizer/dashboard");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể xóa sự kiện. Vui lòng thử lại sau.";
+
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleNextStep = () => {

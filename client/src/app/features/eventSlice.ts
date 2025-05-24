@@ -127,6 +127,34 @@ export const fetchUserEvents = createAsyncThunk(
   }
 );
 
+// Async thunk để lấy chi tiết sự kiện để chỉnh sửa
+export const fetchEventForEdit = createAsyncThunk(
+  "events/fetchEventForEdit",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await eventService.getEventForEdit(id);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch event for editing"
+      );
+    }
+  }
+);
+
+// Async thunk để xóa sự kiện
+export const deleteEvent = createAsyncThunk(
+  "events/deleteEvent",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await eventService.deleteEvent(id);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete event"
+      );
+    }
+  }
+);
+
 // Tạo event slice
 const eventSlice = createSlice({
   name: "events",
@@ -249,6 +277,35 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchOrganizerDashboardStats.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Fetch event for edit cases
+      .addCase(fetchEventForEdit.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventForEdit.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.event = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchEventForEdit.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Delete event cases
+      .addCase(deleteEvent.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteEvent.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(deleteEvent.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });
