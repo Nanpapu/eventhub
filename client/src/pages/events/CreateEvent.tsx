@@ -1050,7 +1050,7 @@ const ProtectedLink = ({
       e.preventDefault();
       if (
         window.confirm(
-          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang?"
+          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
         )
       ) {
         navigate(to);
@@ -1142,7 +1142,7 @@ const CreateEvent = () => {
       if (formModified && !editMode) {
         if (
           window.confirm(
-            "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang?"
+            "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
           )
         ) {
           navigate(to, options);
@@ -1884,7 +1884,7 @@ const CreateEvent = () => {
     if (formModified && !editMode) {
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         const message =
-          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang?";
+          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?";
         e.returnValue = message;
         return message;
       };
