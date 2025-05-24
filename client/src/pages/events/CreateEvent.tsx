@@ -1088,6 +1088,7 @@ const CreateEvent = () => {
   });
 
   const [newTag, setNewTag] = useState("");
+  const [maxVisitedStep, setMaxVisitedStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
   const [authChecked, setAuthChecked] = useState(false);
@@ -1800,6 +1801,13 @@ const CreateEvent = () => {
     }
   };
 
+  // Cập nhật maxVisitedStep mỗi khi activeStep thay đổi
+  useEffect(() => {
+    if (activeStep > maxVisitedStep) {
+      setMaxVisitedStep(activeStep);
+    }
+  }, [activeStep, maxVisitedStep]);
+
   if (!isDataLoaded && editMode) {
     return (
       <Container maxW="container.md" py={10}>
@@ -1854,7 +1862,6 @@ const CreateEvent = () => {
           >
             {stepperSteps.map((step, index) => {
               const IconComponent = step.icon;
-              const isClickable = index <= activeStep;
               return (
                 <Step key={index}>
                   <Flex
@@ -1862,10 +1869,11 @@ const CreateEvent = () => {
                     onClick={() => {
                       if (editMode) {
                         setActiveStep(index);
-                      } else if (isClickable) {
-                        if (index <= activeStep) {
-                          setActiveStep(index);
-                        }
+                      } else if (index <= maxVisitedStep) {
+                        // Cho phép nhấp vào các bước đã từng đi qua
+                        setActiveStep(index);
+                      } else if (index <= activeStep) {
+                        setActiveStep(index);
                       } else {
                         toast({
                           title: "Vui lòng hoàn thành các bước trước",
@@ -1877,13 +1885,19 @@ const CreateEvent = () => {
                         });
                       }
                     }}
-                    cursor={editMode || isClickable ? "pointer" : "not-allowed"}
+                    cursor={
+                      editMode || index <= maxVisitedStep || index <= activeStep
+                        ? "pointer"
+                        : "not-allowed"
+                    }
                     alignItems="center"
                     textAlign="left"
                     p={2}
                     borderRadius="md"
                     _hover={
-                      editMode || isClickable ? { bg: stepperHoverBg } : {}
+                      editMode || index <= maxVisitedStep || index <= activeStep
+                        ? { bg: stepperHoverBg }
+                        : {}
                     }
                     border="none"
                     background="none"
