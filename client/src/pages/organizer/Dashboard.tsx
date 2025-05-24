@@ -107,7 +107,7 @@ const Dashboard = () => {
   // Sử dụng Redux hooks để lấy dữ liệu
   const isLoading = useAppSelector(selectEventLoading);
   const error = useAppSelector(selectEventError);
-  const userEventsFromRedux = useAppSelector(selectUserEvents);
+  const userEventsResponse = useAppSelector(selectUserEvents);
   const dashboardStats = useAppSelector(selectDashboardStats);
 
   // State cho dữ liệu đã được xử lý
@@ -122,9 +122,24 @@ const Dashboard = () => {
 
   // Xử lý dữ liệu khi nhận được từ Redux
   useEffect(() => {
-    if (userEventsFromRedux && userEventsFromRedux.length > 0) {
-      // Chuyển đổi dữ liệu từ API sang định dạng cần thiết
-      const formattedEvents = userEventsFromRedux.map((event: ApiEvent) => ({
+    if (!userEventsResponse) return;
+
+    // Trích xuất mảng sự kiện, kiểm tra cấu trúc của đối tượng response
+    let eventsList: any[] = [];
+
+    if (Array.isArray(userEventsResponse)) {
+      eventsList = userEventsResponse;
+    } else if (userEventsResponse && typeof userEventsResponse === "object") {
+      // @ts-ignore - Để tránh lỗi TypeScript
+      eventsList = userEventsResponse.events || [];
+    }
+
+    console.log("Events list:", eventsList);
+
+    // Chuyển đổi dữ liệu từ API sang định dạng cần thiết
+    const formattedEvents = eventsList.map((event) => {
+      const eventStatus = determineEventStatus(event);
+      return {
         id: event.id || event._id || "",
         title: event.title,
         date: new Date(event.date),
@@ -133,13 +148,17 @@ const Dashboard = () => {
         imageUrl: event.imageUrl || "https://via.placeholder.com/150",
         totalTickets: event.capacity || 0,
         soldTickets: event.attendees || 0,
-        status: determineEventStatus(event),
+        status: eventStatus,
         revenue: calculateEventRevenue(event),
-      }));
+      };
+    });
 
-      setEvents(formattedEvents);
-    }
-  }, [userEventsFromRedux]);
+    console.log(
+      "Upcoming events count:",
+      formattedEvents.filter((e: Event) => e.status === "upcoming").length
+    );
+    setEvents(formattedEvents);
+  }, [userEventsResponse]);
 
   // Hiển thị thông báo lỗi nếu có
   useEffect(() => {
@@ -156,23 +175,53 @@ const Dashboard = () => {
 
   // Helper function để xác định trạng thái sự kiện
   const determineEventStatus = (
-    event: ApiEvent
+    event: any
   ): "upcoming" | "ongoing" | "past" | "cancelled" => {
-    if (event.status === "cancelled") return "cancelled";
+    console.log(`Checking event status for: ${event.title}`);
+    console.log(
+      `Event date: ${event.date}, event status from API: ${event.status}`
+    );
+
+    if (event.status === "cancelled") {
+      console.log(`Event ${event.title} is cancelled`);
+      return "cancelled";
+    }
 
     const eventDate = new Date(event.date);
     const now = new Date();
 
-    // Xác định ngày hiện tại (đã reset thời gian)
+    console.log(
+      `Event date: ${eventDate.toISOString()}, Current date: ${now.toISOString()}`
+    );
+
+    // So sánh theo ngày, bỏ qua giờ phút giây
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Xác định ngày của sự kiện (đã reset thời gian)
     const eventDay = new Date(eventDate);
     eventDay.setHours(0, 0, 0, 0);
 
-    if (eventDay.getTime() === today.getTime()) return "ongoing";
-    if (eventDate > now) return "upcoming";
+    console.log(
+      `Event day: ${eventDay.toISOString()}, Today: ${today.toISOString()}`
+    );
+    console.log(
+      `Comparison result: ${
+        eventDay.getTime() > today.getTime()
+          ? "UPCOMING"
+          : eventDay.getTime() === today.getTime()
+          ? "ONGOING"
+          : "PAST"
+      }`
+    );
+
+    if (eventDay.getTime() === today.getTime()) {
+      return "ongoing";
+    }
+
+    if (eventDay.getTime() > today.getTime()) {
+      return "upcoming";
+    }
+
     return "past";
   };
 
