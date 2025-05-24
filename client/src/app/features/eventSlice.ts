@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import eventService, { EventFilter } from "../../services/event.service";
+import eventService, {
+  EventFilter,
+  OrganizerDashboardStats,
+} from "../../services/event.service";
 import { RootState } from "../store";
 
 // Định nghĩa interface cho state
@@ -15,6 +18,7 @@ interface EventState {
   totalPages: number;
   filter: EventFilter;
   createSuccess: boolean;
+  dashboardStats: OrganizerDashboardStats | null;
 }
 
 // Khởi tạo state
@@ -36,6 +40,7 @@ const initialState: EventState = {
     limit: 10,
   },
   createSuccess: false,
+  dashboardStats: null,
 };
 
 // Async thunk để tạo sự kiện mới
@@ -89,6 +94,20 @@ export const fetchSavedEvents = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch saved events"
+      );
+    }
+  }
+);
+
+// Async thunk để lấy thống kê dashboard cho tổ chức
+export const fetchOrganizerDashboardStats = createAsyncThunk(
+  "events/fetchOrganizerDashboardStats",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await eventService.getOrganizerDashboardStats();
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch dashboard statistics"
       );
     }
   }
@@ -217,6 +236,21 @@ const eventSlice = createSlice({
       .addCase(fetchUserEvents.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+
+      // Fetch organizer dashboard stats cases
+      .addCase(fetchOrganizerDashboardStats.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerDashboardStats.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.dashboardStats = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerDashboardStats.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });
@@ -238,6 +272,8 @@ export const selectCurrentPage = (state: RootState) => state.events.currentPage;
 export const selectTotalPages = (state: RootState) => state.events.totalPages;
 export const selectCreateSuccess = (state: RootState) =>
   state.events.createSuccess;
+export const selectDashboardStats = (state: RootState) =>
+  state.events.dashboardStats;
 
 // Export reducer
 export default eventSlice.reducer;

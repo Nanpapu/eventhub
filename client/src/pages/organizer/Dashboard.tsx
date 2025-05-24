@@ -52,8 +52,15 @@ import {
   FaPlus,
   FaQrcode,
 } from "react-icons/fa";
-import { useAppDispatch } from "../../app/hooks";
-// import { fetchUserEvents } from "../../app/features/eventSlice"; // Sẽ cần thêm vào sau khi có API
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import {
+  fetchUserEvents,
+  fetchOrganizerDashboardStats,
+  selectUserEvents,
+  selectEventLoading,
+  selectEventError,
+  selectDashboardStats,
+} from "../../app/features/eventSlice";
 
 // Định nghĩa các kiểu dữ liệu
 interface Event {
@@ -69,10 +76,25 @@ interface Event {
   revenue?: number;
 }
 
-interface Analytics {
-  totalEvents: number;
-  upcomingEvents: number;
-  pastEvents: number;
+// Định nghĩa kiểu dữ liệu cho sự kiện từ API
+interface ApiEvent {
+  id?: string;
+  _id?: string;
+  title: string;
+  date: string | Date;
+  location: string;
+  isOnline?: boolean;
+  imageUrl?: string;
+  capacity?: number;
+  attendees?: number;
+  status?: string;
+  isPaid?: boolean;
+  price?: number;
+  ticketTypes?: Array<{
+    quantity: number;
+    availableQuantity: number;
+    price: number;
+  }>;
 }
 
 const Dashboard = () => {
@@ -81,98 +103,96 @@ const Dashboard = () => {
   const dispatch = useAppDispatch();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [eventToCancel, setEventToCancel] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Trạng thái dữ liệu
+  // Sử dụng Redux hooks để lấy dữ liệu
+  const isLoading = useAppSelector(selectEventLoading);
+  const error = useAppSelector(selectEventError);
+  const userEventsFromRedux = useAppSelector(selectUserEvents);
+  const dashboardStats = useAppSelector(selectDashboardStats);
+
+  // State cho dữ liệu đã được xử lý
   const [events, setEvents] = useState<Event[]>([]);
-  const [analytics, setAnalytics] = useState<Analytics>({
-    totalEvents: 0,
-    upcomingEvents: 0,
-    pastEvents: 0,
-  });
 
   // Tải dữ liệu sự kiện từ API
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
+    // Dispatch actions để lấy dữ liệu
+    dispatch(fetchUserEvents());
+    dispatch(fetchOrganizerDashboardStats());
+  }, [dispatch]);
 
-        // Trong phiên bản sau, thay thế bằng API thực:
-        // const response = await dispatch(fetchUserEvents()).unwrap();
+  // Xử lý dữ liệu khi nhận được từ Redux
+  useEffect(() => {
+    if (userEventsFromRedux && userEventsFromRedux.length > 0) {
+      // Chuyển đổi dữ liệu từ API sang định dạng cần thiết
+      const formattedEvents = userEventsFromRedux.map((event: ApiEvent) => ({
+        id: event.id || event._id || "",
+        title: event.title,
+        date: new Date(event.date),
+        location: event.location,
+        isOnline: event.isOnline || false,
+        imageUrl: event.imageUrl || "https://via.placeholder.com/150",
+        totalTickets: event.capacity || 0,
+        soldTickets: event.attendees || 0,
+        status: determineEventStatus(event),
+        revenue: calculateEventRevenue(event),
+      }));
 
-        // Demo data - sẽ được thay thế bằng API
-        setTimeout(() => {
-          // Khai báo với kiểu dữ liệu rõ ràng cho mảng
-          const demoEvents: Array<Event> = [
-            {
-              id: "1",
-              title: "Tech Conference 2023",
-              date: new Date("2023-12-15"),
-              location: "Convention Center, New York",
-              isOnline: false,
-              imageUrl:
-                "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&auto=format",
-              totalTickets: 500,
-              soldTickets: 378,
-              status: "upcoming", // Literal type
-              revenue: 18900,
-            },
-            {
-              id: "2",
-              title: "JavaScript Workshop",
-              date: new Date("2023-11-20"),
-              location: "https://zoom.us/j/123456789",
-              isOnline: true,
-              imageUrl:
-                "https://images.unsplash.com/photo-1594904351111-a072f80b1a71?w=500&auto=format",
-              totalTickets: 100,
-              soldTickets: 87,
-              status: "ongoing", // Literal type
-              revenue: 2610,
-            },
-            {
-              id: "3",
-              title: "Music Festival",
-              date: new Date("2023-08-10"),
-              location: "Central Park, New York",
-              isOnline: false,
-              imageUrl:
-                "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&auto=format",
-              totalTickets: 1000,
-              soldTickets: 750,
-              status: "past", // Literal type
-              revenue: 37500,
-            },
-          ] as Event[]; // Type assertion
+      setEvents(formattedEvents);
+    }
+  }, [userEventsFromRedux]);
 
-          setEvents(demoEvents);
+  // Hiển thị thông báo lỗi nếu có
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Lỗi",
+        description: error,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, [error, toast]);
 
-          // Cập nhật analytics
-          const stats: Analytics = {
-            totalEvents: demoEvents.length,
-            upcomingEvents: demoEvents.filter((e) => e.status === "upcoming")
-              .length,
-            pastEvents: demoEvents.filter((e) => e.status === "past").length,
-          };
-          setAnalytics(stats);
+  // Helper function để xác định trạng thái sự kiện
+  const determineEventStatus = (
+    event: ApiEvent
+  ): "upcoming" | "ongoing" | "past" | "cancelled" => {
+    if (event.status === "cancelled") return "cancelled";
 
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
-        toast({
-          title: "Không thể tải dữ liệu",
-          description: "Đã xảy ra lỗi khi tải dữ liệu sự kiện.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setIsLoading(false);
-      }
-    };
+    const eventDate = new Date(event.date);
+    const now = new Date();
 
-    fetchData();
-  }, [dispatch, toast]);
+    // Xác định ngày hiện tại (đã reset thời gian)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Xác định ngày của sự kiện (đã reset thời gian)
+    const eventDay = new Date(eventDate);
+    eventDay.setHours(0, 0, 0, 0);
+
+    if (eventDay.getTime() === today.getTime()) return "ongoing";
+    if (eventDate > now) return "upcoming";
+    return "past";
+  };
+
+  // Helper function để tính doanh thu sự kiện
+  const calculateEventRevenue = (event: ApiEvent): number => {
+    if (!event.isPaid) return 0;
+
+    let revenue = 0;
+
+    if (event.ticketTypes && event.ticketTypes.length > 0) {
+      event.ticketTypes.forEach((ticketType) => {
+        const soldQuantity = ticketType.quantity - ticketType.availableQuantity;
+        revenue += soldQuantity * ticketType.price;
+      });
+    } else if (event.price && event.attendees) {
+      revenue = event.price * event.attendees;
+    }
+
+    return revenue;
+  };
 
   // Lọc sự kiện theo trạng thái
   const upcomingEvents = events.filter((event) => event.status === "upcoming");
@@ -181,7 +201,6 @@ const Dashboard = () => {
 
   // Chuyển đến trang chỉnh sửa sự kiện
   const handleEditEvent = (eventId: string) => {
-    // Trong thực tế, gọi API để lấy dữ liệu sự kiện để chỉnh sửa
     navigate(`/create-event?edit=${eventId}`);
     toast({
       title: "Chỉnh sửa sự kiện",
@@ -273,8 +292,13 @@ const Dashboard = () => {
           <Flex justify="space-between">
             <Box>
               <StatLabel fontWeight="medium">Tổng Số Sự Kiện</StatLabel>
-              <StatNumber>{analytics.totalEvents}</StatNumber>
-              <StatHelpText>{analytics.upcomingEvents} sắp tới</StatHelpText>
+              <StatNumber>
+                {dashboardStats?.totalEvents || events.length}
+              </StatNumber>
+              <StatHelpText>
+                {dashboardStats?.upcomingEvents || upcomingEvents.length} sắp
+                tới
+              </StatHelpText>
             </Box>
             <Box
               bg="teal.500"
@@ -295,7 +319,9 @@ const Dashboard = () => {
           <Flex justify="space-between">
             <Box>
               <StatLabel fontWeight="medium">Sự Kiện Sắp Tới</StatLabel>
-              <StatNumber>{analytics.upcomingEvents}</StatNumber>
+              <StatNumber>
+                {dashboardStats?.upcomingEvents || upcomingEvents.length}
+              </StatNumber>
               <StatHelpText>Cần chuẩn bị</StatHelpText>
             </Box>
             <Box
@@ -317,7 +343,9 @@ const Dashboard = () => {
           <Flex justify="space-between">
             <Box>
               <StatLabel fontWeight="medium">Sự Kiện Đã Qua</StatLabel>
-              <StatNumber>{analytics.pastEvents}</StatNumber>
+              <StatNumber>
+                {dashboardStats?.pastEvents || pastEvents.length}
+              </StatNumber>
               <StatHelpText>Đã hoàn thành</StatHelpText>
             </Box>
             <Box
@@ -410,7 +438,8 @@ const Dashboard = () => {
                           })}
                         </Td>
                         <Td>
-                          {event.soldTickets && event.totalTickets ? (
+                          {event.soldTickets !== undefined &&
+                          event.totalTickets !== undefined ? (
                             <VStack align="start" spacing={1}>
                               <Text>
                                 {event.soldTickets}/{event.totalTickets} (
@@ -528,7 +557,8 @@ const Dashboard = () => {
                           })}
                         </Td>
                         <Td>
-                          {event.soldTickets && event.totalTickets ? (
+                          {event.soldTickets !== undefined &&
+                          event.totalTickets !== undefined ? (
                             <VStack align="start" spacing={1}>
                               <Text>
                                 {event.soldTickets}/{event.totalTickets} (

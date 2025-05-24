@@ -31,4 +31,11 @@ router.patch(
   eventController.updateEventPublishStatus
 );
 
+// Route cho dashboard của tổ chức
+router.get(
+  "/organizer/dashboard-stats",
+  isOrganizer,
+  eventController.getOrganizerDashboardStats
+);
+
 export default router;

@@ -53,6 +53,16 @@ export interface TicketData {
   }[];
 }
 
+// Thêm interface cho dashboard stats
+export interface OrganizerDashboardStats {
+  totalEvents: number;
+  upcomingEvents: number;
+  ongoingEvents: number;
+  pastEvents: number;
+  totalAttendees: number;
+  totalRevenue: number;
+}
+
 /**
  * Service cho Event
  */
@@ -161,6 +171,19 @@ const eventService = {
   isEventSaved: async (eventId: string) => {
     const response = await api.get(`/events/${eventId}/is-saved`);
     return response.data;
+  },
+
+  /**
+   * Lấy thống kê cho dashboard của tổ chức
+   */
+  getOrganizerDashboardStats: async (): Promise<OrganizerDashboardStats> => {
+    try {
+      const response = await api.get("/events/organizer/dashboard-stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching organizer dashboard stats:", error);
+      throw error;
+    }
   },
 };
 

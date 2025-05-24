@@ -212,20 +212,83 @@ class EventController {
       const userId = (req as any).user.id;
       const stats = await eventService.getEventStats(userId);
 
-      return res.status(200).json({
-        success: true,
-        stats,
-      });
-    } catch (error: any) {
-      return res.status(500).json({
-        success: false,
-        message: error.message || "Đã xảy ra lỗi khi lấy thống kê sự kiện",
-      });
+      return res.status(200).json(stats);
+    } catch (error) {
+      console.error("Error getting event stats:", error);
+      return res.status(500).json({ message: "Failed to get event stats" });
     }
   }
 
   /**
-   * Cập nhật trạng thái published của sự kiện
+   * Lấy thống kê tổng quan cho dashboard của tổ chức
+   */
+  async getOrganizerDashboardStats(req: Request, res: Response) {
+    try {
+      const organizerId = (req as any).user.id;
+
+      // Lấy tất cả sự kiện của tổ chức
+      const events = await eventService.getUserEvents(organizerId);
+
+      // Tính toán các thống kê
+      const now = new Date();
+      const upcomingEvents = events.filter(
+        (event: any) =>
+          new Date(event.date) > now && event.status !== "cancelled"
+      );
+
+      const ongoingEvents = events.filter((event: any) => {
+        const eventDate = new Date(event.date);
+        return (
+          eventDate.toDateString() === now.toDateString() &&
+          event.status !== "cancelled"
+        );
+      });
+
+      const pastEvents = events.filter(
+        (event: any) =>
+          new Date(event.date) < now && event.status !== "cancelled"
+      );
+
+      // Tính tổng số người tham gia và doanh thu
+      let totalAttendees = 0;
+      let totalRevenue = 0;
+
+      events.forEach((event: any) => {
+        if (event.attendees) totalAttendees += event.attendees;
+
+        // Tính doanh thu từ ticketTypes
+        if (event.ticketTypes && event.ticketTypes.length > 0) {
+          event.ticketTypes.forEach((ticketType: any) => {
+            const soldQuantity =
+              ticketType.quantity - ticketType.availableQuantity;
+            totalRevenue += soldQuantity * ticketType.price;
+          });
+        } else if (event.isPaid && event.price && event.attendees) {
+          // Nếu không có loại vé, tính doanh thu từ giá chung
+          totalRevenue += event.attendees * event.price;
+        }
+      });
+
+      const stats = {
+        totalEvents: events.length,
+        upcomingEvents: upcomingEvents.length,
+        ongoingEvents: ongoingEvents.length,
+        pastEvents: pastEvents.length,
+        totalAttendees,
+        totalRevenue,
+      };
+
+      return res.status(200).json(stats);
+    } catch (error) {
+      console.error("Error getting organizer dashboard stats:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to get dashboard statistics" });
+    }
+  }
+
+  /**
+   * Cập nhật trạng thái publish của sự kiện
    */
   async updateEventPublishStatus(req: Request, res: Response) {
     try {
