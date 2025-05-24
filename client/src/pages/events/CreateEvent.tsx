@@ -1708,7 +1708,7 @@ const CreateEvent = () => {
         isClosable: true,
       });
       onClose();
-      navigate("/organizer/dashboard");
+      navigate("/");
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
