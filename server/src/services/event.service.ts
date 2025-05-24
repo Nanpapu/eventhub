@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Event, { IEvent } from "../models/Event";
 import User from "../models/User";
+import Registration from "../models/Registration";
+import notificationService from "./notification.service";
 import { EventFilter } from "../validations/event.validation";
 
 interface CreateEventData {
@@ -152,19 +154,91 @@ const eventService = {
    */
   async updateEvent(id: string, data: UpdateEventData) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Event not found");
+      throw new Error("Event ID không hợp lệ");
     }
 
-    const event = await Event.findByIdAndUpdate(id, data, {
+    const originalEvent = await Event.findById(id).lean();
+    if (!originalEvent) {
+      throw new Error("Không tìm thấy sự kiện");
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
     });
 
-    if (!event) {
-      throw new Error("Event not found");
+    if (!updatedEvent) {
+      throw new Error("Không thể cập nhật sự kiện");
     }
 
-    return event;
+    if (new Date(updatedEvent.date) > new Date()) {
+      const changes: string[] = [];
+      if (originalEvent.title !== updatedEvent.title)
+        changes.push(`tiêu đề (mới: ${updatedEvent.title})`);
+      if (originalEvent.description !== updatedEvent.description)
+        changes.push("mô tả");
+      if (
+        new Date(originalEvent.date).toISOString() !==
+        new Date(updatedEvent.date).toISOString()
+      )
+        changes.push(
+          `ngày diễn ra (mới: ${new Date(updatedEvent.date).toLocaleDateString(
+            "vi-VN"
+          )})`
+        );
+      if (originalEvent.startTime !== updatedEvent.startTime)
+        changes.push(`giờ bắt đầu (mới: ${updatedEvent.startTime})`);
+      if (originalEvent.endTime !== updatedEvent.endTime)
+        changes.push(`giờ kết thúc (mới: ${updatedEvent.endTime})`);
+      if (originalEvent.location !== updatedEvent.location)
+        changes.push(`địa điểm (mới: ${updatedEvent.location})`);
+      if (originalEvent.address !== updatedEvent.address)
+        changes.push(`địa chỉ (mới: ${updatedEvent.address})`);
+      if (originalEvent.isOnline !== updatedEvent.isOnline)
+        changes.push(
+          updatedEvent.isOnline ? "hình thức trực tuyến" : "hình thức trực tiếp"
+        );
+      if (originalEvent.onlineUrl !== updatedEvent.onlineUrl)
+        changes.push(
+          `đường dẫn trực tuyến (mới: ${updatedEvent.onlineUrl || "N/A"})`
+        );
+      if (originalEvent.imageUrl !== updatedEvent.imageUrl)
+        changes.push("hình ảnh sự kiện");
+      if (originalEvent.category !== updatedEvent.category)
+        changes.push(`danh mục (mới: ${updatedEvent.category})`);
+      if (originalEvent.published !== updatedEvent.published)
+        changes.push(
+          updatedEvent.published
+            ? "trạng thái công khai"
+            : "trạng thái riêng tư"
+        );
+
+      if (changes.length > 0) {
+        const updatedFieldsText = changes.join(", ");
+
+        const registrations = await Registration.find({
+          event: updatedEvent._id,
+        })
+          .select("user -_id")
+          .lean();
+        const userIds = registrations
+          .map((reg) => reg.user as mongoose.Types.ObjectId)
+          .filter((userId) => userId);
+
+        if (userIds.length > 0) {
+          console.log(
+            `[EventService] Event ${updatedEvent.title} updated. Fields changed: ${updatedFieldsText}. Notifying ${userIds.length} users.`
+          );
+          await notificationService.createEventUpdateNotifications(
+            userIds,
+            updatedEvent,
+            updatedFieldsText
+          );
+        }
+      }
+    }
+
+    return updatedEvent;
   },
 
   /**
@@ -241,7 +315,12 @@ const eventService = {
    */
   async updateEventPublishStatus(id: string, published: boolean) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Event not found");
+      throw new Error("Event ID không hợp lệ");
+    }
+
+    const originalEvent = await Event.findById(id).lean();
+    if (!originalEvent) {
+      throw new Error("Không tìm thấy sự kiện");
     }
 
     const event = await Event.findByIdAndUpdate(
@@ -251,7 +330,35 @@ const eventService = {
     );
 
     if (!event) {
-      throw new Error("Event not found");
+      throw new Error("Không thể cập nhật trạng thái sự kiện");
+    }
+
+    if (
+      originalEvent.published !== event.published &&
+      new Date(event.date) > new Date()
+    ) {
+      const actionText = event.published
+        ? "đã được công khai"
+        : "đã được chuyển sang riêng tư";
+      const message = `Sự kiện "${event.title}" ${actionText}.`;
+
+      const registrations = await Registration.find({ event: event._id })
+        .select("user -_id")
+        .lean();
+      const userIds = registrations
+        .map((reg) => reg.user as mongoose.Types.ObjectId)
+        .filter((userId) => userId);
+
+      if (userIds.length > 0) {
+        console.log(
+          `[EventService] Event ${event.title} publish status changed to ${event.published}. Notifying ${userIds.length} users.`
+        );
+        await notificationService.createEventUpdateNotifications(
+          userIds,
+          event,
+          message
+        );
+      }
     }
 
     return event;
@@ -261,9 +368,16 @@ const eventService = {
    * Lưu sự kiện vào danh sách đã lưu của người dùng
    */
   async saveEvent(eventId: string, userId: string) {
-    // Kiểm tra sự kiện có tồn tại không
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      throw new Error("Event not found");
+      throw new Error("Invalid event ID");
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid user ID");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
     }
 
     const event = await Event.findById(eventId);
@@ -271,99 +385,90 @@ const eventService = {
       throw new Error("Event not found");
     }
 
-    // Kiểm tra sự kiện đã được lưu chưa
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
+    if (user.savedEvents && user.savedEvents.includes(event._id)) {
+      console.log("Event already saved by the user.");
+      return { message: "Event already saved." };
     }
 
-    // Kiểm tra xem sự kiện đã được lưu chưa
-    if (user.savedEvents.includes(new mongoose.Types.ObjectId(eventId))) {
-      throw new Error("Event already saved");
-    }
-
-    // Lưu sự kiện vào danh sách
-    user.savedEvents.push(new mongoose.Types.ObjectId(eventId));
+    user.savedEvents = user.savedEvents || [];
+    user.savedEvents.push(event._id as mongoose.Types.ObjectId);
     await user.save();
 
-    return true;
+    return { message: "Event saved successfully." };
   },
 
   /**
    * Xóa sự kiện khỏi danh sách đã lưu của người dùng
    */
   async unsaveEvent(eventId: string, userId: string) {
-    // Kiểm tra sự kiện có tồn tại không
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      throw new Error("Event not found");
+      throw new Error("Invalid event ID");
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid user ID");
     }
 
-    const event = await Event.findById(eventId);
-    if (!event) {
-      throw new Error("Event not found");
-    }
-
-    // Tìm người dùng
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Kiểm tra xem sự kiện có trong danh sách đã lưu không
-    const eventObjId = new mongoose.Types.ObjectId(eventId);
-    const eventIndex = user.savedEvents.findIndex((id) =>
-      id.equals(eventObjId)
-    );
-
-    if (eventIndex === -1) {
-      throw new Error("Event not saved");
+    if (user.savedEvents) {
+      user.savedEvents = user.savedEvents.filter(
+        (savedEventId) => savedEventId.toString() !== eventId
+      );
+      await user.save();
+      return { message: "Event unsaved successfully." };
+    } else {
+      return {
+        message: "No events to unsave or event not found in saved list.",
+      };
     }
-
-    // Xóa sự kiện khỏi danh sách
-    user.savedEvents.splice(eventIndex, 1);
-    await user.save();
-
-    return true;
   },
 
   /**
    * Kiểm tra xem sự kiện đã được người dùng lưu chưa
    */
-  async isEventSaved(eventId: string, userId: string) {
-    // Kiểm tra tính hợp lệ của ID
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      throw new Error("Event not found");
+  async isEventSaved(eventId: string, userId: string): Promise<boolean> {
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(eventId)
+    ) {
+      console.warn("Invalid user ID or event ID for isEventSaved check.");
+      return false;
     }
-
-    // Tìm người dùng
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
+    const user = await User.findById(userId).select("savedEvents").lean();
+    if (!user || !user.savedEvents) {
+      return false;
     }
-
-    // Kiểm tra xem sự kiện có trong danh sách đã lưu không
-    const eventObjId = new mongoose.Types.ObjectId(eventId);
-    return user.savedEvents.some((id) => id.equals(eventObjId));
+    return user.savedEvents.some((id) => id.toString() === eventId);
   },
 
   /**
    * Lấy danh sách sự kiện đã lưu của người dùng
    */
   async getSavedEvents(userId: string) {
-    // Tìm người dùng và populate savedEvents
-    const user = await User.findById(userId).populate({
-      path: "savedEvents",
-      populate: {
-        path: "organizer",
-        select: "name avatar",
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid user ID");
+    }
+    const user = await User.findById(userId)
+      .populate({
+        path: "savedEvents",
+        model: "Event",
+        populate: {
+          path: "organizer",
+          model: "User",
+          select: "name avatar",
+        },
+        select:
+          "title description date startTime location imageUrl category slug",
+      })
+      .lean();
 
     if (!user) {
       throw new Error("User not found");
     }
-
-    return user.savedEvents;
+    return user.savedEvents || [];
   },
 };
 

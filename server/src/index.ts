@@ -4,6 +4,7 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import connectDB from "./config/database";
 import routes from "./routes";
+import scheduleEventReminders from "./jobs/eventReminders"; // Import cron job scheduler
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,8 @@ app.use(express.json());
 connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
+    // Schedule cron jobs after successful DB connection
+    scheduleEventReminders();
   })
   .catch((error) => {
     console.error("MongoDB connection error:", error);

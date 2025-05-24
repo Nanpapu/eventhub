@@ -11,10 +11,18 @@ import {
   useDisclosure,
   Portal,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
-import { useLocation, useNavigate } from "react-router-dom";
-import NotificationList, { Notification } from "./NotificationList";
+import { useLocation } from "react-router-dom";
+import NotificationList from "./NotificationList";
+import notificationServiceAPI from "../../services/notification.service";
+import { AxiosError } from "axios";
+
+// Interface cho lỗi API có cấu trúc message (định nghĩa lại nếu bị thiếu)
+interface ApiErrorData {
+  message: string;
+}
 
 /**
  * Component hiển thị nút thông báo trên thanh điều hướng
@@ -23,79 +31,76 @@ import NotificationList, { Notification } from "./NotificationList";
 const NotificationBell = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [hasNewNotifications, setHasNewNotifications] =
-    useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
   const location = useLocation();
-  const navigate = useNavigate();
   const bellRef = useRef<HTMLButtonElement>(null);
+  const toast = useToast();
 
   // Màu sắc theo theme
   const badgeBg = useColorModeValue("red.500", "red.300");
   const popoverBg = useColorModeValue("white", "gray.800");
   const popoverBorderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Lấy số lượng thông báo chưa đọc (giả lập - trong thực tế sẽ gọi API)
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationServiceAPI.getUnreadCountAPI();
+      setUnreadCount(response.count);
+    } catch (err) {
+      const error = err as AxiosError<ApiErrorData>;
+      console.error("Lỗi khi lấy số thông báo chưa đọc:", error.message);
+    }
+  };
+
   useEffect(() => {
-    // Giả lập API để lấy số lượng thông báo chưa đọc
-    const fetchUnreadCount = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Giả lập số ngẫu nhiên từ 1-5
-      const count = Math.floor(Math.random() * 5) + 1;
-      setUnreadCount(count);
-      setHasNewNotifications(count > 0);
-    };
-
     fetchUnreadCount();
 
-    // Giả lập cơ chế nhận thông báo mới (ví dụ: WebSocket)
-    const simulateNewNotification = setInterval(() => {
-      if (Math.random() > 0.7) {
-        // 30% cơ hội nhận thông báo mới
-        setUnreadCount((prev) => prev + 1);
-        setHasNewNotifications(true);
-      }
-    }, 60000); // Cứ sau 1 phút có cơ hội nhận thông báo mới
+    const intervalId = setInterval(() => {
+      fetchUnreadCount();
+    }, 60000);
 
-    return () => clearInterval(simulateNewNotification);
+    return () => clearInterval(intervalId);
   }, []);
 
-  // Đóng popover khi thay đổi route
   useEffect(() => {
     onClose();
   }, [location.pathname, onClose]);
 
-  // Xử lý khi nhấp vào một thông báo
-  const handleNotificationClick = (notification: Notification) => {
-    // Đóng popover
-    onClose();
-
-    // Nếu thông báo có ID sự kiện, chuyển đến trang sự kiện
-    if (notification.data?.eventId) {
-      navigate(`/events/${notification.data.eventId}`);
-    } else {
-      // Xử lý các loại thông báo khác
-      switch (notification.type) {
-        case "ticket_confirmation":
-          navigate("/my-tickets");
-          break;
-        case "system_message":
-          // Không chuyển hướng cho thông báo hệ thống
-          break;
-        default:
-          // Mặc định không làm gì cả, vì trang notifications đã bị xóa
-          console.log(
-            "Notification clicked, no specific redirect:",
-            notification
-          );
-      }
-    }
+  const handlePopoverOpen = () => {
+    onOpen();
+    setRefreshKey((prev) => prev + 1);
   };
 
-  // Xử lý khi đánh dấu tất cả là đã đọc
-  const handleMarkAllAsRead = () => {
-    setUnreadCount(0);
-    setHasNewNotifications(false);
+  const handleNotificationClick = () => {
+    onClose();
+    setTimeout(() => {
+      fetchUnreadCount();
+    }, 500);
+  };
+
+  const handleMarkAllAsReadInList = async () => {
+    try {
+      await notificationServiceAPI.markAllNotificationsAsReadAPI();
+      setUnreadCount(0);
+      setRefreshKey((prev) => prev + 1);
+      toast({
+        title: "Tất cả thông báo đã được đánh dấu là đã đọc",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+    } catch (err) {
+      const error = err as AxiosError<ApiErrorData>;
+      console.error("Lỗi khi đánh dấu tất cả đã đọc:", error);
+      toast({
+        title: "Lỗi",
+        description:
+          error.response?.data?.message || "Không thể đánh dấu tất cả đã đọc",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -115,7 +120,7 @@ const NotificationBell = () => {
             icon={<FiBell />}
             variant="ghost"
             size="lg"
-            onClick={onOpen}
+            onClick={handlePopoverOpen}
             position="relative"
           />
         </PopoverTrigger>
@@ -141,14 +146,13 @@ const NotificationBell = () => {
               display="flex"
               alignItems="center"
               justifyContent="center"
-              boxShadow="0 0 0 2px var(--chakra-colors-white)"
+              boxShadow={`0 0 0 2px ${popoverBg}`}
             >
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           </Box>
         )}
 
-        {/* Popover hiển thị danh sách thông báo */}
         <Portal>
           <PopoverContent
             width={{ base: "90vw", md: "450px" }}
@@ -159,22 +163,24 @@ const NotificationBell = () => {
             borderColor={popoverBorderColor}
             bg={popoverBg}
             _focus={{ outline: "none" }}
+            zIndex="popover"
           >
-            <PopoverArrow />
+            <PopoverArrow bg={popoverBg} />
             <PopoverBody p={0}>
               <NotificationList
-                maxNotifications={5}
-                showViewAllButton={true}
-                onMarkAllAsRead={handleMarkAllAsRead}
-                onItemClick={handleNotificationClick}
+                maxNotifications={7}
+                onMarkAllAsReadProp={handleMarkAllAsReadInList}
+                onItemClickProp={handleNotificationClick}
+                isHeaderVisible={true}
+                refreshKey={refreshKey}
               />
             </PopoverBody>
           </PopoverContent>
         </Portal>
       </Popover>
 
-      {/* Hiệu ứng nhấp nháy khi có thông báo mới */}
-      {hasNewNotifications && (
+      {/* Hiệu ứng chỉ hiển thị khi có thông báo chưa đọc và popover đóng */}
+      {unreadCount > 0 && !isOpen && (
         <Box
           position="absolute"
           top="-1px"
@@ -183,20 +189,20 @@ const NotificationBell = () => {
           height="10px"
           borderRadius="full"
           bg={badgeBg}
-          animation="pulse 2s infinite"
+          animation="pulse 1.5s infinite ease-in-out"
           sx={{
             "@keyframes pulse": {
               "0%": {
-                transform: "scale(0.95)",
-                boxShadow: "0 0 0 0 rgba(220, 38, 38, 0.7)",
+                transform: "scale(0.90)",
+                boxShadow: `0 0 0 0 ${badgeBg}`,
               },
-              "70%": {
-                transform: "scale(1)",
-                boxShadow: "0 0 0 10px rgba(220, 38, 38, 0)",
+              "50%": {
+                transform: "scale(1.1)",
+                boxShadow: `0 0 0 6px rgba(0,0,0,0)`,
               },
               "100%": {
-                transform: "scale(0.95)",
-                boxShadow: "0 0 0 0 rgba(220, 38, 38, 0)",
+                transform: "scale(0.90)",
+                boxShadow: `0 0 0 0 rgba(0,0,0,0)`,
               },
             },
           }}

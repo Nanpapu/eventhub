@@ -5,11 +5,24 @@ export interface INotification extends Document {
   user: mongoose.Types.ObjectId;
   title: string;
   message: string;
-  type: "event" | "registration" | "payment" | "system";
+  type:
+    | "event"
+    | "registration"
+    | "payment"
+    | "system"
+    | "ticket_confirmation"
+    | "event_update"
+    | "event_reminder";
   relatedEvent?: mongoose.Types.ObjectId;
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
+  data?: {
+    eventId?: string;
+    eventTitle?: string;
+    ticketId?: string;
+    [key: string]: any;
+  };
 }
 
 // Schema cho Notification
@@ -32,7 +45,15 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ["event", "registration", "payment", "system"],
+      enum: [
+        "event",
+        "registration",
+        "payment",
+        "system",
+        "ticket_confirmation",
+        "event_update",
+        "event_reminder",
+      ],
       required: [true, "Type is required"],
     },
     relatedEvent: {
@@ -42,6 +63,10 @@ const notificationSchema = new Schema<INotification>(
     isRead: {
       type: Boolean,
       default: false,
+    },
+    data: {
+      type: Object,
+      default: {},
     },
   },
   {

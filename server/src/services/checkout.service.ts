@@ -1,14 +1,14 @@
 // server/src/services/checkout.service.ts
 import mongoose, { Types } from "mongoose";
-import Event, { IEvent, ITicketTypeSubdocument } from "../models/Event";
+import Event, { IEvent } from "../models/Event";
 import User from "../models/User"; // Cần thiết nếu bạn muốn lấy thêm thông tin user
 import Payment, { IPayment } from "../models/Payment";
 import Registration, {
   IRegistration,
   IAttendeeInfo,
 } from "../models/Registration";
-import Notification, { INotification } from "../models/Notification";
 import Ticket, { ITicket } from "../models/Ticket";
+import notificationService from "./notification.service"; // Import NotificationService
 
 interface SuccessfulPurchaseParams {
   userId: Types.ObjectId;
@@ -27,7 +27,7 @@ interface SuccessfulPurchaseParams {
 interface PurchaseResult {
   registration: IRegistration;
   payment: IPayment;
-  notification: INotification;
+  // notification: INotification; // Bỏ trường này nếu service không trả về trực tiếp nữa
   tickets: ITicket[];
 }
 
@@ -86,9 +86,9 @@ class CheckoutService {
 
       // 1. Create Registration
       const registrationData: Partial<IRegistration> = {
-        event: event._id as Types.ObjectId,
+        event: event._id as any as Types.ObjectId,
         user: params.userId,
-        ticketType: ticketTypeDetails._id as Types.ObjectId,
+        ticketType: ticketTypeDetails._id as any as Types.ObjectId,
         quantity: params.quantity,
         totalAmount: totalAmount,
         attendeeInfo: [
@@ -107,7 +107,7 @@ class CheckoutService {
       // 2. Create Payment
       const paymentData: Partial<IPayment> = {
         userId: params.userId,
-        eventId: event._id as Types.ObjectId,
+        eventId: event._id as any as Types.ObjectId,
         registrationId: savedRegistration._id as Types.ObjectId,
         amount: totalAmount,
         method: "DEMO_PURCHASE", // Or from params if available
@@ -126,7 +126,7 @@ class CheckoutService {
       const createdTickets: ITicket[] = [];
       for (let i = 0; i < params.quantity; i++) {
         const ticketData: Partial<ITicket> = {
-          eventId: event._id as Types.ObjectId,
+          eventId: event._id as any as Types.ObjectId,
           userId: params.userId,
           ticketTypeId: ticketTypeDetails._id.toString(),
           ticketTypeName: ticketTypeDetails.name,
@@ -148,23 +148,23 @@ class CheckoutService {
       // ticketTypeDetails.soldQuantity = (ticketTypeDetails.soldQuantity || 0) + params.quantity;
       await event.save({ session });
 
-      // 5. Create Notification
-      const notificationData: Partial<INotification> = {
-        user: params.userId,
-        title: `Ticket Purchase Successful: ${event.title}`,
-        message: `You have successfully purchased ${params.quantity} x ${ticketTypeDetails.name} ticket(s) for ${event.title}. Transaction ID: ${savedPayment.transactionId}.`,
-        type: "payment" as const,
-        relatedEvent: event._id as Types.ObjectId,
-        isRead: false,
-      };
-      const notification = new Notification(notificationData);
-      const savedNotification = await notification.save({ session });
+      // Gọi NotificationService để tạo thông báo
+      await notificationService.createTicketConfirmationNotification(
+        params.userId,
+        event, // Truyền toàn bộ object event (đã là IEvent)
+        ticketTypeDetails.name,
+        params.quantity,
+        savedPayment.transactionId, // Truyền transactionId
+        createdTickets.length > 0
+          ? (createdTickets[0]._id as any).toString()
+          : undefined // Truyền ticketId nếu có
+      );
 
       await session.commitTransaction();
       return {
         registration: savedRegistration,
         payment: savedPayment,
-        notification: savedNotification,
+        // notification: savedNotification, // Bỏ vì đã được xử lý bởi NotificationService
         tickets: createdTickets,
       };
     } catch (error) {
