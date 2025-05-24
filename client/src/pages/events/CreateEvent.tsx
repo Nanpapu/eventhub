@@ -1726,11 +1726,21 @@ const CreateEvent = () => {
   };
 
   const handleNextStep = () => {
-    const currentStepErrors = validateStep(activeStep);
-    if (Object.keys(currentStepErrors).length === 0) {
+    // Nếu đang ở chế độ chỉnh sửa, cho phép chuyển giữa các bước mà không cần validate
+    if (editMode) {
+      setActiveStep((prev) => prev + 1);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Ở chế độ tạo mới, yêu cầu validate từng bước
+    const stepErrors = validateStep(activeStep);
+
+    if (Object.keys(stepErrors).length === 0) {
       setActiveStep((prev) => prev + 1);
       window.scrollTo(0, 0);
     } else {
+      setErrors(stepErrors);
       toast({
         title: "Thông tin chưa hợp lệ",
         description: "Vui lòng hoàn tất các trường bắt buộc ở bước này.",
@@ -1850,7 +1860,9 @@ const CreateEvent = () => {
                   <Flex
                     as="button"
                     onClick={() => {
-                      if (isClickable) {
+                      if (editMode) {
+                        setActiveStep(index);
+                      } else if (isClickable) {
                         if (index <= activeStep) {
                           setActiveStep(index);
                         }
@@ -1865,12 +1877,14 @@ const CreateEvent = () => {
                         });
                       }
                     }}
-                    cursor={isClickable ? "pointer" : "not-allowed"}
+                    cursor={editMode || isClickable ? "pointer" : "not-allowed"}
                     alignItems="center"
                     textAlign="left"
                     p={2}
                     borderRadius="md"
-                    _hover={isClickable ? { bg: stepperHoverBg } : {}}
+                    _hover={
+                      editMode || isClickable ? { bg: stepperHoverBg } : {}
+                    }
                     border="none"
                     background="none"
                     w="100%"
