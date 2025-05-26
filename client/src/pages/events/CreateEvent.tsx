@@ -86,7 +86,7 @@ import {
   fetchEventForEdit,
   deleteEvent,
 } from "../../app/features/eventSlice";
-import { CreateEventData } from "../../services/event.service";
+import eventService from "../../services/event.service";
 import {
   selectUser,
   selectIsAuthenticated,
@@ -1693,7 +1693,8 @@ const CreateEvent = () => {
       tags,
     } = formData;
 
-    const apiData: CreateEventData = {
+    // Chuẩn bị dữ liệu thống nhất cho cả tạo mới và cập nhật
+    const eventBaseData = {
       title,
       description,
       category,
@@ -1712,22 +1713,33 @@ const CreateEvent = () => {
           ? undefined
           : formData.price,
       imageUrl: image,
-      ticketTypes: formData.ticketTypes.map((t) => ({
-        name: t.name,
-        price: t.price,
-        quantity: t.quantity,
-        availableQuantity: t.quantity, // Đặt availableQuantity bằng với quantity ban đầu
-        description: t.description || "",
-      })),
       tags,
       published: true,
     };
 
+    // Tạo ticketTypes phù hợp với schema server
+    const preparedTicketTypes = formData.ticketTypes.map((t) => ({
+      name: t.name,
+      price: t.price,
+      quantity: t.quantity,
+      availableQuantity: t.quantity,
+      description: t.description || "",
+    }));
+
     // Sửa try/catch để tắt cảnh báo any ở phần xử lý lỗi
     try {
       if (editMode && formData.id) {
-        console.log("Updating event:", { ...apiData, id: formData.id });
-        await dispatch(createEvent({ ...apiData, id: formData.id })).unwrap();
+        console.log("Updating event:", formData.id);
+
+        // Khi cập nhật, sử dụng eventService.updateEvent trực tiếp, không qua Redux
+        // để tránh vấn đề với schema validation
+        const updateData = {
+          ...eventBaseData,
+          ticketTypes: preparedTicketTypes,
+        };
+
+        await eventService.updateEvent(formData.id, updateData);
+
         toast({
           title: "Đã cập nhật sự kiện!",
           description: "Sự kiện của bạn đã được cập nhật thành công.",
@@ -1735,11 +1747,20 @@ const CreateEvent = () => {
           duration: 5000,
           isClosable: true,
         });
+
         setFormModified(false); // Reset trạng thái form sau khi lưu thành công
         navigateSafely(`/events/${formData.id}`);
       } else {
-        console.log("Creating event:", apiData);
-        const result = await dispatch(createEvent(apiData)).unwrap();
+        console.log("Creating event");
+
+        // Khi tạo mới, sử dụng dispatch và action createEvent
+        const createData = {
+          ...eventBaseData,
+          ticketTypes: preparedTicketTypes,
+        };
+
+        const result = await dispatch(createEvent(createData)).unwrap();
+
         toast({
           title: "Đã tạo sự kiện!",
           description: "Sự kiện của bạn đã được tạo thành công.",
@@ -1747,7 +1768,8 @@ const CreateEvent = () => {
           duration: 5000,
           isClosable: true,
         });
-        setFormModified(false); // Reset trạng thái form sau khi lưu thành công
+
+        setFormModified(false);
         navigateSafely(`/events/${result.event.id}`);
       }
     } catch (error: unknown) {
