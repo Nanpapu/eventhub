@@ -34,7 +34,7 @@ import {
   FiClock,
   FiChevronRight,
 } from "react-icons/fi";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import notificationServiceAPI from "../../services/notification.service";
 import { AxiosError } from "axios";
@@ -49,6 +49,19 @@ export type NotificationType =
   | "payment_success"
   | "payment_failed";
 
+// Định nghĩa kiểu dữ liệu cho thông báo
+type NotificationCustomData = {
+  eventId?: string;
+  eventTitle?: string;
+  ticketId?: string;
+  transactionId?: string;
+  userId?: string;
+  link?: string;
+  reminderTypeSent?: "1day" | "3days";
+  cancellationReason?: string;
+  [key: string]: string | number | boolean | undefined | null;
+};
+
 // Interface cho đối tượng thông báo
 export interface Notification {
   id: string;
@@ -58,17 +71,7 @@ export interface Notification {
   message: string;
   timestamp: Date | string;
   isRead: boolean;
-  data?: {
-    eventId?: string;
-    eventTitle?: string;
-    ticketId?: string;
-    transactionId?: string;
-    userId?: string;
-    link?: string;
-    reminderTypeSent?: "1day" | "3days";
-    cancellationReason?: string;
-    [key: string]: string | number | boolean | undefined | null;
-  };
+  data?: NotificationCustomData;
   user?: string;
   relatedEvent?: string;
   createdAt?: Date | string;
@@ -350,7 +353,7 @@ const NotificationList = ({
   // Hàm lấy icon dựa trên loại thông báo
   const getNotificationIcon = (
     type: NotificationType,
-    data?: NotificationCustomData
+    data?: Notification["data"]
   ) => {
     if (type === "system_message" && data?.cancellationReason) {
       return FiAlertCircle; // Icon cho hủy vé
@@ -377,7 +380,7 @@ const NotificationList = ({
   // Hàm lấy màu dựa trên loại thông báo
   const getNotificationColorName = (
     type: NotificationType,
-    data?: NotificationCustomData
+    data?: Notification["data"]
   ): keyof typeof iconColorsDynamic => {
     if (type === "system_message" && data?.cancellationReason) {
       return "red"; // Màu cho hủy vé
@@ -578,7 +581,7 @@ const NotificationList = ({
           {displayedNotifications.map((notification, index) => {
             const colorName = getNotificationColorName(
               notification.type,
-              notification.data as NotificationCustomData
+              notification.data
             );
             const iconColor = iconColorsDynamic[colorName];
             const iconBgColor = iconBgColorsDynamic[colorName];
@@ -596,17 +599,45 @@ const NotificationList = ({
                   borderBottom="1px solid"
                   borderColor={borderColor}
                   bg={notification.isRead ? itemBgColor : unreadItemBackground}
-                  _hover={{ bg: hoverBgColor }}
+                  _hover={{
+                    bg: hoverBgColor,
+                    transform: "translateY(-1px)",
+                    boxShadow: "sm",
+                    ".view-indicator": { opacity: 1 },
+                  }}
                   cursor="pointer"
                   onClick={() => handleItemClick(notification)}
                   position="relative"
                   transition="all 0.2s"
                   whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                  whileTap={{ scale: 0.98 }}
                   borderLeft={notification.isRead ? "none" : "4px solid"}
                   borderLeftColor={
                     notification.isRead ? "transparent" : borderLeftColorVal
                   }
+                  role="button"
+                  aria-label={`Xem chi tiết: ${notification.title}`}
+                  tabIndex={0}
+                  _after={{
+                    content: '""',
+                    position: "absolute",
+                    bottom: "0",
+                    left: "0",
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                    transition: "opacity 0.2s",
+                    opacity: "0",
+                    bg: "rgba(0, 0, 0, 0.05)",
+                  }}
+                  _focus={{
+                    outline: "none",
+                    boxShadow: "0 0 0 2px var(--chakra-colors-teal-400)",
+                  }}
+                  _active={{
+                    bg: "rgba(0, 0, 0, 0.05)",
+                    transform: "translateY(0)",
+                  }}
                 >
                   <HStack align="start" spacing={3}>
                     <Box
@@ -619,7 +650,7 @@ const NotificationList = ({
                       <Icon
                         as={getNotificationIcon(
                           notification.type,
-                          notification.data as NotificationCustomData
+                          notification.data
                         )}
                         fontSize="xl"
                       />
@@ -664,14 +695,6 @@ const NotificationList = ({
                             >
                               Xóa thông báo
                             </MenuItem>
-                            <MenuItem
-                              as={RouterLink}
-                              to={getNotificationLink(notification)}
-                              icon={<FiChevronRight />}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Xem chi tiết
-                            </MenuItem>
                           </MenuList>
                         </Menu>
                       </HStack>
@@ -696,6 +719,16 @@ const NotificationList = ({
                           <Icon as={FiClock} fontSize="xs" />
                           <Text>{getRelativeTime(notification.timestamp)}</Text>
                         </HStack>
+
+                        {/* Indicator khi hover */}
+                        <Icon
+                          as={FiChevronRight}
+                          fontSize="sm"
+                          opacity="0"
+                          transition="opacity 0.2s"
+                          className="view-indicator"
+                          color="teal.500"
+                        />
                       </HStack>
                     </Box>
 

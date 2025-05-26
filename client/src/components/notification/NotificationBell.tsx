@@ -14,8 +14,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
-import { useLocation } from "react-router-dom";
-import NotificationList from "./NotificationList";
+import { useLocation, useNavigate } from "react-router-dom";
+import NotificationList, { Notification } from "./NotificationList";
 import notificationServiceAPI from "../../services/notification.service";
 import { AxiosError } from "axios";
 
@@ -33,6 +33,7 @@ const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const location = useLocation();
+  const navigate = useNavigate();
   const bellRef = useRef<HTMLButtonElement>(null);
   const toast = useToast();
 
@@ -70,8 +71,53 @@ const NotificationBell = () => {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleNotificationClick = () => {
+  const handleNotificationClick = (notification: Notification) => {
     onClose();
+
+    // Lấy link liên kết từ thông báo
+    const getNotificationLink = (notification: Notification): string => {
+      const { type, data } = notification;
+
+      if (!data) return "#";
+
+      if (
+        type === "system_message" &&
+        data.cancellationReason &&
+        data.eventId
+      ) {
+        return `/events/${data.eventId}`; // Dẫn đến trang sự kiện nếu vé bị hủy
+      }
+
+      switch (type) {
+        case "event_reminder":
+        case "event_update":
+        case "event_invite":
+          return data.eventId ? `/events/${data.eventId}` : "#";
+        case "ticket_confirmation":
+        case "payment_success":
+          if (data.ticketId) return `/user/tickets`;
+          if (data.eventId) return `/events/${data.eventId}`;
+          return "/user/tickets";
+        case "payment_failed":
+          if (data.eventId) return `/checkout/${data.eventId}?retry=true`;
+          return "/support/payment-issues";
+        case "system_message":
+          return data.link || "#";
+        default:
+          if (data.eventId) return `/events/${data.eventId}`;
+          return "#";
+      }
+    };
+
+    // Điều hướng đến URL tương ứng
+    const link = getNotificationLink(notification);
+    if (link && link !== "#") {
+      setTimeout(() => {
+        navigate(link);
+      }, 100);
+    }
+
+    // Cập nhật số lượng thông báo chưa đọc
     setTimeout(() => {
       fetchUnreadCount();
     }, 500);
