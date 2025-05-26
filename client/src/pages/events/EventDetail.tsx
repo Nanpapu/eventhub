@@ -35,7 +35,11 @@ import {
 } from "react-icons/fa";
 import eventService from "../../services/event.service";
 import { useAppSelector } from "../../app/hooks";
-import { selectUser } from "../../app/features/authSlice";
+import {
+  selectUser,
+  selectIsAuthenticated,
+} from "../../app/features/authSlice";
+import useAuth from "../../hooks/useAuth";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
@@ -92,6 +96,8 @@ const EventDetail = () => {
 
   // Lấy thông tin người dùng hiện tại từ Redux store
   const currentUser = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const { isAuthenticated: authCheck } = useAuth();
 
   // Lấy thông tin sự kiện từ API khi component mount
   useEffect(() => {
@@ -281,6 +287,21 @@ const EventDetail = () => {
 
   // Xử lý đăng ký tham gia sự kiện
   const handleRegister = () => {
+    // Kiểm tra đăng nhập trước khi đăng ký
+    if (!isAuthenticated) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để đăng ký tham gia sự kiện này.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      // Lưu URL hiện tại vào sessionStorage để chuyển về sau khi đăng nhập
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      navigate("/login");
+      return;
+    }
+
     // Nếu đã đăng ký, hủy đăng ký
     if (isRegistered) {
       setIsRegistered(false);
@@ -386,6 +407,21 @@ const EventDetail = () => {
 
   // Xử lý chuyển tới trang thanh toán
   const handleBuyTicket = () => {
+    // Kiểm tra đăng nhập trước khi mua vé
+    if (!isAuthenticated) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để mua vé tham gia sự kiện này.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      // Lưu URL hiện tại vào sessionStorage để chuyển về sau khi đăng nhập
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      navigate("/login");
+      return;
+    }
+
     /*
       TODO: Khi có backend, logic sẽ như sau:
       1. Gọi API để tạo đơn hàng (POST /api/events/:id/checkout)

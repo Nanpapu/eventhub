@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaEye,
   FaEyeSlash,
@@ -47,6 +47,15 @@ const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch();
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  // Lấy đường dẫn chuyển hướng từ sessionStorage nếu có
+  useEffect(() => {
+    const storedPath = sessionStorage.getItem("redirectAfterLogin");
+    if (storedPath) {
+      setRedirectPath(storedPath);
+    }
+  }, []);
 
   const {
     register,
@@ -83,7 +92,16 @@ const Login = () => {
         });
 
         // Chuyển hướng sau khi đăng nhập thành công
-        setTimeout(() => navigate("/"), 1500);
+        setTimeout(() => {
+          // Nếu có đường dẫn chuyển hướng, sử dụng nó và xóa khỏi sessionStorage
+          if (redirectPath) {
+            sessionStorage.removeItem("redirectAfterLogin");
+            navigate(redirectPath);
+          } else {
+            // Nếu không, chuyển về trang chủ
+            navigate("/");
+          }
+        }, 1500);
       } else {
         // Đăng nhập thất bại (kết quả rejected)
         // Thông báo lỗi đã được xử lý trong authSlice.rejected

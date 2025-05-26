@@ -97,6 +97,25 @@ export default function Checkout() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const currentUser = useAppSelector(selectUser);
 
+  // Kiểm tra xác thực khi trang được tải
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Lưu URL hiện tại để sau khi đăng nhập chuyển về
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để tiếp tục thanh toán.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Chuyển hướng đến trang đăng nhập
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate, toast]);
+
   // Các bước trong quy trình thanh toán
   const steps = [
     {
@@ -299,6 +318,22 @@ export default function Checkout() {
 
   // Xử lý khi bấm tiếp tục ở bước 1
   const handleContinueToPayment = () => {
+    // Kiểm tra xác thực một lần nữa trước khi tiếp tục
+    if (!isAuthenticated) {
+      toast({
+        title: "Phiên đăng nhập đã hết hạn",
+        description: "Vui lòng đăng nhập lại để tiếp tục thanh toán.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Lưu URL hiện tại vào sessionStorage để chuyển về sau khi đăng nhập
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      navigate("/login");
+      return;
+    }
+
     if (!event) return;
     console.log(
       "[Checkout.tsx] handleContinueToPayment - selectedTicketType:",

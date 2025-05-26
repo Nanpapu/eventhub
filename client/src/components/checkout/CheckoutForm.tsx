@@ -20,6 +20,7 @@ import {
   Image,
   Badge,
 } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { FaMoneyBillWave, FaSpinner, FaCheck } from "react-icons/fa";
 import checkoutService from "../../services/checkout.service";
@@ -88,6 +89,7 @@ export default function CheckoutForm({
   const toast = useToast();
   const formBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const navigate = useNavigate();
 
   const {
     register,
@@ -174,6 +176,23 @@ export default function CheckoutForm({
 
   // Xử lý khi gửi form
   const onSubmit = async (data: FormValues) => {
+    // Kiểm tra xác thực trước khi thực hiện thanh toán
+    if (!isAuthenticated) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description:
+          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để hoàn tất thanh toán.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Lưu URL hiện tại để sau khi đăng nhập chuyển về
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      navigate("/login");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
