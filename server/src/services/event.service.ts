@@ -165,6 +165,7 @@ const eventService = {
       const oldEventData = {
         date: new Date(event.date).toISOString(), // So sánh ISO string cho dễ
         startTime: event.startTime,
+        endTime: event.endTime,
         location: event.location,
         address: event.address,
         isOnline: event.isOnline,
@@ -207,12 +208,14 @@ const eventService = {
 
       const updatedEvent = await event.save({ session });
 
-      // ---- Logic gửi thông báo cập nhật cho người dùng đã lưu sự kiện ----
+      // ---- Logic gửi thông báo cập nhật cho người dùng đã lưu sự kiện và người mua vé ----
       const changedFields: string[] = [];
       if (new Date(updatedEvent.date).toISOString() !== oldEventData.date)
         changedFields.push("ngày diễn ra");
       if (updatedEvent.startTime !== oldEventData.startTime)
         changedFields.push("thời gian bắt đầu");
+      if (updatedEvent.endTime !== oldEventData.endTime)
+        changedFields.push("thời gian kết thúc");
       if (updatedEvent.location !== oldEventData.location)
         changedFields.push("địa điểm");
       if (updatedEvent.address !== oldEventData.address)
@@ -230,12 +233,32 @@ const eventService = {
       }
 
       if (changedFields.length > 0) {
+        // Người dùng đã lưu sự kiện
         const usersWhoSavedEvent = await User.find({
           savedEvents: updatedEvent._id as mongoose.Types.ObjectId,
         }).select("_id");
 
-        if (usersWhoSavedEvent.length > 0) {
-          const userIds = usersWhoSavedEvent.map((user) => user._id);
+        // Lấy danh sách người dùng đã mua vé cho sự kiện này
+        const usersWithRegistrations = await Registration.find({
+          event: updatedEvent._id as mongoose.Types.ObjectId,
+        })
+          .select("user -_id")
+          .lean();
+
+        // Gộp danh sách userIds từ cả người đã lưu và người đã mua vé
+        const allUserIds = [
+          ...usersWhoSavedEvent.map((user) => user._id),
+          ...usersWithRegistrations.map(
+            (reg) => reg.user as mongoose.Types.ObjectId
+          ),
+        ];
+
+        // Lọc ra các ID user duy nhất
+        const uniqueUserIds = [
+          ...new Set(allUserIds.map((id) => id.toString())),
+        ].map((idStr) => new mongoose.Types.ObjectId(idStr));
+
+        if (uniqueUserIds.length > 0) {
           let updateMessage = changedFields.join(", ");
           if (
             updatedEvent.published === false &&
@@ -246,7 +269,7 @@ const eventService = {
           }
 
           await notificationService.createEventUpdateNotifications(
-            userIds,
+            uniqueUserIds,
             updatedEvent,
             updateMessage
           );
