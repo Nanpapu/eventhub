@@ -1335,12 +1335,8 @@ const CreateEvent = () => {
 
               setFormData(formattedData);
               setIsDataLoaded(true);
-              toast({
-                title: "Đã tải dữ liệu sự kiện",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-              });
+
+              // Xóa toast ở đây - không cần hiển thị thêm thông báo
             })
             .catch((error) => {
               console.error("Error loading event data:", error);

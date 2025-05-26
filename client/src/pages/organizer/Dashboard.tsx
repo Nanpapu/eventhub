@@ -258,8 +258,8 @@ const Dashboard = () => {
   const handleEditEvent = (eventId: string) => {
     navigate(`/create-event?edit=${eventId}`);
     toast({
-      title: "Chỉnh sửa sự kiện",
-      description: "Đang tải dữ liệu sự kiện để chỉnh sửa",
+      title: "Đang mở trang chỉnh sửa",
+      description: "Đang chuyển hướng đến trang chỉnh sửa sự kiện",
       status: "info",
       duration: 2000,
       isClosable: true,

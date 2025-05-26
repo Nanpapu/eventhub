@@ -449,8 +449,8 @@ const EventDetail = () => {
     if (event && event.id) {
       navigate(`/create-event?edit=${event.id}`);
       toast({
-        title: "Chỉnh sửa sự kiện",
-        description: "Đang tải dữ liệu sự kiện để chỉnh sửa",
+        title: "Đang mở trang chỉnh sửa",
+        description: "Đang chuyển hướng đến trang chỉnh sửa sự kiện",
         status: "info",
         duration: 2000,
         isClosable: true,
