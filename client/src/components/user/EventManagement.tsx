@@ -733,7 +733,7 @@ const EventManagement = () => {
                 </Heading>
                 <Button
                   as={Link}
-                  to="/events/create"
+                  to="/create-event"
                   colorScheme="teal"
                   leftIcon={<FiPlus />}
                 >
@@ -893,6 +893,7 @@ const EventManagement = () => {
                                 colorScheme="red"
                                 variant="outline"
                                 onClick={() => handleDeleteEvent(event.id)}
+                                display="none"
                               />
                             </HStack>
                           </Flex>

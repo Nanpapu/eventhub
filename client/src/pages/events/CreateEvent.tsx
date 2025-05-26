@@ -1083,29 +1083,17 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
 const ProtectedLink = ({
   to,
   children,
-  formModified,
-  editMode,
   ...props
 }: {
   to: string;
   children: React.ReactNode;
-  formModified: boolean;
-  editMode: boolean;
   [x: string]: unknown;
 }) => {
   const navigate = useNavigate();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (formModified && !editMode) {
-      e.preventDefault();
-      if (
-        window.confirm(
-          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
-        )
-      ) {
-        navigate(to);
-      }
-    }
+    e.preventDefault();
+    navigate(to);
   };
 
   return (
@@ -1179,9 +1167,6 @@ const CreateEvent = () => {
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Biến để theo dõi xem form đã được chỉnh sửa chưa
-  const [formModified, setFormModified] = useState(false);
-
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const stepperHoverBg = useColorModeValue("gray.100", "gray.700");
@@ -1189,20 +1174,18 @@ const CreateEvent = () => {
   // Hàm điều hướng an toàn với xác nhận nếu form đã thay đổi
   const navigateSafely = useCallback(
     (to: string, options?: { replace?: boolean; state?: unknown }) => {
-      if (formModified && !editMode) {
-        if (
-          window.confirm(
-            "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
-          )
-        ) {
-          navigate(to, options);
-        }
-      } else {
-        navigate(to, options);
-      }
+      navigate(to, options);
     },
-    [formModified, editMode, navigate]
+    [navigate]
   );
+
+  useEffect(() => {
+    if (createSuccess) {
+      navigateSafely(
+        editMode && eventId ? `/events/${eventId}` : "/user/events"
+      );
+    }
+  }, [createSuccess, editMode, navigateSafely, eventId]);
 
   useEffect(() => {
     if (isAuthenticated && currentUser && currentUser.role !== "organizer") {
@@ -1258,23 +1241,6 @@ const CreateEvent = () => {
       // setFormData(prev => ({ ...prev, ticketTypes: [] }));
     }
   }, [formData.isPaid, formData.capacity]);
-
-  useEffect(() => {
-    if (createSuccess) {
-      toast({
-        title: editMode ? "Sự kiện đã cập nhật" : "Sự kiện đã tạo",
-        description: editMode
-          ? "Sự kiện của bạn đã được cập nhật thành công"
-          : "Sự kiện của bạn đã được tạo thành công",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      navigateSafely(
-        editMode && eventId ? `/events/${eventId}` : "/user/events"
-      );
-    }
-  }, [createSuccess, editMode, navigateSafely, toast, eventId]);
 
   useEffect(() => {
     if (errorStore) {
@@ -1404,7 +1370,6 @@ const CreateEvent = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setFormModified(true); // Đánh dấu form đã được chỉnh sửa
 
     // Xóa lỗi khi người dùng sửa trường đó
     if (errors[name]) {
@@ -1446,8 +1411,6 @@ const CreateEvent = () => {
         [name]: checked,
       }));
     }
-
-    setFormModified(true); // Đánh dấu form đã được chỉnh sửa
 
     // Xử lý lỗi cho isPaid
     if (name === "isPaid") {
@@ -1744,7 +1707,6 @@ const CreateEvent = () => {
           isClosable: true,
         });
 
-        setFormModified(false); // Reset trạng thái form sau khi lưu thành công
         navigateSafely(`/events/${formData.id}`);
       } else {
         console.log("Creating event");
@@ -1765,7 +1727,6 @@ const CreateEvent = () => {
           isClosable: true,
         });
 
-        setFormModified(false);
         navigateSafely(`/events/${result.event.id}`);
       }
     } catch (error: unknown) {
@@ -1805,7 +1766,6 @@ const CreateEvent = () => {
         isClosable: true,
       });
       onClose();
-      setFormModified(false); // Reset trạng thái form trước khi điều hướng
       navigateSafely("/");
     } catch (error: unknown) {
       const errorMessage =
@@ -1901,25 +1861,6 @@ const CreateEvent = () => {
     }
   }, [activeStep, maxVisitedStep]);
 
-  // Thiết lập cảnh báo khi người dùng cố gắng rời khỏi trang (reload/đóng tab)
-  useEffect(() => {
-    // Chỉ thiết lập cảnh báo khi form đã được chỉnh sửa và không phải ở chế độ chỉnh sửa
-    if (formModified && !editMode) {
-      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        const message =
-          "Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này?";
-        e.returnValue = message;
-        return message;
-      };
-
-      window.addEventListener("beforeunload", handleBeforeUnload);
-
-      return () => {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    }
-  }, [formModified, editMode]);
-
   if (!isDataLoaded && editMode) {
     return (
       <Container maxW="container.md" py={10}>
@@ -1938,22 +1879,12 @@ const CreateEvent = () => {
       <VStack spacing={8} align="stretch">
         <Breadcrumb fontWeight="medium" fontSize="sm">
           <BreadcrumbItem>
-            <BreadcrumbLink
-              as={ProtectedLink}
-              to="/"
-              formModified={formModified}
-              editMode={editMode}
-            >
+            <BreadcrumbLink as={ProtectedLink} to="/">
               Trang chủ
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem>
-            <BreadcrumbLink
-              as={ProtectedLink}
-              to="/user/events"
-              formModified={formModified}
-              editMode={editMode}
-            >
+            <BreadcrumbLink as={ProtectedLink} to="/user/events">
               Quản lý sự kiện
             </BreadcrumbLink>
           </BreadcrumbItem>
