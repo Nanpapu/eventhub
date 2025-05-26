@@ -23,22 +23,31 @@ import {
   Tag,
   Spinner,
   Center,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
   FiCalendar,
   FiMapPin,
-  FiDownload,
   FiShare2,
   FiClock,
   FiList,
   FiClock as FiHistory,
   FiX,
+  FiCode,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
 import userService from "../../services/user.service.ts";
 import { getLocationOptions } from "../../utils/locationUtils";
+import QRCode from "react-qr-code";
 
 // Interface cho dữ liệu vé (đồng bộ với dữ liệu trả về từ API)
 interface Ticket {
@@ -446,6 +455,9 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
 
+  // QR Code modal controls
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   // Badge color dựa vào status
   const getBadgeColor = (status: string) => {
     switch (status) {
@@ -582,13 +594,14 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
             <Flex>
               <Button
                 size="sm"
-                leftIcon={<FiDownload />}
+                leftIcon={<FiCode />}
                 colorScheme="teal"
                 variant="outline"
                 mr={2}
                 isDisabled={ticket.status === "canceled"}
+                onClick={onOpen}
               >
-                Tải vé
+                Xem mã QR
               </Button>
               <Button
                 size="sm"
@@ -603,6 +616,41 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
           </Flex>
         </Box>
       </Flex>
+
+      {/* Modal hiển thị mã QR */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Mã QR vé của bạn</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="center" py={4}>
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderRadius="md"
+                borderColor={borderColor}
+                bg="white"
+              >
+                <QRCode
+                  value={ticket.id}
+                  size={200}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                />
+              </Box>
+              <Text fontWeight="bold">Mã vé: {ticket.id}</Text>
+              <Text fontSize="sm" color={secondaryTextColor} textAlign="center">
+                Xuất trình mã QR này khi tham gia sự kiện để xác nhận vé của bạn
+              </Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Đóng
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
