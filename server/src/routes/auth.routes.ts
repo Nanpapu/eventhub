@@ -9,6 +9,8 @@ import {
   updateProfileValidation,
 } from "../validations/auth.validation";
 import { authenticate } from "../middlewares/auth.middleware";
+import config from "../config";
+import emailService from "../services/email.service";
 
 const router: Router = express.Router();
 
@@ -50,5 +52,41 @@ router.put(
   updateProfileValidation,
   authController.updateProfile
 );
+
+// Route test chức năng gửi email quên mật khẩu (chỉ có trong môi trường development)
+if (config.nodeEnv === "development") {
+  router.post("/test-forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email là bắt buộc",
+        });
+      }
+
+      const testToken = "test-reset-token-" + Date.now();
+
+      const result = await emailService.sendPasswordResetEmail(
+        email,
+        testToken
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Email test đã được gửi",
+        previewURL: result.previewURL,
+        testToken, // Chỉ trả về trong môi trường development
+      });
+    } catch (error) {
+      console.error("Lỗi gửi email test:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi gửi email test",
+      });
+    }
+  });
+}
 
 export default router;

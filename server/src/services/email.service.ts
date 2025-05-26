@@ -28,17 +28,25 @@ const createTransporter = async () => {
       isDevelopment: true,
     };
   } else {
-    // Sử dụng cấu hình SMTP thực tế
+    // Sử dụng cấu hình Gmail thực tế
     const transporter = nodemailer.createTransport({
-      service: config.emailService, // 'gmail', 'outlook', etc.
-      host: config.emailHost,
-      port: config.emailPort,
-      secure: config.emailPort === 465, // true for 465, false for other ports
+      service: config.emailService, // 'gmail'
+      host: config.emailHost, // smtp.gmail.com
+      port: config.emailPort, // 587
+      secure: false, // true for 465, false for other ports
       auth: {
-        user: config.emailUser,
-        pass: config.emailPass,
+        user: config.emailUser, // Email từ file .env
+        pass: config.emailPass, // Password từ file .env (App Password từ Google)
       },
     });
+
+    // Verify the transporter configuration
+    try {
+      await transporter.verify();
+      console.log("SMTP connection to Gmail verified successfully");
+    } catch (error) {
+      console.error("SMTP connection verification failed:", error);
+    }
 
     return {
       transporter,
@@ -97,6 +105,7 @@ const emailService = {
 
       // Gửi email
       const info = await transporter.sendMail(mailOptions);
+      console.log("Message sent: %s", info.messageId);
 
       // Kết quả
       const result: {

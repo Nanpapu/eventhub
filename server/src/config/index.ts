@@ -9,7 +9,9 @@ const config = {
   nodeEnv: process.env.NODE_ENV || "development",
 
   // MongoDB
-  mongoURI: process.env.MONGODB_URI || "mongodb+srv://21521059:Lam%4020032001@data.v6vriop.mongodb.net/eventhub",
+  mongoURI:
+    process.env.MONGODB_URI ||
+    "mongodb+srv://21521059:Lam%4020032001@data.v6vriop.mongodb.net/eventhub",
 
   // JWT
   jwtSecret: process.env.JWT_SECRET || "your-secret-key",
@@ -23,7 +25,7 @@ const config = {
   emailHost: process.env.EMAIL_HOST || "smtp.ethereal.email",
   emailPort: parseInt(process.env.EMAIL_PORT || "587", 10),
   emailUser: process.env.EMAIL_USER || "",
-  emailPass: process.env.EMAIL_PASS || "",
+  emailPass: process.env.EMAIL_PASSWORD || "",
   emailFrom: process.env.EMAIL_FROM || "noreply@eventhub.com",
 };
 
