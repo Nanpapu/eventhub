@@ -52,6 +52,7 @@ import EventManagement from "../../components/user/EventManagement";
 import MyTickets from "../../components/user/MyTickets";
 import UserSettings from "../../components/user/UserSettings";
 import authService from "../../services/auth.service";
+import userService, { UserStats } from "../../services/user.service";
 
 // Interface for API error responses
 interface ApiErrorResponse {
@@ -88,7 +89,7 @@ const UserDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   // State cho thống kê
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<UserStats>({
     createdEvents: 0,
     savedEvents: 0,
     tickets: 0,
@@ -123,7 +124,7 @@ const UserDashboard = () => {
   const iconColor = useColorModeValue("teal.500", "teal.300");
   const errorColor = useColorModeValue("red.500", "red.300");
 
-  // Fetch thông tin người dùng từ API
+  // Fetch thông tin người dùng và thống kê từ API
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -160,13 +161,21 @@ const UserDashboard = () => {
           joinDate,
         };
 
-        // Giả lập số lượng thống kê (sau này sẽ lấy từ API)
-        // Trong thực tế, bạn sẽ gọi API để lấy số liệu thống kê này
-        setStats({
-          createdEvents: 5, // Sẽ lấy từ API
-          savedEvents: 12, // Sẽ lấy từ API
-          tickets: 8, // Sẽ lấy từ API
-        });
+        // Lấy thống kê người dùng từ API
+        try {
+          const userStats = await userService.getUserStats();
+          setStats(userStats);
+        } catch (statsError) {
+          console.error("Lỗi khi lấy thống kê người dùng:", statsError);
+          toast({
+            title: "Không thể tải thống kê",
+            description: "Đã xảy ra lỗi khi tải dữ liệu thống kê người dùng",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          // Vẫn tiếp tục vì có thể hiển thị thông tin người dùng mà không cần thống kê
+        }
 
         setUserData(formattedUser);
         setFormData(formattedUser);
@@ -179,7 +188,7 @@ const UserDashboard = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [toast]);
 
   // Xử lý thay đổi tab
   const handleTabChange = (index: number) => {

@@ -4,6 +4,7 @@ import eventRoutes from "./event.routes";
 import checkoutRoutes from "./checkout.routes";
 import ticketRoutes from "./ticket.routes";
 import notificationRoutes from "./notification.routes";
+import userRoutes from "./user.routes";
 
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.use("/events", eventRoutes);
 router.use("/checkout", checkoutRoutes);
 router.use("/tickets", ticketRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/users", userRoutes);
 
 export default router;

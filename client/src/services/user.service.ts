@@ -19,6 +19,13 @@ export interface Ticket {
   // eventOrganizer?: any; // Bỏ qua eventOrganizer nếu client chưa dùng
 }
 
+// Interface cho thống kê người dùng
+export interface UserStats {
+  createdEvents: number;
+  savedEvents: number;
+  tickets: number;
+}
+
 const API_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /**
@@ -65,8 +72,44 @@ const getMyTickets = async (): Promise<Ticket[]> => {
   }
 };
 
+/**
+ * Lấy thống kê người dùng đã đăng nhập
+ */
+const getUserStats = async (): Promise<UserStats> => {
+  const token = localStorage.getItem("token");
+  console.log(
+    "[Client user.service] Getting user stats. Token:",
+    token ? "exists" : "not found"
+  );
+
+  if (!token) {
+    throw new Error("Người dùng chưa đăng nhập");
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/users/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("[Client user.service] User stats response:", response.data);
+
+    return response.data.stats as UserStats;
+  } catch (error) {
+    console.error("[Client user.service] Error fetching user stats:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        error.response.data?.message ||
+          "Không thể lấy thông tin thống kê người dùng"
+      );
+    }
+    throw new Error("Lỗi không xác định khi lấy thống kê người dùng");
+  }
+};
+
 const userService = {
   getMyTickets,
+  getUserStats,
 };
 
 export default userService;
