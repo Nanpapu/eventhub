@@ -142,21 +142,38 @@ const eventService = {
       throw new Error("Event not found");
     }
 
+    console.log(
+      `[EventService] getEventById: fetching event ${id}, userId: ${
+        userId || "none"
+      }`
+    );
+
     const event = await Event.findById(id).populate("organizer", "name avatar");
 
     if (!event) {
+      console.log(`[EventService] getEventById: event ${id} not found`);
       throw new Error("Event not found");
     }
 
     // Nếu sự kiện bị ẩn, cần kiểm tra người dùng
     if (event.isHidden) {
+      console.log(
+        `[EventService] getEventById: event ${id} is hidden, checking permissions`
+      );
+
       // Nếu không có userId, không cho phép xem
-      if (!userId) {
+      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        console.log(
+          `[EventService] getEventById: no valid userId provided, access denied`
+        );
         throw new Error("Event not found");
       }
 
       // Kiểm tra xem người dùng có phải là người tổ chức không
       if (event.organizer._id.toString() === userId) {
+        console.log(
+          `[EventService] getEventById: user ${userId} is organizer, access granted`
+        );
         return event; // Người tổ chức luôn có thể xem
       }
 
@@ -166,18 +183,34 @@ const eventService = {
         savedEvents: id,
       });
 
-      // Kiểm tra xem người này có mua vé chưa
+      // Kiểm tra xem người này đã mua vé qua Ticket model chưa
       const userHasTicket = await Ticket.findOne({
         userId: userId,
         eventId: id,
       });
 
-      // Nếu người dùng đã lưu sự kiện hoặc có vé
-      if (userSavedEvent || userHasTicket) {
+      // Kiểm tra xem người này đã đăng ký qua Registration model chưa
+      const userHasRegistration = await Registration.findOne({
+        user: userId,
+        event: id,
+      });
+
+      console.log(
+        `[EventService] getEventById: user ${userId} saved event: ${!!userSavedEvent}, has ticket: ${!!userHasTicket}, has registration: ${!!userHasRegistration}`
+      );
+
+      // Nếu người dùng đã lưu sự kiện hoặc có vé hoặc đã đăng ký
+      if (userSavedEvent || userHasTicket || userHasRegistration) {
+        console.log(
+          `[EventService] getEventById: user ${userId} has access, granting permission`
+        );
         return event;
       }
 
       // Không cho phép xem nếu không đáp ứng điều kiện
+      console.log(
+        `[EventService] getEventById: user ${userId} does not meet criteria, access denied`
+      );
       throw new Error("Event not found");
     }
 

@@ -102,7 +102,8 @@ const EventDetail = () => {
       setError(null);
 
       try {
-        const eventData = await eventService.getEventById(id);
+        // Truyền userId vào để kiểm tra quyền truy cập nếu sự kiện bị ẩn
+        const eventData = await eventService.getEventById(id, currentUser?.id);
 
         // Debug: Log dữ liệu API trả về để kiểm tra
         console.log("API response data:", eventData);
@@ -171,7 +172,7 @@ const EventDetail = () => {
     };
 
     fetchEventData();
-  }, [id]);
+  }, [id, currentUser?.id]);
 
   // Hàm mới để xử lý hiển thị giá vé
   const getDisplayPrice = () => {
@@ -434,16 +435,47 @@ const EventDetail = () => {
 
   // Hiển thị thông báo lỗi
   if (error) {
+    // Kiểm tra xem lỗi có phải do sự kiện không tìm thấy hay không
+    const isEventNotFoundError =
+      error === "Event not found" || error.includes("not found");
+
     return (
       <Container maxW="container.xl" py={8}>
         <Flex direction="column" justify="center" align="center" minH="60vh">
-          <Heading size="lg" mb={4} color="red.500">
-            Có lỗi xảy ra
+          <Image
+            src="/images/hidden-event.svg"
+            fallbackSrc="https://cdn-icons-png.flaticon.com/512/1076/1076928.png"
+            alt="Hidden Event"
+            width="150px"
+            mb={6}
+            opacity={0.7}
+          />
+          <Heading
+            size="lg"
+            mb={4}
+            color={isEventNotFoundError ? "gray.500" : "red.500"}
+          >
+            {isEventNotFoundError ? "Sự kiện không khả dụng" : "Có lỗi xảy ra"}
           </Heading>
-          <Text mb={6}>{error}</Text>
-          <Button colorScheme="teal" onClick={() => navigate("/events")}>
-            Quay lại danh sách sự kiện
-          </Button>
+          <Text mb={6} textAlign="center" maxW="500px">
+            {isEventNotFoundError
+              ? "Sự kiện này có thể đã bị ẩn, bị xóa, hoặc bạn không có quyền xem. Nếu bạn đã mua vé hoặc lưu sự kiện này, vui lòng đăng nhập để xem."
+              : error}
+          </Text>
+          <HStack spacing={4}>
+            <Button colorScheme="teal" onClick={() => navigate("/events")}>
+              Xem sự kiện khác
+            </Button>
+            {!currentUser && (
+              <Button
+                variant="outline"
+                colorScheme="blue"
+                onClick={() => navigate("/login")}
+              >
+                Đăng nhập
+              </Button>
+            )}
+          </HStack>
         </Flex>
       </Container>
     );
@@ -454,6 +486,14 @@ const EventDetail = () => {
     return (
       <Container maxW="container.xl" py={8}>
         <Flex direction="column" justify="center" align="center" minH="60vh">
+          <Image
+            src="/images/not-found.svg"
+            fallbackSrc="https://cdn-icons-png.flaticon.com/512/6598/6598519.png"
+            alt="Event Not Found"
+            width="150px"
+            mb={6}
+            opacity={0.7}
+          />
           <Heading size="lg" mb={4}>
             Không tìm thấy sự kiện
           </Heading>

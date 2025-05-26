@@ -79,12 +79,18 @@ const eventService = {
   /**
    * Lấy thông tin chi tiết sự kiện
    * @param id ID của sự kiện
+   * @param userId ID của người dùng hiện tại (nếu có) để kiểm tra quyền truy cập
    */
-  getEventById: async (id: string) => {
+  getEventById: async (id: string, userId?: string) => {
     try {
-      const response = await api.get(`/events/${id}`);
+      // Tạo headers với userId nếu có
+      const headers: Record<string, string> = {};
+      if (userId) {
+        headers["X-User-Id"] = userId;
+      }
+
+      const response = await api.get(`/events/${id}`, { headers });
       console.log("API raw response:", response);
-      // API hiện giờ trả về event object trực tiếp
       return response.data;
     } catch (error) {
       console.error("Error in event service getEventById:", error);

@@ -42,8 +42,15 @@ class EventController {
   async getEventById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      // Lấy userId nếu có, không bắt buộc đăng nhập
-      const userId = req.user?.id;
+
+      // Lấy userId từ nhiều nguồn:
+      // 1. Header X-User-Id (từ client gửi lên)
+      // 2. Token JWT (nếu đã đăng nhập)
+      // 3. Query param userId (backward compatibility)
+      const userId =
+        req.header("X-User-Id") || req.user?.id || (req.query.userId as string);
+
+      console.log("Fetching event with userId:", userId); // Debug log
 
       const event = await eventService.getEventById(id, userId);
 

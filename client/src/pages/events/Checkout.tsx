@@ -37,7 +37,10 @@ import CheckoutForm from "../../components/checkout/CheckoutForm";
 import { CurrencyDisplay } from "../../components/common";
 import eventService from "../../services/event.service";
 import { useAppSelector } from "../../app/hooks";
-import { selectIsAuthenticated } from "../../app/features/authSlice";
+import {
+  selectIsAuthenticated,
+  selectUser,
+} from "../../app/features/authSlice";
 
 // Định nghĩa interface cho event
 interface EventData {
@@ -92,6 +95,7 @@ export default function Checkout() {
 
   // Kiểm tra người dùng đã đăng nhập chưa
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const currentUser = useAppSelector(selectUser);
 
   // Các bước trong quy trình thanh toán
   const steps = [
@@ -142,7 +146,9 @@ export default function Checkout() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await eventService.getEventById(eventId);
+        // Truyền userId vào để kiểm tra quyền truy cập sự kiện bị ẩn
+        const data = await eventService.getEventById(eventId, currentUser?.id);
+
         console.log("[Checkout.tsx] API response for event:", data);
 
         if (data) {
@@ -224,7 +230,7 @@ export default function Checkout() {
     };
 
     fetchEventData();
-  }, [eventId, isAuthenticated, toast]);
+  }, [eventId, currentUser, toast]);
 
   // Tính toán số lượng vé tối đa có thể mua
   const currentSelectedTicketInfo = event?.ticketTypes?.find(
