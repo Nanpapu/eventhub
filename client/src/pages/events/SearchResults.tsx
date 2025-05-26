@@ -18,10 +18,7 @@ import { useSearchParams } from "react-router-dom";
 import { FiX, FiTag } from "react-icons/fi";
 import { SearchBar } from "../../components/common";
 import eventService, { EventFilter } from "../../services/event.service";
-import {
-  getCategoryName,
-  categories as allCategories,
-} from "../../utils/categoryUtils";
+import { getCategoryName, getCategoryOptions } from "../../utils/categoryUtils";
 import { getLocationOptions } from "../../utils/locationUtils";
 import { EventCard, EventCardData } from "../../components/events/EventCard";
 
@@ -264,10 +261,7 @@ const SearchResults = () => {
   }, []);
 
   const locationOptions = getLocationOptions();
-  const categoryOptions = allCategories.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-  }));
+  const categoryOptions = getCategoryOptions();
 
   const renderPaginationControls = () => {
     console.log("---- [renderPaginationControls] Debug Info ----");

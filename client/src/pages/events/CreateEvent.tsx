@@ -92,6 +92,7 @@ import {
   selectIsAuthenticated,
 } from "../../app/features/authSlice";
 import { vietnamProvinces } from "../../utils/locationUtils";
+import { categories } from "../../utils/categoryUtils";
 
 // Interface cho dữ liệu sự kiện
 interface EventFormData {
@@ -132,19 +133,6 @@ interface ApiTicketType {
   description?: string;
   availableQuantity?: number;
 }
-
-// Dữ liệu cho các lựa chọn form
-const categoryOptions = [
-  "Hội nghị",
-  "Hội thảo",
-  "Buổi thuyết trình",
-  "Gặp gỡ",
-  "Hòa nhạc",
-  "Triển lãm",
-  "Thể thao",
-  "Tiệc",
-  "Khác",
-];
 
 // Props chung cho các Step components
 interface StepProps {
@@ -224,9 +212,9 @@ const BasicInfoStep: React.FC<StepProps> = ({
           placeholder="Chọn danh mục cho sự kiện"
           borderColor={borderColor}
         >
-          {categoryOptions.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
             </option>
           ))}
         </Select>
