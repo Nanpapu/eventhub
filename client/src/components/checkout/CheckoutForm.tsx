@@ -150,9 +150,9 @@ export default function CheckoutForm({
       const selectedType = event.ticketTypes.find(
         (t) => t.id === selectedTicketTypeId
       );
-      return selectedType ? selectedType.price : event.price;
+      return selectedType ? selectedType.price || 0 : event.price || 0;
     }
-    return event.price;
+    return event.price || 0; // Đảm bảo luôn trả về số, mặc định là 0
   };
 
   const getTicketName = () => {
@@ -165,8 +165,11 @@ export default function CheckoutForm({
     return "Standard";
   };
 
+  // Kiểm tra xem có phải là vé miễn phí không
+  const isFreeTicket = getTicketPrice() === 0;
   const subtotal = getTicketPrice() * ticketQuantity;
-  const serviceFee = Math.round(subtotal * 0.05); // Phí dịch vụ 5%
+  // Không áp dụng phí dịch vụ cho vé miễn phí
+  const serviceFee = isFreeTicket ? 0 : Math.round(subtotal * 0.05); // Phí dịch vụ 5%
   const total = subtotal + serviceFee;
 
   // Xử lý khi gửi form
@@ -308,7 +311,11 @@ export default function CheckoutForm({
                 </Text>
                 <Badge colorScheme="teal">
                   {getTicketName()}: {ticketQuantity} vé x{" "}
-                  <Text as="span">${getTicketPrice()}</Text>
+                  <Text as="span">
+                    {isFreeTicket
+                      ? "Miễn phí"
+                      : `$${getTicketPrice().toLocaleString()}`}
+                  </Text>
                 </Badge>
               </Box>
             </Flex>
@@ -419,17 +426,25 @@ export default function CheckoutForm({
               <VStack spacing={2} align="stretch" fontSize="sm">
                 <HStack justify="space-between">
                   <Text>Tạm tính ({ticketQuantity} vé):</Text>
-                  <Text fontWeight="medium">${subtotal.toLocaleString()}</Text>
-                </HStack>
-                <HStack justify="space-between">
-                  <Text>Phí dịch vụ (5%):</Text>
                   <Text fontWeight="medium">
-                    ${serviceFee.toLocaleString()}
+                    {isFreeTicket
+                      ? "Miễn phí"
+                      : `$${subtotal.toLocaleString()}`}
                   </Text>
                 </HStack>
+                {!isFreeTicket && (
+                  <HStack justify="space-between">
+                    <Text>Phí dịch vụ (5%):</Text>
+                    <Text fontWeight="medium">
+                      ${serviceFee.toLocaleString()}
+                    </Text>
+                  </HStack>
+                )}
                 <HStack justify="space-between" fontWeight="bold" fontSize="md">
                   <Text>Tổng cộng:</Text>
-                  <Text>${total.toLocaleString()}</Text>
+                  <Text>
+                    {isFreeTicket ? "Miễn phí" : `$${total.toLocaleString()}`}
+                  </Text>
                 </HStack>
               </VStack>
 
