@@ -585,6 +585,7 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
                   colorScheme="red"
                   variant="outline"
                   onClick={() => onCancel(ticket.id)}
+                  display="none" // Đã thay đổi để nút không hiển thị nữa
                 >
                   Hủy vé
                 </Button>
