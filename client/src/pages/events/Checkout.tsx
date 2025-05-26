@@ -29,6 +29,7 @@ import {
   NumberDecrementStepper,
   Divider,
   useToast,
+  Badge,
 } from "@chakra-ui/react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaCheck, FaTicketAlt, FaEnvelope } from "react-icons/fa";
@@ -240,6 +241,15 @@ export default function Checkout() {
     0,
     Math.min(maxTicketsAvailableForOrder, eventMaxPerOrder)
   );
+
+  // Thêm biến kiểm tra đã đạt giới hạn vé
+  const hasReachedTicketLimit =
+    isAuthenticated &&
+    userTicketStatus &&
+    event &&
+    typeof userTicketStatus.ticketCount === "number" &&
+    event.maxPerOrder > 0 &&
+    userTicketStatus.ticketCount >= event.maxPerOrder;
 
   // Xử lý khi thay đổi loại vé
   const handleTicketTypeChange = (newTicketTypeId: string) => {
@@ -564,9 +574,17 @@ export default function Checkout() {
               borderColor={borderColor}
               boxShadow="md"
             >
-              <Heading size="md" color={textColor}>
-                Chọn số lượng vé
-              </Heading>
+              <Flex justify="space-between" align="center" mb={2}>
+                <Heading size="md" color={textColor}>
+                  Chọn số lượng vé
+                </Heading>
+
+                {hasReachedTicketLimit && (
+                  <Badge colorScheme="red" py={1} px={2} borderRadius="md">
+                    Đã đạt giới hạn vé
+                  </Badge>
+                )}
+              </Flex>
 
               {/* Hiện thông báo nếu người dùng đã có vé miễn phí */}
               {isAuthenticated &&
@@ -636,9 +654,52 @@ export default function Checkout() {
                 <Text color={textColor}>{maxTicketsAvailableForOrder}</Text>
               </HStack>
 
+              {/* Hiển thị thông báo về giới hạn vé */}
+              {isAuthenticated && userTicketStatus && event.maxPerOrder > 0 && (
+                <Alert
+                  status={
+                    userTicketStatus?.ticketCount &&
+                    userTicketStatus?.ticketCount >= event.maxPerOrder
+                      ? "error"
+                      : "info"
+                  }
+                  borderRadius="md"
+                  mb={4}
+                >
+                  <AlertIcon />
+                  <Box>
+                    {userTicketStatus?.ticketCount &&
+                    userTicketStatus?.ticketCount >= event.maxPerOrder ? (
+                      <>
+                        <AlertTitle>Bạn đã đạt giới hạn vé</AlertTitle>
+                        <AlertDescription>
+                          Bạn đã mua {userTicketStatus?.ticketCount || 0} vé cho
+                          sự kiện này. Mỗi người chỉ được mua tối đa{" "}
+                          {event.maxPerOrder} vé.
+                        </AlertDescription>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTitle>Thông tin vé</AlertTitle>
+                        <AlertDescription>
+                          Bạn đã mua {userTicketStatus?.ticketCount || 0}/
+                          {event.maxPerOrder} vé cho sự kiện này. Còn có thể mua
+                          thêm{" "}
+                          {event.maxPerOrder -
+                            (userTicketStatus?.ticketCount || 0)}{" "}
+                          vé.
+                        </AlertDescription>
+                      </>
+                    )}
+                  </Box>
+                </Alert>
+              )}
+
               {/* Nếu người dùng đã đăng nhập, hiển thị số vé đã mua */}
               {isAuthenticated &&
-                userTicketStatus?.ticketCount > 0 &&
+                userTicketStatus &&
+                typeof userTicketStatus.ticketCount === "number" &&
+                userTicketStatus.ticketCount > 0 &&
                 event.maxPerOrder > 0 && (
                   <HStack spacing={4}>
                     <Text fontWeight="medium" color={textColor}>
@@ -755,9 +816,12 @@ export default function Checkout() {
                   isDisabled={
                     maxAllowedForInput === 0 ||
                     (isAuthenticated &&
-                      userTicketStatus?.hasFreeTicker &&
+                      userTicketStatus &&
+                      userTicketStatus.hasFreeTicker &&
                       (currentSelectedTicketInfo?.price === 0 ||
-                        (!event.ticketTypes?.length && event.price === 0)))
+                        (event.ticketTypes?.length === 0 &&
+                          event.price === 0))) ||
+                    hasReachedTicketLimit
                   }
                 >
                   <NumberInputField />
@@ -794,9 +858,12 @@ export default function Checkout() {
                     isLoading ||
                     (maxAllowedForInput === 0 && ticketQuantity === 0) ||
                     (isAuthenticated &&
-                      userTicketStatus?.hasFreeTicker &&
+                      userTicketStatus &&
+                      userTicketStatus.hasFreeTicker &&
                       (currentSelectedTicketInfo?.price === 0 ||
-                        (!event.ticketTypes?.length && event.price === 0)))
+                        (event.ticketTypes?.length === 0 &&
+                          event.price === 0))) ||
+                    hasReachedTicketLimit
                   }
                 >
                   Tiếp tục
