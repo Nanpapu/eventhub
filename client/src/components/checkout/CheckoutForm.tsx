@@ -177,30 +177,6 @@ export default function CheckoutForm({
     setIsProcessing(true);
 
     try {
-      // Kiểm tra nếu là vé miễn phí
-      const ticketPrice = getTicketPrice();
-      if (ticketPrice === 0) {
-        // Kiểm tra giới hạn vé miễn phí
-        const checkResult = await checkoutService.validateFreeTicket({
-          eventId: event.id,
-          ticketPrice,
-          quantity: ticketQuantity,
-        });
-
-        if (!checkResult.isValid) {
-          toast({
-            title: "Giới hạn vé miễn phí",
-            description:
-              checkResult.message || "Không thể đăng ký thêm vé miễn phí.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          setIsProcessing(false);
-          return;
-        }
-      }
-
       const payload = {
         eventId: event.id,
         ticketTypeId: selectedTicketTypeId,

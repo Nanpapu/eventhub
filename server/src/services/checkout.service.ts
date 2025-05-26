@@ -82,23 +82,6 @@ class CheckoutService {
         );
       }
 
-      // Kiểm tra nếu là vé miễn phí
-      if (ticketTypeDetails.price === 0) {
-        // Kiểm tra người dùng đã có vé miễn phí cho sự kiện này chưa
-        const ticketStatus = await ticketService.getUserTicketStatus(
-          userId.toString(),
-          eventId
-        );
-        if (ticketStatus.hasFreeTicker) {
-          throw new Error("Bạn đã đăng ký vé miễn phí cho sự kiện này rồi");
-        }
-
-        // Kiểm tra số lượng vé miễn phí
-        if (quantity > 1) {
-          throw new Error("Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện");
-        }
-      }
-
       const totalAmount = ticketTypeDetails.price * quantity;
 
       // 1. Create Registration

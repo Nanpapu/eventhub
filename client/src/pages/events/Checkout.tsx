@@ -270,23 +270,7 @@ export default function Checkout() {
       Math.min(newMaxAvailable, eventMaxPerOrder)
     );
 
-    // Kiểm tra giá vé mới
-    if (
-      newTypeInfo &&
-      newTypeInfo.price === 0 &&
-      userTicketStatus?.hasFreeTicker
-    ) {
-      // Nếu chọn vé miễn phí và đã có vé miễn phí rồi
-      toast({
-        title: "Giới hạn vé miễn phí",
-        description: "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      setTicketQuantity(0); // Không cho phép mua thêm vé miễn phí
-      return;
-    }
+    // Bỏ kiểm tra vé miễn phí ở đây
 
     if (ticketQuantity > newMaxAllowed || newMaxAllowed === 0) {
       setTicketQuantity(newMaxAllowed > 0 ? 1 : 0);
@@ -294,17 +278,7 @@ export default function Checkout() {
       setTicketQuantity(1);
     }
 
-    // Giới hạn số lượng vé miễn phí là 1
-    if (newTypeInfo && newTypeInfo.price === 0 && ticketQuantity > 1) {
-      setTicketQuantity(1);
-      toast({
-        title: "Giới hạn vé miễn phí",
-        description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    // Bỏ giới hạn số lượng vé miễn phí
   };
 
   // Kiểm tra khi thay đổi số lượng vé
@@ -312,26 +286,7 @@ export default function Checkout() {
     valueAsString: string,
     valueAsNumber: number
   ) => {
-    const isFreeTicket =
-      (currentSelectedTicketInfo && currentSelectedTicketInfo.price === 0) ||
-      ((!currentSelectedTicketInfo ||
-        !event?.ticketTypes ||
-        event.ticketTypes.length === 0) &&
-        event?.price === 0);
-
-    // Nếu là vé miễn phí và số lượng > 1
-    if (isFreeTicket && valueAsNumber > 1) {
-      toast({
-        title: "Giới hạn vé miễn phí",
-        description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-      setTicketQuantity(1);
-      return;
-    }
-
+    // Loại bỏ kiểm tra vé miễn phí - cho phép mua nhiều vé miễn phí
     setTicketQuantity(valueAsNumber);
   };
 
@@ -429,35 +384,6 @@ export default function Checkout() {
         isClosable: true,
       });
       return;
-    }
-
-    // Kiểm tra vé miễn phí
-    const isFreeTicket = currentTicketPrice === 0;
-    if (isFreeTicket) {
-      // Nếu người dùng đã đăng nhập và đã có vé miễn phí
-      if (isAuthenticated && userTicketStatus?.hasFreeTicker) {
-        toast({
-          title: "Giới hạn vé miễn phí",
-          description: "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      // Giới hạn số lượng vé miễn phí
-      if (ticketQuantity > 1) {
-        toast({
-          title: "Giới hạn vé miễn phí",
-          description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-        setTicketQuantity(1);
-        return;
-      }
     }
 
     // Kiểm tra giới hạn tổng số vé người dùng đã mua
@@ -583,81 +509,13 @@ export default function Checkout() {
                   Chọn số lượng vé
                 </Heading>
 
+                {/* Kiểm tra đã đạt giới hạn vé */}
                 {hasReachedTicketLimit && (
                   <Badge colorScheme="red" py={1} px={2} borderRadius="md">
                     Đã đạt giới hạn vé
                   </Badge>
                 )}
               </Flex>
-
-              {/* Hiện thông báo nếu người dùng đã có vé miễn phí */}
-              {isAuthenticated &&
-                userTicketStatus?.hasFreeTicker &&
-                (currentSelectedTicketInfo?.price === 0 ||
-                  (!event.ticketTypes?.length && event.price === 0)) && (
-                  <Alert status="warning" borderRadius="md">
-                    <AlertIcon />
-                    <Box>
-                      <AlertTitle>Giới hạn vé miễn phí</AlertTitle>
-                      <AlertDescription>
-                        Bạn đã đăng ký vé miễn phí cho sự kiện này rồi. Mỗi
-                        người chỉ được đăng ký 1 vé miễn phí.
-                      </AlertDescription>
-                    </Box>
-                  </Alert>
-                )}
-
-              <HStack spacing={4} py={4}>
-                <Text fontWeight="medium" color={textColor}>
-                  Sự kiện:
-                </Text>
-                <Text color={textColor}>{event.title}</Text>
-              </HStack>
-
-              <HStack spacing={4}>
-                <Text fontWeight="medium" color={textColor}>
-                  Thời gian:
-                </Text>
-                <Text color={textColor}>
-                  {event.date} • {event.time}
-                </Text>
-              </HStack>
-
-              <HStack spacing={4}>
-                <Text fontWeight="medium" color={textColor}>
-                  Địa điểm:
-                </Text>
-                <Text color={textColor}>{event.location}</Text>
-              </HStack>
-
-              {/* Hiển thị thông tin giá vé */}
-              <HStack spacing={4}>
-                <Text fontWeight="medium" color={textColor}>
-                  Giá vé:
-                </Text>
-                <Text as="span" color={textColor}>
-                  {currentSelectedTicketInfo ? (
-                    currentSelectedTicketInfo.price === 0 ? (
-                      "Miễn phí"
-                    ) : (
-                      <CurrencyDisplay
-                        amount={currentSelectedTicketInfo.price}
-                      />
-                    )
-                  ) : event.price === 0 ? (
-                    "Miễn phí"
-                  ) : (
-                    <CurrencyDisplay amount={event.price || 0} />
-                  )}
-                </Text>
-              </HStack>
-
-              <HStack spacing={4}>
-                <Text fontWeight="medium" color={textColor}>
-                  Số vé còn lại:
-                </Text>
-                <Text color={textColor}>{maxTicketsAvailableForOrder}</Text>
-              </HStack>
 
               {/* Hiển thị thông báo về giới hạn vé */}
               {isAuthenticated && userTicketStatus && event.maxPerOrder > 0 && (
@@ -716,6 +574,66 @@ export default function Checkout() {
                   </HStack>
                 )}
 
+              <HStack spacing={4} py={4}>
+                <Text fontWeight="medium" color={textColor}>
+                  Sự kiện:
+                </Text>
+                <Text color={textColor}>{event.title}</Text>
+              </HStack>
+
+              <HStack spacing={4}>
+                <Text fontWeight="medium" color={textColor}>
+                  Thời gian:
+                </Text>
+                <Text color={textColor}>
+                  {event.date} • {event.time}
+                </Text>
+              </HStack>
+
+              <HStack spacing={4}>
+                <Text fontWeight="medium" color={textColor}>
+                  Địa điểm:
+                </Text>
+                <Text color={textColor}>{event.location}</Text>
+              </HStack>
+
+              {/* Hiển thị thông tin giá vé */}
+              <HStack spacing={4}>
+                <Text fontWeight="medium" color={textColor}>
+                  Giá vé:
+                </Text>
+                <Text as="span" color={textColor}>
+                  {currentSelectedTicketInfo ? (
+                    currentSelectedTicketInfo.price === 0 ? (
+                      "Miễn phí"
+                    ) : (
+                      <CurrencyDisplay
+                        amount={currentSelectedTicketInfo.price}
+                      />
+                    )
+                  ) : event.price === 0 ? (
+                    "Miễn phí"
+                  ) : (
+                    <CurrencyDisplay amount={event.price || 0} />
+                  )}
+                </Text>
+              </HStack>
+
+              <HStack spacing={4}>
+                <Text fontWeight="medium" color={textColor}>
+                  Số vé còn lại:
+                </Text>
+                <Text color={textColor}>{maxTicketsAvailableForOrder}</Text>
+              </HStack>
+
+              {/* Kiểm tra còn vé không */}
+              {maxAllowedForInput === 0 && (
+                <Alert status="warning" borderRadius="md" mb={2}>
+                  <AlertIcon />
+                  <AlertTitle>Loại vé này đã hết hoặc không có sẵn</AlertTitle>
+                </Alert>
+              )}
+
               {event.ticketTypes && event.ticketTypes.length > 0 && (
                 <>
                   <Heading size="sm" color={textColor} mt={2}>
@@ -744,29 +662,13 @@ export default function Checkout() {
                               : "transparent"
                           }
                           cursor={
-                            ticket.availableQuantity > 0 &&
-                            !(
-                              ticket.price === 0 &&
-                              userTicketStatus?.hasFreeTicker
-                            )
+                            ticket.availableQuantity > 0
                               ? "pointer"
                               : "not-allowed"
                           }
-                          opacity={
-                            ticket.availableQuantity > 0 &&
-                            !(
-                              ticket.price === 0 &&
-                              userTicketStatus?.hasFreeTicker
-                            )
-                              ? 1
-                              : 0.6
-                          }
+                          opacity={ticket.availableQuantity > 0 ? 1 : 0.6}
                           onClick={() =>
                             ticket.availableQuantity > 0 &&
-                            !(
-                              ticket.price === 0 &&
-                              userTicketStatus?.hasFreeTicker
-                            ) &&
                             handleTicketTypeChange(ticket.id)
                           }
                         >
@@ -786,9 +688,6 @@ export default function Checkout() {
                                 {ticket.availableQuantity > 0
                                   ? `Còn ${ticket.availableQuantity} vé`
                                   : "Hết vé"}
-                                {ticket.price === 0 &&
-                                  userTicketStatus?.hasFreeTicker &&
-                                  " - Đã đăng ký"}
                               </Text>
                             </VStack>
                             <Text fontWeight="bold" color={textColor} as="span">
@@ -819,14 +718,7 @@ export default function Checkout() {
                   value={ticketQuantity}
                   onChange={handleTicketQuantityChange}
                   isDisabled={Boolean(
-                    maxAllowedForInput === 0 ||
-                      (isAuthenticated &&
-                        userTicketStatus &&
-                        userTicketStatus.hasFreeTicker &&
-                        (currentSelectedTicketInfo?.price === 0 ||
-                          (event.ticketTypes?.length === 0 &&
-                            event.price === 0))) ||
-                      hasReachedTicketLimit
+                    maxAllowedForInput === 0 || hasReachedTicketLimit
                   )}
                 >
                   <NumberInputField />
@@ -867,12 +759,6 @@ export default function Checkout() {
                   isDisabled={Boolean(
                     isLoading ||
                       (maxAllowedForInput === 0 && ticketQuantity === 0) ||
-                      (isAuthenticated &&
-                        userTicketStatus &&
-                        userTicketStatus.hasFreeTicker &&
-                        (currentSelectedTicketInfo?.price === 0 ||
-                          (event.ticketTypes?.length === 0 &&
-                            event.price === 0))) ||
                       hasReachedTicketLimit
                   )}
                 >

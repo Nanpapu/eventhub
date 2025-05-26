@@ -41,12 +41,6 @@ interface DemoPaymentErrorResponse {
   quantity?: number;
 }
 
-interface CheckFreeTicketParams {
-  eventId: string;
-  ticketPrice: number;
-  quantity: number;
-}
-
 const checkoutService = {
   /**
    * Gọi API để xử lý thanh toán demo.
@@ -99,54 +93,6 @@ const checkoutService = {
         errorMessage = error.message; // Lỗi đã được ném từ block `if (response.data.success)`
       }
       throw new Error(errorMessage);
-    }
-  },
-
-  /**
-   * Kiểm tra vé miễn phí trước khi cho phép thanh toán
-   * @param params Thông tin vé
-   * @returns Kết quả kiểm tra có thể mua vé không
-   */
-  async validateFreeTicket(
-    params: CheckFreeTicketParams
-  ): Promise<{ isValid: boolean; message?: string }> {
-    try {
-      // Nếu không phải vé miễn phí hoặc số lượng vé = 0, không cần kiểm tra
-      if (params.ticketPrice > 0 || params.quantity === 0) {
-        return { isValid: true };
-      }
-
-      // Nếu là vé miễn phí, kiểm tra giới hạn số lượng
-      if (params.quantity > 1) {
-        return {
-          isValid: false,
-          message: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
-        };
-      }
-
-      // Kiểm tra người dùng đã có vé miễn phí chưa
-      try {
-        const statusResponse = await api.get(
-          `/tickets/status/${params.eventId}`
-        );
-        if (statusResponse.data?.hasFreeTicker) {
-          return {
-            isValid: false,
-            message: "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
-          };
-        }
-      } catch (error) {
-        // Nếu API lỗi, đặt về hợp lệ và để server kiểm tra
-        console.warn(
-          "[checkout.service] Error checking free ticket status:",
-          error
-        );
-      }
-
-      return { isValid: true };
-    } catch (error) {
-      console.error("[checkout.service] Error validating free ticket:", error);
-      return { isValid: true }; // Mặc định là hợp lệ và để server kiểm tra
     }
   },
 };
