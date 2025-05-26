@@ -155,13 +155,29 @@ const SearchBar = ({
 
   // Apply filters từ drawer
   const applyFilters = () => {
+    // Áp dụng các giá trị vào state chính
     setKeyword(tempKeyword);
     if (setLocation) setLocation(tempLocation);
     if (setCategory) setCategory(tempCategory);
     if (setShowFreeOnly) setShowFreeOnly(tempShowFreeOnly);
     if (setShowPaidOnly) setShowPaidOnly(tempShowPaidOnly);
+
+    // QUAN TRỌNG: Đây là bước then chốt - phải gọi onSearch
+    // onSearch sẽ là handleApplySearch trong SearchResults.tsx
+    // Nó sẽ cập nhật các giá trị applied từ temp và trigger việc hiển thị badge
     onSearch();
+
+    // Đóng drawer
     onClose();
+
+    // Thêm log để debug
+    console.log("[SearchBar] Applied filters from drawer:", {
+      keyword: tempKeyword,
+      location: tempLocation,
+      category: tempCategory,
+      showFreeOnly: tempShowFreeOnly,
+      showPaidOnly: tempShowPaidOnly,
+    });
   };
 
   // Reset filters trong drawer
@@ -182,9 +198,8 @@ const SearchBar = ({
 
   return (
     <Box {...boxProps}>
-      {/* Desktop: Search & Filter Bar */}
+      {/* Desktop và Mobile: Search & Filter Bar */}
       <Box
-        display={{ base: compact ? "none" : "block", md: "block" }}
         p={6}
         bg={boxBg}
         borderRadius="lg"
@@ -210,13 +225,27 @@ const SearchBar = ({
             <Button colorScheme="teal" onClick={onSearch} px={8}>
               Tìm kiếm
             </Button>
+
+            {/* Hiển thị nút filter trên mobile */}
+            <IconButton
+              aria-label="Lọc"
+              icon={<FiFilter />}
+              colorScheme="teal"
+              onClick={onOpen}
+              display={{ base: "flex", md: "none" }}
+            />
           </Flex>
 
           {(!compact ||
             showLocationFilter ||
             showCategoryFilter ||
             showPriceFilter) && (
-            <Flex gap={4} align="center" wrap={{ base: "wrap", lg: "nowrap" }}>
+            <Flex
+              gap={4}
+              align="center"
+              wrap={{ base: "wrap", lg: "nowrap" }}
+              display={{ base: "none", md: "flex" }} // Ẩn trên mobile, hiển thị trên tablet/desktop
+            >
               {showLocationFilter && (
                 <InputGroup size="md" flex={{ base: "1 0 100%", md: 1 }}>
                   <InputLeftElement pointerEvents="none">
@@ -302,127 +331,102 @@ const SearchBar = ({
         </Flex>
       </Box>
 
-      {/* Mobile: Compact Search & Filter */}
-      <Box display={{ base: "block", md: compact ? "block" : "none" }} mb={6}>
-        <Flex gap={2} mb={4}>
-          <InputGroup size="md" flex={1}>
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color={iconColor} />
-            </InputLeftElement>
-            <Input
-              placeholder="Tìm kiếm sự kiện..."
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              borderColor={borderColor}
-              onKeyPress={handleKeyPress}
-            />
-          </InputGroup>
+      {/* Filter Badges (hiển thị bộ lọc đã chọn) */}
+      {appliedFilters &&
+        (appliedFilters.location ||
+          appliedFilters.category ||
+          appliedFilters.showFreeOnly ||
+          appliedFilters.showPaidOnly) && (
+          <Flex gap={2} mt={4} flexWrap="wrap">
+            {appliedFilters.location && (
+              <Badge
+                colorScheme="teal"
+                borderRadius="full"
+                px={2}
+                py={1}
+                display="flex"
+                alignItems="center"
+              >
+                {appliedFilters.location}
+                <Box
+                  as={FiX}
+                  ml={1}
+                  cursor="pointer"
+                  onClick={() => {
+                    setLocation("");
+                    onSearch();
+                  }}
+                />
+              </Badge>
+            )}
 
-          <IconButton
-            aria-label="Lọc"
-            icon={<FiFilter />}
-            colorScheme="teal"
-            onClick={onOpen}
-          />
-        </Flex>
+            {appliedFilters.category && (
+              <Badge
+                colorScheme="purple"
+                borderRadius="full"
+                px={2}
+                py={1}
+                display="flex"
+                alignItems="center"
+              >
+                {getCategoryName(appliedFilters.category)}
+                <Box
+                  as={FiX}
+                  ml={1}
+                  cursor="pointer"
+                  onClick={() => {
+                    setCategory("");
+                    onSearch();
+                  }}
+                />
+              </Badge>
+            )}
 
-        {/* Filter Badges (hiển thị bộ lọc đã chọn) */}
-        {appliedFilters &&
-          (appliedFilters.location ||
-            appliedFilters.category ||
-            appliedFilters.showFreeOnly ||
-            appliedFilters.showPaidOnly) && (
-            <Flex gap={2} mb={4} flexWrap="wrap">
-              {appliedFilters.location && (
-                <Badge
-                  colorScheme="teal"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  {appliedFilters.location}
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => {
-                      setLocation("");
-                      onSearch();
-                    }}
-                  />
-                </Badge>
-              )}
+            {appliedFilters.showFreeOnly && (
+              <Badge
+                colorScheme="green"
+                borderRadius="full"
+                px={2}
+                py={1}
+                display="flex"
+                alignItems="center"
+              >
+                Miễn phí
+                <Box
+                  as={FiX}
+                  ml={1}
+                  cursor="pointer"
+                  onClick={() => {
+                    setShowFreeOnly(false);
+                    onSearch();
+                  }}
+                />
+              </Badge>
+            )}
 
-              {appliedFilters.category && (
-                <Badge
-                  colorScheme="purple"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  {getCategoryName(appliedFilters.category)}
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => {
-                      setCategory("");
-                      onSearch();
-                    }}
-                  />
-                </Badge>
-              )}
-
-              {appliedFilters.showFreeOnly && (
-                <Badge
-                  colorScheme="green"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  Miễn phí
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => {
-                      setShowFreeOnly(false);
-                      onSearch();
-                    }}
-                  />
-                </Badge>
-              )}
-
-              {appliedFilters.showPaidOnly && (
-                <Badge
-                  colorScheme="orange"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  display="flex"
-                  alignItems="center"
-                >
-                  Có phí
-                  <Box
-                    as={FiX}
-                    ml={1}
-                    cursor="pointer"
-                    onClick={() => {
-                      setShowPaidOnly(false);
-                      onSearch();
-                    }}
-                  />
-                </Badge>
-              )}
-            </Flex>
-          )}
-      </Box>
+            {appliedFilters.showPaidOnly && (
+              <Badge
+                colorScheme="orange"
+                borderRadius="full"
+                px={2}
+                py={1}
+                display="flex"
+                alignItems="center"
+              >
+                Có phí
+                <Box
+                  as={FiX}
+                  ml={1}
+                  cursor="pointer"
+                  onClick={() => {
+                    setShowPaidOnly(false);
+                    onSearch();
+                  }}
+                />
+              </Badge>
+            )}
+          </Flex>
+        )}
 
       {/* Mobile Drawer Filter */}
       <Drawer isOpen={isOpen} placement="right" onClose={onClose}>

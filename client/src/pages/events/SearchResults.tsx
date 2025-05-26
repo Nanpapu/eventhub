@@ -72,6 +72,7 @@ const SearchResults = () => {
   const [totalEvents, setTotalEvents] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filtersUpdated, setFiltersUpdated] = useState(false);
   const eventsPerPage = 6;
 
   const areFiltersApplied = useCallback(() => {
@@ -197,6 +198,10 @@ const SearchResults = () => {
       );
       setSearchParams(newSearchParams, { replace: true });
     }
+
+    if (filtersUpdated) {
+      setFiltersUpdated(false);
+    }
   }, [
     appliedKeyword,
     appliedLocation,
@@ -206,7 +211,21 @@ const SearchResults = () => {
     currentPage,
     fetchAndFilterEvents,
     setSearchParams,
+    filtersUpdated,
   ]);
+
+  // Thêm useEffect mới để xử lý cập nhật UI khi filter thay đổi
+  useEffect(() => {
+    // Khi filtersUpdated = true, có nghĩa là người dùng vừa áp dụng filter mới
+    if (filtersUpdated) {
+      console.log(
+        "[useEffect filtersUpdated] Filters were updated, refreshing UI"
+      );
+
+      // Sau khi đã cập nhật UI, reset lại state
+      setFiltersUpdated(false);
+    }
+  }, [filtersUpdated]);
 
   const handleApplySearch = useCallback(() => {
     console.log("[handleApplySearch] Applying search with temp filters:", {
@@ -216,12 +235,24 @@ const SearchResults = () => {
       tempShowFreeOnly,
       tempShowPaidOnly,
     });
+
+    // Cập nhật tất cả các giá trị applied cùng một lúc để đảm bảo UI được cập nhật đồng bộ
     setAppliedKeyword(tempKeyword);
     setAppliedLocation(tempLocation);
     setAppliedCategory(tempCategory);
     setAppliedShowFreeOnly(tempShowFreeOnly);
     setAppliedShowPaidOnly(tempShowPaidOnly);
     setCurrentPage(1);
+    setFiltersUpdated(true);
+
+    // Thêm log để kiểm tra sau khi cập nhật
+    console.log("[handleApplySearch] Applied filters updated:", {
+      keyword: tempKeyword,
+      location: tempLocation,
+      category: tempCategory,
+      showFreeOnly: tempShowFreeOnly,
+      showPaidOnly: tempShowPaidOnly,
+    });
   }, [
     tempKeyword,
     tempLocation,
@@ -258,6 +289,7 @@ const SearchResults = () => {
     setAppliedShowFreeOnly(false);
     setAppliedShowPaidOnly(false);
     setCurrentPage(1);
+    setFiltersUpdated(true);
   }, []);
 
   const locationOptions = getLocationOptions();
