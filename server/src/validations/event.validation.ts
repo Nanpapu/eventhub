@@ -158,8 +158,9 @@ export const createEventSchema = Joi.object({
     .when("isPaid", {
       is: true,
       then: Joi.optional(),
-      otherwise: Joi.forbidden().messages({
-        "any.unknown": "Không thể cung cấp loại vé cho sự kiện miễn phí",
+      otherwise: Joi.optional().messages({
+        "any.unknown":
+          "Chỉ được cung cấp loại vé miễn phí khi sự kiện không thu phí",
       }),
     }),
 

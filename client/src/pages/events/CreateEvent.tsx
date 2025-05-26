@@ -501,167 +501,173 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
         />
       </FormControl>
 
-      {formData.isPaid ? (
-        <VStack
-          spacing={6}
-          align="stretch"
-          pl={0}
-          borderWidth="1px"
-          borderColor={borderColor}
-          p={5}
-          borderRadius="md"
-        >
-          <Heading size="sm" mb={0}>
-            Quản lý các loại vé
-          </Heading>
-          {formData.ticketTypes.map((ticket) => (
-            <Box
-              key={ticket.id}
-              p={4}
-              borderWidth="1px"
-              borderColor={borderColor}
-              borderRadius="lg"
-              _hover={{ shadow: "md" }}
-            >
-              <VStack spacing={4} align="stretch">
+      <VStack
+        spacing={6}
+        align="stretch"
+        pl={0}
+        borderWidth="1px"
+        borderColor={borderColor}
+        p={5}
+        borderRadius="md"
+      >
+        <Heading size="sm" mb={0}>
+          {formData.isPaid ? "Quản lý các loại vé" : "Vé miễn phí"}
+        </Heading>
+        {formData.ticketTypes.map((ticket) => (
+          <Box
+            key={ticket.id}
+            p={4}
+            borderWidth="1px"
+            borderColor={borderColor}
+            borderRadius="lg"
+            _hover={{ shadow: "md" }}
+          >
+            <VStack spacing={4} align="stretch">
+              <FormControl
+                isInvalid={!!errors[`ticketName-${ticket.id}`]}
+                isRequired
+              >
+                <FormLabel htmlFor={`ticketName-${ticket.id}`}>
+                  Tên loại vé
+                </FormLabel>
+                <Input
+                  id={`ticketName-${ticket.id}`}
+                  value={ticket.name}
+                  onChange={(e) =>
+                    updateTicketType(ticket.id, "name", e.target.value)
+                  }
+                  placeholder="VD: Vé VIP, Vé thường, Early Bird"
+                  borderColor={borderColor}
+                  isDisabled={!formData.isPaid && ticket.price === 0}
+                />
+                {errors[`ticketName-${ticket.id}`] && (
+                  <FormErrorMessage>
+                    {errors[`ticketName-${ticket.id}`]}
+                  </FormErrorMessage>
+                )}
+              </FormControl>
+
+              <HStack spacing={4}>
                 <FormControl
-                  isInvalid={!!errors[`ticketName-${ticket.id}`]}
+                  isInvalid={!!errors[`ticketPrice-${ticket.id}`]}
                   isRequired
+                  flex={1}
                 >
-                  <FormLabel htmlFor={`ticketName-${ticket.id}`}>
-                    Tên loại vé
+                  <FormLabel htmlFor={`ticketPrice-${ticket.id}`}>
+                    Giá vé
                   </FormLabel>
-                  <Input
-                    id={`ticketName-${ticket.id}`}
-                    value={ticket.name}
-                    onChange={(e) =>
-                      updateTicketType(ticket.id, "name", e.target.value)
+                  <NumberInput
+                    id={`ticketPrice-${ticket.id}`}
+                    value={ticket.price}
+                    onChange={(valueString, valueNumber) =>
+                      updateTicketType(ticket.id, "price", valueNumber || 0)
                     }
-                    placeholder="VD: Vé VIP, Vé thường, Early Bird"
+                    min={0}
                     borderColor={borderColor}
-                  />
-                  {errors[`ticketName-${ticket.id}`] && (
+                    isDisabled={!formData.isPaid && ticket.price === 0}
+                  >
+                    <InputGroup>
+                      <InputLeftElement pointerEvents="none">
+                        <Icon as={FiDollarSign} color="gray.500" />
+                      </InputLeftElement>
+                      <NumberInputField
+                        borderColor={borderColor}
+                        pl={10}
+                        placeholder="VD: 100.000"
+                      />
+                      <InputRightElement width="4.5rem">
+                        <Text pr={1} color="gray.500">
+                          VNĐ
+                        </Text>
+                      </InputRightElement>
+                    </InputGroup>
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  {errors[`ticketPrice-${ticket.id}`] && (
                     <FormErrorMessage>
-                      {errors[`ticketName-${ticket.id}`]}
+                      {errors[`ticketPrice-${ticket.id}`]}
                     </FormErrorMessage>
                   )}
                 </FormControl>
 
-                <HStack spacing={4}>
-                  <FormControl
-                    isInvalid={!!errors[`ticketPrice-${ticket.id}`]}
-                    isRequired
-                    flex={1}
-                  >
-                    <FormLabel htmlFor={`ticketPrice-${ticket.id}`}>
-                      Giá vé
-                    </FormLabel>
-                    <NumberInput
-                      id={`ticketPrice-${ticket.id}`}
-                      value={ticket.price}
-                      onChange={(valueString, valueNumber) =>
-                        updateTicketType(ticket.id, "price", valueNumber || 0)
-                      }
-                      min={0}
-                      borderColor={borderColor}
-                    >
-                      <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                          <Icon as={FiDollarSign} color="gray.500" />
-                        </InputLeftElement>
-                        <NumberInputField
-                          borderColor={borderColor}
-                          pl={10}
-                          placeholder="VD: 100.000"
-                        />
-                        <InputRightElement width="4.5rem">
-                          <Text pr={1} color="gray.500">
-                            VNĐ
-                          </Text>
-                        </InputRightElement>
-                      </InputGroup>
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
-                    {errors[`ticketPrice-${ticket.id}`] && (
-                      <FormErrorMessage>
-                        {errors[`ticketPrice-${ticket.id}`]}
-                      </FormErrorMessage>
-                    )}
-                  </FormControl>
-
-                  <FormControl
-                    isInvalid={!!errors[`ticketQuantity-${ticket.id}`]}
-                    isRequired
-                    flex={1}
-                  >
-                    <FormLabel htmlFor={`ticketQuantity-${ticket.id}`}>
-                      Số lượng vé
-                    </FormLabel>
-                    <NumberInput
-                      id={`ticketQuantity-${ticket.id}`}
-                      value={ticket.quantity}
-                      onChange={(valueString) =>
-                        updateTicketType(
-                          ticket.id,
-                          "quantity",
-                          parseInt(valueString, 10) || 0
-                        )
-                      }
-                      min={1}
-                      borderColor={borderColor}
-                    >
-                      <NumberInputField borderColor={borderColor} />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
-                    {errors[`ticketQuantity-${ticket.id}`] && (
-                      <FormErrorMessage>
-                        {errors[`ticketQuantity-${ticket.id}`]}
-                      </FormErrorMessage>
-                    )}
-                  </FormControl>
-                </HStack>
                 <FormControl
-                  isInvalid={!!errors[`ticketDescription-${ticket.id}`]}
+                  isInvalid={!!errors[`ticketQuantity-${ticket.id}`]}
+                  isRequired
+                  flex={1}
                 >
-                  <FormLabel htmlFor={`ticketDescription-${ticket.id}`}>
-                    Mô tả loại vé (tùy chọn)
+                  <FormLabel htmlFor={`ticketQuantity-${ticket.id}`}>
+                    Số lượng vé
                   </FormLabel>
-                  <Textarea
-                    id={`ticketDescription-${ticket.id}`}
-                    value={ticket.description || ""}
-                    onChange={(e) =>
-                      updateTicketType(ticket.id, "description", e.target.value)
+                  <NumberInput
+                    id={`ticketQuantity-${ticket.id}`}
+                    value={ticket.quantity}
+                    onChange={(valueString) =>
+                      updateTicketType(
+                        ticket.id,
+                        "quantity",
+                        parseInt(valueString, 10) || 0
+                      )
                     }
-                    placeholder="VD: Vé này bao gồm quyền lợi đặc biệt..."
+                    min={1}
                     borderColor={borderColor}
-                    size="sm"
-                  />
-                  {errors[`ticketDescription-${ticket.id}`] && (
+                  >
+                    <NumberInputField borderColor={borderColor} />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  {errors[`ticketQuantity-${ticket.id}`] && (
                     <FormErrorMessage>
-                      {errors[`ticketDescription-${ticket.id}`]}
+                      {errors[`ticketQuantity-${ticket.id}`]}
                     </FormErrorMessage>
                   )}
                 </FormControl>
-                <Flex justify="flex-end">
-                  <IconButton
-                    aria-label="Xóa loại vé"
-                    icon={<FiTrash2 />}
-                    size="sm"
-                    colorScheme="red"
-                    variant="ghost"
-                    onClick={() => removeTicketType(ticket.id)}
-                    isDisabled={formData.ticketTypes.length <= 1}
-                  />
-                </Flex>
-              </VStack>
-            </Box>
-          ))}
+              </HStack>
+              <FormControl
+                isInvalid={!!errors[`ticketDescription-${ticket.id}`]}
+              >
+                <FormLabel htmlFor={`ticketDescription-${ticket.id}`}>
+                  Mô tả loại vé (tùy chọn)
+                </FormLabel>
+                <Textarea
+                  id={`ticketDescription-${ticket.id}`}
+                  value={ticket.description || ""}
+                  onChange={(e) =>
+                    updateTicketType(ticket.id, "description", e.target.value)
+                  }
+                  placeholder="VD: Vé này bao gồm quyền lợi đặc biệt..."
+                  borderColor={borderColor}
+                  size="sm"
+                  isDisabled={!formData.isPaid && ticket.price === 0}
+                />
+                {errors[`ticketDescription-${ticket.id}`] && (
+                  <FormErrorMessage>
+                    {errors[`ticketDescription-${ticket.id}`]}
+                  </FormErrorMessage>
+                )}
+              </FormControl>
+              <Flex justify="flex-end">
+                <IconButton
+                  aria-label="Xóa loại vé"
+                  icon={<FiTrash2 />}
+                  size="sm"
+                  colorScheme="red"
+                  variant="ghost"
+                  onClick={() => removeTicketType(ticket.id)}
+                  isDisabled={
+                    formData.ticketTypes.length <= 1 ||
+                    (!formData.isPaid && ticket.price === 0)
+                  }
+                />
+              </Flex>
+            </VStack>
+          </Box>
+        ))}
+        {formData.isPaid && (
           <Button
             leftIcon={<FiPlus />}
             onClick={addTicketType}
@@ -672,11 +678,13 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
           >
             Thêm loại vé
           </Button>
-        </VStack>
-      ) : (
+        )}
+      </VStack>
+
+      {!formData.isPaid && (
         <Text color="gray.500" fontStyle="italic">
-          Sự kiện này miễn phí cho tất cả người tham dự. Nếu bạn muốn bán vé,
-          vui lòng bật tùy chọn sự kiện có thu phí ở trên.
+          Sự kiện này miễn phí cho tất cả người tham dự. Hệ thống sẽ tự động tạo
+          một loại vé miễn phí.
         </Text>
       )}
     </VStack>
@@ -1420,8 +1428,19 @@ const CreateEvent = () => {
       setFormData((prev) => ({
         ...prev,
         [name]: checked,
-        // Khi chuyển thành sự kiện miễn phí, xóa ticketTypes và đặt price = 0 rõ ràng
-        ...(!checked && { ticketTypes: [], price: 0 }),
+        // Khi chuyển thành sự kiện miễn phí, tạo một loại vé miễn phí mặc định
+        ...(!checked && {
+          ticketTypes: [
+            {
+              id: `ticket-${Date.now()}`,
+              name: "Vé miễn phí",
+              price: 0,
+              quantity: prev.capacity || 100,
+              description: "Vé tham dự sự kiện miễn phí",
+            },
+          ],
+          price: 0,
+        }),
         // Khi chuyển thành sự kiện có phí, không đặt price
         ...(checked && { price: undefined }),
       }));
@@ -1693,14 +1712,13 @@ const CreateEvent = () => {
           ? undefined
           : formData.price,
       imageUrl: image,
-      ticketTypes: formData.isPaid
-        ? formData.ticketTypes.map((t) => ({
-            name: t.name,
-            price: t.price,
-            quantity: t.quantity,
-            description: t.description || "",
-          }))
-        : undefined,
+      ticketTypes: formData.ticketTypes.map((t) => ({
+        name: t.name,
+        price: t.price,
+        quantity: t.quantity,
+        availableQuantity: t.quantity, // Đặt availableQuantity bằng với quantity ban đầu
+        description: t.description || "",
+      })),
       tags,
       published: true,
     };

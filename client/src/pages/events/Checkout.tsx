@@ -51,6 +51,7 @@ interface EventData {
   organizer: string;
   availableTickets: number; // Tổng số vé còn lại (fallback nếu không có ticketTypes)
   maxPerOrder: number; // Số lượng tối đa mỗi đơn hàng (chung)
+  isPaid?: boolean; // Thêm thuộc tính này để biết sự kiện là có phí hay miễn phí
   ticketTypes?: {
     id: string;
     name: string;
@@ -314,20 +315,30 @@ export default function Checkout() {
       return;
     }
 
-    // Nếu sự kiện có nhiều loại vé, phải chọn 1 loại vé
-    if (
-      event.ticketTypes &&
-      event.ticketTypes.length > 0 &&
-      !selectedTicketType
-    ) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng chọn loại vé",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
+    // Kiểm tra việc chọn loại vé dựa trên điều kiện
+    // Nếu sự kiện có nhiều loại vé có phí, bắt buộc phải chọn 1 loại
+    // Nếu sự kiện miễn phí chỉ có 1 loại vé, tự động chọn loại vé đó
+    if (event.ticketTypes && event.ticketTypes.length > 0) {
+      if (!selectedTicketType) {
+        // Nếu chưa chọn loại vé, kiểm tra nếu sự kiện miễn phí và chỉ có 1 loại vé miễn phí
+        const freeTickets = event.ticketTypes.filter((t) => t.price === 0);
+        if (
+          freeTickets.length === 1 &&
+          (event.price === 0 || freeTickets.length === event.ticketTypes.length)
+        ) {
+          // Tự động chọn loại vé miễn phí duy nhất
+          setSelectedTicketType(freeTickets[0].id);
+        } else {
+          toast({
+            title: "Lỗi",
+            description: "Vui lòng chọn loại vé",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+      }
     }
 
     if (ticketQuantity < 1 && maxAllowedForInput > 0) {
