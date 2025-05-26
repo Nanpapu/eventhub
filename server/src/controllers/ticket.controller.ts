@@ -4,6 +4,7 @@ import ticketService from "../services/ticket.service";
 class TicketController {
   constructor() {
     this.getMyTickets = this.getMyTickets.bind(this); // Bind 'this' context
+    this.getUserTicketStatus = this.getUserTicketStatus.bind(this);
   }
 
   /**
@@ -50,6 +51,38 @@ class TicketController {
       );
       res.status(500).json({ message: "Error fetching tickets from service" });
       // throw error; // Hoặc throw error để asyncHandler xử lý chung
+    }
+  }
+
+  /**
+   * Kiểm tra trạng thái vé của người dùng cho sự kiện cụ thể
+   */
+  async getUserTicketStatus(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params;
+
+      if (!eventId) {
+        return res.status(400).json({
+          success: false,
+          message: "ID sự kiện không được cung cấp",
+        });
+      }
+
+      const status = await ticketService.getUserTicketStatus(
+        req.user.id,
+        eventId
+      );
+
+      res.json({
+        success: true,
+        ...status,
+      });
+    } catch (error) {
+      console.error("Error in getUserTicketStatus:", error);
+      res.status(500).json({
+        success: false,
+        message: "Không thể kiểm tra trạng thái vé. Vui lòng thử lại sau.",
+      });
     }
   }
 

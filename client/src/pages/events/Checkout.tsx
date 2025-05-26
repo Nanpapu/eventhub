@@ -35,6 +35,8 @@ import { FaCheck, FaTicketAlt, FaEnvelope } from "react-icons/fa";
 import CheckoutForm from "../../components/checkout/CheckoutForm";
 import { CurrencyDisplay } from "../../components/common";
 import eventService from "../../services/event.service";
+import { useAppSelector } from "../../app/hooks";
+import { selectIsAuthenticated } from "../../app/features/authSlice";
 
 // Định nghĩa interface cho event
 interface EventData {
@@ -57,6 +59,13 @@ interface EventData {
   }[];
 }
 
+// Interface cho trạng thái vé người dùng
+interface UserTicketStatus {
+  success: boolean;
+  ticketCount: number; // Số lượng vé đã mua
+  hasFreeTicker: boolean; // Đã có vé miễn phí hay chưa
+}
+
 /**
  * Trang thanh toán cho việc mua vé sự kiện
  * Quy trình 3 bước: chọn vé, thanh toán, xác nhận
@@ -74,6 +83,13 @@ export default function Checkout() {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Thêm state cho trạng thái vé người dùng
+  const [userTicketStatus, setUserTicketStatus] =
+    useState<UserTicketStatus | null>(null);
+
+  // Kiểm tra người dùng đã đăng nhập chưa
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   // Các bước trong quy trình thanh toán
   const steps = [
@@ -108,7 +124,7 @@ export default function Checkout() {
 
   // Tải dữ liệu sự kiện từ API
   useEffect(() => {
-    const fetchEventRealAPI = async () => {
+    const fetchEventData = async () => {
       console.log(
         "[Checkout.tsx] Attempting to fetch event with ID from URL params:",
         eventId
@@ -145,6 +161,40 @@ export default function Checkout() {
           } else {
             setTicketQuantity(1);
           }
+
+          // Kiểm tra trạng thái vé người dùng nếu đã đăng nhập
+          if (isAuthenticated) {
+            try {
+              const ticketStatus = await eventService.getUserTicketStatus(
+                eventId
+              );
+              console.log("[Checkout.tsx] User ticket status:", ticketStatus);
+              setUserTicketStatus(ticketStatus);
+
+              // Nếu sự kiện miễn phí và người dùng đã có vé miễn phí, hiển thị thông báo
+              const currentTicketPrice =
+                formattedData.ticketTypes?.find(
+                  (t) => t.id === formattedData.ticketTypes?.[0].id
+                )?.price ?? formattedData.price;
+
+              if (currentTicketPrice === 0 && ticketStatus.hasFreeTicker) {
+                toast({
+                  title: "Thông báo",
+                  description:
+                    "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
+                  status: "warning",
+                  duration: 5000,
+                  isClosable: true,
+                });
+              }
+            } catch (err) {
+              console.error(
+                "[Checkout.tsx] Error fetching user ticket status:",
+                err
+              );
+              // Không hiển thị lỗi này cho người dùng, chỉ log
+            }
+          }
         } else {
           console.error(
             "[Checkout.tsx] Event not found by API, eventId:",
@@ -171,8 +221,8 @@ export default function Checkout() {
       }
     };
 
-    fetchEventRealAPI();
-  }, [eventId]);
+    fetchEventData();
+  }, [eventId, isAuthenticated, toast]);
 
   // Tính toán số lượng vé tối đa có thể mua
   const currentSelectedTicketInfo = event?.ticketTypes?.find(
@@ -210,11 +260,69 @@ export default function Checkout() {
       Math.min(newMaxAvailable, eventMaxPerOrder)
     );
 
+    // Kiểm tra giá vé mới
+    if (
+      newTypeInfo &&
+      newTypeInfo.price === 0 &&
+      userTicketStatus?.hasFreeTicker
+    ) {
+      // Nếu chọn vé miễn phí và đã có vé miễn phí rồi
+      toast({
+        title: "Giới hạn vé miễn phí",
+        description: "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      setTicketQuantity(0); // Không cho phép mua thêm vé miễn phí
+      return;
+    }
+
     if (ticketQuantity > newMaxAllowed || newMaxAllowed === 0) {
       setTicketQuantity(newMaxAllowed > 0 ? 1 : 0);
     } else if (ticketQuantity === 0 && newMaxAllowed > 0) {
       setTicketQuantity(1);
     }
+
+    // Giới hạn số lượng vé miễn phí là 1
+    if (newTypeInfo && newTypeInfo.price === 0 && ticketQuantity > 1) {
+      setTicketQuantity(1);
+      toast({
+        title: "Giới hạn vé miễn phí",
+        description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Kiểm tra khi thay đổi số lượng vé
+  const handleTicketQuantityChange = (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => {
+    const isFreeTicket =
+      (currentSelectedTicketInfo && currentSelectedTicketInfo.price === 0) ||
+      ((!currentSelectedTicketInfo ||
+        !event?.ticketTypes ||
+        event.ticketTypes.length === 0) &&
+        event?.price === 0);
+
+    // Nếu là vé miễn phí và số lượng > 1
+    if (isFreeTicket && valueAsNumber > 1) {
+      toast({
+        title: "Giới hạn vé miễn phí",
+        description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+      setTicketQuantity(1);
+      return;
+    }
+
+    setTicketQuantity(valueAsNumber);
   };
 
   // Xử lý khi bấm tiếp tục ở bước 1
@@ -307,6 +415,50 @@ export default function Checkout() {
         isClosable: true,
       });
       return;
+    }
+
+    // Kiểm tra vé miễn phí
+    const isFreeTicket = currentTicketPrice === 0;
+    if (isFreeTicket) {
+      // Nếu người dùng đã đăng nhập và đã có vé miễn phí
+      if (isAuthenticated && userTicketStatus?.hasFreeTicker) {
+        toast({
+          title: "Giới hạn vé miễn phí",
+          description: "Bạn đã đăng ký vé miễn phí cho sự kiện này rồi.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Giới hạn số lượng vé miễn phí
+      if (ticketQuantity > 1) {
+        toast({
+          title: "Giới hạn vé miễn phí",
+          description: "Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        setTicketQuantity(1);
+        return;
+      }
+    }
+
+    // Kiểm tra giới hạn tổng số vé người dùng đã mua
+    if (isAuthenticated && userTicketStatus && event.maxPerOrder) {
+      const ticketCount = userTicketStatus.ticketCount || 0; // Đảm bảo có giá trị mặc định nếu undefined
+      if (ticketCount + ticketQuantity > event.maxPerOrder) {
+        toast({
+          title: "Vượt quá giới hạn vé",
+          description: `Bạn chỉ có thể mua tối đa ${event.maxPerOrder} vé cho sự kiện này. Bạn đã mua ${ticketCount} vé.`,
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
     }
 
     setActiveStep(1);
@@ -416,6 +568,23 @@ export default function Checkout() {
                 Chọn số lượng vé
               </Heading>
 
+              {/* Hiện thông báo nếu người dùng đã có vé miễn phí */}
+              {isAuthenticated &&
+                userTicketStatus?.hasFreeTicker &&
+                (currentSelectedTicketInfo?.price === 0 ||
+                  (!event.ticketTypes?.length && event.price === 0)) && (
+                  <Alert status="warning" borderRadius="md">
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle>Giới hạn vé miễn phí</AlertTitle>
+                      <AlertDescription>
+                        Bạn đã đăng ký vé miễn phí cho sự kiện này rồi. Mỗi
+                        người chỉ được đăng ký 1 vé miễn phí.
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                )}
+
               <HStack spacing={4} py={4}>
                 <Text fontWeight="medium" color={textColor}>
                   Sự kiện:
@@ -467,6 +636,20 @@ export default function Checkout() {
                 <Text color={textColor}>{maxTicketsAvailableForOrder}</Text>
               </HStack>
 
+              {/* Nếu người dùng đã đăng nhập, hiển thị số vé đã mua */}
+              {isAuthenticated &&
+                userTicketStatus?.ticketCount > 0 &&
+                event.maxPerOrder > 0 && (
+                  <HStack spacing={4}>
+                    <Text fontWeight="medium" color={textColor}>
+                      Số vé đã mua:
+                    </Text>
+                    <Text color={textColor}>
+                      {userTicketStatus.ticketCount}/{event.maxPerOrder}
+                    </Text>
+                  </HStack>
+                )}
+
               {event.ticketTypes && event.ticketTypes.length > 0 && (
                 <>
                   <Heading size="sm" color={textColor} mt={2}>
@@ -495,13 +678,29 @@ export default function Checkout() {
                               : "transparent"
                           }
                           cursor={
-                            ticket.availableQuantity > 0
+                            ticket.availableQuantity > 0 &&
+                            !(
+                              ticket.price === 0 &&
+                              userTicketStatus?.hasFreeTicker
+                            )
                               ? "pointer"
                               : "not-allowed"
                           }
-                          opacity={ticket.availableQuantity > 0 ? 1 : 0.6}
+                          opacity={
+                            ticket.availableQuantity > 0 &&
+                            !(
+                              ticket.price === 0 &&
+                              userTicketStatus?.hasFreeTicker
+                            )
+                              ? 1
+                              : 0.6
+                          }
                           onClick={() =>
                             ticket.availableQuantity > 0 &&
+                            !(
+                              ticket.price === 0 &&
+                              userTicketStatus?.hasFreeTicker
+                            ) &&
                             handleTicketTypeChange(ticket.id)
                           }
                         >
@@ -521,6 +720,9 @@ export default function Checkout() {
                                 {ticket.availableQuantity > 0
                                   ? `Còn ${ticket.availableQuantity} vé`
                                   : "Hết vé"}
+                                {ticket.price === 0 &&
+                                  userTicketStatus?.hasFreeTicker &&
+                                  " - Đã đăng ký"}
                               </Text>
                             </VStack>
                             <Text fontWeight="bold" color={textColor} as="span">
@@ -549,10 +751,14 @@ export default function Checkout() {
                   min={maxAllowedForInput > 0 ? 1 : 0}
                   max={maxAllowedForInput}
                   value={ticketQuantity}
-                  onChange={(valueString, valueNumber) =>
-                    setTicketQuantity(valueNumber)
+                  onChange={handleTicketQuantityChange}
+                  isDisabled={
+                    maxAllowedForInput === 0 ||
+                    (isAuthenticated &&
+                      userTicketStatus?.hasFreeTicker &&
+                      (currentSelectedTicketInfo?.price === 0 ||
+                        (!event.ticketTypes?.length && event.price === 0)))
                   }
-                  isDisabled={maxAllowedForInput === 0}
                 >
                   <NumberInputField />
                   <NumberInputStepper>
@@ -586,7 +792,11 @@ export default function Checkout() {
                   onClick={handleContinueToPayment}
                   isDisabled={
                     isLoading ||
-                    (maxAllowedForInput === 0 && ticketQuantity === 0)
+                    (maxAllowedForInput === 0 && ticketQuantity === 0) ||
+                    (isAuthenticated &&
+                      userTicketStatus?.hasFreeTicker &&
+                      (currentSelectedTicketInfo?.price === 0 ||
+                        (!event.ticketTypes?.length && event.price === 0)))
                   }
                 >
                   Tiếp tục

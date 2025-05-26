@@ -9,6 +9,7 @@ import Registration, {
 } from "../models/Registration";
 import Ticket, { ITicket } from "../models/Ticket";
 import notificationService from "./notification.service"; // Import NotificationService
+import ticketService from "./ticket.service";
 
 interface SuccessfulPurchaseParams {
   userId: Types.ObjectId;
@@ -46,8 +47,10 @@ class CheckoutService {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
+      const { userId, eventId, ticketTypeId, quantity, purchaserInfo } = params;
+
       // Find event
-      const event = await Event.findById(params.eventId).session(session);
+      const event = await Event.findById(eventId).session(session);
       if (!event) {
         throw new Error("Event not found.");
       }
@@ -58,7 +61,7 @@ class CheckoutService {
 
       // Find selected ticket type
       const ticketTypeDetails = event.ticketTypes.find(
-        (tt) => tt._id.toString() === params.ticketTypeId
+        (tt) => tt._id.toString() === ticketTypeId
       );
 
       if (!ticketTypeDetails) {
@@ -66,68 +69,82 @@ class CheckoutService {
       }
 
       // Check available quantity (critical: do this within the transaction)
-      if (ticketTypeDetails.availableQuantity < params.quantity) {
+      if (ticketTypeDetails.availableQuantity < quantity) {
         throw new Error("Not enough tickets available for the selected type.");
       }
-      if (params.quantity <= 0) {
+      if (quantity <= 0) {
         throw new Error("Quantity must be greater than zero.");
       }
       // Assuming maxTicketsPerPerson field exists on event
-      if (
-        event.maxTicketsPerPerson &&
-        params.quantity > event.maxTicketsPerPerson
-      ) {
+      if (event.maxTicketsPerPerson && quantity > event.maxTicketsPerPerson) {
         throw new Error(
           `Cannot purchase more than ${event.maxTicketsPerPerson} tickets per order for this event.`
         );
       }
 
-      const totalAmount = ticketTypeDetails.price * params.quantity;
+      // Kiểm tra nếu là vé miễn phí
+      if (ticketTypeDetails.price === 0) {
+        // Kiểm tra người dùng đã có vé miễn phí cho sự kiện này chưa
+        const ticketStatus = await ticketService.getUserTicketStatus(
+          userId.toString(),
+          eventId
+        );
+        if (ticketStatus.hasFreeTicker) {
+          throw new Error("Bạn đã đăng ký vé miễn phí cho sự kiện này rồi");
+        }
+
+        // Kiểm tra số lượng vé miễn phí
+        if (quantity > 1) {
+          throw new Error("Chỉ được đăng ký 1 vé miễn phí cho mỗi sự kiện");
+        }
+      }
+
+      const totalAmount = ticketTypeDetails.price * quantity;
 
       // 1. Create Registration
       const registrationData: Partial<IRegistration> = {
         event: event._id as any as Types.ObjectId,
-        user: params.userId,
+        user: userId,
         ticketType: ticketTypeDetails._id as any as Types.ObjectId,
-        quantity: params.quantity,
+        quantity: quantity,
         totalAmount: totalAmount,
         attendeeInfo: [
           {
-            name: params.purchaserInfo.fullName,
-            email: params.purchaserInfo.email,
-            phone: params.purchaserInfo.phone,
+            name: purchaserInfo.fullName,
+            email: purchaserInfo.email,
+            phone: purchaserInfo.phone,
           },
         ],
         status: "confirmed", // Because payment is successful
         paymentStatus: "paid",
+        paymentMethod: "DEMO_PURCHASE", // Demo payment
       };
       const registration = new Registration(registrationData);
       const savedRegistration = await registration.save({ session });
 
       // 2. Create Payment
       const paymentData: Partial<IPayment> = {
-        userId: params.userId,
+        userId: userId,
         eventId: event._id as any as Types.ObjectId,
         registrationId: savedRegistration._id as Types.ObjectId,
         amount: totalAmount,
-        method: "DEMO_PURCHASE", // Or from params if available
+        method: "DEMO_PURCHASE", // Demo payment
         status: "completed",
-        transactionId: `DEMO_TRANS_${new Types.ObjectId().toString()}`, // Mock transaction ID
+        transactionId: `DEMO-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       };
       const payment = new Payment(paymentData);
       const savedPayment = await payment.save({ session }); // Assign to new variable
 
       // Update registration with paymentId (if your schema needs it, ensure it's optional or handled)
-      // registration.paymentId = savedPayment._id; // This line might be problematic if paymentId is string
-      // registration.paymentMethod = savedPayment.method;
-      // await registration.save({ session }); // Save registration again if updated
+      registration.paymentId = savedPayment._id;
+      await registration.save({ session });
 
       // 3. Create individual Ticket records
       const createdTickets: ITicket[] = [];
-      for (let i = 0; i < params.quantity; i++) {
+      for (let i = 0; i < quantity; i++) {
         const ticketData: Partial<ITicket> = {
           eventId: event._id as any as Types.ObjectId,
-          userId: params.userId,
+          userId: userId,
           ticketTypeId: ticketTypeDetails._id.toString(),
           ticketTypeName: ticketTypeDetails.name,
           price: ticketTypeDetails.price,
@@ -142,18 +159,18 @@ class CheckoutService {
       }
 
       // 4. Update available quantity in Event
-      ticketTypeDetails.availableQuantity -= params.quantity;
-      event.attendees = (event.attendees || 0) + params.quantity; // Update total attendees
+      ticketTypeDetails.availableQuantity -= quantity;
+      event.attendees = (event.attendees || 0) + quantity; // Update total attendees
       // If you have a soldTickets field on ticketTypeDetails, update it too
-      // ticketTypeDetails.soldQuantity = (ticketTypeDetails.soldQuantity || 0) + params.quantity;
+      // ticketTypeDetails.soldQuantity = (ticketTypeDetails.soldQuantity || 0) + quantity;
       await event.save({ session });
 
       // Gọi NotificationService để tạo thông báo
       await notificationService.createTicketConfirmationNotification(
-        params.userId,
+        userId,
         event, // Truyền toàn bộ object event (đã là IEvent)
         ticketTypeDetails.name,
-        params.quantity,
+        quantity,
         savedPayment.transactionId, // Truyền transactionId
         createdTickets.length > 0
           ? (createdTickets[0]._id as any).toString()

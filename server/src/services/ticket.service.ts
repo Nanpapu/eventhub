@@ -117,6 +117,57 @@ class TicketService {
     return transformedTickets;
   }
 
+  /**
+   * Kiểm tra trạng thái vé của người dùng cho sự kiện cụ thể
+   * @param userId ID của người dùng
+   * @param eventId ID của sự kiện
+   * @returns Thông tin về số lượng vé đã mua và có vé miễn phí hay không
+   */
+  async getUserTicketStatus(
+    userId: string,
+    eventId: string
+  ): Promise<{ ticketCount: number; hasFreeTicker: boolean }> {
+    // Tìm tất cả vé của người dùng cho sự kiện này
+    const tickets = await Ticket.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      eventId: new mongoose.Types.ObjectId(eventId),
+      status: { $nin: ["cancelled"] }, // Không đếm vé đã hủy
+    }).populate({
+      path: "eventId",
+      select: "isPaid price ticketTypes",
+    });
+
+    // Đếm tổng số vé đã mua
+    const ticketCount = tickets.reduce(
+      (sum, ticket) => sum + ticket.quantity,
+      0
+    );
+
+    // Kiểm tra xem đã có vé miễn phí chưa
+    const hasFreeTicker = tickets.some((ticket) => {
+      // Nếu là vé thường (không có ticketTypeId cụ thể)
+      if (
+        !ticket.ticketTypeId &&
+        ticket.eventId &&
+        !(ticket.eventId as any).isPaid
+      ) {
+        return true;
+      }
+
+      // Nếu là vé có loại cụ thể, kiểm tra giá của loại vé đó
+      if (ticket.price === 0) {
+        return true;
+      }
+
+      return false;
+    });
+
+    return {
+      ticketCount,
+      hasFreeTicker,
+    };
+  }
+
   // Các hàm service khác cho vé...
   // Ví dụ: async cancelUserTicket(userId: string, ticketId: string): Promise<ITicket | null> { ... }
 }

@@ -205,6 +205,17 @@ const eventService = {
       throw error;
     }
   },
+
+  // Thêm hàm mới để kiểm tra trạng thái vé của người dùng
+  async getUserTicketStatus(eventId) {
+    try {
+      const response = await api.get(`/tickets/status/${eventId}`);
+      return response.data;
+    } catch (error) {
+      console.error("[event.service] Error getting user ticket status:", error);
+      throw error.response?.data?.message || "Không thể kiểm tra trạng thái vé";
+    }
+  },
 };
 
 export default eventService;

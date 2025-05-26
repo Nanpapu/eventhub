@@ -173,22 +173,46 @@ export default function CheckoutForm({
   const onSubmit = async (data: FormValues) => {
     setIsProcessing(true);
 
-    const payload = {
-      eventId: event.id,
-      ticketTypeId: selectedTicketTypeId,
-      quantity: ticketQuantity,
-      fullName: data.fullName,
-      email: data.email,
-      phone: data.phone,
-      paymentMethodDetails: {
-        type:
-          paymentMethod === "demo_success"
-            ? "DEMO_SUCCESS"
-            : ("DEMO_FAIL" as "DEMO_SUCCESS" | "DEMO_FAIL"),
-      },
-    };
-
     try {
+      // Kiểm tra nếu là vé miễn phí
+      const ticketPrice = getTicketPrice();
+      if (ticketPrice === 0) {
+        // Kiểm tra giới hạn vé miễn phí
+        const checkResult = await checkoutService.validateFreeTicket({
+          eventId: event.id,
+          ticketPrice,
+          quantity: ticketQuantity,
+        });
+
+        if (!checkResult.isValid) {
+          toast({
+            title: "Giới hạn vé miễn phí",
+            description:
+              checkResult.message || "Không thể đăng ký thêm vé miễn phí.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          setIsProcessing(false);
+          return;
+        }
+      }
+
+      const payload = {
+        eventId: event.id,
+        ticketTypeId: selectedTicketTypeId,
+        quantity: ticketQuantity,
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        paymentMethodDetails: {
+          type:
+            paymentMethod === "demo_success"
+              ? "DEMO_SUCCESS"
+              : ("DEMO_FAIL" as "DEMO_SUCCESS" | "DEMO_FAIL"),
+        },
+      };
+
       console.log("[CheckoutForm] Submitting payment with payload:", payload);
       // Gọi API service
       const result = await checkoutService.processDemoPayment(payload);
@@ -216,8 +240,8 @@ export default function CheckoutForm({
     } catch (error) {
       console.error("[CheckoutForm] Error during payment submission:", error);
       let errorMessage = "Không thể hoàn tất thanh toán vào lúc này.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
+      if (typeof error === "object" && error !== null && "message" in error) {
+        errorMessage = (error as Error).message;
       }
       toast({
         title: "Lỗi xử lý thanh toán",
