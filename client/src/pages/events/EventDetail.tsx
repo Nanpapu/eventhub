@@ -63,6 +63,8 @@ interface EventData {
   };
   attendees: number;
   capacity: number;
+  isOnline: boolean;
+  onlineUrl?: string;
 }
 
 const EventDetail = () => {
@@ -134,6 +136,8 @@ const EventDetail = () => {
           },
           attendees: eventData.attendees || 0,
           capacity: eventData.capacity || 50,
+          isOnline: Boolean(eventData.isOnline) || false,
+          onlineUrl: eventData.onlineUrl || "",
         };
 
         // Debug: Log event đã format để kiểm tra
@@ -237,6 +241,41 @@ const EventDetail = () => {
     console.log("Is creator:", isCreator);
 
     return isCreator;
+  };
+
+  // Kiểm tra xem sự kiện đã diễn ra hay chưa
+  const isEventPast = () => {
+    if (!event) return false;
+
+    // Chuyển đổi chuỗi ngày từ định dạng vi-VN về đối tượng Date
+    // Format của ngày Việt Nam: dd/mm/yyyy
+    const dateParts = event.date.split("/");
+    if (dateParts.length !== 3) return false; // Không đúng định dạng
+
+    const day = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10) - 1; // Tháng trong JS là 0-11
+    const year = parseInt(dateParts[2], 10);
+
+    const eventDate = new Date(year, month, day);
+
+    // Lấy giờ kết thúc từ endTime (nếu có), định dạng "HH:MM"
+    let eventEndHour = 23;
+    let eventEndMinute = 59;
+
+    if (event.endTime) {
+      const timeParts = event.endTime.split(":");
+      if (timeParts.length === 2) {
+        eventEndHour = parseInt(timeParts[0], 10);
+        eventEndMinute = parseInt(timeParts[1], 10);
+      }
+    }
+
+    // Đặt giờ kết thúc cho ngày sự kiện
+    eventDate.setHours(eventEndHour, eventEndMinute, 0);
+
+    // So sánh với thời gian hiện tại
+    const now = new Date();
+    return now > eventDate;
   };
 
   // Xử lý đăng ký tham gia sự kiện
@@ -524,11 +563,28 @@ const EventDetail = () => {
                 <Box as={FiMapPin} color={iconColor} mt={1} />
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="medium" color={textColor}>
-                    {event.location}
+                    {event.isOnline ? "Sự kiện trực tuyến" : event.location}
                   </Text>
-                  <Text fontSize="sm" color={secondaryTextColor}>
-                    {event.address}
-                  </Text>
+                  {!event.isOnline ? (
+                    <Text fontSize="sm" color={secondaryTextColor}>
+                      {event.address}
+                    </Text>
+                  ) : event.onlineUrl ? (
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="link"
+                      leftIcon={<FiShare2 />}
+                      onClick={() => window.open(event.onlineUrl, "_blank")}
+                      mt={1}
+                    >
+                      Nhấn vào đây để tham gia
+                    </Button>
+                  ) : (
+                    <Text fontSize="sm" color={secondaryTextColor}>
+                      Link tham gia sẽ được cung cấp trước khi sự kiện diễn ra
+                    </Text>
+                  )}
                 </VStack>
               </Flex>
 
@@ -636,18 +692,31 @@ const EventDetail = () => {
               {/* 
                 Thêm kiểm tra isEventCreator() để hiển thị nút chỉnh sửa nếu người dùng
                 là người tạo sự kiện, ngược lại hiển thị nút đăng ký/mua vé như trước
+                Nút chỉnh sửa chỉ hiển thị khi sự kiện chưa diễn ra
               */}
               {isEventCreator() ? (
                 // Nút chỉnh sửa sự kiện cho người tạo
-                <Button
-                  colorScheme="purple"
-                  size="lg"
-                  width="full"
-                  onClick={handleEditEvent}
-                  leftIcon={<FaEdit />}
-                >
-                  Chỉnh sửa sự kiện
-                </Button>
+                isEventPast() ? (
+                  <Button
+                    colorScheme="gray"
+                    size="lg"
+                    width="full"
+                    isDisabled={true}
+                    leftIcon={<FaEdit />}
+                  >
+                    Không thể chỉnh sửa sự kiện đã diễn ra
+                  </Button>
+                ) : (
+                  <Button
+                    colorScheme="purple"
+                    size="lg"
+                    width="full"
+                    onClick={handleEditEvent}
+                    leftIcon={<FaEdit />}
+                  >
+                    Chỉnh sửa sự kiện
+                  </Button>
+                )
               ) : event.isPaid ? (
                 // === SỰ KIỆN CÓ PHÍ ===
                 isRegistered ? (

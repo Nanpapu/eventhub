@@ -74,7 +74,7 @@ import {
   FiList,
   FiSettings,
   FiCheckCircle,
-  FiLink,
+  FiHome,
 } from "react-icons/fi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -348,6 +348,8 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
 
       <Divider />
 
+      {/* Tạm thời comment phần sự kiện online */}
+      {/* 
       <FormControl display="flex" alignItems="center">
         <FormLabel htmlFor="isOnline" mb="0">
           Sự kiện trực tuyến (Online)?
@@ -360,7 +362,50 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
           colorScheme="teal"
         />
       </FormControl>
+      */}
 
+      {/* Phần nhập địa điểm cho sự kiện (hiện luôn vì đã vô hiệu hóa isOnline) */}
+      <FormControl isInvalid={!!errors.location} isRequired>
+        <FormLabel htmlFor="location">Tên địa điểm</FormLabel>
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FiMapPin} color="gray.500" />
+          </InputLeftElement>
+          <Input
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder="VD: Nhà Văn hóa Thanh niên"
+            borderColor={borderColor}
+          />
+        </InputGroup>
+        {errors.location && (
+          <FormErrorMessage>{errors.location}</FormErrorMessage>
+        )}
+      </FormControl>
+
+      <FormControl isInvalid={!!errors.address} isRequired>
+        <FormLabel htmlFor="address">Địa chỉ chi tiết</FormLabel>
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FiHome} color="gray.500" />
+          </InputLeftElement>
+          <Input
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="VD: 04 Phạm Ngọc Thạch, Quận 1, TP.HCM"
+            borderColor={borderColor}
+          />
+        </InputGroup>
+        {errors.address && (
+          <FormErrorMessage>{errors.address}</FormErrorMessage>
+        )}
+      </FormControl>
+
+      {/* Phần nhập URL cho sự kiện online - đã comment
       {formData.isOnline ? (
         <FormControl isInvalid={!!errors.onlineUrl} isRequired>
           <FormLabel htmlFor="onlineUrl">URL sự kiện trực tuyến</FormLabel>
@@ -397,7 +442,7 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                placeholder="VD: Trung tâm Hội nghị Quốc gia"
+                placeholder="VD: Nhà Văn hóa Thanh niên"
                 borderColor={borderColor}
               />
             </InputGroup>
@@ -407,21 +452,27 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
           </FormControl>
 
           <FormControl isInvalid={!!errors.address} isRequired>
-            <FormLabel htmlFor="address">Địa chỉ cụ thể</FormLabel>
-            <Textarea
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="VD: Số 1 Đại lộ Thăng Long, Mễ Trì, Nam Từ Liêm, Hà Nội"
-              borderColor={borderColor}
-            />
+            <FormLabel htmlFor="address">Địa chỉ chi tiết</FormLabel>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FiHome} color="gray.500" />
+              </InputLeftElement>
+              <Input
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="VD: 04 Phạm Ngọc Thạch, Quận 1, TP.HCM"
+                borderColor={borderColor}
+              />
+            </InputGroup>
             {errors.address && (
               <FormErrorMessage>{errors.address}</FormErrorMessage>
             )}
           </FormControl>
         </>
       )}
+      */}
     </VStack>
   );
 };
@@ -770,11 +821,10 @@ interface ReviewConfirmStepProps {
 
 // Bước 5: Xem trước & Xác nhận
 const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
+  const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
+  const secondaryTextColor = useColorModeValue("gray.500", "gray.400");
   const iconColor = useColorModeValue("teal.500", "teal.300");
-  const ticketBoxBgColor = useColorModeValue("gray.50", "gray.700");
-  const onlineLinkColor = useColorModeValue("teal.500", "teal.300");
 
   return (
     <VStack spacing={6} align="stretch">
@@ -857,6 +907,7 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
               {formData.startTime} - {formData.endTime}
             </Text>
           </Flex>
+          {/* Bỏ phần hiển thị thông tin sự kiện online
           {formData.isOnline ? (
             <Flex align="center" gap={2}>
               <Icon as={FiLink} color={iconColor} />
@@ -876,16 +927,17 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
               </Text>
             </Flex>
           ) : (
-            <Flex align="start" gap={2}>
-              <Icon as={FiMapPin} color={iconColor} mt={1} />
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="medium">{formData.location}</Text>
-                <Text fontSize="sm" color={secondaryTextColor}>
-                  {formData.address}
-                </Text>
-              </VStack>
-            </Flex>
-          )}
+          */}
+          <Flex align="start" gap={2}>
+            <Icon as={FiMapPin} color={iconColor} mt={1} />
+            <VStack align="start" spacing={0}>
+              <Text fontWeight="medium">{formData.location}</Text>
+              <Text fontSize="sm" color={secondaryTextColor}>
+                {formData.address}
+              </Text>
+            </VStack>
+          </Flex>
+          {/*)}*/}
         </VStack>
       </Box>
 
@@ -929,7 +981,7 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
                   borderWidth="1px"
                   borderColor={borderColor}
                   borderRadius="md"
-                  bg={ticketBoxBgColor}
+                  bg={bgColor}
                 >
                   <Flex justify="space-between" align="center">
                     <Text fontWeight="medium">{ticket.name}</Text>
@@ -1366,41 +1418,24 @@ const CreateEvent = () => {
     }
   };
 
+  /**
+   * Xử lý sự kiện thay đổi của các input checkbox.
+   * @eslint-disable-next-line @typescript-eslint/no-unused-vars
+   */
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
 
-    // Giữ lại logic xử lý đặc biệt cho trường isOnline và isPaid
+    // Bỏ xử lý đặc biệt cho isOnline, chỉ giữ cho isPaid
     setFormData((prev) => ({
       ...prev,
       [name]: checked,
-      ...(name === "isOnline" &&
-        checked && {
-          location: "",
-          address: "",
-          onlineUrl: prev.onlineUrl || "",
-        }),
-      ...(name === "isOnline" &&
-        !checked && {
-          onlineUrl: undefined,
-          location: prev.location || "",
-          address: prev.address || "",
-        }),
       ...(name === "isPaid" &&
         !checked && { ticketTypes: [], price: undefined }),
     }));
 
     setFormModified(true); // Đánh dấu form đã được chỉnh sửa
 
-    // Giữ lại logic xử lý lỗi
-    if (name === "isOnline") {
-      setErrors((prevEditorErrors) => ({
-        ...prevEditorErrors,
-        onlineUrl: "",
-        location: "",
-        address: "",
-      }));
-    }
-
+    // Xử lý lỗi cho isPaid
     if (name === "isPaid") {
       setErrors((prevEditorErrors) => {
         const newEditorErrors = { ...prevEditorErrors };
@@ -1543,20 +1578,23 @@ const CreateEvent = () => {
         if (!formData.endTime) {
           newStepErrors.endTime = "Thời gian kết thúc là bắt buộc.";
         }
+        // Bỏ validation cho isOnline
+        /*
         if (formData.isOnline) {
           if (!formData.onlineUrl?.trim()) {
             newStepErrors.onlineUrl = "URL sự kiện trực tuyến là bắt buộc.";
           }
         } else {
-          if (!formData.location.trim()) {
-            newStepErrors.location =
-              "Tên địa điểm là bắt buộc cho sự kiện offline.";
-          }
-          if (!formData.address.trim()) {
-            newStepErrors.address =
-              "Địa chỉ cụ thể là bắt buộc cho sự kiện offline.";
-          }
+        */
+        if (!formData.location.trim()) {
+          newStepErrors.location =
+            "Tên địa điểm là bắt buộc cho sự kiện offline.";
         }
+        if (!formData.address.trim()) {
+          newStepErrors.address =
+            "Địa chỉ cụ thể là bắt buộc cho sự kiện offline.";
+        }
+        //}
         break;
       case 2:
         if (formData.isPaid) {
@@ -1614,54 +1652,11 @@ const CreateEvent = () => {
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    let allStepsValid = true;
-    const finalSubmissionErrors: Record<string, string> = {};
-
-    for (let i = 0; i < stepperSteps.length - 1; i++) {
-      const stepSpecificErrors = validateStep(i);
-      if (Object.keys(stepSpecificErrors).length > 0) {
-        allStepsValid = false;
-        Object.assign(finalSubmissionErrors, stepSpecificErrors);
-      }
-    }
-
-    if (!allStepsValid) {
-      let firstErrorStep = -1;
-      for (let i = 0; i < stepperSteps.length - 1; i++) {
-        const stepErrorKeys = getErrorKeysForStep(i);
-        if (stepErrorKeys.some((key) => finalSubmissionErrors[key])) {
-          firstErrorStep = i;
-          break;
-        }
-      }
-
-      if (firstErrorStep !== -1) {
-        setActiveStep(firstErrorStep);
-        toast({
-          title: "Thông tin chưa hoàn tất",
-          description: `Vui lòng kiểm tra lại các trường được đánh dấu đỏ ở Bước ${
-            firstErrorStep + 1
-          }.`,
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Thông tin chưa hoàn tất",
-          description: "Vui lòng kiểm tra lại thông tin ở các bước.",
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
-      }
-      return;
+    if (e) {
+      e.preventDefault();
     }
 
     const {
-      id,
       title,
       description,
       category,
@@ -1670,13 +1665,14 @@ const CreateEvent = () => {
       endTime,
       location,
       address,
-      isOnline,
-      onlineUrl,
+      // isOnline, // Comment lại biến không sử dụng
+      // onlineUrl, // Comment lại biến không sử dụng
       capacity,
       maxTicketsPerPerson,
       isPaid,
-      tags,
+      // price, // Comment lại biến không sử dụng
       image,
+      tags,
     } = formData;
 
     const apiData: CreateEventData = {
@@ -1686,10 +1682,10 @@ const CreateEvent = () => {
       date,
       startTime,
       endTime,
-      location: isOnline ? "" : location,
-      address: isOnline ? "" : address,
-      isOnline,
-      onlineUrl: isOnline ? onlineUrl : undefined,
+      location,
+      address,
+      isOnline: false, // Luôn đặt là false
+      // onlineUrl: undefined, // Không cần gửi vì isOnline = false
       capacity,
       maxTicketsPerPerson,
       isPaid,
@@ -1710,47 +1706,41 @@ const CreateEvent = () => {
       published: true,
     };
 
-    if (apiData.onlineUrl === "") {
-      delete apiData.onlineUrl;
-    }
-
+    // Sửa try/catch để tắt cảnh báo any ở phần xử lý lỗi
     try {
-      if (editMode && id) {
-        console.log("Updating event:", { ...apiData, id });
-        await dispatch(createEvent({ ...apiData, id })).unwrap();
+      if (editMode && formData.id) {
+        console.log("Updating event:", { ...apiData, id: formData.id });
+        await dispatch(createEvent({ ...apiData, id: formData.id })).unwrap();
         toast({
-          title: "Sự kiện đã cập nhật",
-          description: "Sự kiện của bạn đã được cập nhật thành công",
+          title: "Đã cập nhật sự kiện!",
+          description: "Sự kiện của bạn đã được cập nhật thành công.",
           status: "success",
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
         setFormModified(false); // Reset trạng thái form sau khi lưu thành công
-        navigateSafely(`/events/${id}`);
+        navigateSafely(`/events/${formData.id}`);
       } else {
         console.log("Creating event:", apiData);
         const result = await dispatch(createEvent(apiData)).unwrap();
         toast({
-          title: "Sự kiện đã tạo",
-          description: "Sự kiện của bạn đã được tạo thành công",
+          title: "Đã tạo sự kiện!",
+          description: "Sự kiện của bạn đã được tạo thành công.",
           status: "success",
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
         setFormModified(false); // Reset trạng thái form sau khi lưu thành công
-        navigateSafely(`/events/${result.event?._id || result.event?.id}`);
+        navigateSafely(`/events/${result.event.id}`);
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Có lỗi xảy ra khi xử lý sự kiện";
-
+    } catch (error: any) {
+      console.error("Error saving event:", error);
       toast({
-        title: "Lỗi",
-        description: errorMessage,
+        title: "Lỗi lưu sự kiện",
+        description:
+          error.message || "Có lỗi xảy ra khi lưu sự kiện, vui lòng thử lại.",
         status: "error",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
       });
     }

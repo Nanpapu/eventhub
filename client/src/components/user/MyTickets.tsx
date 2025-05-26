@@ -146,6 +146,23 @@ const MyTickets = () => {
     }
   });
 
+  // Hàm tiện ích lọc vé theo điều kiện search và location
+  const filterTickets = (status?: string) => {
+    return tickets.filter((ticket) => {
+      const matchesSearch = ticket.eventTitle
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesLocation =
+        locationFilter === "" ||
+        ticket.location.toLowerCase().includes(locationFilter.toLowerCase());
+
+      if (status) {
+        return matchesSearch && matchesLocation && ticket.status === status;
+      }
+      return matchesSearch && matchesLocation;
+    });
+  };
+
   // Xử lý hủy vé
   const handleCancelTicket = (ticketId: string) => {
     setTickets(
@@ -236,7 +253,7 @@ const MyTickets = () => {
               <Icon as={FiList} fontSize="18px" mr={2} />
               <Text>Tất cả vé</Text>
               <Badge ml={2} colorScheme="blue" borderRadius="full">
-                {filteredTickets.length}
+                {filterTickets().length}
               </Badge>
             </Flex>
           </Tab>
@@ -251,11 +268,7 @@ const MyTickets = () => {
               <Icon as={FiCalendar} fontSize="18px" mr={2} />
               <Text>Sắp diễn ra</Text>
               <Badge ml={2} colorScheme="green" borderRadius="full">
-                {
-                  filteredTickets.filter(
-                    (ticket) => ticket.status === "upcoming"
-                  ).length
-                }
+                {filterTickets("upcoming").length}
               </Badge>
             </Flex>
           </Tab>
@@ -270,10 +283,7 @@ const MyTickets = () => {
               <Icon as={FiHistory} fontSize="18px" mr={2} />
               <Text>Đã qua</Text>
               <Badge ml={2} colorScheme="gray" borderRadius="full">
-                {
-                  filteredTickets.filter((ticket) => ticket.status === "past")
-                    .length
-                }
+                {filterTickets("past").length}
               </Badge>
             </Flex>
           </Tab>
@@ -287,11 +297,7 @@ const MyTickets = () => {
               <Icon as={FiX} fontSize="18px" mr={2} />
               <Text>Đã hủy</Text>
               <Badge ml={2} colorScheme="red" borderRadius="full">
-                {
-                  filteredTickets.filter(
-                    (ticket) => ticket.status === "canceled"
-                  ).length
-                }
+                {filterTickets("canceled").length}
               </Badge>
             </Flex>
           </Tab>
