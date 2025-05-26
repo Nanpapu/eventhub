@@ -33,7 +33,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { FaCheck, FaTicketAlt, FaEnvelope } from "react-icons/fa";
 import CheckoutForm from "../../components/checkout/CheckoutForm";
-import { useTranslation } from "react-i18next";
 import { CurrencyDisplay } from "../../components/common";
 import eventService from "../../services/event.service";
 
@@ -63,7 +62,6 @@ interface EventData {
  * Quy trình 3 bước: chọn vé, thanh toán, xác nhận
  */
 export default function Checkout() {
-  const { t } = useTranslation();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -544,7 +542,7 @@ export default function Checkout() {
 
               <Flex align="center" justify="space-between">
                 <Text fontWeight="medium" color={textColor}>
-                  {t("checkout.ticketQuantity")}:
+                  Số lượng vé:
                 </Text>
                 <NumberInput
                   maxW={32}
@@ -567,7 +565,7 @@ export default function Checkout() {
               <Divider my={2} />
 
               <Flex justify="space-between" fontWeight="bold" color={textColor}>
-                <Text>{t("checkout.total")}:</Text>
+                <Text>Tổng cộng:</Text>
                 <Text as="span">
                   <CurrencyDisplay
                     amount={
@@ -580,7 +578,7 @@ export default function Checkout() {
 
               <HStack spacing={4} justify="flex-end" pt={4}>
                 <Button variant="outline" onClick={handleBackToEvent}>
-                  {t("common.back")}
+                  Quay lại
                 </Button>
                 <Button
                   colorScheme="teal"
@@ -591,7 +589,7 @@ export default function Checkout() {
                     (maxAllowedForInput === 0 && ticketQuantity === 0)
                   }
                 >
-                  {t("common.continue")}
+                  Tiếp tục
                 </Button>
               </HStack>
             </VStack>
@@ -635,17 +633,17 @@ export default function Checkout() {
                 </Box>
 
                 <Heading size="lg" color={successIconColor} mb={2}>
-                  {t("checkout.success.title")}
+                  Đặt vé thành công
                 </Heading>
 
                 <Text color={successIconColor} mb={4}>
-                  {t("checkout.success.thankYou")}
+                  Cảm ơn bạn đã đặt vé!
                 </Text>
               </Box>
 
               <Box bg={confirmBoxBg} p={4} borderRadius="md" boxShadow="sm">
                 <Heading size="md" mb={4} color={textColor}>
-                  {t("checkout.ticketInfo")}
+                  Thông tin vé
                 </Heading>
 
                 <VStack spacing={3} align="stretch">
@@ -658,14 +656,14 @@ export default function Checkout() {
 
                   <HStack>
                     <Text fontWeight="medium" width="40%" color={textColor}>
-                      {t("checkout.ticketQuantity")}:
+                      Số lượng vé:
                     </Text>
                     <Text color={textColor}>{ticketQuantity}</Text>
                   </HStack>
 
                   <HStack>
                     <Text fontWeight="medium" width="40%" color={textColor}>
-                      {t("checkout.transactionId")}:
+                      Mã giao dịch:
                     </Text>
                     <Text color={textColor}>{transactionId}</Text>
                   </HStack>
@@ -693,14 +691,14 @@ export default function Checkout() {
                   leftIcon={<FaEnvelope />}
                   onClick={() =>
                     toast({
-                      title: t("checkout.success.emailResent"),
+                      title: "Email xác nhận đã được gửi lại",
                       status: "success",
                       duration: 3000,
                       isClosable: true,
                     })
                   }
                 >
-                  {t("checkout.resendEmail")}
+                  Gửi lại email
                 </Button>
 
                 <Button
@@ -708,7 +706,7 @@ export default function Checkout() {
                   rightIcon={<FaTicketAlt />}
                   onClick={handleFinish}
                 >
-                  {t("checkout.viewMyTickets")}
+                  Xem vé của tôi
                 </Button>
               </HStack>
             </VStack>
