@@ -29,14 +29,21 @@ const createTransporter = async () => {
     };
   } else {
     // Sử dụng cấu hình Gmail thực tế
+    // Hiển thị thông tin cấu hình để debug (che giấu mật khẩu)
+    console.log("Email configuration:");
+    console.log("- Service:", config.emailService);
+    console.log("- Host:", config.emailHost);
+    console.log("- Port:", config.emailPort);
+    console.log("- User:", config.emailUser);
+    console.log("- From:", config.emailFrom);
+    console.log("- Password exists:", config.emailPass ? "Yes" : "No");
+
+    // Cấu hình transporter cho Gmail - phiên bản đơn giản hơn
     const transporter = nodemailer.createTransport({
-      service: config.emailService, // 'gmail'
-      host: config.emailHost, // smtp.gmail.com
-      port: config.emailPort, // 587
-      secure: false, // true for 465, false for other ports
+      service: "gmail",
       auth: {
-        user: config.emailUser, // Email từ file .env
-        pass: config.emailPass, // Password từ file .env (App Password từ Google)
+        user: config.emailUser,
+        pass: config.emailPass,
       },
     });
 
@@ -44,8 +51,9 @@ const createTransporter = async () => {
     try {
       await transporter.verify();
       console.log("SMTP connection to Gmail verified successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("SMTP connection verification failed:", error);
+      throw new Error(`SMTP connection failed: ${error.message}`);
     }
 
     return {
@@ -73,6 +81,7 @@ const emailService = {
 
       // Tạo link đặt lại mật khẩu
       const resetLink = `${config.clientURL}/auth/reset-password?token=${resetToken}`;
+      console.log(`Generated reset link: ${resetLink}`);
 
       // Nội dung email
       const mailOptions = {
@@ -103,6 +112,8 @@ const emailService = {
         `,
       };
 
+      console.log(`Attempting to send email to: ${email}`);
+
       // Gửi email
       const info = await transporter.sendMail(mailOptions);
       console.log("Message sent: %s", info.messageId);
@@ -128,9 +139,19 @@ const emailService = {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi gửi email đặt lại mật khẩu:", error);
-      throw error;
+
+      // Bổ sung thông tin lỗi chi tiết hơn để debug
+      let errorMessage = "Unknown error";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        console.error("Error stack:", error.stack);
+      } else {
+        errorMessage = String(error);
+      }
+
+      throw new Error(`Không thể gửi email: ${errorMessage}`);
     }
   },
 };

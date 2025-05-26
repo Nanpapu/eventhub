@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 // Tải biến môi trường từ file .env
 dotenv.config();
 
+// Hiển thị CLIENT_URL để debug
+console.log("CLIENT_URL from .env:", process.env.CLIENT_URL);
+
 const config = {
   // Server
   port: process.env.PORT || 5000,

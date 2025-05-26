@@ -84,6 +84,8 @@ if (config.nodeEnv === "development") {
       res.status(500).json({
         success: false,
         message: "Lỗi gửi email test",
+        error: error.message,
+        stack: config.nodeEnv === "development" ? error.stack : undefined,
       });
     }
   });
