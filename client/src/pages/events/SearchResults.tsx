@@ -22,6 +22,7 @@ import {
   getCategoryName,
   categories as allCategories,
 } from "../../utils/categoryUtils";
+import { getLocationOptions } from "../../utils/locationUtils";
 import { EventCard, EventCardData } from "../../components/events/EventCard";
 
 interface EventResponse {
@@ -36,15 +37,6 @@ interface EventResponse {
   address: string;
   [key: string]: string | number | boolean | Date;
 }
-
-const locations = [
-  "TP. Hồ Chí Minh",
-  "Hà Nội",
-  "Đà Nẵng",
-  "Cần Thơ",
-  "Huế",
-  "Nha Trang",
-];
 
 const SearchResults = () => {
   const textColor = useColorModeValue("gray.800", "gray.100");
@@ -271,7 +263,7 @@ const SearchResults = () => {
     setCurrentPage(1);
   }, []);
 
-  const locationOptions = locations.map((loc) => ({ name: loc }));
+  const locationOptions = getLocationOptions();
   const categoryOptions = allCategories.map((cat) => ({
     id: cat.id,
     name: cat.name,

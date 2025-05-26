@@ -91,6 +91,7 @@ import {
   selectUser,
   selectIsAuthenticated,
 } from "../../app/features/authSlice";
+import { vietnamProvinces } from "../../utils/locationUtils";
 
 // Interface cho dữ liệu sự kiện
 interface EventFormData {
@@ -156,6 +157,11 @@ interface StepProps {
   setFormData: React.Dispatch<React.SetStateAction<EventFormData>>;
   errors: Record<string, string>;
   // Thêm các props khác nếu cần cho từng step
+}
+
+// Định nghĩa interface với tên khác để tránh xung đột
+interface DateTimeLocationProps extends StepProps {
+  // Không cần handleCheckboxChange nữa
 }
 
 // Bước 1: Thông tin cơ bản
@@ -271,17 +277,11 @@ const BasicInfoStep: React.FC<StepProps> = ({
   );
 };
 
-// Các step component khác giữ nguyên dạng rỗng hoặc cập nhật props nếu cần
-interface DateTimeLocationStepProps extends StepProps {
-  handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
 // Bước 2: Thời gian & Địa điểm
-const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
+const DateTimeLocationStep: React.FC<DateTimeLocationProps> = ({
   formData,
   handleChange,
   errors,
-  handleCheckboxChange,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   return (
@@ -366,19 +366,26 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
 
       {/* Phần nhập địa điểm cho sự kiện (hiện luôn vì đã vô hiệu hóa isOnline) */}
       <FormControl isInvalid={!!errors.location} isRequired>
-        <FormLabel htmlFor="location">Tên địa điểm</FormLabel>
+        <FormLabel htmlFor="location">Tỉnh/Thành phố</FormLabel>
         <InputGroup>
           <InputLeftElement pointerEvents="none">
             <Icon as={FiMapPin} color="gray.500" />
           </InputLeftElement>
-          <Input
+          <Select
             id="location"
             name="location"
             value={formData.location}
             onChange={handleChange}
-            placeholder="VD: Nhà Văn hóa Thanh niên"
+            placeholder="Chọn tỉnh/thành phố"
             borderColor={borderColor}
-          />
+            pl={10}
+          >
+            {vietnamProvinces.map((province) => (
+              <option key={province} value={province}>
+                {province}
+              </option>
+            ))}
+          </Select>
         </InputGroup>
         {errors.location && (
           <FormErrorMessage>{errors.location}</FormErrorMessage>
@@ -396,7 +403,7 @@ const DateTimeLocationStep: React.FC<DateTimeLocationStepProps> = ({
             name="address"
             value={formData.address}
             onChange={handleChange}
-            placeholder="VD: 04 Phạm Ngọc Thạch, Quận 1, TP.HCM"
+            placeholder="VD: 04 Phạm Ngọc Thạch, Quận 1, Phường Bến Nghé"
             borderColor={borderColor}
           />
         </InputGroup>
@@ -1093,7 +1100,7 @@ const ProtectedLink = ({
   children: React.ReactNode;
   formModified: boolean;
   editMode: boolean;
-  [x: string]: any;
+  [x: string]: unknown;
 }) => {
   const navigate = useNavigate();
 
@@ -1190,7 +1197,7 @@ const CreateEvent = () => {
 
   // Hàm điều hướng an toàn với xác nhận nếu form đã thay đổi
   const navigateSafely = useCallback(
-    (to: string, options?: { replace?: boolean; state?: any }) => {
+    (to: string, options?: { replace?: boolean; state?: unknown }) => {
       if (formModified && !editMode) {
         if (
           window.confirm(
@@ -1733,12 +1740,14 @@ const CreateEvent = () => {
         setFormModified(false); // Reset trạng thái form sau khi lưu thành công
         navigateSafely(`/events/${result.event.id}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving event:", error);
       toast({
         title: "Lỗi lưu sự kiện",
         description:
-          error.message || "Có lỗi xảy ra khi lưu sự kiện, vui lòng thử lại.",
+          error instanceof Error
+            ? error.message
+            : "Có lỗi xảy ra khi lưu sự kiện, vui lòng thử lại.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -1824,11 +1833,7 @@ const CreateEvent = () => {
         return <BasicInfoStep {...commonProps} handleChange={handleChange} />;
       case 1:
         return (
-          <DateTimeLocationStep
-            {...commonProps}
-            handleChange={handleChange}
-            handleCheckboxChange={handleCheckboxChange}
-          />
+          <DateTimeLocationStep {...commonProps} handleChange={handleChange} />
         );
       case 2:
         return (
