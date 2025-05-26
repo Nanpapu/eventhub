@@ -21,7 +21,6 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
-import { useTranslation } from "react-i18next";
 
 interface ResetPasswordFormValues {
   password: string;
@@ -29,7 +28,6 @@ interface ResetPasswordFormValues {
 }
 
 const ResetPassword = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
@@ -81,7 +79,7 @@ const ResetPassword = () => {
       });
 
       toast({
-        title: t("auth.resetPassword.resetSuccess"),
+        title: "Đặt lại mật khẩu thành công",
         description:
           "Mật khẩu của bạn đã được đặt lại thành công. Vui lòng đăng nhập bằng mật khẩu mới.",
         status: "success",
@@ -93,24 +91,27 @@ const ResetPassword = () => {
       setTimeout(() => {
         navigate("/login", { state: { from: "reset-password-success" } });
       }, 2000);
-    } catch (error: any) {
-      let errorMessage = t("common.unknownError");
+    } catch (error: unknown) {
+      let errorMessage = "Đã xảy ra lỗi không xác định";
 
       // Xử lý các trường hợp lỗi cụ thể từ API
-      if (error.response) {
-        if (error.response.data && error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 400) {
+      if (error && typeof error === "object" && "response" in error) {
+        const errorObj = error as {
+          response?: { data?: { message?: string }; status?: number };
+        };
+        if (errorObj.response?.data?.message) {
+          errorMessage = errorObj.response.data.message;
+        } else if (errorObj.response?.status === 400) {
           errorMessage = "Token không hợp lệ hoặc đã hết hạn.";
-        } else if (error.response.status === 500) {
+        } else if (errorObj.response?.status === 500) {
           errorMessage = "Lỗi máy chủ. Không thể đặt lại mật khẩu.";
         }
-      } else if (error.request) {
+      } else if (error && typeof error === "object" && "request" in error) {
         errorMessage = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.";
       }
 
       toast({
-        title: t("auth.resetPassword.resetFailed"),
+        title: "Đặt lại mật khẩu thất bại",
         description: errorMessage,
         status: "error",
         duration: 5000,
@@ -130,7 +131,7 @@ const ResetPassword = () => {
           </Center>
           <Stack spacing={3} textAlign="center">
             <Heading fontSize="2xl" fontWeight="bold">
-              {t("auth.resetPassword.title")}
+              Đặt lại mật khẩu
             </Heading>
           </Stack>
         </Stack>
@@ -145,11 +146,11 @@ const ResetPassword = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel fontWeight="medium">{t("auth.password")}</FormLabel>
+                <FormLabel fontWeight="medium">Mật khẩu mới</FormLabel>
                 <InputGroup>
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder={t("auth.resetPassword.newPasswordPlaceholder")}
+                    placeholder="Nhập mật khẩu mới"
                     size="lg"
                     focusBorderColor="teal.400"
                     {...register("password", {
@@ -176,15 +177,11 @@ const ResetPassword = () => {
               </FormControl>
 
               <FormControl isInvalid={!!errors.confirmPassword}>
-                <FormLabel fontWeight="medium">
-                  {t("auth.confirmPassword")}
-                </FormLabel>
+                <FormLabel fontWeight="medium">Xác nhận mật khẩu</FormLabel>
                 <InputGroup>
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder={t(
-                      "auth.resetPassword.confirmPasswordPlaceholder"
-                    )}
+                    placeholder="Nhập lại mật khẩu mới"
                     size="lg"
                     focusBorderColor="teal.400"
                     {...register("confirmPassword", {
@@ -217,7 +214,7 @@ const ResetPassword = () => {
                 fontSize="md"
                 isLoading={isSubmitting}
               >
-                {t("common.submit")}
+                Đặt lại mật khẩu
               </Button>
 
               <Button
@@ -228,7 +225,7 @@ const ResetPassword = () => {
                 size="sm"
                 leftIcon={<FaArrowLeft />}
               >
-                {t("common.back")}
+                Quay lại đăng nhập
               </Button>
             </Stack>
           </form>

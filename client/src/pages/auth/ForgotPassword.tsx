@@ -12,7 +12,6 @@ import {
   useToast,
   Image,
   Center,
-  Link as ChakraLink,
   Alert,
   AlertIcon,
   AlertTitle,
@@ -25,14 +24,12 @@ import { useForm } from "react-hook-form";
 import { FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 
 interface ForgotPasswordFormValues {
   email: string;
 }
 
 const ForgotPassword = () => {
-  const { t } = useTranslation();
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
@@ -57,30 +54,33 @@ const ForgotPassword = () => {
       }
 
       toast({
-        title: t("auth.forgotPassword.resetLinkSent"),
+        title: "Đã gửi link đặt lại mật khẩu",
         description: "Vui lòng kiểm tra email của bạn để đặt lại mật khẩu.",
         status: "success",
         duration: 5000,
         isClosable: true,
       });
-    } catch (error: any) {
-      let errorMessage = t("common.unknownError");
+    } catch (error: unknown) {
+      let errorMessage = "Đã xảy ra lỗi không xác định";
 
       // Xử lý các trường hợp lỗi cụ thể từ API
-      if (error.response) {
-        if (error.response.data && error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 404) {
+      if (error && typeof error === "object" && "response" in error) {
+        const errorObj = error as {
+          response?: { data?: { message?: string }; status?: number };
+        };
+        if (errorObj.response?.data?.message) {
+          errorMessage = errorObj.response.data.message;
+        } else if (errorObj.response?.status === 404) {
           errorMessage = "Không tìm thấy email trong hệ thống.";
-        } else if (error.response.status === 500) {
+        } else if (errorObj.response?.status === 500) {
           errorMessage = "Lỗi máy chủ. Không thể gửi email đặt lại mật khẩu.";
         }
-      } else if (error.request) {
+      } else if (error && typeof error === "object" && "request" in error) {
         errorMessage = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.";
       }
 
       toast({
-        title: t("auth.forgotPassword.resetLinkFailed"),
+        title: "Không thể gửi link đặt lại mật khẩu",
         description: errorMessage,
         status: "error",
         duration: 5000,
@@ -100,9 +100,11 @@ const ForgotPassword = () => {
           </Center>
           <Stack spacing={3} textAlign="center">
             <Heading fontSize="2xl" fontWeight="bold">
-              {t("auth.forgotPassword.title")}
+              Quên mật khẩu
             </Heading>
-            <Text color="gray.500">{t("auth.forgotPassword.instruction")}</Text>
+            <Text color="gray.500">
+              Nhập email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu
+            </Text>
           </Stack>
         </Stack>
 
@@ -152,7 +154,7 @@ const ForgotPassword = () => {
                 <FormLabel fontWeight="medium">Email</FormLabel>
                 <Input
                   type="email"
-                  placeholder={t("auth.forgotPassword.emailPlaceholder")}
+                  placeholder="Nhập địa chỉ email của bạn"
                   size="lg"
                   focusBorderColor="teal.400"
                   {...register("email", {
@@ -173,7 +175,7 @@ const ForgotPassword = () => {
                 fontSize="md"
                 isLoading={isSubmitting}
               >
-                {t("common.submit")}
+                Gửi link đặt lại mật khẩu
               </Button>
 
               <Button
@@ -184,7 +186,7 @@ const ForgotPassword = () => {
                 size="sm"
                 leftIcon={<FaArrowLeft />}
               >
-                {t("common.back")}
+                Quay lại đăng nhập
               </Button>
             </Stack>
           </form>
