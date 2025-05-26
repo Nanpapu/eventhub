@@ -82,26 +82,38 @@ const ResetPassword = () => {
 
       toast({
         title: t("auth.resetPassword.resetSuccess"),
+        description:
+          "Mật khẩu của bạn đã được đặt lại thành công. Vui lòng đăng nhập bằng mật khẩu mới.",
         status: "success",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
 
-      // Chuyển hướng đến trang đăng nhập
-      navigate("/login");
-    } catch (error: unknown) {
+      // Chuyển hướng đến trang đăng nhập sau 2 giây để người dùng có thể đọc thông báo
+      setTimeout(() => {
+        navigate("/login", { state: { from: "reset-password-success" } });
+      }, 2000);
+    } catch (error: any) {
       let errorMessage = t("common.unknownError");
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const responseError = error.response as { data?: { message?: string } };
-        if (responseError.data && responseError.data.message) {
-          errorMessage = responseError.data.message;
+
+      // Xử lý các trường hợp lỗi cụ thể từ API
+      if (error.response) {
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 400) {
+          errorMessage = "Token không hợp lệ hoặc đã hết hạn.";
+        } else if (error.response.status === 500) {
+          errorMessage = "Lỗi máy chủ. Không thể đặt lại mật khẩu.";
         }
+      } else if (error.request) {
+        errorMessage = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.";
       }
+
       toast({
         title: t("auth.resetPassword.resetFailed"),
         description: errorMessage,
         status: "error",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     } finally {

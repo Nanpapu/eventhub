@@ -21,7 +21,7 @@ import {
   Image,
   Center,
 } from "@chakra-ui/react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import {
@@ -45,6 +45,7 @@ interface LoginFormValues {
 const Login = () => {
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch();
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
@@ -55,7 +56,19 @@ const Login = () => {
     if (storedPath) {
       setRedirectPath(storedPath);
     }
-  }, []);
+
+    // Kiểm tra nếu người dùng đến từ trang reset password thành công
+    if (location.state && location.state.from === "reset-password-success") {
+      toast({
+        title: "Đặt lại mật khẩu thành công!",
+        description: "Vui lòng đăng nhập bằng mật khẩu mới của bạn.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }, [location, toast]);
 
   const {
     register,

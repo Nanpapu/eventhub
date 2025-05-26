@@ -58,23 +58,32 @@ const ForgotPassword = () => {
 
       toast({
         title: t("auth.forgotPassword.resetLinkSent"),
+        description: "Vui lòng kiểm tra email của bạn để đặt lại mật khẩu.",
         status: "success",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
-    } catch (error: unknown) {
+    } catch (error: any) {
       let errorMessage = t("common.unknownError");
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const responseError = error.response as { data?: { message?: string } };
-        if (responseError.data && responseError.data.message) {
-          errorMessage = responseError.data.message;
+
+      // Xử lý các trường hợp lỗi cụ thể từ API
+      if (error.response) {
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 404) {
+          errorMessage = "Không tìm thấy email trong hệ thống.";
+        } else if (error.response.status === 500) {
+          errorMessage = "Lỗi máy chủ. Không thể gửi email đặt lại mật khẩu.";
         }
+      } else if (error.request) {
+        errorMessage = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.";
       }
+
       toast({
         title: t("auth.forgotPassword.resetLinkFailed"),
         description: errorMessage,
         status: "error",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     } finally {
@@ -101,20 +110,23 @@ const ForgotPassword = () => {
           <Alert status="info" mb={4} borderRadius="md">
             <AlertIcon />
             <Box flex="1">
-              <AlertTitle mb={1}>Email preview available</AlertTitle>
+              <AlertTitle mb={1}>Email xem trước</AlertTitle>
               <AlertDescription display="block">
-                <Text>
-                  This is a development feature. In production, the email would
-                  be sent to your inbox.
+                <Text mb={2}>
+                  Đây là tính năng chỉ có trong môi trường phát triển. Trên môi
+                  trường thực tế, email sẽ được gửi đến hộp thư của bạn.
                 </Text>
-                <ChakraLink
+                <Button
+                  as="a"
                   href={previewURL}
-                  isExternal
-                  color="teal.500"
-                  textDecoration="underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  colorScheme="teal"
+                  size="sm"
+                  rightIcon={<FaArrowLeft transform="rotate(135deg)" />}
                 >
-                  Click here to view the reset password email
-                </ChakraLink>
+                  Xem email đặt lại mật khẩu
+                </Button>
               </AlertDescription>
             </Box>
             <CloseButton

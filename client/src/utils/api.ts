@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 10000, // Thêm timeout 10 giây để tránh chờ quá lâu khi có sự cố mạng
 });
 
 // Thêm interceptor cho request

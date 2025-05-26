@@ -144,7 +144,11 @@ const authService = {
    */
   forgotPassword: async (data: ForgotPasswordData) => {
     const response = await api.post("/auth/forgot-password", data);
-    return response.data;
+    return {
+      ...response.data,
+      // Trích xuất URL xem trước nếu có (cho môi trường phát triển)
+      previewURL: response.data.previewURL || null,
+    };
   },
 
   /**
