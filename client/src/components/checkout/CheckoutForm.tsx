@@ -340,9 +340,25 @@ export default function CheckoutForm({
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                       message: "Email không hợp lệ",
                     },
+                    validate:
+                      isAuthenticated && !!currentUser?.email
+                        ? undefined
+                        : undefined,
                   })}
                   placeholder="example@email.com"
+                  isDisabled={isAuthenticated && !!currentUser?.email}
+                  _disabled={{
+                    opacity: 0.8,
+                    cursor: "not-allowed",
+                    border: "1px solid",
+                    borderColor: "gray.300",
+                  }}
                 />
+                {isAuthenticated && currentUser?.email && (
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Email được lấy từ tài khoản của bạn và không thể chỉnh sửa
+                  </Text>
+                )}
                 <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
               </FormControl>
 
