@@ -22,6 +22,7 @@ interface CreateEventData {
   capacity: number;
   maxTicketsPerPerson: number;
   ticketTypes?: {
+    _id?: mongoose.Types.ObjectId;
     name: string;
     price: number;
     quantity: number;
@@ -171,6 +172,7 @@ const eventService = {
         isOnline: event.isOnline,
         onlineUrl: event.onlineUrl,
         published: event.published, // Theo dõi cả trạng thái publish/unpublish
+        isPaid: event.isPaid,
       };
 
       // Cập nhật sự kiện
@@ -182,7 +184,7 @@ const eventService = {
           ...tt,
           _id: tt._id || new mongoose.Types.ObjectId(), // Tạo ID nếu là ticket type mới
           availableQuantity: tt.quantity, // Mặc định availableQuantity bằng quantity khi tạo/cập nhật
-        })) as any; // Cần ép kiểu ở đây do mongoose subdocument
+        })) as any; // Cần giữ lại ép kiểu any vì không thể khớp chính xác với kiểu ITicketTypeSubdocument[]
       }
       // Nếu không có ticketTypes trong data và sự kiện đang miễn phí, đảm bảo ticketTypes rỗng
       else if (!data.isPaid) {
@@ -255,7 +257,9 @@ const eventService = {
 
         // Lọc ra các ID user duy nhất
         const uniqueUserIds = [
-          ...new Set(allUserIds.map((id) => id.toString())),
+          ...new Set(
+            allUserIds.map((id) => (id as mongoose.Types.ObjectId).toString())
+          ),
         ].map((idStr) => new mongoose.Types.ObjectId(idStr));
 
         if (uniqueUserIds.length > 0) {
@@ -393,7 +397,7 @@ const eventService = {
         .lean();
       const userIds = registrations
         .map((reg) => reg.user as mongoose.Types.ObjectId)
-        .filter((userId) => userId);
+        .filter((userId): userId is mongoose.Types.ObjectId => Boolean(userId));
 
       if (userIds.length > 0) {
         console.log(
@@ -431,7 +435,14 @@ const eventService = {
       throw new Error("Event not found");
     }
 
-    if (user.savedEvents && user.savedEvents.includes(event._id)) {
+    if (
+      user.savedEvents &&
+      user.savedEvents.some(
+        (savedId) =>
+          savedId.toString() ===
+          (event._id as mongoose.Types.ObjectId).toString()
+      )
+    ) {
       console.log("Event already saved by the user.");
       return { message: "Event already saved." };
     }
@@ -551,7 +562,9 @@ const eventService = {
         }).select("_id");
 
         if (usersWhoSavedEvent.length > 0) {
-          const userIds = usersWhoSavedEvent.map((user) => user._id);
+          const userIds = usersWhoSavedEvent.map(
+            (user) => user._id
+          ) as mongoose.Types.ObjectId[];
           await notificationService.createEventUpdateNotifications(
             userIds,
             updatedEvent,
