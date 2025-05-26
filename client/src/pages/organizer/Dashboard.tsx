@@ -51,6 +51,8 @@ import {
   FaTrash,
   FaPlus,
   FaQrcode,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -60,6 +62,7 @@ import {
   selectEventLoading,
   selectEventError,
   selectDashboardStats,
+  toggleEventVisibility,
 } from "../../app/features/eventSlice";
 
 // Định nghĩa các kiểu dữ liệu
@@ -74,6 +77,7 @@ interface Event {
   soldTickets?: number;
   status: "upcoming" | "ongoing" | "past" | "cancelled";
   revenue?: number;
+  isHidden?: boolean;
 }
 
 // Định nghĩa kiểu dữ liệu cho sự kiện từ API
@@ -90,6 +94,7 @@ interface ApiEvent {
   status?: string;
   isPaid?: boolean;
   price?: number;
+  isHidden?: boolean;
   ticketTypes?: Array<{
     quantity: number;
     availableQuantity: number;
@@ -150,6 +155,7 @@ const Dashboard = () => {
         soldTickets: event.attendees || 0,
         status: eventStatus,
         revenue: calculateEventRevenue(event),
+        isHidden: event.isHidden || false,
       };
     });
 
@@ -304,6 +310,48 @@ const Dashboard = () => {
     } finally {
       onClose();
       setEventToCancel(null);
+    }
+  };
+
+  // Xử lý ẩn/hiện sự kiện
+  const handleToggleVisibility = async (
+    eventId: string,
+    currentlyHidden: boolean
+  ) => {
+    try {
+      await dispatch(
+        toggleEventVisibility({ id: eventId, isHidden: !currentlyHidden })
+      ).unwrap();
+
+      // Cập nhật UI
+      const updatedEvents = events.map((event) =>
+        event.id === eventId ? { ...event, isHidden: !currentlyHidden } : event
+      );
+      setEvents(updatedEvents);
+
+      toast({
+        title: currentlyHidden
+          ? "Sự kiện đã được hiển thị"
+          : "Sự kiện đã được ẩn",
+        description: currentlyHidden
+          ? "Sự kiện đã được hiển thị công khai trở lại"
+          : "Sự kiện đã bị ẩn khỏi danh sách công khai",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể thay đổi trạng thái hiển thị. Vui lòng thử lại sau.";
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -471,6 +519,11 @@ const Dashboard = () => {
                               >
                                 {event.title}
                               </Link>
+                              {event.isHidden && (
+                                <Badge colorScheme="gray" fontSize="2xs" ml={2}>
+                                  Ẩn
+                                </Badge>
+                              )}
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
                                   ? "Sự Kiện Trực Tuyến"
@@ -523,6 +576,29 @@ const Dashboard = () => {
                                 onClick={() => handleEditEvent(event.id)}
                               />
                             </Tooltip>
+                            <Tooltip
+                              label={
+                                event.isHidden ? "Hiện sự kiện" : "Ẩn sự kiện"
+                              }
+                            >
+                              <IconButton
+                                aria-label={
+                                  event.isHidden ? "Hiện sự kiện" : "Ẩn sự kiện"
+                                }
+                                icon={
+                                  event.isHidden ? <FaEye /> : <FaEyeSlash />
+                                }
+                                size="sm"
+                                variant="ghost"
+                                colorScheme={event.isHidden ? "green" : "gray"}
+                                onClick={() =>
+                                  handleToggleVisibility(
+                                    event.id,
+                                    !!event.isHidden
+                                  )
+                                }
+                              />
+                            </Tooltip>
                             <Tooltip label="Hủy sự kiện">
                               <IconButton
                                 aria-label="Hủy sự kiện"
@@ -534,6 +610,7 @@ const Dashboard = () => {
                                   bg: cancelBtnHoverBg,
                                 }}
                                 onClick={() => confirmCancelEvent(event.id)}
+                                display="none"
                               />
                             </Tooltip>
                           </HStack>
@@ -586,6 +663,15 @@ const Dashboard = () => {
                                 >
                                   {event.title}
                                 </Link>
+                                {event.isHidden && (
+                                  <Badge
+                                    colorScheme="gray"
+                                    fontSize="2xs"
+                                    mr={2}
+                                  >
+                                    Ẩn
+                                  </Badge>
+                                )}
                                 <Badge colorScheme="green" fontSize="2xs">
                                   Đang diễn ra
                                 </Badge>
@@ -687,9 +773,11 @@ const Dashboard = () => {
                                 >
                                   {event.title}
                                 </Link>
-                                <Badge colorScheme="gray" fontSize="2xs">
-                                  Đã kết thúc
-                                </Badge>
+                                {event.isHidden && (
+                                  <Badge colorScheme="gray" fontSize="2xs">
+                                    Ẩn
+                                  </Badge>
+                                )}
                               </Flex>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline

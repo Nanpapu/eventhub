@@ -155,6 +155,23 @@ export const deleteEvent = createAsyncThunk(
   }
 );
 
+// Async thunk để ẩn/hiện sự kiện
+export const toggleEventVisibility = createAsyncThunk(
+  "events/toggleEventVisibility",
+  async (
+    { id, isHidden }: { id: string; isHidden: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await eventService.toggleEventVisibility(id, isHidden);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update event visibility"
+      );
+    }
+  }
+);
+
 // Tạo event slice
 const eventSlice = createSlice({
   name: "events",
@@ -306,6 +323,37 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteEvent.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Toggle event visibility cases
+      .addCase(toggleEventVisibility.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(toggleEventVisibility.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+
+        // Cập nhật sự kiện trong danh sách nếu có
+        if (state.userEvents.length > 0) {
+          state.userEvents = state.userEvents.map((event) =>
+            event.id === action.payload.event.id
+              ? { ...event, isHidden: action.payload.event.isHidden }
+              : event
+          );
+        }
+
+        // Cập nhật event hiện tại nếu đang xem chi tiết
+        if (state.event && state.event.id === action.payload.event.id) {
+          state.event = {
+            ...state.event,
+            isHidden: action.payload.event.isHidden,
+          };
+        }
+      })
+      .addCase(toggleEventVisibility.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

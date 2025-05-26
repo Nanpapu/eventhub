@@ -49,6 +49,7 @@ export interface IEvent extends Document {
   organizer: mongoose.Types.ObjectId;
   attendees: number;
   published: boolean;
+  isHidden: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -177,6 +178,10 @@ const eventSchema = new Schema<IEvent>(
     published: {
       type: Boolean,
       default: true,
+    },
+    isHidden: {
+      type: Boolean,
+      default: false,
     },
   },
   {

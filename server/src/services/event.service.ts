@@ -4,6 +4,7 @@ import User from "../models/User";
 import Registration from "../models/Registration";
 import notificationService from "./notification.service";
 import { EventFilter } from "../validations/event.validation";
+import Ticket from "../models/Ticket";
 
 interface CreateEventData {
   title: string;
@@ -46,89 +47,97 @@ const eventService = {
    * Lấy danh sách sự kiện
    */
   async getEvents(filter: EventFilter = {}) {
-    const {
-      keyword,
-      category,
-      location,
-      startDate,
-      endDate,
-      isFree,
-      page = 1,
-      limit = 10,
-    } = filter;
+    try {
+      const {
+        keyword,
+        category,
+        location,
+        startDate,
+        endDate,
+        isFree,
+        page = 1,
+        limit = 10,
+      } = filter;
 
-    const query: any = {};
+      const query: any = {
+        published: true,
+        isHidden: { $ne: true }, // Không hiển thị các sự kiện bị ẩn
+      };
 
-    // Chỉ lấy các sự kiện đã published
-    query.published = true;
-
-    // Filter theo từ khóa
-    if (keyword) {
-      query.$or = [
-        { title: { $regex: keyword, $options: "i" } },
-        { description: { $regex: keyword, $options: "i" } },
-      ];
-    }
-
-    // Filter theo category
-    if (category) {
-      query.category = category;
-    }
-
-    // Filter theo location
-    if (location) {
-      query.location = { $regex: location, $options: "i" };
-    }
-
-    // Filter theo ngày
-    if (startDate || endDate) {
-      query.date = {};
-
-      if (startDate) {
-        query.date.$gte = new Date(startDate);
+      // Filter theo từ khóa
+      if (keyword) {
+        query.$or = [
+          { title: { $regex: keyword, $options: "i" } },
+          { description: { $regex: keyword, $options: "i" } },
+        ];
       }
 
-      if (endDate) {
-        query.date.$lte = new Date(endDate);
+      // Filter theo category
+      if (category) {
+        query.category = category;
       }
+
+      // Filter theo location
+      if (location) {
+        query.location = { $regex: location, $options: "i" };
+      }
+
+      // Filter theo ngày
+      if (startDate || endDate) {
+        query.date = {};
+
+        if (startDate) {
+          query.date.$gte = new Date(startDate);
+        }
+
+        if (endDate) {
+          query.date.$lte = new Date(endDate);
+        }
+      }
+
+      // Filter theo giá vé
+      if (isFree !== undefined) {
+        query.isPaid = !isFree;
+      }
+
+      // Tính toán số lượng sự kiện bỏ qua
+      const skip = (page - 1) * limit;
+
+      // Query database
+      const events = await Event.find(query)
+        .populate("organizer", "name avatar")
+        .skip(skip)
+        .limit(limit)
+        .sort({ date: 1 });
+
+      // Đếm tổng số sự kiện thỏa mãn điều kiện
+      const total = await Event.countDocuments(query);
+
+      // Tính toán tổng số trang
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        events,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    } catch (error) {
+      console.error("Error in getEvents:", error);
+      throw error;
     }
-
-    // Filter theo giá vé
-    if (isFree !== undefined) {
-      query.isPaid = !isFree;
-    }
-
-    // Tính toán số lượng sự kiện bỏ qua
-    const skip = (page - 1) * limit;
-
-    // Query database
-    const events = await Event.find(query)
-      .populate("organizer", "name avatar")
-      .skip(skip)
-      .limit(limit)
-      .sort({ date: 1 });
-
-    // Đếm tổng số sự kiện thỏa mãn điều kiện
-    const total = await Event.countDocuments(query);
-
-    // Tính toán tổng số trang
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      events,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages,
-      },
-    };
   },
 
   /**
    * Lấy thông tin chi tiết sự kiện theo ID
+   * @param id ID của sự kiện
+   * @param userId ID của người dùng (có thể không có nếu là truy cập công khai)
+   * @returns Thông tin chi tiết sự kiện
    */
-  async getEventById(id: string) {
+  async getEventById(id: string, userId?: string) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error("Event not found");
     }
@@ -136,6 +145,39 @@ const eventService = {
     const event = await Event.findById(id).populate("organizer", "name avatar");
 
     if (!event) {
+      throw new Error("Event not found");
+    }
+
+    // Nếu sự kiện bị ẩn, cần kiểm tra người dùng
+    if (event.isHidden) {
+      // Nếu không có userId, không cho phép xem
+      if (!userId) {
+        throw new Error("Event not found");
+      }
+
+      // Kiểm tra xem người dùng có phải là người tổ chức không
+      if (event.organizer._id.toString() === userId) {
+        return event; // Người tổ chức luôn có thể xem
+      }
+
+      // Kiểm tra xem người này đã mua vé hay đã lưu sự kiện chưa
+      const userSavedEvent = await User.findOne({
+        _id: userId,
+        savedEvents: id,
+      });
+
+      // Kiểm tra xem người này có mua vé chưa
+      const userHasTicket = await Ticket.findOne({
+        userId: userId,
+        eventId: id,
+      });
+
+      // Nếu người dùng đã lưu sự kiện hoặc có vé
+      if (userSavedEvent || userHasTicket) {
+        return event;
+      }
+
+      // Không cho phép xem nếu không đáp ứng điều kiện
       throw new Error("Event not found");
     }
 
@@ -512,6 +554,7 @@ const eventService = {
       .populate({
         path: "savedEvents",
         model: "Event",
+        match: { isHidden: { $ne: true } }, // Chỉ lấy sự kiện không bị ẩn
         populate: {
           path: "organizer",
           model: "User",
@@ -526,6 +569,42 @@ const eventService = {
       throw new Error("User not found");
     }
     return user.savedEvents || [];
+  },
+
+  /**
+   * Ẩn hoặc hiện một sự kiện
+   * @param id ID của sự kiện
+   * @param userId ID của người tổ chức
+   * @param isHidden true để ẩn, false để hiện
+   * @returns Sự kiện sau khi cập nhật
+   */
+  async toggleEventVisibility(
+    id: string,
+    userId: string,
+    isHidden: boolean
+  ): Promise<IEvent | null> {
+    try {
+      // Kiểm tra sự kiện tồn tại và thuộc về người tổ chức này
+      const event = await Event.findOne({
+        _id: id,
+        organizer: userId,
+      });
+
+      if (!event) {
+        throw new Error(
+          "Không tìm thấy sự kiện hoặc bạn không có quyền truy cập"
+        );
+      }
+
+      // Cập nhật trạng thái ẩn
+      event.isHidden = isHidden;
+      await event.save();
+
+      return event;
+    } catch (error) {
+      console.error("Error in toggleEventVisibility:", error);
+      throw error;
+    }
   },
 
   // Hủy sự kiện (ví dụ: unpublish)

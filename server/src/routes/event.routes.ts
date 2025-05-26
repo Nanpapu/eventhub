@@ -30,6 +30,11 @@ router.patch(
   isOrganizer,
   eventController.updateEventPublishStatus
 );
+router.patch(
+  "/:id/visibility",
+  isOrganizer,
+  eventController.toggleEventVisibility
+);
 
 // Route cho dashboard của tổ chức
 router.get(

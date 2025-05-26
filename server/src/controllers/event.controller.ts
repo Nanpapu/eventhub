@@ -42,18 +42,17 @@ class EventController {
   async getEventById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      console.log(`Fetching event with ID: ${id}`);
+      // Lấy userId nếu có, không bắt buộc đăng nhập
+      const userId = req.user?.id;
 
-      const event = await eventService.getEventById(id);
-      console.log("Event found:", event);
+      const event = await eventService.getEventById(id, userId);
 
-      // Trả về dữ liệu trực tiếp, không bọc trong object
-      return res.status(200).json(event);
-    } catch (error: any) {
+      res.status(200).json(event);
+    } catch (error) {
       console.error("Error in getEventById:", error);
-      return res.status(error.message === "Event not found" ? 404 : 500).json({
+      res.status(404).json({
         success: false,
-        message: error.message || "Đã xảy ra lỗi khi lấy chi tiết sự kiện",
+        message: error instanceof Error ? error.message : "Event not found",
       });
     }
   }
@@ -447,6 +446,46 @@ class EventController {
         success: false,
         message:
           error.message || "Đã xảy ra lỗi khi lấy danh sách sự kiện đã lưu",
+      });
+    }
+  }
+
+  /**
+   * Ẩn hoặc hiện một sự kiện
+   * @param req Request với req.params.id (event ID) và req.body.isHidden (boolean)
+   * @param res Response
+   */
+  async toggleEventVisibility(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { isHidden } = req.body;
+      const userId = req.user?.id;
+
+      if (typeof isHidden !== "boolean") {
+        return res.status(400).json({
+          success: false,
+          message: "isHidden phải là giá trị boolean",
+        });
+      }
+
+      const event = await eventService.toggleEventVisibility(
+        id,
+        userId,
+        isHidden
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: isHidden
+          ? "Sự kiện đã được ẩn thành công"
+          : "Sự kiện đã được hiển thị thành công",
+        event,
+      });
+    } catch (error) {
+      console.error("Error in toggleEventVisibility controller:", error);
+      return res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Lỗi server",
       });
     }
   }

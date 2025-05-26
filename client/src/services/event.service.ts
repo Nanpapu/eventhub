@@ -220,6 +220,28 @@ const eventService = {
         : "Không thể kiểm tra trạng thái vé";
     }
   },
+
+  /**
+   * Ẩn hoặc hiện một sự kiện
+   * @param eventId ID của sự kiện
+   * @param isHidden true để ẩn, false để hiện
+   * @returns Kết quả từ API
+   */
+  toggleEventVisibility: async (
+    eventId: string,
+    isHidden: boolean
+  ): Promise<any> => {
+    try {
+      const { data } = await api.patch(`/events/${eventId}/visibility`, {
+        isHidden,
+      });
+      return data;
+    } catch (error: any) {
+      throw (
+        error.response?.data?.message || "Failed to update event visibility"
+      );
+    }
+  },
 };
 
 export default eventService;
