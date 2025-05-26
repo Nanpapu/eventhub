@@ -343,7 +343,11 @@ export default function Checkout() {
       selectedTicketType
     ); // DEBUG
 
-    const currentTicketPrice = currentSelectedTicketInfo?.price ?? event.price;
+    // Đảm bảo giá vé luôn là số, mặc định là 0 nếu undefined
+    const currentTicketPrice =
+      currentSelectedTicketInfo?.price ?? event.price ?? 0;
+
+    // Dù giá vé đã được đảm bảo là số, nhưng vẫn giữ lại kiểm tra này để an toàn
     if (currentTicketPrice === undefined) {
       toast({
         title: "Lỗi",
@@ -626,6 +630,7 @@ export default function Checkout() {
                 <Text color={textColor}>{event.location}</Text>
               </HStack>
 
+              {/* Hiển thị thông tin giá vé */}
               <HStack spacing={4}>
                 <Text fontWeight="medium" color={textColor}>
                   Giá vé:
@@ -642,7 +647,7 @@ export default function Checkout() {
                   ) : event.price === 0 ? (
                     "Miễn phí"
                   ) : (
-                    <CurrencyDisplay amount={event.price} />
+                    <CurrencyDisplay amount={event.price || 0} />
                   )}
                 </Text>
               </HStack>
@@ -813,16 +818,16 @@ export default function Checkout() {
                   max={maxAllowedForInput}
                   value={ticketQuantity}
                   onChange={handleTicketQuantityChange}
-                  isDisabled={
+                  isDisabled={Boolean(
                     maxAllowedForInput === 0 ||
-                    (isAuthenticated &&
-                      userTicketStatus &&
-                      userTicketStatus.hasFreeTicker &&
-                      (currentSelectedTicketInfo?.price === 0 ||
-                        (event.ticketTypes?.length === 0 &&
-                          event.price === 0))) ||
-                    hasReachedTicketLimit
-                  }
+                      (isAuthenticated &&
+                        userTicketStatus &&
+                        userTicketStatus.hasFreeTicker &&
+                        (currentSelectedTicketInfo?.price === 0 ||
+                          (event.ticketTypes?.length === 0 &&
+                            event.price === 0))) ||
+                      hasReachedTicketLimit
+                  )}
                 >
                   <NumberInputField />
                   <NumberInputStepper>
@@ -837,12 +842,17 @@ export default function Checkout() {
               <Flex justify="space-between" fontWeight="bold" color={textColor}>
                 <Text>Tổng cộng:</Text>
                 <Text as="span">
-                  <CurrencyDisplay
-                    amount={
-                      (currentSelectedTicketInfo?.price ?? event.price ?? 0) *
-                      ticketQuantity
-                    }
-                  />
+                  {currentSelectedTicketInfo?.price === 0 ||
+                  (!currentSelectedTicketInfo && event.price === 0) ? (
+                    "Miễn phí"
+                  ) : (
+                    <CurrencyDisplay
+                      amount={
+                        (currentSelectedTicketInfo?.price ?? event.price ?? 0) *
+                        ticketQuantity
+                      }
+                    />
+                  )}
                 </Text>
               </Flex>
 
@@ -854,17 +864,17 @@ export default function Checkout() {
                   colorScheme="teal"
                   rightIcon={<FaTicketAlt />}
                   onClick={handleContinueToPayment}
-                  isDisabled={
+                  isDisabled={Boolean(
                     isLoading ||
-                    (maxAllowedForInput === 0 && ticketQuantity === 0) ||
-                    (isAuthenticated &&
-                      userTicketStatus &&
-                      userTicketStatus.hasFreeTicker &&
-                      (currentSelectedTicketInfo?.price === 0 ||
-                        (event.ticketTypes?.length === 0 &&
-                          event.price === 0))) ||
-                    hasReachedTicketLimit
-                  }
+                      (maxAllowedForInput === 0 && ticketQuantity === 0) ||
+                      (isAuthenticated &&
+                        userTicketStatus &&
+                        userTicketStatus.hasFreeTicker &&
+                        (currentSelectedTicketInfo?.price === 0 ||
+                          (event.ticketTypes?.length === 0 &&
+                            event.price === 0))) ||
+                      hasReachedTicketLimit
+                  )}
                 >
                   Tiếp tục
                 </Button>

@@ -147,11 +147,6 @@ interface StepProps {
   // Thêm các props khác nếu cần cho từng step
 }
 
-// Định nghĩa interface với tên khác để tránh xung đột
-interface DateTimeLocationProps extends StepProps {
-  // Không cần handleCheckboxChange nữa
-}
-
 // Bước 1: Thông tin cơ bản
 const BasicInfoStep: React.FC<StepProps> = ({
   formData,
@@ -266,7 +261,7 @@ const BasicInfoStep: React.FC<StepProps> = ({
 };
 
 // Bước 2: Thời gian & Địa điểm
-const DateTimeLocationStep: React.FC<DateTimeLocationProps> = ({
+const DateTimeLocationStep: React.FC<StepProps> = ({
   formData,
   handleChange,
   errors,
@@ -1420,13 +1415,22 @@ const CreateEvent = () => {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
 
-    // Bỏ xử lý đặc biệt cho isOnline, chỉ giữ cho isPaid
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-      ...(name === "isPaid" &&
-        !checked && { ticketTypes: [], price: undefined }),
-    }));
+    // Xử lý đặc biệt cho isPaid: đặt giá vé 0 khi là sự kiện miễn phí
+    if (name === "isPaid") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+        // Khi chuyển thành sự kiện miễn phí, xóa ticketTypes và đặt price = 0 rõ ràng
+        ...(!checked && { ticketTypes: [], price: 0 }),
+        // Khi chuyển thành sự kiện có phí, không đặt price
+        ...(checked && { price: undefined }),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
+    }
 
     setFormModified(true); // Đánh dấu form đã được chỉnh sửa
 

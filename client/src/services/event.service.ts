@@ -186,34 +186,38 @@ const eventService = {
     }
   },
 
-  // Thêm phương thức này sau các phương thức hiện có
-  async getEventForEdit(eventId: string) {
-    try {
-      const response = await api.get(`/events/${eventId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Thêm phương thức này sau phương thức getEventForEdit
-  async deleteEvent(eventId: string) {
-    try {
-      const response = await api.delete(`/events/${eventId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  /**
+   * Lấy thông tin chi tiết sự kiện để chỉnh sửa
+   * @param eventId ID của sự kiện
+   */
+  getEventForEdit: async (eventId: string) => {
+    const response = await api.get(`/events/${eventId}`);
+    return response.data;
   },
 
   // Thêm hàm mới để kiểm tra trạng thái vé của người dùng
-  async getUserTicketStatus(eventId: string) {
+  getUserTicketStatus: async (eventId: string) => {
     try {
       const response = await api.get(`/tickets/status/${eventId}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[event.service] Error getting user ticket status:", error);
-      throw error.response?.data?.message || "Không thể kiểm tra trạng thái vé";
+
+      // Sử dụng type guard để kiểm tra cấu trúc lỗi
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        throw (
+          axiosError.response?.data?.message ||
+          "Không thể kiểm tra trạng thái vé"
+        );
+      }
+
+      // Trường hợp lỗi khác
+      throw error instanceof Error
+        ? error.message
+        : "Không thể kiểm tra trạng thái vé";
     }
   },
 };
