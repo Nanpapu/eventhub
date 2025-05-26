@@ -38,6 +38,7 @@ import {
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
 import userService from "../../services/user.service.ts";
+import { getLocationOptions } from "../../utils/locationUtils";
 
 // Interface cho dữ liệu vé (đồng bộ với dữ liệu trả về từ API)
 interface Ticket {
@@ -184,13 +185,8 @@ const MyTickets = () => {
     setLocationFilter("");
   };
 
-  // Tạo locationOptions cho SearchBar
-  const locationOptions = tickets
-    .map((ticket) => ticket.location)
-    .filter(
-      (location, index, self) => self.indexOf(location) === index && location
-    )
-    .map((location) => ({ name: location }));
+  // Tạo locationOptions cho SearchBar từ utils
+  const locationOptions = getLocationOptions();
 
   // Tạo danh mục (dummy) cho SearchBar - Bỏ đi vì không dùng
   /*

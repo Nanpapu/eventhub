@@ -38,6 +38,8 @@ import {
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
 import eventService from "../../services/event.service";
+import { getCategoryName, getCategoryOptions } from "../../utils/categoryUtils";
+import { getLocationOptions } from "../../utils/locationUtils";
 
 // Interface cho dữ liệu sự kiện thô từ API (cho cả myEvents và savedEvents)
 interface ApiEventDto {
@@ -100,79 +102,8 @@ interface Event {
   endTime?: string;
 }
 
-// Danh mục sự kiện
-const categories = [
-  { id: "", name: "Tất cả danh mục" },
-  { id: "conference", name: "Hội nghị" },
-  { id: "workshop", name: "Hội thảo" },
-  { id: "meetup", name: "Gặp gỡ" },
-  { id: "networking", name: "Kết nối" },
-  { id: "music", name: "Âm nhạc" },
-  { id: "exhibition", name: "Triển lãm" },
-  { id: "tech", name: "Công nghệ" },
-  { id: "masterclass", name: "Masterclass" },
-  { id: "other", name: "Khác" },
-];
-
-// Dữ liệu mẫu: Sự kiện do user tạo - SẼ BỊ XÓA SAU KHI TÍCH HỢP API
-// const myEventsData: Event[] = [
-//   {
-//     id: "101",
-//     title: "Web Development Workshop",
-//     description: "Learn the latest web development techniques and tools.",
-//     date: "15/09/2023",
-//     startTime: "10:00 AM",
-//     location: "Tech Hub Center",
-//     image: "https://images.pexels.com/photos/1181271/pexels-photo-1181271.jpeg",
-//     category: "workshop",
-//     isPaid: true,
-//     price: 15.0,
-//     organizer: {
-//       name: "Nguyen Van A",
-//     },
-//     isOwner: true,
-//     participants: 45,
-//   },
-//   {
-//     id: "102",
-//     title: "Digital Marketing Conference",
-//     description: "Explore effective digital marketing strategies for 2023.",
-//     date: "22/09/2023",
-//     startTime: "09:00 AM",
-//     location: "Business Center",
-//     image: "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg",
-//     category: "conference",
-//     isPaid: true,
-//     price: 25.0,
-//     organizer: {
-//       name: "Nguyen Van A",
-//     },
-//     isOwner: true,
-//     participants: 120,
-//   },
-//   {
-//     id: "103",
-//     title: "Mobile App Design Meetup",
-//     description: "Share ideas and get feedback on mobile app designs.",
-//     date: "05/10/2023",
-//     startTime: "06:30 PM",
-//     location: "Design Studio",
-//     image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg",
-//     category: "meetup",
-//     isPaid: false,
-//     organizer: {
-//       name: "Nguyen Van A",
-//     },
-//     isOwner: true,
-//     participants: 30,
-//   },
-// ];
-
-// Function để lấy tên category từ id
-const getCategoryName = (categoryId: string): string => {
-  const category = categories.find((cat) => cat.id === categoryId);
-  return category ? category.name : "Khác";
-};
+// Format categories cho SearchBar
+const categoryOptions = getCategoryOptions();
 
 /**
  * Component quản lý sự kiện - hiển thị trong tab Sự kiện của UserDashboard
@@ -376,7 +307,7 @@ const EventManagement = () => {
     // Hiển thị toast thông báo thành công/thất bại
   };
 
-  // Hủy lưu sự kiện - gọi API để hủy lưu
+  // Xử lý hủy lưu sự kiện - gọi API để hủy lưu
   const handleUnsaveEvent = async (eventId: string) => {
     try {
       await eventService.unsaveEvent(eventId);
@@ -390,18 +321,8 @@ const EventManagement = () => {
     }
   };
 
-  // Format categories cho SearchBar
-  const categoryOptions = categories.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-  }));
-
   // Tạo locationOptions từ các sự kiện
-  const allEvents = [...myEvents, ...savedEvents]; // myEventsData đã bị xóa, myEvents giờ là state
-  const locationOptions = allEvents
-    .map((event) => event.location)
-    .filter((location, index, self) => self.indexOf(location) === index) // Loại bỏ trùng lặp
-    .map((location) => ({ name: location }));
+  const locationOptions = getLocationOptions();
 
   // Tạo appliedFilters để hiển thị badges khi có filter
   const appliedFilters = {
