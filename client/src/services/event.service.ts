@@ -197,8 +197,36 @@ const eventService = {
    * @param eventId ID của sự kiện
    */
   getEventForEdit: async (eventId: string) => {
-    const response = await api.get(`/events/${eventId}`);
-    return response.data;
+    try {
+      // Lấy thông tin người dùng từ localStorage để truyền vào header
+      const userString = localStorage.getItem("user");
+      const user = userString ? JSON.parse(userString) : null;
+      const userId = user ? user.id : null;
+
+      const headers: Record<string, string> = {};
+      if (userId) {
+        headers["X-User-Id"] = userId;
+      }
+
+      const response = await api.get(`/events/${eventId}`, { headers });
+      return response.data;
+    } catch (error: unknown) {
+      console.error("[event.service] Error fetching event for edit:", error);
+
+      // Type checking cho error
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        throw (
+          axiosError.response?.data?.message || "Không thể tải dữ liệu sự kiện"
+        );
+      }
+
+      throw error instanceof Error
+        ? error.message
+        : "Không thể tải dữ liệu sự kiện";
+    }
   },
 
   // Thêm hàm mới để kiểm tra trạng thái vé của người dùng
@@ -236,15 +264,23 @@ const eventService = {
   toggleEventVisibility: async (
     eventId: string,
     isHidden: boolean
-  ): Promise<any> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    event?: Record<string, unknown>;
+  }> => {
     try {
       const { data } = await api.patch(`/events/${eventId}/visibility`, {
         isHidden,
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+      };
       throw (
-        error.response?.data?.message || "Failed to update event visibility"
+        axiosError.response?.data?.message ||
+        "Failed to update event visibility"
       );
     }
   },
