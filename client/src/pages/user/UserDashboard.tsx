@@ -49,6 +49,7 @@ import {
   FiEdit,
   FiAlertCircle,
 } from "react-icons/fi";
+import { FaCamera } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import EventManagement from "../../components/user/EventManagement";
 import MyTickets from "../../components/user/MyTickets";
@@ -436,46 +437,79 @@ const UserDashboard = () => {
               mr={{ base: 0, md: 6 }}
             >
               <Tooltip label="Nhấn để thay đổi ảnh đại diện" placement="top">
-                <Avatar
-                  src={userData?.avatar || getDefaultAvatar(userData?.name)}
-                  name={userData?.name}
-                  size="xl"
-                  cursor="pointer"
-                  onClick={handleAvatarClick}
+                <Box
+                  position="relative"
+                  borderRadius="full"
+                  overflow="visible"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    "& > .avatar-edit-icon": {
+                      opacity: 1,
+                      transform: "translateY(0) scale(1)",
+                    },
+                  }}
                 >
-                  {isUploadingAvatar && (
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="0"
-                      right="0"
-                      bottom="0"
-                      bg="blackAlpha.600"
-                      borderRadius="full"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <Spinner size="lg" color="white" />
-                    </Box>
-                  )}
-                </Avatar>
+                  <Avatar
+                    src={userData?.avatar || getDefaultAvatar(userData?.name)}
+                    name={userData?.name}
+                    size="xl"
+                    cursor="pointer"
+                    onClick={handleAvatarClick}
+                  >
+                    {isUploadingAvatar && (
+                      <Box
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        right="0"
+                        bottom="0"
+                        bg="blackAlpha.600"
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        <Spinner size="lg" color="white" />
+                      </Box>
+                    )}
+                  </Avatar>
+
+                  {/* Icon chỉnh sửa avatar - phiên bản mượt mà hơn */}
+                  <Flex
+                    className="avatar-edit-icon"
+                    position="absolute"
+                    bottom="-6px"
+                    right="-6px"
+                    bg="rgba(255, 255, 255, 0.9)"
+                    backdropFilter="blur(4px)"
+                    color="teal.500"
+                    width="32px"
+                    height="32px"
+                    borderRadius="full"
+                    justifyContent="center"
+                    alignItems="center"
+                    cursor="pointer"
+                    onClick={handleAvatarClick}
+                    zIndex="1"
+                    boxShadow="0 2px 8px rgba(0,0,0,0.15)"
+                    border="2px solid white"
+                    opacity="0.8"
+                    transform="translateY(5px) scale(0.9)"
+                    transition="all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+                    _hover={{
+                      bg: "teal.500",
+                      color: "white",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                    }}
+                    _active={{
+                      transform: "scale(0.92)",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    <Icon as={FaCamera} boxSize="15px" />
+                  </Flex>
+                </Box>
               </Tooltip>
-              {/* Icon chỉnh sửa avatar */}
-              <Box
-                position="absolute"
-                bottom="0"
-                right="0"
-                bg="teal.500"
-                p="2px"
-                borderRadius="full"
-                border="2px solid white"
-                cursor="pointer"
-                onClick={handleAvatarClick}
-                zIndex="1"
-              >
-                <Icon as={FiEdit} color="white" boxSize={4} />
-              </Box>
               <Input
                 type="file"
                 ref={fileInputRef}
