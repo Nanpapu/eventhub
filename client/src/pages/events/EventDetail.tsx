@@ -48,6 +48,7 @@ import {
 } from "../../app/features/authSlice";
 import useAuth from "../../hooks/useAuth";
 import { getDefaultAvatar } from "../../utils/userUtils";
+import { getCategoryName } from "../../utils/categoryUtils";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
@@ -227,7 +228,7 @@ const EventDetail = () => {
 
   // Màu sắc cho badge
   const tealBadgeBg = useColorModeValue("teal.500", "teal.500");
-  const paidBadgeBg = useColorModeValue("purple.500", "purple.500");
+  const paidBadgeBg = useColorModeValue("blue.500", "blue.500");
   const freeBadgeBg = useColorModeValue("green.500", "green.500");
 
   // Hàm mới để xử lý hiển thị giá vé
@@ -617,10 +618,10 @@ const EventDetail = () => {
             bg={tealBadgeBg}
             color="white"
           >
-            {event.category}
+            {getCategoryName(event.category)}
           </Badge>
           <Badge
-            colorScheme={event.isPaid ? "purple" : "green"}
+            colorScheme={event.isPaid ? "blue" : "green"}
             fontSize="sm"
             px={2}
             py={1}
@@ -629,7 +630,7 @@ const EventDetail = () => {
             bg={event.isPaid ? paidBadgeBg : freeBadgeBg}
             color="white"
           >
-            {event.isPaid ? "Có phí" : "Miễn phí"}
+            {event.isPaid ? "Trả phí" : "Miễn phí"}
           </Badge>
         </HStack>
       </Box>
