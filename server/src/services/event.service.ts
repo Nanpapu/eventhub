@@ -148,7 +148,11 @@ const eventService = {
       }`
     );
 
-    const event = await Event.findById(id).populate("organizer", "name avatar");
+    const event = await Event.findById(id).populate({
+      path: "organizer",
+      select:
+        "name avatar bio description location phone website email organizationName organizationType",
+    });
 
     if (!event) {
       console.log(`[EventService] getEventById: event ${id} not found`);

@@ -30,6 +30,8 @@ import {
   FiMail,
   FiPhone,
   FiGlobe,
+  FiHome,
+  FiBriefcase,
 } from "react-icons/fi";
 import {
   FaTimes,
@@ -71,9 +73,13 @@ interface EventData {
     name: string;
     avatar?: string;
     bio?: string;
+    description?: string;
     email?: string;
     phone?: string;
     website?: string;
+    location?: string;
+    organizationName?: string;
+    organizationType?: string;
     eventsCount?: number;
   };
   attendees: number;
@@ -128,6 +134,19 @@ const EventDetail = () => {
         console.log("API response data:", eventData);
         console.log("Event organizer from API:", eventData.organizer);
 
+        // Kiểm tra chi tiết các trường của organizer
+        if (eventData.organizer) {
+          console.log("Organizer bio:", eventData.organizer.bio);
+          console.log(
+            "Organizer description:",
+            eventData.organizer.description
+          );
+          console.log(
+            "Organizer organization:",
+            eventData.organizer.organizationName
+          );
+        }
+
         // Format dữ liệu từ API để phù hợp với cấu trúc giao diện
         const formattedEvent: EventData = {
           id: eventData.id || id,
@@ -153,10 +172,18 @@ const EventDetail = () => {
             avatar:
               eventData.organizer?.avatar ||
               getDefaultAvatar(eventData.organizer?.name),
-            bio: eventData.organizer?.bio || "Không có thông tin mô tả.",
+            // Kiểm tra cả hai trường bio và description
+            bio:
+              eventData.organizer?.bio ||
+              eventData.organizer?.description ||
+              "Không có thông tin mô tả.",
+            description: eventData.organizer?.description,
             email: eventData.organizer?.email,
             phone: eventData.organizer?.phone,
             website: eventData.organizer?.website,
+            location: eventData.organizer?.location,
+            organizationName: eventData.organizer?.organizationName,
+            organizationType: eventData.organizer?.organizationType,
             eventsCount: eventData.organizer?.eventsCount || 0,
           },
           attendees: eventData.attendees || 0,
@@ -720,7 +747,7 @@ const EventDetail = () => {
                 mt={3}
               >
                 <Flex direction="column" gap={3}>
-                  {/* Tiêu đề và avatar */}
+                  {/* Tiêu đề và badge */}
                   <Flex align="center" justify="space-between">
                     <Text
                       fontSize="sm"
@@ -749,6 +776,16 @@ const EventDetail = () => {
                     />
                     <Box>
                       <Text fontWeight="bold">{event.organizer.name}</Text>
+                      {event.organizer.organizationName && (
+                        <Text
+                          fontSize="sm"
+                          fontWeight="medium"
+                          color="teal.500"
+                        >
+                          {event.organizer.organizationName}
+                          
+                        </Text>
+                      )}
                       {event.organizer.bio && (
                         <Text
                           fontSize="sm"
@@ -780,6 +817,29 @@ const EventDetail = () => {
                         </Text>
                       </Flex>
                     )}
+
+                    {event.organizer.location && (
+                      <Flex align="center" gap={2} minW="fit-content">
+                        <Box as={FiHome} fontSize="sm" color={iconColor} />
+                        <Text fontSize="sm" color={secondaryTextColor}>
+                          {event.organizer.location}
+                        </Text>
+                      </Flex>
+                    )}
+
+                    {event.organizer.organizationType &&
+                      !event.organizer.organizationName && (
+                        <Flex align="center" gap={2} minW="fit-content">
+                          <Box
+                            as={FiBriefcase}
+                            fontSize="sm"
+                            color={iconColor}
+                          />
+                          <Text fontSize="sm" color={secondaryTextColor}>
+                            {event.organizer.organizationType}
+                          </Text>
+                        </Flex>
+                      )}
 
                     {event.organizer.website && (
                       <Flex align="center" gap={2} minW="fit-content">
