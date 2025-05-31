@@ -438,6 +438,56 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
   errors,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  // Thêm hàm tính toán thời lượng sự kiện
+  const getEventDuration = () => {
+    if (!formData.startTime || !formData.endTime) return null;
+
+    const [startHour, startMinute] = formData.startTime.split(":").map(Number);
+    const [endHour, endMinute] = formData.endTime.split(":").map(Number);
+
+    let durationHours = endHour - startHour;
+    let durationMinutes = endMinute - startMinute;
+
+    if (durationMinutes < 0) {
+      durationHours -= 1;
+      durationMinutes += 60;
+    }
+
+    // Xử lý trường hợp event kéo dài qua ngày hôm sau
+    if (durationHours < 0) {
+      durationHours += 24;
+    }
+
+    const hourText = durationHours > 0 ? `${durationHours} giờ` : "";
+    const minuteText = durationMinutes > 0 ? `${durationMinutes} phút` : "";
+    const durationText = [hourText, minuteText].filter(Boolean).join(" ");
+
+    return durationText || "0 phút";
+  };
+
+  // Hàm tạo mô tả thời gian sự kiện
+  const getEventTimeDescription = () => {
+    if (!formData.startTime || !formData.endTime) return null;
+
+    const [startHour] = formData.startTime.split(":").map(Number);
+    const [endHour] = formData.endTime.split(":").map(Number);
+
+    let startTimeOfDay = "sáng";
+    if (startHour >= 12 && startHour < 18) startTimeOfDay = "chiều";
+    else if (startHour >= 18) startTimeOfDay = "tối";
+
+    let endTimeOfDay = "sáng";
+    if (endHour >= 12 && endHour < 18) endTimeOfDay = "chiều";
+    else if (endHour >= 18) endTimeOfDay = "tối";
+
+    return `Sự kiện diễn ra từ ${formData.startTime} ${startTimeOfDay} đến ${
+      formData.endTime
+    } ${endTimeOfDay}, kéo dài ${getEventDuration()}.`;
+  };
+
+  const eventTimeDescription = getEventTimeDescription();
+
   return (
     <VStack spacing={6} align="stretch">
       <FormControl isInvalid={!!errors.date} isRequired>
@@ -499,6 +549,20 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
           )}
         </FormControl>
       </HStack>
+
+      {/* Hiển thị thông tin về thời lượng sự kiện */}
+      {formData.startTime && formData.endTime && (
+        <Box
+          p={3}
+          bg="blue.50"
+          color="blue.700"
+          borderRadius="md"
+          borderLeftWidth="4px"
+          borderLeftColor="blue.500"
+        >
+          <Text fontSize="sm">{eventTimeDescription}</Text>
+        </Box>
+      )}
 
       <Divider />
 
@@ -1568,11 +1632,40 @@ const CreateEvent = () => {
 
     // Xử lý đặc biệt cho isPaid: đặt giá vé 0 khi là sự kiện miễn phí
     if (name === "isPaid") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: checked,
-        // Khi chuyển thành sự kiện miễn phí, tạo một loại vé miễn phí mặc định
-        ...(!checked && {
+      if (checked) {
+        // Chuyển từ miễn phí sang có phí
+        setFormData((prev) => {
+          // Nếu đã có ticket types trước đó
+          const updatedTicketTypes =
+            prev.ticketTypes.length > 0
+              ? prev.ticketTypes.map((ticket) => ({
+                  ...ticket,
+                  name:
+                    ticket.name === "Vé miễn phí" ? "Tiêu chuẩn" : ticket.name,
+                }))
+              : [
+                  {
+                    id: `ticket-${Date.now()}`,
+                    name: "Tiêu chuẩn",
+                    price: 0,
+                    quantity: prev.capacity || 100,
+                    description: "",
+                  },
+                ];
+
+          return {
+            ...prev,
+            isPaid: true,
+            price: undefined,
+            ticketTypes: updatedTicketTypes,
+          };
+        });
+      } else {
+        // Chuyển từ có phí sang miễn phí
+        setFormData((prev) => ({
+          ...prev,
+          isPaid: false,
+          // Khi chuyển thành sự kiện miễn phí, tạo một loại vé miễn phí mặc định
           ticketTypes: [
             {
               id: `ticket-${Date.now()}`,
@@ -1583,10 +1676,8 @@ const CreateEvent = () => {
             },
           ],
           price: 0,
-        }),
-        // Khi chuyển thành sự kiện có phí, không đặt price
-        ...(checked && { price: undefined }),
-      }));
+        }));
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -1722,9 +1813,18 @@ const CreateEvent = () => {
         }
         if (!formData.description.trim()) {
           newStepErrors.description = "Mô tả sự kiện là bắt buộc.";
+        } else if (formData.description.trim().length < 30) {
+          newStepErrors.description = "Mô tả sự kiện phải có ít nhất 30 ký tự.";
         }
         if (!formData.category) {
           newStepErrors.category = "Danh mục sự kiện là bắt buộc.";
+        }
+        if (
+          !formData.image ||
+          formData.image ===
+            "https://via.placeholder.com/800x400?text=Event+Image"
+        ) {
+          newStepErrors.imageFile = "Ảnh bìa sự kiện là bắt buộc.";
         }
         break;
       case 1:
