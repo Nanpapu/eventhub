@@ -302,6 +302,7 @@ const EventDetail = () => {
   };
 
   // Kiểm tra xem sự kiện đã diễn ra hay chưa
+  // Vẫn giữ lại hàm này cho tương thích ngược với các phần khác của code có thể sử dụng
   const isEventPast = () => {
     if (!event) return false;
 
@@ -334,6 +335,59 @@ const EventDetail = () => {
     // So sánh với thời gian hiện tại
     const now = new Date();
     return now > eventDate;
+  };
+
+  // Lấy trạng thái chi tiết của sự kiện: sắp diễn ra, đang diễn ra, hoặc đã kết thúc
+  const getEventStatus = () => {
+    if (!event) return "upcoming"; // Mặc định nếu không có dữ liệu
+
+    // Chuyển đổi chuỗi ngày từ định dạng vi-VN về đối tượng Date
+    const dateParts = event.date.split("/");
+    if (dateParts.length !== 3) return "upcoming";
+
+    const day = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10) - 1; // Tháng trong JS là 0-11
+    const year = parseInt(dateParts[2], 10);
+
+    // Lấy giờ bắt đầu và kết thúc
+    let eventStartHour = 0;
+    let eventStartMinute = 0;
+    let eventEndHour = 23;
+    let eventEndMinute = 59;
+
+    if (event.startTime) {
+      const startTimeParts = event.startTime.split(":");
+      if (startTimeParts.length === 2) {
+        eventStartHour = parseInt(startTimeParts[0], 10);
+        eventStartMinute = parseInt(startTimeParts[1], 10);
+      }
+    }
+
+    if (event.endTime) {
+      const endTimeParts = event.endTime.split(":");
+      if (endTimeParts.length === 2) {
+        eventEndHour = parseInt(endTimeParts[0], 10);
+        eventEndMinute = parseInt(endTimeParts[1], 10);
+      }
+    }
+
+    // Thời gian bắt đầu và kết thúc
+    const eventStartDateTime = new Date(year, month, day);
+    eventStartDateTime.setHours(eventStartHour, eventStartMinute, 0);
+
+    const eventEndDateTime = new Date(year, month, day);
+    eventEndDateTime.setHours(eventEndHour, eventEndMinute, 0);
+
+    // So sánh với thời gian hiện tại
+    const now = new Date();
+
+    if (now < eventStartDateTime) {
+      return "upcoming"; // Sắp diễn ra
+    } else if (now > eventEndDateTime) {
+      return "past"; // Đã kết thúc
+    } else {
+      return "ongoing"; // Đang diễn ra
+    }
   };
 
   // Xử lý đăng ký tham gia sự kiện
@@ -947,27 +1001,46 @@ const EventDetail = () => {
               */}
               {isEventCreator() ? (
                 // Nút chỉnh sửa sự kiện cho người tạo
-                isEventPast() ? (
-                  <Button
-                    colorScheme="gray"
-                    size="lg"
-                    width="full"
-                    isDisabled={true}
-                    leftIcon={<FaEdit />}
-                  >
-                    Không thể chỉnh sửa sự kiện đã diễn ra
-                  </Button>
-                ) : (
-                  <Button
-                    colorScheme="purple"
-                    size="lg"
-                    width="full"
-                    onClick={handleEditEvent}
-                    leftIcon={<FaEdit />}
-                  >
-                    Chỉnh sửa sự kiện
-                  </Button>
-                )
+                (() => {
+                  const status = getEventStatus();
+                  if (status === "upcoming") {
+                    return (
+                      <Button
+                        colorScheme="purple"
+                        size="lg"
+                        width="full"
+                        onClick={handleEditEvent}
+                        leftIcon={<FaEdit />}
+                      >
+                        Chỉnh sửa sự kiện
+                      </Button>
+                    );
+                  } else if (status === "ongoing") {
+                    return (
+                      <Button
+                        colorScheme="gray"
+                        size="lg"
+                        width="full"
+                        isDisabled={true}
+                        leftIcon={<FaEdit />}
+                      >
+                        Không thể chỉnh sửa sự kiện đang diễn ra
+                      </Button>
+                    );
+                  } else {
+                    return (
+                      <Button
+                        colorScheme="gray"
+                        size="lg"
+                        width="full"
+                        isDisabled={true}
+                        leftIcon={<FaEdit />}
+                      >
+                        Không thể chỉnh sửa sự kiện đã kết thúc
+                      </Button>
+                    );
+                  }
+                })()
               ) : event.isPaid ? (
                 // === SỰ KIỆN CÓ PHÍ ===
                 isRegistered ? (
