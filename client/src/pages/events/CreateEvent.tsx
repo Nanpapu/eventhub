@@ -568,7 +568,9 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                   >
                     <InputGroup>
                       <InputLeftElement pointerEvents="none">
-                        <Icon as={FiDollarSign} color="gray.500" />
+                        <Text fontSize="sm" fontWeight="bold" ml={2}>
+                          đ
+                        </Text>
                       </InputLeftElement>
                       <NumberInputField
                         borderColor={borderColor}

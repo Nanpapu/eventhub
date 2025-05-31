@@ -309,7 +309,7 @@ export default function CheckoutForm({
                   <Text as="span">
                     {isFreeTicket
                       ? "Miễn phí"
-                      : `$${getTicketPrice().toLocaleString()}`}
+                      : `${getTicketPrice().toLocaleString()} đ`}
                   </Text>
                 </Badge>
               </Box>
@@ -424,21 +424,21 @@ export default function CheckoutForm({
                   <Text fontWeight="medium">
                     {isFreeTicket
                       ? "Miễn phí"
-                      : `$${subtotal.toLocaleString()}`}
+                      : `${subtotal.toLocaleString()} đ`}
                   </Text>
                 </HStack>
                 {!isFreeTicket && (
                   <HStack justify="space-between">
                     <Text>Phí dịch vụ (5%):</Text>
                     <Text fontWeight="medium">
-                      ${serviceFee.toLocaleString()}
+                      {serviceFee.toLocaleString()} đ
                     </Text>
                   </HStack>
                 )}
                 <HStack justify="space-between" fontWeight="bold" fontSize="md">
                   <Text>Tổng cộng:</Text>
                   <Text>
-                    {isFreeTicket ? "Miễn phí" : `$${total.toLocaleString()}`}
+                    {isFreeTicket ? "Miễn phí" : `${total.toLocaleString()} đ`}
                   </Text>
                 </HStack>
               </VStack>

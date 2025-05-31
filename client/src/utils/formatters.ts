@@ -11,10 +11,16 @@ export const formatCurrency = (amount: number, currency = "VND"): string => {
   const locale = i18n.language === "vi" ? "vi-VN" : "en-US";
 
   try {
+    if (currency === "VND") {
+      // Định dạng số theo ngôn ngữ, sau đó thêm đ vào cuối
+      return `${new Intl.NumberFormat(locale).format(amount)} đ`;
+    }
+
+    // Các loại tiền tệ khác vẫn sử dụng Intl.NumberFormat
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
-      maximumFractionDigits: currency === "VND" ? 0 : 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   } catch (error) {
     console.error("Error formatting currency:", error);
