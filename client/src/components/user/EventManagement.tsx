@@ -359,17 +359,17 @@ const EventManagement = () => {
   // Xử lý ẩn/hiện sự kiện
   const handleToggleVisibility = (eventId: string) => {
     // Trong thực tế, đây sẽ là API call để ẩn/hiện sự kiện
-    const event = myEvents.find(e => e.id === eventId);
+    const event = myEvents.find((e) => e.id === eventId);
     const isCurrentlyHidden = event?.isHidden || false;
-    
+
     const updatedEvents = myEvents.map((event) =>
       event.id === eventId ? { ...event, isHidden: !event.isHidden } : event
     );
     setMyEvents(updatedEvents);
-    
+
     toast({
       title: isCurrentlyHidden ? "Đã hiện sự kiện" : "Đã ẩn sự kiện",
-      description: isCurrentlyHidden 
+      description: isCurrentlyHidden
         ? "Sự kiện đã được hiển thị công khai trở lại"
         : "Sự kiện đã bị ẩn khỏi danh sách công khai",
       status: "success",
@@ -1124,7 +1124,6 @@ const EventManagement = () => {
                   colorScheme="teal"
                   variant="outline"
                   leftIcon={<FaEye />}
-                  
                 >
                   Khám phá sự kiện
                 </Button>
