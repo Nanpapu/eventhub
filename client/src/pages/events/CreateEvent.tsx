@@ -73,6 +73,7 @@ import {
   FiList,
   FiCheckCircle,
   FiHome,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -273,7 +274,20 @@ const BasicInfoStep: React.FC<StepProps> = ({
           borderColor={borderColor}
           minH="120px"
           placeholder="Mô tả chi tiết về nội dung, lịch trình, diễn giả của sự kiện..."
+          maxLength={2000} // Giới hạn tối đa 2000 ký tự
         />
+        <Flex justify="space-between" mt={1}>
+          <FormHelperText>
+            Mô tả chi tiết về sự kiện của bạn. Tối thiểu 30 ký tự, tối đa 2000
+            ký tự.
+          </FormHelperText>
+          <Text
+            fontSize="xs"
+            color={formData.description.length < 30 ? "red.500" : "gray.500"}
+          >
+            {formData.description.length}/2000 ký tự
+          </Text>
+        </Flex>
         {errors.description && (
           <FormErrorMessage>{errors.description}</FormErrorMessage>
         )}
@@ -300,7 +314,7 @@ const BasicInfoStep: React.FC<StepProps> = ({
         )}
       </FormControl>
 
-      <FormControl isInvalid={!!errors.imageFile}>
+      <FormControl isInvalid={!!errors.imageFile} isRequired>
         <FormLabel htmlFor="imageFile">Ảnh bìa sự kiện</FormLabel>
         <Box mb={2}>
           <Text fontSize="sm" color="gray.500">
@@ -654,10 +668,23 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const totalTickets = calculateTotalTickets(formData.ticketTypes);
-  const infoBg = useColorModeValue("yellow.50", "yellow.900");
-  const infoColor = useColorModeValue("yellow.700", "yellow.200");
-  const infoBorderColor = useColorModeValue("yellow.500", "yellow.400");
   const showTagsUI = false; // Biến xác định việc hiển thị phần tags - đặt false để ẩn
+
+  // Định nghĩa các màu sắc cho thông báo trạng thái
+  // Background colors
+  const successBgColor = useColorModeValue("green.50", "green.900");
+  const infoBgColor = useColorModeValue("blue.50", "blue.900");
+  const warningBgColor = useColorModeValue("red.50", "red.900");
+
+  // Text colors
+  const successTextColor = useColorModeValue("green.700", "green.200");
+  const infoTextColor = useColorModeValue("blue.700", "blue.200");
+  const warningTextColor = useColorModeValue("red.700", "red.200");
+
+  // Border colors
+  const successBorderColor = useColorModeValue("green.500", "green.400");
+  const infoBorderColor = useColorModeValue("blue.500", "blue.400");
+  const warningBorderColor = useColorModeValue("red.500", "red.400");
 
   return (
     <VStack spacing={6} align="stretch">
@@ -699,20 +726,57 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
           <Box
             mt={2}
             p={3}
-            bg={infoBg}
-            color={infoColor}
+            bg={
+              totalTickets === formData.capacity
+                ? successBgColor
+                : totalTickets < formData.capacity
+                ? infoBgColor
+                : warningBgColor
+            }
+            color={
+              totalTickets === formData.capacity
+                ? successTextColor
+                : totalTickets < formData.capacity
+                ? infoTextColor
+                : warningTextColor
+            }
             borderRadius="md"
             borderLeftWidth="4px"
-            borderLeftColor={infoBorderColor}
+            borderLeftColor={
+              totalTickets === formData.capacity
+                ? successBorderColor
+                : totalTickets < formData.capacity
+                ? infoBorderColor
+                : warningBorderColor
+            }
           >
-            <Text fontSize="sm">
-              Tổng số vé đã cấu hình: <strong>{totalTickets}</strong>.
-              {totalTickets < formData.capacity
-                ? ` Còn ${
-                    formData.capacity - totalTickets
-                  } chỗ chưa được phân bổ vé.`
-                : ` Đã phân bổ đủ số vé cho sức chứa.`}
-            </Text>
+            <Flex align="center">
+              {totalTickets === formData.capacity ? (
+                <Icon as={FiCheckCircle} mr={2} />
+              ) : totalTickets < formData.capacity ? (
+                <Icon as={FiInfo} mr={2} />
+              ) : (
+                <Icon as={FiAlertTriangle} mr={2} />
+              )}
+              <Box>
+                <Text fontSize="sm" fontWeight="medium">
+                  {totalTickets === formData.capacity
+                    ? "Đã phân bổ đủ số vé cho sức chứa"
+                    : totalTickets < formData.capacity
+                    ? `Còn ${
+                        formData.capacity - totalTickets
+                      } chỗ chưa được phân bổ vé`
+                    : `Cảnh báo: Vượt quá sức chứa`}
+                </Text>
+                <Text fontSize="xs" mt={1}>
+                  {totalTickets === formData.capacity
+                    ? `Tổng số vé: ${totalTickets} = Sức chứa: ${formData.capacity}`
+                    : totalTickets < formData.capacity
+                    ? `Bạn đã cấu hình ${totalTickets}/${formData.capacity} vé. Bạn có thể thêm loại vé hoặc tăng số lượng vé hiện có.`
+                    : `Số vé (${totalTickets}) nhiều hơn sức chứa (${formData.capacity}). Hãy giảm số lượng vé hoặc tăng sức chứa.`}
+                </Text>
+              </Box>
+            </Flex>
           </Box>
         </FormControl>
       </Box>
@@ -1674,21 +1738,7 @@ const CreateEvent = () => {
   const handleCapacityChange = (value: string) => {
     const newCapacity = parseInt(value, 10) || 0;
 
-    // Kiểm tra capacity có nhỏ hơn tổng số vé hiện tại không
-    const totalTickets = calculateTotalTickets(formData.ticketTypes);
-
-    if (newCapacity < totalTickets) {
-      toast({
-        title: "Cảnh báo",
-        description:
-          "Sức chứa sự kiện không thể nhỏ hơn tổng số vé. Vui lòng điều chỉnh số lượng vé trước.",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-
+    // Chỉ cập nhật state, không hiển thị thông báo
     setFormData((prev) => ({ ...prev, capacity: newCapacity }));
   };
 
