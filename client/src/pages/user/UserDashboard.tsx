@@ -34,6 +34,7 @@ import {
   useToast,
   Spinner,
   Tooltip,
+  Image,
 } from "@chakra-ui/react";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -132,6 +133,10 @@ const UserDashboard = () => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dispatch = useAppDispatch();
+
+  // Thêm state để quản lý modal preview avatar
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   // Fetch thông tin người dùng và thống kê từ API
   useEffect(() => {
@@ -290,7 +295,7 @@ const UserDashboard = () => {
     fileInputRef.current?.click();
   };
 
-  // Thêm hàm xử lý upload avatar
+  // Cập nhật hàm handleAvatarChange
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -312,7 +317,7 @@ const UserDashboard = () => {
       if (!file.type.startsWith("image/")) {
         toast({
           title: "Lỗi",
-          description: "Chỉ chấp nhận file hình ảnh",
+          description: "Chỉ chấp nhận file hình ảnh (jpg, jpeg, png, gif)",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -320,38 +325,59 @@ const UserDashboard = () => {
         return;
       }
 
-      try {
-        setIsUploadingAvatar(true);
-        // Gọi API upload avatar
-        const response = await userService.uploadAvatar(file);
+      // Hiển thị preview ảnh trong modal
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewImage(reader.result as string);
+        setIsPreviewModalOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-        if (response.success) {
-          // Cập nhật avatar trong state và Redux store
-          setUserData((prev) =>
-            prev ? { ...prev, avatar: response.data.user.avatar } : null
-          );
-          dispatch(updateUser({ avatar: response.data.user.avatar }));
+  // Hàm xử lý khi người dùng xác nhận sử dụng ảnh preview
+  const handleConfirmAvatar = async () => {
+    if (!previewImage) return;
 
-          toast({
-            title: "Thành công",
-            description: "Avatar đã được cập nhật",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
-      } catch (error) {
-        console.error("Error uploading avatar:", error);
+    try {
+      setIsUploadingAvatar(true);
+      setIsPreviewModalOpen(false);
+
+      // Chuyển đổi base64 thành Blob
+      const response = await fetch(previewImage);
+      const blob = await response.blob();
+      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+
+      // Gọi API upload avatar
+      const uploadResponse = await userService.uploadAvatar(file);
+
+      if (uploadResponse.success) {
+        // Cập nhật avatar trong state và Redux store
+        setUserData((prev) =>
+          prev ? { ...prev, avatar: uploadResponse.data.user.avatar } : null
+        );
+        dispatch(updateUser({ avatar: uploadResponse.data.user.avatar }));
+
         toast({
-          title: "Lỗi",
-          description: "Không thể upload avatar, vui lòng thử lại",
-          status: "error",
+          title: "Thành công",
+          description: "Avatar đã được cập nhật",
+          status: "success",
           duration: 3000,
           isClosable: true,
         });
-      } finally {
-        setIsUploadingAvatar(false);
       }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể upload avatar, vui lòng thử lại",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      setPreviewImage(null);
     }
   };
 
@@ -435,6 +461,21 @@ const UserDashboard = () => {
                   )}
                 </Avatar>
               </Tooltip>
+              {/* Icon chỉnh sửa avatar */}
+              <Box
+                position="absolute"
+                bottom="0"
+                right="0"
+                bg="teal.500"
+                p="2px"
+                borderRadius="full"
+                border="2px solid white"
+                cursor="pointer"
+                onClick={handleAvatarClick}
+                zIndex="1"
+              >
+                <Icon as={FiEdit} color="white" boxSize={4} />
+              </Box>
               <Input
                 type="file"
                 ref={fileInputRef}
@@ -719,6 +760,68 @@ const UserDashboard = () => {
                 </Button>
               </ModalFooter>
             </form>
+          </ModalContent>
+        </Modal>
+
+        {/* Modal xem trước và tùy chỉnh ảnh avatar */}
+        <Modal
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          size="md"
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Xem trước và tùy chỉnh ảnh đại diện</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                {previewImage && (
+                  <Box
+                    position="relative"
+                    width="100%"
+                    maxWidth="300px"
+                    margin="0 auto"
+                    overflow="hidden"
+                    borderRadius="full"
+                    boxShadow="md"
+                    border="3px solid"
+                    borderColor="teal.500"
+                  >
+                    <Box width="300px" height="300px" overflow="hidden">
+                      <Image
+                        src={previewImage}
+                        alt="Preview Avatar"
+                        width="100%"
+                        height="100%"
+                        objectFit="cover"
+                      />
+                    </Box>
+                  </Box>
+                )}
+
+                <Text mt={2} fontSize="sm" color="gray.500" textAlign="center">
+                  Ảnh đại diện sẽ hiển thị dưới dạng hình tròn. Nên sử dụng ảnh
+                  vuông để có kết quả tốt nhất.
+                </Text>
+
+                <HStack spacing={4} width="100%" justifyContent="center" mt={4}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPreviewModalOpen(false)}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    colorScheme="teal"
+                    onClick={handleConfirmAvatar}
+                    isLoading={isUploadingAvatar}
+                    loadingText="Đang tải lên"
+                  >
+                    Xác nhận
+                  </Button>
+                </HStack>
+              </VStack>
+            </ModalBody>
           </ModalContent>
         </Modal>
       </Container>
