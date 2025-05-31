@@ -30,7 +30,6 @@ import {
   MdKeyboardArrowRight as ChevronRightIcon,
   MdPerson,
   MdDashboard,
-  MdEvent,
   MdConfirmationNumber,
   MdBookmark,
   MdStars,
@@ -206,17 +205,34 @@ export default function Header() {
                     <>
                       <MenuItem
                         as={Link}
+                        to="/user/tickets"
+                        icon={<Icon as={MdConfirmationNumber} mr={2} />}
+                      >
+                        Vé của tôi
+                      </MenuItem>
+                      <MenuItem
+                        as={Link}
+                        to="/user/events"
+                        icon={<Icon as={MdBookmark} mr={2} />}
+                      >
+                        Sự kiện đã lưu
+                      </MenuItem>
+                      <MenuDivider />
+                      <Text
+                        px={3}
+                        py={2}
+                        fontSize="sm"
+                        fontWeight="bold"
+                        color={secondaryTextColor}
+                      >
+                        Quản lý tổ chức
+                      </Text>
+                      <MenuItem
+                        as={Link}
                         to="/dashboard"
                         icon={<Icon as={MdDashboard} mr={2} />}
                       >
                         Bảng điều khiển tổ chức
-                      </MenuItem>
-                      <MenuItem
-                        as={Link}
-                        to="/my-events"
-                        icon={<Icon as={MdEvent} mr={2} />}
-                      >
-                        Sự kiện đã tạo
                       </MenuItem>
                     </>
                   ) : (
