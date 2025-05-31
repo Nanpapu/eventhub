@@ -438,6 +438,9 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
   errors,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const infoBg = useColorModeValue("blue.50", "blue.900");
+  const infoColor = useColorModeValue("blue.700", "blue.200");
+  const infoBorderColor = useColorModeValue("blue.500", "blue.400");
 
   // Thêm hàm tính toán thời lượng sự kiện
   const getEventDuration = () => {
@@ -481,9 +484,11 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
     if (endHour >= 12 && endHour < 18) endTimeOfDay = "chiều";
     else if (endHour >= 18) endTimeOfDay = "tối";
 
-    return `Sự kiện diễn ra từ ${formData.startTime} ${startTimeOfDay} đến ${
+    return `Sự kiện của bạn sẽ diễn ra vào lúc ${
+      formData.startTime
+    } ${startTimeOfDay} đến ${
       formData.endTime
-    } ${endTimeOfDay}, kéo dài ${getEventDuration()}.`;
+    } ${endTimeOfDay}, kéo dài trong ${getEventDuration()}.`;
   };
 
   const eventTimeDescription = getEventTimeDescription();
@@ -554,33 +559,17 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
       {formData.startTime && formData.endTime && (
         <Box
           p={3}
-          bg="blue.50"
-          color="blue.700"
+          bg={infoBg}
+          color={infoColor}
           borderRadius="md"
           borderLeftWidth="4px"
-          borderLeftColor="blue.500"
+          borderLeftColor={infoBorderColor}
         >
           <Text fontSize="sm">{eventTimeDescription}</Text>
         </Box>
       )}
 
       <Divider />
-
-      {/* Tạm thời comment phần sự kiện online */}
-      {/* 
-      <FormControl display="flex" alignItems="center">
-        <FormLabel htmlFor="isOnline" mb="0">
-          Sự kiện trực tuyến (Online)?
-        </FormLabel>
-        <Switch
-          id="isOnline"
-          name="isOnline"
-          isChecked={formData.isOnline}
-          onChange={handleCheckboxChange}
-          colorScheme="teal"
-        />
-      </FormControl>
-      */}
 
       {/* Phần nhập địa điểm cho sự kiện (hiện luôn vì đã vô hiệu hóa isOnline) */}
       <FormControl isInvalid={!!errors.location} isRequired>
@@ -629,75 +618,6 @@ const DateTimeLocationStep: React.FC<StepProps> = ({
           <FormErrorMessage>{errors.address}</FormErrorMessage>
         )}
       </FormControl>
-
-      {/* Phần nhập URL cho sự kiện online - đã comment
-      {formData.isOnline ? (
-        <FormControl isInvalid={!!errors.onlineUrl} isRequired>
-          <FormLabel htmlFor="onlineUrl">URL sự kiện trực tuyến</FormLabel>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FiLink} color="gray.500" />
-            </InputLeftElement>
-            <Input
-              id="onlineUrl"
-              name="onlineUrl"
-              value={formData.onlineUrl || ""}
-              onChange={handleChange}
-              placeholder="VD: https://zoom.us/j/your-meeting-id"
-              borderColor={borderColor}
-            />
-          </InputGroup>
-          <FormHelperText>
-            Cung cấp đường dẫn để người tham gia có thể truy cập sự kiện.
-          </FormHelperText>
-          {errors.onlineUrl && (
-            <FormErrorMessage>{errors.onlineUrl}</FormErrorMessage>
-          )}
-        </FormControl>
-      ) : (
-        <>
-          <FormControl isInvalid={!!errors.location} isRequired>
-            <FormLabel htmlFor="location">Tên địa điểm</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none">
-                <Icon as={FiMapPin} color="gray.500" />
-              </InputLeftElement>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="VD: Nhà Văn hóa Thanh niên"
-                borderColor={borderColor}
-              />
-            </InputGroup>
-            {errors.location && (
-              <FormErrorMessage>{errors.location}</FormErrorMessage>
-            )}
-          </FormControl>
-
-          <FormControl isInvalid={!!errors.address} isRequired>
-            <FormLabel htmlFor="address">Địa chỉ chi tiết</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none">
-                <Icon as={FiHome} color="gray.500" />
-              </InputLeftElement>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="VD: 04 Phạm Ngọc Thạch, Quận 1, TP.HCM"
-                borderColor={borderColor}
-              />
-            </InputGroup>
-            {errors.address && (
-              <FormErrorMessage>{errors.address}</FormErrorMessage>
-            )}
-          </FormControl>
-        </>
-      )}
-      */}
     </VStack>
   );
 };
@@ -1399,7 +1319,14 @@ const CreateEvent = () => {
     isPaid: false,
     price: undefined,
     ticketTypes: [
-      // { id: `ticket-${Date.now()}`, name: "Tiêu chuẩn", price: 0, quantity: 100, description: "" }, // Sẽ thêm vé khi isPaid = true
+      // Khởi tạo vé miễn phí mặc định ngay từ đầu
+      {
+        id: `ticket-${Date.now()}`,
+        name: "Vé miễn phí",
+        price: 0,
+        quantity: 100,
+        description: "Vé tham dự sự kiện miễn phí",
+      },
     ],
     image: "https://via.placeholder.com/800x400?text=Event+Image",
     imageFile: null,
@@ -1416,6 +1343,14 @@ const CreateEvent = () => {
   const stepperHoverBg = useColorModeValue("gray.100", "gray.700");
 
   const [newTag, setNewTag] = useState("");
+
+  // Thêm state để lưu trữ thông tin vé trước khi toggle
+  const [savedPaidTickets, setSavedPaidTickets] = useState<
+    EventFormData["ticketTypes"]
+  >([]);
+  const [savedFreeTickets, setSavedFreeTickets] = useState<
+    EventFormData["ticketTypes"]
+  >([]);
 
   // Hàm điều hướng an toàn với xác nhận nếu form đã thay đổi
   const navigateSafely = useCallback(
@@ -1469,24 +1404,21 @@ const CreateEvent = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (formData.isPaid && formData.ticketTypes.length === 0) {
+    if (!formData.isPaid && formData.ticketTypes.length === 0) {
       setFormData((prev) => ({
         ...prev,
         ticketTypes: [
           {
             id: `ticket-${Date.now()}`,
-            name: "Tiêu chuẩn",
+            name: "Vé miễn phí",
             price: 0,
             quantity: prev.capacity || 100,
-            description: "",
+            description: "Vé tham dự sự kiện miễn phí",
           },
         ],
       }));
-    } else if (!formData.isPaid) {
-      // Optionally clear ticket types or set a default free one if needed when switching to not paid
-      // setFormData(prev => ({ ...prev, ticketTypes: [] }));
     }
-  }, [formData.isPaid, formData.capacity]);
+  }, [formData.isPaid, formData.ticketTypes, formData.capacity]);
 
   useEffect(() => {
     if (errorStore) {
@@ -1634,10 +1566,15 @@ const CreateEvent = () => {
     if (name === "isPaid") {
       if (checked) {
         // Chuyển từ miễn phí sang có phí
+        // Lưu trữ thông tin vé miễn phí hiện tại
+        setSavedFreeTickets(formData.ticketTypes);
+
         setFormData((prev) => {
-          // Nếu đã có ticket types trước đó
+          // Kiểm tra xem đã có thông tin vé trả phí được lưu trước đó chưa
           const updatedTicketTypes =
-            prev.ticketTypes.length > 0
+            savedPaidTickets.length > 0
+              ? savedPaidTickets // Sử dụng thông tin vé trả phí đã lưu trước đó
+              : prev.ticketTypes.length > 0
               ? prev.ticketTypes.map((ticket) => ({
                   ...ticket,
                   name:
@@ -1662,21 +1599,31 @@ const CreateEvent = () => {
         });
       } else {
         // Chuyển từ có phí sang miễn phí
-        setFormData((prev) => ({
-          ...prev,
-          isPaid: false,
-          // Khi chuyển thành sự kiện miễn phí, tạo một loại vé miễn phí mặc định
-          ticketTypes: [
-            {
-              id: `ticket-${Date.now()}`,
-              name: "Vé miễn phí",
-              price: 0,
-              quantity: prev.capacity || 100,
-              description: "Vé tham dự sự kiện miễn phí",
-            },
-          ],
-          price: 0,
-        }));
+        // Lưu trữ thông tin vé trả phí hiện tại
+        setSavedPaidTickets(formData.ticketTypes);
+
+        setFormData((prev) => {
+          // Kiểm tra xem đã có thông tin vé miễn phí được lưu trước đó chưa
+          const freeTicket =
+            savedFreeTickets.length > 0
+              ? savedFreeTickets // Sử dụng thông tin vé miễn phí đã lưu trước đó
+              : [
+                  {
+                    id: `ticket-${Date.now()}`,
+                    name: "Vé miễn phí",
+                    price: 0,
+                    quantity: prev.capacity || 100,
+                    description: "Vé tham dự sự kiện miễn phí",
+                  },
+                ];
+
+          return {
+            ...prev,
+            isPaid: false,
+            ticketTypes: freeTicket,
+            price: 0,
+          };
+        });
       }
     } else {
       setFormData((prev) => ({
@@ -2083,6 +2030,26 @@ const CreateEvent = () => {
   };
 
   const handleNextStep = () => {
+    // Nếu sắp chuyển đến bước 3 (Vé & Giá) và isPaid là false nhưng chưa có vé
+    if (
+      activeStep === 1 &&
+      !formData.isPaid &&
+      formData.ticketTypes.length === 0
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        ticketTypes: [
+          {
+            id: `ticket-${Date.now()}`,
+            name: "Vé miễn phí",
+            price: 0,
+            quantity: prev.capacity || 100,
+            description: "Vé tham dự sự kiện miễn phí",
+          },
+        ],
+      }));
+    }
+
     // Nếu đang ở chế độ chỉnh sửa, cho phép chuyển giữa các bước mà không cần validate
     if (editMode) {
       setActiveStep((prev) => prev + 1);
