@@ -92,6 +92,7 @@ import {
 } from "../../app/features/authSlice";
 import { vietnamProvinces } from "../../utils/locationUtils";
 import { categories } from "../../utils/categoryUtils";
+import { FaTrash } from "react-icons/fa";
 
 // Interface cho dữ liệu sự kiện
 interface EventFormData {
@@ -231,6 +232,23 @@ const BasicInfoStep: React.FC<StepProps> = ({
     }
   };
 
+  // Thêm hàm xử lý xóa ảnh
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({
+      ...prev,
+      image: "https://via.placeholder.com/800x400?text=Event+Image",
+      imageFile: null,
+    }));
+
+    toast({
+      title: "Đã xóa ảnh",
+      description: "Bạn có thể tải lên ảnh mới",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   return (
     <VStack spacing={6} align="stretch">
       <FormControl isInvalid={!!errors.title} isRequired>
@@ -295,61 +313,66 @@ const BasicInfoStep: React.FC<StepProps> = ({
           </Text>
         </Box>
 
-        <Box
-          borderWidth="2px"
-          borderRadius="md"
-          borderStyle="dashed"
-          borderColor={borderColor}
-          py={4}
-          px={2}
-          mb={3}
-          position="relative"
-          _hover={{ borderColor: "teal.300" }}
-          transition="all 0.3s"
-          cursor="pointer"
-          textAlign="center"
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-              handleImageChange({
-                target: { files: e.dataTransfer.files },
-              } as React.ChangeEvent<HTMLInputElement>);
-            }
-          }}
-          onClick={() => {
-            const fileInput = document.getElementById("imageFile");
-            if (fileInput) fileInput.click();
-          }}
-        >
-          <Input
-            type="file"
-            id="imageFile"
-            name="imageFile"
-            accept="image/*"
-            onChange={handleImageChange}
-            display="none"
-            isDisabled={isUploading}
-          />
+        {/* Hiển thị khung kéo thả CHỈ KHI chưa có ảnh được upload thành công */}
+        {(!formData.image || !formData.image.includes("cloudinary")) && (
+          <Box
+            borderWidth="2px"
+            borderRadius="md"
+            borderStyle="dashed"
+            borderColor={borderColor}
+            py={4}
+            px={2}
+            mb={3}
+            position="relative"
+            _hover={{ borderColor: "teal.300" }}
+            transition="all 0.3s"
+            cursor="pointer"
+            textAlign="center"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleImageChange({
+                  target: { files: e.dataTransfer.files },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }
+            }}
+            onClick={() => {
+              const fileInput = document.getElementById("imageFile");
+              if (fileInput) fileInput.click();
+            }}
+          >
+            <Input
+              type="file"
+              id="imageFile"
+              name="imageFile"
+              accept="image/*"
+              onChange={handleImageChange}
+              display="none"
+              isDisabled={isUploading}
+            />
 
-          <Flex direction="column" alignItems="center" justifyContent="center">
-            <Icon as={FiUpload} w={8} h={8} mb={2} color="teal.500" />
-            <Text fontWeight="medium" color={textColor}>
-              {formData.imageFile
-                ? formData.imageFile.name
-                : formData.image && formData.image.includes("cloudinary")
-                ? "Ảnh đã được tải lên"
-                : "Kéo thả ảnh vào đây hoặc nhấp để chọn ảnh"}
-            </Text>
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              Hỗ trợ định dạng JPG, PNG hoặc GIF
-            </Text>
-          </Flex>
-        </Box>
+            <Flex
+              direction="column"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon as={FiUpload} w={8} h={8} mb={2} color="teal.500" />
+              <Text fontWeight="medium" color={textColor}>
+                {formData.imageFile
+                  ? formData.imageFile.name
+                  : "Kéo thả ảnh vào đây hoặc nhấp để chọn ảnh"}
+              </Text>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                Hỗ trợ định dạng JPG, PNG hoặc GIF
+              </Text>
+            </Flex>
+          </Box>
+        )}
 
         {isUploading && (
           <Flex align="center" mt={2}>
@@ -362,6 +385,15 @@ const BasicInfoStep: React.FC<StepProps> = ({
           formData.image !==
             "https://via.placeholder.com/800x400?text=Event+Image" && (
             <Box position="relative" mt={4}>
+              {/* Hiển thị badge "Đã tải lên" ở trên hình, phía bên trái */}
+              {formData.image.includes("cloudinary") && (
+                <Box mb={2}>
+                  <Badge colorScheme="green" p={1}>
+                    Đã tải lên
+                  </Badge>
+                </Box>
+              )}
+
               <Image
                 src={formData.image}
                 alt="Xem trước ảnh bìa"
@@ -371,16 +403,20 @@ const BasicInfoStep: React.FC<StepProps> = ({
                 borderWidth="1px"
                 borderColor={borderColor}
               />
-              {formData.image.includes("cloudinary") && (
-                <Badge
-                  colorScheme="green"
-                  position="absolute"
-                  top={4}
-                  right={0}
-                >
-                  Đã tải lên
-                </Badge>
-              )}
+
+              {/* Nút xóa ở dưới hình, phía bên trái */}
+              <Box mt={2} textAlign="left">
+                <IconButton
+                  aria-label="Xóa ảnh"
+                  icon={<FaTrash />}
+                  size="sm"
+                  bg="red.500"
+                  color="white"
+                  onClick={handleRemoveImage}
+                  _hover={{ bg: "red.600", transform: "scale(1.05)" }}
+                  boxShadow="md"
+                />
+              </Box>
             </Box>
           )}
         <FormHelperText>
@@ -790,7 +826,7 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
               <Flex justify="flex-end">
                 <IconButton
                   aria-label="Xóa loại vé"
-                  icon={<FiTrash2 />}
+                  icon={<FaTrash />}
                   size="sm"
                   colorScheme="red"
                   variant="ghost"
