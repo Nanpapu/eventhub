@@ -52,13 +52,13 @@ import {
   StepSeparator,
   useSteps,
   Spinner,
+  Badge,
+  InputRightElement,
   Wrap,
   WrapItem,
   Tag,
   TagLabel,
   TagCloseButton,
-  Badge,
-  InputRightElement,
 } from "@chakra-ui/react";
 import {
   FiCalendar,
@@ -715,6 +715,8 @@ const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
   handleMaxTicketsChange,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  // Biến xác định việc hiển thị phần tags - đặt false để ẩn
+  const showTagsUI = false;
 
   return (
     <VStack spacing={6} align="stretch">
@@ -767,48 +769,51 @@ const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
         </FormHelperText>
       </FormControl>
 
-      <FormControl>
-        <FormLabel htmlFor="tags">Thẻ (Tags)</FormLabel>
-        <InputGroup>
-          <Input
-            id="tags"
-            placeholder="Nhập tag và nhấn Thêm"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            borderColor={borderColor}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag();
-              }
-            }}
-          />
-          <Button onClick={addTag} ml={2} colorScheme="teal">
-            Thêm Tag
-          </Button>
-        </InputGroup>
-        {formData.tags.length > 0 && (
-          <Wrap mt={4} spacing={2}>
-            {formData.tags.map((tag) => (
-              <WrapItem key={tag}>
-                <Tag
-                  size="lg"
-                  variant="solid"
-                  colorScheme="teal"
-                  borderRadius="full"
-                >
-                  <TagLabel>{tag}</TagLabel>
-                  <TagCloseButton onClick={() => removeTag(tag)} />
-                </Tag>
-              </WrapItem>
-            ))}
-          </Wrap>
-        )}
-        <FormHelperText>
-          Gắn thẻ để phân loại và giúp sự kiện dễ tìm kiếm hơn. Nhấn Enter hoặc
-          click "Thêm Tag".
-        </FormHelperText>
-      </FormControl>
+      {/* Ẩn phần UI tags nhưng vẫn giữ code */}
+      {showTagsUI && (
+        <FormControl>
+          <FormLabel htmlFor="tags">Thẻ (Tags)</FormLabel>
+          <InputGroup>
+            <Input
+              id="tags"
+              placeholder="Nhập tag và nhấn Thêm"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              borderColor={borderColor}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+            />
+            <Button onClick={addTag} ml={2} colorScheme="teal">
+              Thêm Tag
+            </Button>
+          </InputGroup>
+          {formData.tags.length > 0 && (
+            <Wrap mt={4} spacing={2}>
+              {formData.tags.map((tag) => (
+                <WrapItem key={tag}>
+                  <Tag
+                    size="lg"
+                    variant="solid"
+                    colorScheme="teal"
+                    borderRadius="full"
+                  >
+                    <TagLabel>{tag}</TagLabel>
+                    <TagCloseButton onClick={() => removeTag(tag)} />
+                  </Tag>
+                </WrapItem>
+              ))}
+            </Wrap>
+          )}
+          <FormHelperText>
+            Gắn thẻ để phân loại và giúp sự kiện dễ tìm kiếm hơn. Nhấn Enter
+            hoặc click "Thêm Tag".
+          </FormHelperText>
+        </FormControl>
+      )}
     </VStack>
   );
 };
@@ -823,6 +828,8 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const secondaryTextColor = useColorModeValue("gray.500", "gray.400");
   const iconColor = useColorModeValue("teal.500", "teal.300");
+  // Biến xác định việc hiển thị phần tags trong review - đặt false để ẩn
+  const showTagsInReview = false;
 
   return (
     <VStack spacing={6} align="stretch">
@@ -1047,7 +1054,8 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
             </Text>
             <Text>{formData.maxTicketsPerPerson} vé</Text>
           </Flex>
-          {formData.tags.length > 0 && (
+          {/* Ẩn hiển thị tags trong review nhưng vẫn giữ code */}
+          {showTagsInReview && formData.tags.length > 0 && (
             <Flex align="start">
               <Text fontWeight="bold" minW="180px" mt={1}>
                 Tags:
@@ -1161,7 +1169,6 @@ const CreateEvent = () => {
     tags: [],
   });
 
-  const [newTag, setNewTag] = useState("");
   const [maxVisitedStep, setMaxVisitedStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDataLoaded, setIsDataLoaded] = useState(!editMode);
@@ -1170,6 +1177,8 @@ const CreateEvent = () => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const stepperHoverBg = useColorModeValue("gray.100", "gray.700");
+
+  const [newTag, setNewTag] = useState("");
 
   // Hàm điều hướng an toàn với xác nhận nếu form đã thay đổi
   const navigateSafely = useCallback(
@@ -1442,20 +1451,6 @@ const CreateEvent = () => {
     }));
   };
 
-  const addTag = () => {
-    if (newTag.trim() !== "" && !formData.tags.includes(newTag.trim())) {
-      setFormData((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
-      setNewTag("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }));
-  };
-
   const addTicketType = () => {
     setFormData((prev) => ({
       ...prev,
@@ -1499,6 +1494,20 @@ const CreateEvent = () => {
       ticketTypes: prev.ticketTypes.map((tt) =>
         tt.id === id ? { ...tt, [field]: value } : tt
       ),
+    }));
+  };
+
+  const addTag = () => {
+    if (newTag.trim() !== "" && !formData.tags.includes(newTag.trim())) {
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
