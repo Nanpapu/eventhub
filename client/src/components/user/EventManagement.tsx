@@ -23,6 +23,7 @@ import {
   Icon,
   Spinner,
   Tooltip,
+  useToast,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
@@ -142,6 +143,9 @@ const EventManagement = () => {
   const cardHoverBg = useColorModeValue("gray.50", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
+
+  // Toast thông báo
+  const toast = useToast();
 
   // Fetch "Sự kiện của tôi" (sự kiện do người dùng tạo)
   useEffect(() => {
@@ -301,11 +305,14 @@ const EventManagement = () => {
   });
 
   // Kết hợp tất cả sự kiện đã lọc
-  const allFilteredEvents = [...filteredMyEvents, ...filteredSavedEvents].sort(
-    (a, b) =>
-      new Date(b.date.split("/").reverse().join("-")).getTime() -
-      new Date(a.date.split("/").reverse().join("-")).getTime()
-  ); // Sắp xếp theo ngày giảm dần
+  const allFilteredEvents = [...filteredMyEvents, ...filteredSavedEvents]
+    // Lọc ra các sự kiện không bị ẩn cho tab "Tất cả sự kiện"
+    .filter((event) => !event.isHidden)
+    .sort(
+      (a, b) =>
+        new Date(b.date.split("/").reverse().join("-")).getTime() -
+        new Date(a.date.split("/").reverse().join("-")).getTime()
+    ); // Sắp xếp theo ngày giảm dần
 
   // Cập nhật totalPages cho tất cả sự kiện khi tab thay đổi
   useEffect(() => {
@@ -352,10 +359,23 @@ const EventManagement = () => {
   // Xử lý ẩn/hiện sự kiện
   const handleToggleVisibility = (eventId: string) => {
     // Trong thực tế, đây sẽ là API call để ẩn/hiện sự kiện
+    const event = myEvents.find(e => e.id === eventId);
+    const isCurrentlyHidden = event?.isHidden || false;
+    
     const updatedEvents = myEvents.map((event) =>
       event.id === eventId ? { ...event, isHidden: !event.isHidden } : event
     );
     setMyEvents(updatedEvents);
+    
+    toast({
+      title: isCurrentlyHidden ? "Đã hiện sự kiện" : "Đã ẩn sự kiện",
+      description: isCurrentlyHidden 
+        ? "Sự kiện đã được hiển thị công khai trở lại"
+        : "Sự kiện đã bị ẩn khỏi danh sách công khai",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   // Xử lý hủy lưu sự kiện - gọi API để hủy lưu
@@ -469,30 +489,15 @@ const EventManagement = () => {
 
               <Box p={4}>
                 <Flex justify="space-between" align="start" mb={2}>
-                  <Badge
-                    colorScheme="teal"
-                    borderRadius="full"
-                    px={2}
-                   
-                  >
+                  <Badge colorScheme="teal" borderRadius="full" px={2}>
                     {getCategoryName(event.category)}
                   </Badge>
                   {event.isPaid ? (
-                    <Badge
-                      colorScheme="blue"
-                      borderRadius="full"
-                      px={2}
-                    
-                    >
+                    <Badge colorScheme="blue" borderRadius="full" px={2}>
                       Trả phí
                     </Badge>
                   ) : (
-                    <Badge
-                      colorScheme="green"
-                      borderRadius="full"
-                      px={2}
-                      
-                    >
+                    <Badge colorScheme="green" borderRadius="full" px={2}>
                       Miễn phí
                     </Badge>
                   )}
@@ -619,30 +624,15 @@ const EventManagement = () => {
 
                 <Box p={4}>
                   <Flex justify="space-between" align="start" mb={2}>
-                    <Badge
-                      colorScheme="teal"
-                      borderRadius="full"
-                      px={2}
-                      
-                    >
+                    <Badge colorScheme="teal" borderRadius="full" px={2}>
                       {getCategoryName(event.category)}
                     </Badge>
                     {event.isPaid ? (
-                      <Badge
-                        colorScheme="blue"
-                        borderRadius="full"
-                        px={2}
-                    
-                      >
+                      <Badge colorScheme="blue" borderRadius="full" px={2}>
                         Trả phí
                       </Badge>
                     ) : (
-                      <Badge
-                        colorScheme="green"
-                        borderRadius="full"
-                        px={2}
-                       
-                      >
+                      <Badge colorScheme="green" borderRadius="full" px={2}>
                         Miễn phí
                       </Badge>
                     )}
@@ -715,6 +705,7 @@ const EventManagement = () => {
                       colorScheme={event.isHidden ? "green" : "gray"}
                       variant="outline"
                       onClick={() => handleToggleVisibility(event.id)}
+                      display="none"
                     />
                   </Tooltip>
                 </HStack>
@@ -1050,6 +1041,7 @@ const EventManagement = () => {
                                   onClick={() =>
                                     handleToggleVisibility(event.id)
                                   }
+                                  display="none"
                                 />
                               </Tooltip>
                             </HStack>
@@ -1132,6 +1124,7 @@ const EventManagement = () => {
                   colorScheme="teal"
                   variant="outline"
                   leftIcon={<FaEye />}
+                  
                 >
                   Khám phá sự kiện
                 </Button>
