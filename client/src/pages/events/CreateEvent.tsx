@@ -154,6 +154,7 @@ const BasicInfoStep: React.FC<StepProps> = ({
   errors,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
   const toast = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -293,35 +294,77 @@ const BasicInfoStep: React.FC<StepProps> = ({
             để tránh bị cắt xén trên các thiết bị khác nhau.
           </Text>
         </Box>
-        <InputGroup>
-          <InputLeftElement pointerEvents="none">
-            <Icon as={FiUpload} />
-          </InputLeftElement>
+
+        <Box
+          borderWidth="2px"
+          borderRadius="md"
+          borderStyle="dashed"
+          borderColor={borderColor}
+          py={4}
+          px={2}
+          mb={3}
+          position="relative"
+          _hover={{ borderColor: "teal.300" }}
+          transition="all 0.3s"
+          cursor="pointer"
+          textAlign="center"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+              handleImageChange({
+                target: { files: e.dataTransfer.files },
+              } as React.ChangeEvent<HTMLInputElement>);
+            }
+          }}
+          onClick={() => {
+            const fileInput = document.getElementById("imageFile");
+            if (fileInput) fileInput.click();
+          }}
+        >
           <Input
             type="file"
             id="imageFile"
             name="imageFile"
             accept="image/*"
             onChange={handleImageChange}
-            p={1.5}
-            borderColor={borderColor}
+            display="none"
             isDisabled={isUploading}
           />
-        </InputGroup>
+
+          <Flex direction="column" alignItems="center" justifyContent="center">
+            <Icon as={FiUpload} w={8} h={8} mb={2} color="teal.500" />
+            <Text fontWeight="medium" color={textColor}>
+              {formData.imageFile
+                ? formData.imageFile.name
+                : formData.image && formData.image.includes("cloudinary")
+                ? "Ảnh đã được tải lên"
+                : "Kéo thả ảnh vào đây hoặc nhấp để chọn ảnh"}
+            </Text>
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              Hỗ trợ định dạng JPG, PNG hoặc GIF
+            </Text>
+          </Flex>
+        </Box>
+
         {isUploading && (
           <Flex align="center" mt={2}>
-            <Spinner size="sm" mr={2} />
+            <Spinner size="sm" mr={2} color="teal.500" />
             <Text fontSize="sm">Đang tải ảnh lên...</Text>
           </Flex>
         )}
+
         {formData.image &&
           formData.image !==
             "https://via.placeholder.com/800x400?text=Event+Image" && (
-            <Box position="relative">
+            <Box position="relative" mt={4}>
               <Image
                 src={formData.image}
                 alt="Xem trước ảnh bìa"
-                mt={4}
                 maxH="250px"
                 borderRadius="md"
                 objectFit="cover"

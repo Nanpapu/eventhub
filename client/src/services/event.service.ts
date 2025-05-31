@@ -284,6 +284,29 @@ const eventService = {
       );
     }
   },
+
+  /**
+   * Upload ảnh sự kiện
+   * @param file File ảnh sự kiện
+   * @returns Promise chứa response từ API
+   */
+  uploadEventImage: async (file: File): Promise<any> => {
+    // Tạo FormData để gửi file
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await api.post("/events/upload-image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading event image:", error);
+      throw error;
+    }
+  },
 };
 
 export default eventService;

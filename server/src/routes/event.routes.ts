@@ -1,6 +1,7 @@
 import { Router } from "express";
 import eventController from "../controllers/event.controller";
 import { authenticate, isOrganizer } from "../middlewares/auth.middleware";
+import { eventImageUpload } from "../config/cloudinary";
 
 const router = Router();
 
@@ -20,6 +21,14 @@ router.get("/user/saved-events", eventController.getSavedEvents);
 router.post("/:id/save", eventController.saveEvent);
 router.delete("/:id/save", eventController.unsaveEvent);
 router.get("/:id/is-saved", eventController.isEventSaved);
+
+// Route upload ảnh sự kiện
+router.post(
+  "/upload-image",
+  isOrganizer,
+  eventImageUpload.single("image"),
+  eventController.uploadEventImage
+);
 
 // Routes cho nhà tổ chức
 router.post("/", isOrganizer, eventController.createEvent);

@@ -39,4 +39,34 @@ const avatarUpload = multer({
   },
 });
 
-export { cloudinary, avatarUpload };
+// Tạo storage engine cho Multer sử dụng Cloudinary cho ảnh sự kiện
+const eventImageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    // @ts-ignore
+    folder: "eventhub/events", // Thư mục lưu trữ ảnh sự kiện trên Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+    transformation: [
+      { width: 1200, height: 630, crop: "fill" }, // Tỷ lệ 16:9
+      { quality: "auto:good" }, // Tối ưu chất lượng
+    ],
+  },
+});
+
+// Cấu hình multer để upload ảnh sự kiện
+const eventImageUpload = multer({
+  storage: eventImageStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Giới hạn kích thước file 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    // Chấp nhận chỉ các file ảnh
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!") as any);
+    }
+  },
+});
+
+export { cloudinary, avatarUpload, eventImageUpload };

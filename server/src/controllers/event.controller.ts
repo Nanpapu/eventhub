@@ -496,6 +496,41 @@ class EventController {
       });
     }
   }
+
+  /**
+   * Upload ảnh sự kiện
+   * @route POST /api/events/upload-image
+   * @access Private (Organizer)
+   */
+  async uploadEventImage(req: Request, res: Response) {
+    try {
+      // req.file có sẵn từ middleware multer
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Không có file được tải lên",
+        });
+      }
+
+      // @ts-ignore - Cloudinary sẽ thêm path và filename vào req.file
+      const imageUrl = req.file.path;
+
+      return res.status(200).json({
+        success: true,
+        message: "Ảnh sự kiện đã được tải lên thành công",
+        data: {
+          imageUrl: imageUrl,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error uploading event image:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi tải ảnh sự kiện",
+        error: error.message,
+      });
+    }
+  }
 }
 
 export default new EventController();
