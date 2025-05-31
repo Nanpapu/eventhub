@@ -718,8 +718,12 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                       updateTicketType(ticket.id, "price", valueNumber || 0)
                     }
                     min={0}
+                    step={10000} // Thay đổi bước tăng/giảm thành 10.000 VND
                     borderColor={borderColor}
                     isDisabled={!formData.isPaid && ticket.price === 0}
+                    // Thêm định dạng hiển thị cho số tiền
+                    format={(val) => `${parseInt(val).toLocaleString("vi-VN")}`}
+                    parse={(val) => val.replace(/[^\d]/g, "")}
                   >
                     <InputGroup>
                       <InputLeftElement pointerEvents="none">
@@ -858,6 +862,7 @@ interface AdvancedSettingsStepProps {
   removeTag: (tag: string) => void;
   handleCapacityChange: (value: string) => void;
   handleMaxTicketsChange: (value: string) => void;
+  calculateTotalTickets: (ticketTypes: EventFormData["ticketTypes"]) => number;
 }
 
 // Bước 4: Cài đặt khác
@@ -870,8 +875,13 @@ const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
   removeTag,
   handleCapacityChange,
   handleMaxTicketsChange,
+  calculateTotalTickets,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const totalTickets = calculateTotalTickets(formData.ticketTypes);
+  const infoBg = useColorModeValue("yellow.50", "yellow.900");
+  const infoColor = useColorModeValue("yellow.700", "yellow.200");
+  const infoBorderColor = useColorModeValue("yellow.500", "yellow.400");
   // Biến xác định việc hiển thị phần tags - đặt false để ẩn
   const showTagsUI = false;
 
@@ -883,7 +893,7 @@ const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
           id="capacity"
           value={formData.capacity}
           onChange={handleCapacityChange}
-          min={1}
+          min={totalTickets > 0 ? totalTickets : 1}
           borderColor={borderColor}
         >
           <NumberInputField />
@@ -898,6 +908,26 @@ const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
         <FormHelperText>
           Tổng số người có thể tham dự sự kiện này.
         </FormHelperText>
+
+        {/* Thêm thông tin về tổng số vé đã cấu hình */}
+        <Box
+          mt={2}
+          p={3}
+          bg={infoBg}
+          color={infoColor}
+          borderRadius="md"
+          borderLeftWidth="4px"
+          borderLeftColor={infoBorderColor}
+        >
+          <Text fontSize="sm">
+            Tổng số vé đã cấu hình: <strong>{totalTickets}</strong>.
+            {totalTickets < formData.capacity
+              ? ` Còn ${
+                  formData.capacity - totalTickets
+                } chỗ chưa được phân bổ vé.`
+              : ` Đã phân bổ đủ số vé cho sức chứa.`}
+          </Text>
+        </Box>
       </FormControl>
 
       <FormControl isInvalid={!!errors.maxTicketsPerPerson}>
@@ -1651,8 +1681,30 @@ const CreateEvent = () => {
     }
   };
 
+  // Thêm hàm tính tổng số vé từ các loại vé
+  const calculateTotalTickets = (ticketTypes: EventFormData["ticketTypes"]) => {
+    return ticketTypes.reduce((total, ticket) => total + ticket.quantity, 0);
+  };
+
   const handleCapacityChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, capacity: parseInt(value, 10) || 0 }));
+    const newCapacity = parseInt(value, 10) || 0;
+
+    // Kiểm tra capacity có nhỏ hơn tổng số vé hiện tại không
+    const totalTickets = calculateTotalTickets(formData.ticketTypes);
+
+    if (newCapacity < totalTickets) {
+      toast({
+        title: "Cảnh báo",
+        description:
+          "Sức chứa sự kiện không thể nhỏ hơn tổng số vé. Vui lòng điều chỉnh số lượng vé trước.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, capacity: newCapacity }));
   };
 
   const handleMaxTicketsChange = (value: string) => {
@@ -1663,9 +1715,8 @@ const CreateEvent = () => {
   };
 
   const addTicketType = () => {
-    setFormData((prev) => ({
-      ...prev,
-      ticketTypes: [
+    setFormData((prev) => {
+      const newTicketTypes = [
         ...prev.ticketTypes,
         {
           id: `ticket-${Date.now()}`,
@@ -1674,16 +1725,28 @@ const CreateEvent = () => {
           quantity: 10,
           description: "",
         },
-      ],
-    }));
+      ];
+
+      return {
+        ...prev,
+        ticketTypes: newTicketTypes,
+        capacity: calculateTotalTickets(newTicketTypes),
+      };
+    });
   };
 
   const removeTicketType = (id: string) => {
     if (formData.ticketTypes.length > 1) {
-      setFormData((prev) => ({
-        ...prev,
-        ticketTypes: prev.ticketTypes.filter((tt) => tt.id !== id),
-      }));
+      setFormData((prev) => {
+        const updatedTicketTypes = prev.ticketTypes.filter(
+          (tt) => tt.id !== id
+        );
+        return {
+          ...prev,
+          ticketTypes: updatedTicketTypes,
+          capacity: calculateTotalTickets(updatedTicketTypes),
+        };
+      });
     } else {
       toast({
         title: "Không thể xóa",
@@ -1698,14 +1761,27 @@ const CreateEvent = () => {
   const updateTicketType = (
     id: string,
     field: string,
-    value: string | number
+    value: any // Thay đổi kiểu dữ liệu thành any để tránh lỗi
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      ticketTypes: prev.ticketTypes.map((tt) =>
+    setFormData((prev) => {
+      const updatedTicketTypes = prev.ticketTypes.map((tt) =>
         tt.id === id ? { ...tt, [field]: value } : tt
-      ),
-    }));
+      );
+
+      // Nếu thay đổi số lượng vé, cập nhật lại capacity
+      if (field === "quantity") {
+        return {
+          ...prev,
+          ticketTypes: updatedTicketTypes,
+          capacity: calculateTotalTickets(updatedTicketTypes),
+        };
+      }
+
+      return {
+        ...prev,
+        ticketTypes: updatedTicketTypes,
+      };
+    });
   };
 
   const addTag = () => {
@@ -2111,6 +2187,7 @@ const CreateEvent = () => {
             removeTag={removeTag}
             handleCapacityChange={handleCapacityChange}
             handleMaxTicketsChange={handleMaxTicketsChange}
+            calculateTotalTickets={calculateTotalTickets}
           />
         );
       case 4:
