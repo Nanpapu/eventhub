@@ -53,6 +53,7 @@ import MyTickets from "../../components/user/MyTickets";
 import UserSettings from "../../components/user/UserSettings";
 import authService from "../../services/auth.service";
 import userService, { UserStats } from "../../services/user.service";
+import { getDefaultAvatar } from "../../utils/userUtils";
 
 // Interface for API error responses
 interface ApiErrorResponse {
@@ -326,7 +327,7 @@ const UserDashboard = () => {
             align={{ base: "center", md: "start" }}
           >
             <Avatar
-              src={userData?.avatar}
+              src={userData?.avatar || getDefaultAvatar(userData?.name)}
               name={userData?.name}
               size="xl"
               mr={{ base: 0, md: 6 }}

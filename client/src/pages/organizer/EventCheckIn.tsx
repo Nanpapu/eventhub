@@ -62,6 +62,7 @@ import {
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useParams, useNavigate } from "react-router-dom";
 import { DateDisplay } from "../../components/common";
+import { getDefaultAvatar } from "../../utils/userUtils";
 
 /**
  * Các thiết lập cho quy trình check-in
@@ -576,7 +577,10 @@ const EventCheckIn = () => {
                                 <Avatar
                                   size="xs"
                                   name={attendee.name}
-                                  src={attendee.avatar}
+                                  src={
+                                    attendee.avatar ||
+                                    getDefaultAvatar(attendee.name)
+                                  }
                                 />
                                 <Text color={textColor}>{attendee.name}</Text>
                               </HStack>
@@ -690,7 +694,10 @@ const EventCheckIn = () => {
                               <Avatar
                                 size="sm"
                                 name={attendee.name}
-                                src={attendee.avatar}
+                                src={
+                                  attendee.avatar ||
+                                  getDefaultAvatar(attendee.name)
+                                }
                               />
                               <Box>
                                 <Text fontWeight="medium" color={textColor}>
@@ -830,7 +837,10 @@ const EventCheckIn = () => {
                       <Avatar
                         size="md"
                         name={lastScannedAttendee.name}
-                        src={lastScannedAttendee.avatar}
+                        src={
+                          lastScannedAttendee.avatar ||
+                          getDefaultAvatar(lastScannedAttendee.name)
+                        }
                       />
                       <Box>
                         <Text fontWeight="bold" color={textColor}>

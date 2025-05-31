@@ -45,6 +45,7 @@ import {
   selectIsAuthenticated,
 } from "../../app/features/authSlice";
 import useAuth from "../../hooks/useAuth";
+import { getDefaultAvatar } from "../../utils/userUtils";
 
 // Interface cho dữ liệu sự kiện
 interface EventData {
@@ -151,7 +152,7 @@ const EventDetail = () => {
             name: eventData.organizer?.name || "Unknown Organizer",
             avatar:
               eventData.organizer?.avatar ||
-              "https://ui-avatars.com/api/?name=Unknown&background=0D8ABC&color=fff",
+              getDefaultAvatar(eventData.organizer?.name),
             bio: eventData.organizer?.bio || "Không có thông tin mô tả.",
             email: eventData.organizer?.email,
             phone: eventData.organizer?.phone,
@@ -739,7 +740,10 @@ const EventDetail = () => {
                   {/* Thông tin chính */}
                   <Flex gap={3} align="center">
                     <Avatar
-                      src={event.organizer.avatar}
+                      src={
+                        event.organizer.avatar ||
+                        getDefaultAvatar(event.organizer.name)
+                      }
                       name={event.organizer.name}
                       size="md"
                     />

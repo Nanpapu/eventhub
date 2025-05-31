@@ -42,6 +42,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import authService from "../../services/auth.service";
+import { getDefaultAvatar } from "../../utils/userUtils";
 
 // Interface cho lỗi API
 interface ApiErrorResponse {
@@ -403,7 +404,7 @@ const Profile = () => {
               <Box position="relative">
                 <Avatar
                   size="2xl"
-                  src={avatarPreview || undefined}
+                  src={avatarPreview || getDefaultAvatar(user?.name)}
                   name={user?.name || "User"}
                   cursor="pointer"
                   onClick={handleAvatarClick}

@@ -44,6 +44,7 @@ import {
   selectIsAuthenticated,
   selectUser,
 } from "../../app/features/authSlice";
+import { getDefaultAvatar } from "../../utils/userUtils";
 
 export default function Header() {
   const { isOpen, onToggle } = useDisclosure();
@@ -178,7 +179,9 @@ export default function Header() {
                 >
                   <Avatar
                     size={"sm"}
-                    src={currentUser?.avatar}
+                    src={
+                      currentUser?.avatar || getDefaultAvatar(currentUser?.name)
+                    }
                     _hover={{
                       transform: "scale(1.05)",
                       transition: "all 0.2s ease",
