@@ -40,6 +40,10 @@ const EventCardComponent: React.FC<EventCardProps> = ({ event }) => {
   const tagColor = useColorModeValue("teal.600", "teal.200");
   const locationColor = useColorModeValue("gray.600", "gray.400");
 
+  // Màu sắc đậm hơn cho badge
+  const paidBadgeBg = useColorModeValue("blue.500", "blue.500");
+  const freeBadgeBg = useColorModeValue("green.500", "green.500");
+
   return (
     <Box
       as={Link}
@@ -70,11 +74,27 @@ const EventCardComponent: React.FC<EventCardProps> = ({ event }) => {
         />
         <Box position="absolute" top={2} right={2}>
           {event.isPaid ? (
-            <Badge colorScheme="blue" py={1} px={2} borderRadius="md">
+            <Badge
+              colorScheme="blue"
+              py={1}
+              px={2}
+              borderRadius="md"
+              variant="solid"
+              bg={paidBadgeBg}
+              color="white"
+            >
               Trả phí
             </Badge>
           ) : (
-            <Badge colorScheme="green" py={1} px={2} borderRadius="md">
+            <Badge
+              colorScheme="green"
+              py={1}
+              px={2}
+              borderRadius="md"
+              variant="solid"
+              bg={freeBadgeBg}
+              color="white"
+            >
               Miễn phí
             </Badge>
           )}

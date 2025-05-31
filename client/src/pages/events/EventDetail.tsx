@@ -225,6 +225,11 @@ const EventDetail = () => {
     fetchEventData();
   }, [id, currentUser?.id]);
 
+  // Màu sắc cho badge
+  const tealBadgeBg = useColorModeValue("teal.500", "teal.500");
+  const paidBadgeBg = useColorModeValue("purple.500", "purple.500");
+  const freeBadgeBg = useColorModeValue("green.500", "green.500");
+
   // Hàm mới để xử lý hiển thị giá vé
   const getDisplayPrice = () => {
     if (!event) return "Đang tải...";
@@ -608,6 +613,9 @@ const EventDetail = () => {
             px={2}
             py={1}
             borderRadius="md"
+            variant="solid"
+            bg={tealBadgeBg}
+            color="white"
           >
             {event.category}
           </Badge>
@@ -617,6 +625,9 @@ const EventDetail = () => {
             px={2}
             py={1}
             borderRadius="md"
+            variant="solid"
+            bg={event.isPaid ? paidBadgeBg : freeBadgeBg}
+            color="white"
           >
             {event.isPaid ? "Có phí" : "Miễn phí"}
           </Badge>
@@ -783,7 +794,6 @@ const EventDetail = () => {
                           color="teal.500"
                         >
                           {event.organizer.organizationName}
-                          
                         </Text>
                       )}
                       {event.organizer.bio && (
