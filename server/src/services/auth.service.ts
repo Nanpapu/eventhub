@@ -307,6 +307,13 @@ const authService = {
     if (!user) {
       throw new Error("User not found");
     }
+    console.log("Server returning user data:", {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      // Các trường khác
+    });
     return {
       id: user.id,
       name: user.name,

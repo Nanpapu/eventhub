@@ -125,6 +125,12 @@ const authController = {
       // Giả sử req.user.id chứa ID của người dùng đã xác thực
       const userId = req.user.id;
       const user = await authService.getCurrentUser(userId);
+      console.log("Controller getMe returning:", {
+        user,
+        hasCreatedAt: !!user.createdAt,
+        createdAtType: user.createdAt ? typeof user.createdAt : null,
+        createdAtValue: user.createdAt ? user.createdAt.toString() : null,
+      });
       res.status(200).json({ success: true, user });
     } catch (error: any) {
       res.status(404).json({ success: false, message: error.message });

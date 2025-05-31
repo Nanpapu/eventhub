@@ -154,13 +154,15 @@ const UserDashboard = () => {
           return;
         }
 
-        // Parse ngày tham gia từ ID MongoDB hoặc từ createdAt nếu có
+        console.log("User data received:", user);
+
+        // Parse ngày tham gia từ createdAt
         let joinDate = "Không xác định";
         if (user.createdAt) {
+          console.log("CreatedAt from API:", user.createdAt);
           joinDate = new Date(user.createdAt).toLocaleDateString("vi-VN");
-        } else if (user.id) {
-          // MongoDB ObjectIDs chứa timestamp trong 4 byte đầu tiên
-          // Nhưng vì frontend không có cách truy cập trực tiếp, ta chỉ hiển thị "Không xác định"
+        } else {
+          console.log("No createdAt found in user data:", user);
         }
 
         // Format lại dữ liệu người dùng

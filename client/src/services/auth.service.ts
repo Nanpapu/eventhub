@@ -106,27 +106,23 @@ const authService = {
   },
 
   /**
-   * Lấy thông tin người dùng hiện tại
+   * Lấy thông tin người dùng hiện tại từ localStorage hoặc API
+   * @returns Thông tin người dùng hiện tại hoặc null
    */
-  getCurrentUser: async () => {
-    // Kiểm tra nếu đã có user trong localStorage
-    const cachedUser = localStorage.getItem("user");
-    if (cachedUser) {
-      return JSON.parse(cachedUser);
-    }
-
+  async getCurrentUser() {
     try {
-      // Nếu không có hoặc cần refresh, gọi API
-      const response = await api.get<{ success: boolean; user: any }>(
-        "/auth/me"
-      );
-      if (response.data.success) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        return response.data.user;
+      // Kiểm tra token trong localStorage
+      const token = this.getToken();
+      if (!token) {
+        return null;
       }
-      return null;
+
+      // Lấy thông tin người dùng từ API
+      const response = await api.get("/auth/me");
+      console.log("API getCurrentUser response:", response.data);
+      return response.data.user;
     } catch (error) {
-      console.error("Error fetching current user:", error);
+      console.error("Error getting current user:", error);
       return null;
     }
   },
