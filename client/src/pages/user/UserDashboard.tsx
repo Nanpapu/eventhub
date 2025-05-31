@@ -33,8 +33,9 @@ import {
   Icon,
   useToast,
   Spinner,
+  Tooltip,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FiUser,
   FiCalendar,
@@ -54,6 +55,8 @@ import UserSettings from "../../components/user/UserSettings";
 import authService from "../../services/auth.service";
 import userService, { UserStats } from "../../services/user.service";
 import { getDefaultAvatar } from "../../utils/userUtils";
+import { useAppDispatch } from "../../app/hooks";
+import { updateUser } from "../../app/features/authSlice";
 
 // Interface for API error responses
 interface ApiErrorResponse {
@@ -124,6 +127,11 @@ const UserDashboard = () => {
   const highlightBg = useColorModeValue("gray.50", "gray.700");
   const iconColor = useColorModeValue("teal.500", "teal.300");
   const errorColor = useColorModeValue("red.500", "red.300");
+
+  // Thêm state và ref cho việc upload avatar
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dispatch = useAppDispatch();
 
   // Fetch thông tin người dùng và thống kê từ API
   useEffect(() => {
@@ -277,6 +285,76 @@ const UserDashboard = () => {
     }
   };
 
+  // Thêm hàm xử lý click vào avatar
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Thêm hàm xử lý upload avatar
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      // Kiểm tra kích thước file
+      if (file.size > maxSize) {
+        toast({
+          title: "Lỗi",
+          description: "Kích thước file không được vượt quá 5MB",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Kiểm tra loại file
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Lỗi",
+          description: "Chỉ chấp nhận file hình ảnh",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      try {
+        setIsUploadingAvatar(true);
+        // Gọi API upload avatar
+        const response = await userService.uploadAvatar(file);
+
+        if (response.success) {
+          // Cập nhật avatar trong state và Redux store
+          setUserData((prev) =>
+            prev ? { ...prev, avatar: response.data.user.avatar } : null
+          );
+          dispatch(updateUser({ avatar: response.data.user.avatar }));
+
+          toast({
+            title: "Thành công",
+            description: "Avatar đã được cập nhật",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể upload avatar, vui lòng thử lại",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    }
+  };
+
   // Hiển thị loading state
   if (loading) {
     return (
@@ -326,13 +404,46 @@ const UserDashboard = () => {
             direction={{ base: "column", md: "row" }}
             align={{ base: "center", md: "start" }}
           >
-            <Avatar
-              src={userData?.avatar || getDefaultAvatar(userData?.name)}
-              name={userData?.name}
-              size="xl"
-              mr={{ base: 0, md: 6 }}
+            <Box
+              position="relative"
               mb={{ base: 4, md: 0 }}
-            />
+              mr={{ base: 0, md: 6 }}
+            >
+              <Tooltip label="Nhấn để thay đổi ảnh đại diện" placement="top">
+                <Avatar
+                  src={userData?.avatar || getDefaultAvatar(userData?.name)}
+                  name={userData?.name}
+                  size="xl"
+                  cursor="pointer"
+                  onClick={handleAvatarClick}
+                >
+                  {isUploadingAvatar && (
+                    <Box
+                      position="absolute"
+                      top="0"
+                      left="0"
+                      right="0"
+                      bottom="0"
+                      bg="blackAlpha.600"
+                      borderRadius="full"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <Spinner size="lg" color="white" />
+                    </Box>
+                  )}
+                </Avatar>
+              </Tooltip>
+              <Input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                display="none"
+                onChange={handleAvatarChange}
+                isDisabled={isUploadingAvatar}
+              />
+            </Box>
 
             <Box flex="1">
               <Heading as="h1" size="lg" color={textColor}>

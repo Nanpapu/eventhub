@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "../utils/api";
 
 // Interface cho dữ liệu vé (đồng bộ với dữ liệu trả về từ API và MyTickets.tsx)
 export interface Ticket {
@@ -107,9 +108,33 @@ const getUserStats = async (): Promise<UserStats> => {
   }
 };
 
+/**
+ * Upload avatar
+ * @param file File ảnh avatar
+ * @returns Promise chứa response từ API
+ */
+const uploadAvatar = async (file: File): Promise<any> => {
+  // Tạo FormData để gửi file
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  try {
+    const response = await api.post("/users/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading avatar:", error);
+    throw error;
+  }
+};
+
 const userService = {
   getMyTickets,
   getUserStats,
+  uploadAvatar,
 };
 
 export default userService;

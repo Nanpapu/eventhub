@@ -43,6 +43,9 @@ import {
 } from "react-icons/fa";
 import authService from "../../services/auth.service";
 import { getDefaultAvatar } from "../../utils/userUtils";
+import userService from "../../services/user.service";
+import { useAppDispatch } from "../../app/hooks";
+import { updateUser } from "../../app/features/authSlice";
 
 // Interface cho lỗi API
 interface ApiErrorResponse {
@@ -182,33 +185,74 @@ const Profile = () => {
     fetchUserProfile();
   }, [resetProfileForm, resetPreferencesForm]);
 
-  // Xử lý upload ảnh đại diện
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setAvatarPreview(result);
+  const dispatch = useAppDispatch();
+  const [isUploading, setIsUploading] = useState(false);
 
-        // Trong thực tế, đây sẽ là API call để upload ảnh
-        // Ví dụ:
-        // const formData = new FormData();
-        // formData.append('avatar', file);
-        // const response = await api.post('/upload/avatar', formData);
-        // Sau đó cập nhật thông tin người dùng với URL avatar mới
-        // await authService.updateProfile({ avatar: response.data.url });
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const maxSize = 5 * 1024 * 1024; // 5MB
 
-        // Tạm thời chỉ hiển thị avatar mới
+      // Kiểm tra kích thước file
+      if (file.size > maxSize) {
         toast({
-          title: "Ảnh đại diện đã cập nhật",
-          description: "Ảnh đại diện của bạn đã được cập nhật thành công",
-          status: "success",
+          title: "Lỗi",
+          description: "Kích thước file không được vượt quá 5MB",
+          status: "error",
           duration: 3000,
           isClosable: true,
         });
+        return;
+      }
+
+      // Kiểm tra loại file
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Lỗi",
+          description: "Chỉ chấp nhận file hình ảnh",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Hiển thị preview ảnh
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      try {
+        setIsUploading(true);
+        // Gọi API upload avatar
+        const response = await userService.uploadAvatar(file);
+
+        if (response.success) {
+          // Cập nhật avatar trong Redux store
+          dispatch(updateUser({ avatar: response.data.user.avatar }));
+
+          toast({
+            title: "Thành công",
+            description: "Avatar đã được cập nhật",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể upload avatar, vui lòng thử lại",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -401,35 +445,60 @@ const Profile = () => {
         <GridItem>
           <Box bg={bgColor} p={6} borderRadius="xl" boxShadow={boxShadow}>
             <VStack spacing={4}>
-              <Box position="relative">
-                <Avatar
-                  size="2xl"
-                  src={avatarPreview || getDefaultAvatar(user?.name)}
-                  name={user?.name || "User"}
+              <FormControl mb={6}>
+                <FormLabel
+                  textAlign="center"
+                  htmlFor="avatar-upload"
                   cursor="pointer"
-                  onClick={handleAvatarClick}
-                />
-                <Tooltip label="Đổi ảnh đại diện" placement="top">
-                  <IconButton
-                    aria-label="Đổi ảnh đại diện"
-                    icon={<FaCamera />}
-                    size="sm"
-                    colorScheme="teal"
-                    borderRadius="full"
-                    position="absolute"
-                    bottom="0"
-                    right="0"
-                    onClick={handleAvatarClick}
-                  />
-                </Tooltip>
-                <input
+                >
+                  <VStack spacing={3}>
+                    <Avatar
+                      size="2xl"
+                      name={user?.name || "User"}
+                      src={
+                        avatarPreview ||
+                        user?.avatar ||
+                        getDefaultAvatar(user?.name)
+                      }
+                      cursor="pointer"
+                      position="relative"
+                    >
+                      {isUploading && (
+                        <Box
+                          position="absolute"
+                          top="0"
+                          left="0"
+                          right="0"
+                          bottom="0"
+                          bg="blackAlpha.600"
+                          borderRadius="full"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                        >
+                          <Spinner size="lg" color="white" />
+                        </Box>
+                      )}
+                    </Avatar>
+                    <Button
+                      size="sm"
+                      leftIcon={<FaCamera />}
+                      isLoading={isUploading}
+                      loadingText="Đang tải lên"
+                    >
+                      Thay đổi ảnh
+                    </Button>
+                  </VStack>
+                </FormLabel>
+                <Input
+                  id="avatar-upload"
                   type="file"
                   accept="image/*"
-                  style={{ display: "none" }}
-                  ref={fileInputRef}
                   onChange={handleAvatarChange}
+                  display="none"
+                  isDisabled={isUploading}
                 />
-              </Box>
+              </FormControl>
               <Heading size="md">{user?.name || "User"}</Heading>
               <Text color="gray.500">{user?.email || ""}</Text>
               <Divider />
