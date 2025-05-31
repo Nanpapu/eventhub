@@ -135,7 +135,7 @@ const Dashboard = () => {
     if (Array.isArray(userEventsResponse)) {
       eventsList = userEventsResponse;
     } else if (userEventsResponse && typeof userEventsResponse === "object") {
-      // @ts-ignore - Để tránh lỗi TypeScript
+      // @ts-expect-error - Để tránh lỗi TypeScript
       eventsList = userEventsResponse.events || [];
     }
 
