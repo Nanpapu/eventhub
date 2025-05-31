@@ -71,7 +71,6 @@ import {
   FiTrash2,
   FiInfo,
   FiList,
-  FiSettings,
   FiCheckCircle,
   FiHome,
 } from "react-icons/fi";
@@ -628,9 +627,16 @@ interface TicketsPricingStepProps
   addTicketType: () => void;
   removeTicketType: (id: string) => void;
   updateTicketType: (id: string, field: string, value: string | number) => void;
+  handleCapacityChange: (value: string) => void;
+  handleMaxTicketsChange: (value: string) => void;
+  newTag: string;
+  setNewTag: React.Dispatch<React.SetStateAction<string>>;
+  addTag: () => void;
+  removeTag: (tag: string) => void;
+  calculateTotalTickets: (ticketTypes: EventFormData["ticketTypes"]) => number;
 }
 
-// Bước 3: Vé & Giá
+// Bước 3: Vé & Cài đặt (gộp Vé và Cài đặt nâng cao)
 const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
   formData,
   errors,
@@ -638,11 +644,80 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
   addTicketType,
   removeTicketType,
   updateTicketType,
+  handleCapacityChange,
+  handleMaxTicketsChange,
+  newTag,
+  setNewTag,
+  addTag,
+  removeTag,
+  calculateTotalTickets,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const totalTickets = calculateTotalTickets(formData.ticketTypes);
+  const infoBg = useColorModeValue("yellow.50", "yellow.900");
+  const infoColor = useColorModeValue("yellow.700", "yellow.200");
+  const infoBorderColor = useColorModeValue("yellow.500", "yellow.400");
+  const showTagsUI = false; // Biến xác định việc hiển thị phần tags - đặt false để ẩn
 
   return (
     <VStack spacing={6} align="stretch">
+      {/* Phần sức chứa của sự kiện - đặt ở trên đầu */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="md"
+        mb={4}
+      >
+        <Heading size="sm" mb={4}>
+          Sức chứa sự kiện
+        </Heading>
+
+        <FormControl isInvalid={!!errors.capacity}>
+          <FormLabel htmlFor="capacity">Tổng sức chứa tối đa</FormLabel>
+          <NumberInput
+            id="capacity"
+            value={formData.capacity}
+            onChange={handleCapacityChange}
+            min={totalTickets > 0 ? totalTickets : 1}
+            borderColor={borderColor}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+          {errors.capacity && (
+            <FormErrorMessage>{errors.capacity}</FormErrorMessage>
+          )}
+          <FormHelperText>
+            Tổng số người có thể tham dự sự kiện này.
+          </FormHelperText>
+
+          {/* Thêm thông tin về tổng số vé đã cấu hình */}
+          <Box
+            mt={2}
+            p={3}
+            bg={infoBg}
+            color={infoColor}
+            borderRadius="md"
+            borderLeftWidth="4px"
+            borderLeftColor={infoBorderColor}
+          >
+            <Text fontSize="sm">
+              Tổng số vé đã cấu hình: <strong>{totalTickets}</strong>.
+              {totalTickets < formData.capacity
+                ? ` Còn ${
+                    formData.capacity - totalTickets
+                  } chỗ chưa được phân bổ vé.`
+                : ` Đã phân bổ đủ số vé cho sức chứa.`}
+            </Text>
+          </Box>
+        </FormControl>
+      </Box>
+
+      {/* Phần cài đặt vé - phần loại vé và giá */}
       <FormControl display="flex" alignItems="center">
         <FormLabel htmlFor="isPaid" mb="0">
           Đây là sự kiện có thu phí?
@@ -721,7 +796,7 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
                     step={10000} // Thay đổi bước tăng/giảm thành 10.000 VND
                     borderColor={borderColor}
                     isDisabled={!formData.isPaid && ticket.price === 0}
-                    // Thêm định dạng hiển thị cho số tiền
+                    // @ts-expect-error: Chakra-UI NumberInput expects different type for format function
                     format={(val) => `${parseInt(val).toLocaleString("vi-VN")}`}
                     parse={(val) => val.replace(/[^\d]/g, "")}
                   >
@@ -848,159 +923,93 @@ const TicketsPricingStep: React.FC<TicketsPricingStepProps> = ({
           một loại vé miễn phí.
         </Text>
       )}
-    </VStack>
-  );
-};
 
-// Định nghĩa lại AdvancedSettingsStepProps một cách tường minh
-interface AdvancedSettingsStepProps {
-  formData: EventFormData;
-  errors: Record<string, string>;
-  newTag: string;
-  setNewTag: React.Dispatch<React.SetStateAction<string>>;
-  addTag: () => void;
-  removeTag: (tag: string) => void;
-  handleCapacityChange: (value: string) => void;
-  handleMaxTicketsChange: (value: string) => void;
-  calculateTotalTickets: (ticketTypes: EventFormData["ticketTypes"]) => number;
-}
+      {/* Số vé tối đa mỗi người có thể mua - đặt ở dưới cùng */}
+      <Box
+        p={5}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="md"
+        mt={4}
+      >
+        <Heading size="sm" mb={4}>
+          Cài đặt giới hạn vé
+        </Heading>
 
-// Bước 4: Cài đặt khác
-const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
-  formData,
-  errors,
-  newTag,
-  setNewTag,
-  addTag,
-  removeTag,
-  handleCapacityChange,
-  handleMaxTicketsChange,
-  calculateTotalTickets,
-}) => {
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const totalTickets = calculateTotalTickets(formData.ticketTypes);
-  const infoBg = useColorModeValue("yellow.50", "yellow.900");
-  const infoColor = useColorModeValue("yellow.700", "yellow.200");
-  const infoBorderColor = useColorModeValue("yellow.500", "yellow.400");
-  // Biến xác định việc hiển thị phần tags - đặt false để ẩn
-  const showTagsUI = false;
-
-  return (
-    <VStack spacing={6} align="stretch">
-      <FormControl isInvalid={!!errors.capacity}>
-        <FormLabel htmlFor="capacity">Sức chứa của sự kiện</FormLabel>
-        <NumberInput
-          id="capacity"
-          value={formData.capacity}
-          onChange={handleCapacityChange}
-          min={totalTickets > 0 ? totalTickets : 1}
-          borderColor={borderColor}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-        {errors.capacity && (
-          <FormErrorMessage>{errors.capacity}</FormErrorMessage>
-        )}
-        <FormHelperText>
-          Tổng số người có thể tham dự sự kiện này.
-        </FormHelperText>
-
-        {/* Thêm thông tin về tổng số vé đã cấu hình */}
-        <Box
-          mt={2}
-          p={3}
-          bg={infoBg}
-          color={infoColor}
-          borderRadius="md"
-          borderLeftWidth="4px"
-          borderLeftColor={infoBorderColor}
-        >
-          <Text fontSize="sm">
-            Tổng số vé đã cấu hình: <strong>{totalTickets}</strong>.
-            {totalTickets < formData.capacity
-              ? ` Còn ${
-                  formData.capacity - totalTickets
-                } chỗ chưa được phân bổ vé.`
-              : ` Đã phân bổ đủ số vé cho sức chứa.`}
-          </Text>
-        </Box>
-      </FormControl>
-
-      <FormControl isInvalid={!!errors.maxTicketsPerPerson}>
-        <FormLabel htmlFor="maxTicketsPerPerson">
-          Số vé tối đa mỗi người có thể mua
-        </FormLabel>
-        <NumberInput
-          id="maxTicketsPerPerson"
-          name="maxTicketsPerPerson"
-          value={formData.maxTicketsPerPerson}
-          onChange={handleMaxTicketsChange}
-          min={1}
-          borderColor={borderColor}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-        {errors.maxTicketsPerPerson && (
-          <FormErrorMessage>{errors.maxTicketsPerPerson}</FormErrorMessage>
-        )}
-        <FormHelperText>
-          Giới hạn số lượng vé một người tham gia có thể mua cho sự kiện này.
-        </FormHelperText>
-      </FormControl>
-
-      {/* Ẩn phần UI tags nhưng vẫn giữ code */}
-      {showTagsUI && (
-        <FormControl>
-          <FormLabel htmlFor="tags">Thẻ (Tags)</FormLabel>
-          <InputGroup>
-            <Input
-              id="tags"
-              placeholder="Nhập tag và nhấn Thêm"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              borderColor={borderColor}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addTag();
-                }
-              }}
-            />
-            <Button onClick={addTag} ml={2} colorScheme="teal">
-              Thêm Tag
-            </Button>
-          </InputGroup>
-          {formData.tags.length > 0 && (
-            <Wrap mt={4} spacing={2}>
-              {formData.tags.map((tag) => (
-                <WrapItem key={tag}>
-                  <Tag
-                    size="lg"
-                    variant="solid"
-                    colorScheme="teal"
-                    borderRadius="full"
-                  >
-                    <TagLabel>{tag}</TagLabel>
-                    <TagCloseButton onClick={() => removeTag(tag)} />
-                  </Tag>
-                </WrapItem>
-              ))}
-            </Wrap>
+        <FormControl isInvalid={!!errors.maxTicketsPerPerson}>
+          <FormLabel htmlFor="maxTicketsPerPerson">
+            Số vé tối đa mỗi người có thể mua
+          </FormLabel>
+          <NumberInput
+            id="maxTicketsPerPerson"
+            name="maxTicketsPerPerson"
+            value={formData.maxTicketsPerPerson}
+            onChange={handleMaxTicketsChange}
+            min={1}
+            max={formData.capacity}
+            borderColor={borderColor}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+          {errors.maxTicketsPerPerson && (
+            <FormErrorMessage>{errors.maxTicketsPerPerson}</FormErrorMessage>
           )}
           <FormHelperText>
-            Gắn thẻ để phân loại và giúp sự kiện dễ tìm kiếm hơn. Nhấn Enter
-            hoặc click "Thêm Tag".
+            Giới hạn số lượng vé một người tham gia có thể mua cho sự kiện này.
+            Giá trị tối đa không thể vượt quá sức chứa sự kiện.
           </FormHelperText>
         </FormControl>
-      )}
+
+        {/* Phần tags - ẩn nhưng vẫn giữ code */}
+        {showTagsUI && (
+          <FormControl mt={6}>
+            <FormLabel htmlFor="tags">Thẻ (Tags)</FormLabel>
+            <InputGroup>
+              <Input
+                id="tags"
+                placeholder="Nhập tag và nhấn Thêm"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                borderColor={borderColor}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+              />
+              <Button onClick={addTag} ml={2} colorScheme="teal">
+                Thêm Tag
+              </Button>
+            </InputGroup>
+            {formData.tags.length > 0 && (
+              <Wrap mt={4} spacing={2}>
+                {formData.tags.map((tag) => (
+                  <WrapItem key={tag}>
+                    <Tag
+                      size="lg"
+                      variant="solid"
+                      colorScheme="teal"
+                      borderRadius="full"
+                    >
+                      <TagLabel>{tag}</TagLabel>
+                      <TagCloseButton onClick={() => removeTag(tag)} />
+                    </Tag>
+                  </WrapItem>
+                ))}
+              </Wrap>
+            )}
+            <FormHelperText>
+              Gắn thẻ để phân loại và giúp sự kiện dễ tìm kiếm hơn. Nhấn Enter
+              hoặc click "Thêm Tag".
+            </FormHelperText>
+          </FormControl>
+        )}
+      </Box>
     </VStack>
   );
 };
@@ -1009,7 +1018,7 @@ interface ReviewConfirmStepProps {
   formData: EventFormData;
 }
 
-// Bước 5: Xem trước & Xác nhận
+// Bước 4: Xem trước & Xác nhận
 const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -1099,27 +1108,6 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
               {formData.startTime} - {formData.endTime}
             </Text>
           </Flex>
-          {/* Bỏ phần hiển thị thông tin sự kiện online
-          {formData.isOnline ? (
-            <Flex align="center" gap={2}>
-              <Icon as={FiLink} color={iconColor} />
-              <Text>
-                Trực tuyến tại:{" "}
-                <a
-                  href={formData.onlineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: onlineLinkColor,
-                    textDecoration: "underline",
-                  }}
-                >
-                  {formData.onlineUrl}
-                </a>
-              </Text>
-            </Flex>
-          ) : (
-          */}
           <Flex align="start" gap={2}>
             <Icon as={FiMapPin} color={iconColor} mt={1} />
             <VStack align="start" spacing={0}>
@@ -1129,11 +1117,10 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
               </Text>
             </VStack>
           </Flex>
-          {/*)}*/}
         </VStack>
       </Box>
 
-      {/* Vé & Giá */}
+      {/* Vé & Cài đặt - gộp phần 3 và 4 lại */}
       <Box
         p={5}
         borderWidth="1px"
@@ -1142,9 +1129,31 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
         shadow="sm"
       >
         <Heading size="md" mb={4}>
-          3. Thông Tin Vé & Giá
+          3. Vé & Cài Đặt
         </Heading>
-        <VStack spacing={3} align="stretch">
+
+        {/* Phần sức chứa */}
+        <VStack spacing={3} align="stretch" mb={6}>
+          <Heading size="sm">Thông tin sức chứa</Heading>
+          <Flex>
+            <Text fontWeight="bold" minW="180px">
+              Sức chứa tối đa:
+            </Text>
+            <Text>{formData.capacity} người</Text>
+          </Flex>
+          <Flex>
+            <Text fontWeight="bold" minW="180px">
+              Vé tối đa/người:
+            </Text>
+            <Text>{formData.maxTicketsPerPerson} vé</Text>
+          </Flex>
+        </VStack>
+
+        <Divider my={4} />
+
+        {/* Phần vé */}
+        <VStack spacing={3} align="stretch" mt={4}>
+          <Heading size="sm">Thông tin vé</Heading>
           <Flex>
             <Text fontWeight="bold" minW="120px">
               Hình thức:
@@ -1215,34 +1224,11 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
             </Text>
           )}
         </VStack>
-      </Box>
 
-      {/* Cài đặt khác */}
-      <Box
-        p={5}
-        borderWidth="1px"
-        borderRadius="md"
-        borderColor={borderColor}
-        shadow="sm"
-      >
-        <Heading size="md" mb={4}>
-          4. Cài Đặt Khác
-        </Heading>
-        <VStack spacing={3} align="stretch">
-          <Flex>
-            <Text fontWeight="bold" minW="180px">
-              Sức chứa tối đa:
-            </Text>
-            <Text>{formData.capacity} người</Text>
-          </Flex>
-          <Flex>
-            <Text fontWeight="bold" minW="180px">
-              Vé tối đa/người:
-            </Text>
-            <Text>{formData.maxTicketsPerPerson} vé</Text>
-          </Flex>
-          {/* Ẩn hiển thị tags trong review nhưng vẫn giữ code */}
-          {showTagsInReview && formData.tags.length > 0 && (
+        {/* Hiển thị tags nếu cần */}
+        {showTagsInReview && formData.tags.length > 0 && (
+          <VStack align="stretch" spacing={3} mt={6}>
+            <Heading size="sm">Thẻ tag</Heading>
             <Flex align="start">
               <Text fontWeight="bold" minW="180px" mt={1}>
                 Tags:
@@ -1262,8 +1248,8 @@ const ReviewConfirmStep: React.FC<ReviewConfirmStepProps> = ({ formData }) => {
                 ))}
               </Wrap>
             </Flex>
-          )}
-        </VStack>
+          </VStack>
+        )}
       </Box>
 
       <Divider my={6} />
@@ -1319,9 +1305,8 @@ const CreateEvent = () => {
       description: "Lịch trình",
       icon: FiCalendar,
     },
-    { title: "Vé & Giá", description: "Chi phí", icon: FiList },
-    { title: "Cài đặt", description: "Nâng cao", icon: FiSettings },
-    { title: "Xem trước", description: "Hoàn tất", icon: FiCheckCircle },
+    { title: "Vé & Cài đặt", description: "Chi tiết", icon: FiList }, // Đổi tên bước 3
+    { title: "Xem trước", description: "Hoàn tất", icon: FiCheckCircle }, // Bước 4 thành bước cuối
   ];
 
   const { activeStep, setActiveStep } = useSteps({
@@ -1761,7 +1746,7 @@ const CreateEvent = () => {
   const updateTicketType = (
     id: string,
     field: string,
-    value: any // Thay đổi kiểu dữ liệu thành any để tránh lỗi
+    value: string | number
   ) => {
     setFormData((prev) => {
       const updatedTicketTypes = prev.ticketTypes.map((tt) =>
@@ -2174,23 +2159,16 @@ const CreateEvent = () => {
             addTicketType={addTicketType}
             removeTicketType={removeTicketType}
             updateTicketType={updateTicketType}
-          />
-        );
-      case 3:
-        return (
-          <AdvancedSettingsStep
-            formData={commonProps.formData}
-            errors={commonProps.errors}
+            handleCapacityChange={handleCapacityChange}
+            handleMaxTicketsChange={handleMaxTicketsChange}
             newTag={newTag}
             setNewTag={setNewTag}
             addTag={addTag}
             removeTag={removeTag}
-            handleCapacityChange={handleCapacityChange}
-            handleMaxTicketsChange={handleMaxTicketsChange}
             calculateTotalTickets={calculateTotalTickets}
           />
         );
-      case 4:
+      case 3:
         return <ReviewConfirmStep formData={formData} />;
       default:
         return <Box>Unknown Step</Box>;
