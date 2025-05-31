@@ -64,7 +64,6 @@ import {
   FiCalendar,
   FiMapPin,
   FiClock,
-  FiDollarSign,
   FiPlus,
   FiUpload,
   FiSave,
@@ -155,14 +154,79 @@ const BasicInfoStep: React.FC<StepProps> = ({
   errors,
 }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const toast = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      // Kiểm tra kích thước file
+      if (file.size > maxSize) {
+        toast({
+          title: "Lỗi",
+          description: "Kích thước file không được vượt quá 5MB",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Kiểm tra loại file
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Lỗi",
+          description: "Chỉ chấp nhận file hình ảnh (jpg, jpeg, png, gif)",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Hiển thị preview ảnh ngay lập tức
       setFormData((prev) => ({
         ...prev,
-        image: URL.createObjectURL(file), // Cập nhật URL để preview
-        imageFile: file, // Lưu file để upload
+        image: URL.createObjectURL(file),
+        imageFile: file,
       }));
+
+      try {
+        setIsUploading(true);
+
+        // Upload ảnh lên Cloudinary
+        const response = await eventService.uploadEventImage(file);
+
+        if (response.success) {
+          // Cập nhật URL ảnh thật từ Cloudinary
+          setFormData((prev) => ({
+            ...prev,
+            image: response.data.imageUrl,
+            imageFile: null, // Không cần lưu file nữa sau khi đã upload
+          }));
+
+          toast({
+            title: "Thành công",
+            description: "Ảnh bìa sự kiện đã được tải lên",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error uploading event image:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải ảnh lên, vui lòng thử lại",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -220,37 +284,65 @@ const BasicInfoStep: React.FC<StepProps> = ({
 
       <FormControl isInvalid={!!errors.imageFile}>
         <FormLabel htmlFor="imageFile">Ảnh bìa sự kiện</FormLabel>
+        <Box mb={2}>
+          <Text fontSize="sm" color="gray.500">
+            Kích thước đề xuất: 1200 x 630 pixels (tỷ lệ 16:9). Tối đa 5MB.
+          </Text>
+          <Text fontSize="sm" color="gray.500" mt={1}>
+            Hãy đảm bảo phần quan trọng của ảnh (logo, văn bản) nằm ở trung tâm
+            để tránh bị cắt xén trên các thiết bị khác nhau.
+          </Text>
+        </Box>
         <InputGroup>
           <InputLeftElement pointerEvents="none">
             <Icon as={FiUpload} />
           </InputLeftElement>
           <Input
             type="file"
-            id="imageFile" // Đổi id và name để không trùng với formData.image (URL)
+            id="imageFile"
             name="imageFile"
             accept="image/*"
-            onChange={handleImageChange} // Sử dụng handleImageChange
+            onChange={handleImageChange}
             p={1.5}
             borderColor={borderColor}
+            isDisabled={isUploading}
           />
         </InputGroup>
+        {isUploading && (
+          <Flex align="center" mt={2}>
+            <Spinner size="sm" mr={2} />
+            <Text fontSize="sm">Đang tải ảnh lên...</Text>
+          </Flex>
+        )}
         {formData.image &&
           formData.image !==
             "https://via.placeholder.com/800x400?text=Event+Image" && (
-            <Image
-              src={formData.image} // Hiển thị preview từ URL (có thể là URL.createObjectURL)
-              alt="Xem trước ảnh bìa"
-              mt={4}
-              maxH="250px"
-              borderRadius="md"
-              objectFit="cover"
-              borderWidth="1px"
-              borderColor={borderColor}
-            />
+            <Box position="relative">
+              <Image
+                src={formData.image}
+                alt="Xem trước ảnh bìa"
+                mt={4}
+                maxH="250px"
+                borderRadius="md"
+                objectFit="cover"
+                borderWidth="1px"
+                borderColor={borderColor}
+              />
+              {formData.image.includes("cloudinary") && (
+                <Badge
+                  colorScheme="green"
+                  position="absolute"
+                  top={4}
+                  right={0}
+                >
+                  Đã tải lên
+                </Badge>
+              )}
+            </Box>
           )}
         <FormHelperText>
-          Chọn ảnh đại diện cho sự kiện của bạn. Ảnh nên có chất lượng tốt và tỷ
-          lệ phù hợp.
+          Chọn ảnh đại diện cho sự kiện của bạn. Nên sử dụng ảnh ngang, tỷ lệ
+          16:9 để hiển thị tốt nhất.
         </FormHelperText>
         {errors.imageFile && (
           <FormErrorMessage>{errors.imageFile}</FormErrorMessage>
@@ -1662,6 +1754,23 @@ const CreateEvent = () => {
       image,
       tags,
     } = formData;
+
+    // Kiểm tra nếu ảnh chưa được upload lên Cloudinary
+    if (
+      image &&
+      !image.includes("cloudinary") &&
+      image !== "https://via.placeholder.com/800x400?text=Event+Image"
+    ) {
+      toast({
+        title: "Lưu ý",
+        description:
+          "Ảnh sự kiện đang được tải lên. Vui lòng đợi hoàn tất trước khi lưu.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
     // Chuẩn bị dữ liệu thống nhất cho cả tạo mới và cập nhật
     const eventBaseData = {
