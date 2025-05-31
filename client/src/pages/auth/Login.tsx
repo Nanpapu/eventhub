@@ -338,7 +338,9 @@ const Login = () => {
             p={8}
           >
             <Stack spacing={6} color="white" textAlign="center">
-              <Heading size="xl">Đăng nhập để tham gia sự kiện</Heading>
+              <Heading size="xl" color="white">
+                Đăng nhập để tham gia sự kiện
+              </Heading>
               <Text fontSize="lg">
                 Khám phá và tận hưởng hàng nghìn sự kiện đa dạng trên EventHub
               </Text>

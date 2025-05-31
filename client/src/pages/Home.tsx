@@ -17,10 +17,10 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { EventCard, EventCardData } from "../components/events/EventCard";
-import { categories, getCategoryName, Category } from "../utils/categoryUtils";
+import { categories } from "../utils/categoryUtils";
 
-// Tạo interface cho event để có type checking
-interface EventData {
+// API response interface
+interface ApiEventData {
   id: string;
   title: string;
   description: string;
@@ -55,7 +55,7 @@ const Home = () => {
         if (response.data.success) {
           // Chuyển đổi dữ liệu từ API để phù hợp với interface EventCardData
           const formattedEvents: EventCardData[] = response.data.events.map(
-            (event: any) => ({
+            (event: ApiEventData) => ({
               id: event.id,
               title: event.title,
               description: event.description,
@@ -125,7 +125,7 @@ const Home = () => {
               maxW="container.md"
               textAlign={{ base: "center", md: "left" }}
             >
-              <Heading as="h1" size="2xl">
+              <Heading as="h1" size="2xl" color="white">
                 Tìm và tham gia sự kiện hấp dẫn
               </Heading>
               <Text fontSize="xl" maxW="container.sm">
