@@ -40,6 +40,12 @@ import {
   Tooltip,
   Badge,
   Spinner,
+  Icon,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Divider,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -48,7 +54,6 @@ import {
   FaUsers,
   FaTicketAlt,
   FaEdit,
-  FaTrash,
   FaPlus,
   FaQrcode,
   FaEye,
@@ -106,8 +111,17 @@ const Dashboard = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [eventToCancel, setEventToCancel] = useState<string | null>(null);
+
+  // State cho modal ẩn sự kiện
+  const {
+    isOpen: isHideEventModalOpen,
+    onOpen: onHideEventModalOpen,
+    onClose: onHideEventModalClose,
+  } = useDisclosure();
+  const [eventToToggleVisibility, setEventToToggleVisibility] = useState<{
+    id: string;
+    isHidden: boolean;
+  } | null>(null);
 
   // Sử dụng Redux hooks để lấy dữ liệu
   const isLoading = useAppSelector(selectEventLoading);
@@ -266,58 +280,19 @@ const Dashboard = () => {
     });
   };
 
-  // Mở hộp thoại xác nhận khi hủy sự kiện
-  const confirmCancelEvent = (eventId: string) => {
-    setEventToCancel(eventId);
-    onOpen();
-  };
-
-  // Xử lý hủy sự kiện sau khi xác nhận
-  const handleCancelConfirmed = async () => {
-    if (!eventToCancel) return;
-
-    try {
-      // Trong tương lai, sẽ gọi API để hủy sự kiện
-      // await cancelEvent(eventToCancel);
-
-      // Cập nhật trạng thái UI
-      const updatedEvents = events.map((event) =>
-        event.id === eventToCancel
-          ? { ...event, status: "cancelled" as const }
-          : event
-      );
-      setEvents(updatedEvents);
-
-      toast({
-        title: "Đã hủy sự kiện",
-        description: "Sự kiện đã được hủy thành công.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Không thể hủy sự kiện. Vui lòng thử lại sau.";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      onClose();
-      setEventToCancel(null);
-    }
-  };
-
   // Xử lý ẩn/hiện sự kiện
   const handleToggleVisibility = async (
     eventId: string,
     currentlyHidden: boolean
   ) => {
+    // Nếu đang hiển thị và sắp ẩn đi, mở modal xác nhận
+    if (!currentlyHidden) {
+      setEventToToggleVisibility({ id: eventId, isHidden: currentlyHidden });
+      onHideEventModalOpen();
+      return;
+    }
+
+    // Nếu đang ẩn và sắp hiển thị, thực hiện luôn không cần xác nhận
     try {
       await dispatch(
         toggleEventVisibility({ id: eventId, isHidden: !currentlyHidden })
@@ -330,12 +305,8 @@ const Dashboard = () => {
       setEvents(updatedEvents);
 
       toast({
-        title: currentlyHidden
-          ? "Sự kiện đã được hiển thị"
-          : "Sự kiện đã được ẩn",
-        description: currentlyHidden
-          ? "Sự kiện đã được hiển thị công khai trở lại"
-          : "Sự kiện đã bị ẩn khỏi danh sách công khai",
+        title: "Sự kiện đã được hiển thị",
+        description: "Sự kiện đã được hiển thị công khai trở lại",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -355,13 +326,69 @@ const Dashboard = () => {
     }
   };
 
+  // Xử lý khi người dùng xác nhận ẩn sự kiện
+  const handleConfirmHideEvent = async () => {
+    if (!eventToToggleVisibility) return;
+
+    try {
+      await dispatch(
+        toggleEventVisibility({
+          id: eventToToggleVisibility.id,
+          isHidden: !eventToToggleVisibility.isHidden,
+        })
+      ).unwrap();
+
+      // Cập nhật UI
+      const updatedEvents = events.map((event) =>
+        event.id === eventToToggleVisibility.id
+          ? { ...event, isHidden: !eventToToggleVisibility.isHidden }
+          : event
+      );
+      setEvents(updatedEvents);
+
+      toast({
+        title: "Sự kiện đã được ẩn",
+        description: "Sự kiện đã bị ẩn khỏi danh sách công khai",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể thay đổi trạng thái hiển thị. Vui lòng thử lại sau.";
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      onHideEventModalClose();
+      setEventToToggleVisibility(null);
+    }
+  };
+
   // Màu sắc cho giao diện
   const cardBg = useColorModeValue("white", "gray.800");
   const statBg = useColorModeValue("gray.50", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
-  const cancelBtnBg = useColorModeValue("red.50", "red.900");
-  const cancelBtnColor = useColorModeValue("red.600", "red.200");
-  const cancelBtnHoverBg = useColorModeValue("red.100", "red.800");
+
+  // Màu sắc cho modal ẩn sự kiện
+  const modalHeaderBg = useColorModeValue("orange.50", "orange.900");
+  const modalHeaderColor = useColorModeValue("orange.700", "orange.100");
+  const modalFooterBg = useColorModeValue("gray.50", "gray.700");
+  const modalAlertBg = useColorModeValue("yellow.50", "yellow.900");
+  const modalAlertColor = useColorModeValue("yellow.800", "yellow.100");
+  const modalOverlayBg = useColorModeValue("blackAlpha.300", "blackAlpha.600");
+
+  // Màu sắc cho icon trong modal ẩn sự kiện
+  const usersIconColor = useColorModeValue("blue.500", "blue.300");
+  const ticketIconColor = useColorModeValue("green.500", "green.300");
+  const calendarIconColor = useColorModeValue("purple.500", "purple.300");
+  const editIconColor = useColorModeValue("orange.500", "orange.300");
 
   if (isLoading) {
     return (
@@ -599,20 +626,6 @@ const Dashboard = () => {
                                 }
                               />
                             </Tooltip>
-                            <Tooltip label="Hủy sự kiện">
-                              <IconButton
-                                aria-label="Hủy sự kiện"
-                                icon={<FaTrash />}
-                                size="sm"
-                                bg={cancelBtnBg}
-                                color={cancelBtnColor}
-                                _hover={{
-                                  bg: cancelBtnHoverBg,
-                                }}
-                                onClick={() => confirmCancelEvent(event.id)}
-                                display="none"
-                              />
-                            </Tooltip>
                           </HStack>
                         </Td>
                       </Tr>
@@ -814,31 +827,99 @@ const Dashboard = () => {
         </Tabs>
       </Box>
 
-      {/* Modal xác nhận hủy sự kiện */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay>
-          <ModalContent>
-            <ModalHeader>Xác Nhận Hủy Sự Kiện</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <Text>Bạn có chắc chắn muốn hủy sự kiện này không?</Text>
-              <Text mt={2} fontSize="sm" color="gray.500">
-                Sự kiện sẽ được đánh dấu là đã hủy và tất cả người đăng ký sẽ
-                được thông báo. Dữ liệu sự kiện vẫn được giữ lại trong hệ thống.
-              </Text>
-            </ModalBody>
-            <ModalFooter>
-              <Button onClick={onClose}>Đóng</Button>
-              <Button
-                colorScheme="red"
-                onClick={() => handleCancelConfirmed()}
-                ml={3}
+      {/* Modal xác nhận ẩn sự kiện */}
+      <Modal
+        isOpen={isHideEventModalOpen}
+        onClose={onHideEventModalClose}
+        isCentered
+        size="lg"
+      >
+        <ModalOverlay bg={modalOverlayBg} backdropFilter="blur(10px)" />
+        <ModalContent>
+          <ModalHeader
+            bg={modalHeaderBg}
+            borderTopRadius="md"
+            color={modalHeaderColor}
+          >
+            <Flex align="center">
+              <Icon as={FaEyeSlash} mr={2} />
+              Xác Nhận Ẩn Sự Kiện
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch">
+              <Alert
+                status="warning"
+                borderRadius="md"
+                bg={modalAlertBg}
+                color={modalAlertColor}
               >
-                Hủy Sự Kiện
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </ModalOverlay>
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Lưu ý quan trọng!</AlertTitle>
+                  <AlertDescription>
+                    Khi ẩn sự kiện, sự kiện sẽ không xuất hiện trong danh sách
+                    tìm kiếm và khám phá công khai.
+                  </AlertDescription>
+                </Box>
+              </Alert>
+
+              <Text fontWeight="medium">Khi ẩn sự kiện:</Text>
+
+              <VStack spacing={2} align="start" pl={4}>
+                <Flex align="center">
+                  <Icon as={FaUsers} color={usersIconColor} mr={2} />
+                  <Text>
+                    Những người đã đăng ký/mua vé vẫn có thể xem được sự kiện
+                  </Text>
+                </Flex>
+
+                <Flex align="center">
+                  <Icon as={FaTicketAlt} color={ticketIconColor} mr={2} />
+                  <Text>
+                    Vé đã mua vẫn có hiệu lực và có thể sử dụng bình thường
+                  </Text>
+                </Flex>
+
+                <Flex align="center">
+                  <Icon as={FaCalendarAlt} color={calendarIconColor} mr={2} />
+                  <Text>Sự kiện vẫn diễn ra theo lịch trình đã đặt</Text>
+                </Flex>
+
+                <Flex align="center">
+                  <Icon as={FaEdit} color={editIconColor} mr={2} />
+                  <Text>
+                    Bạn vẫn có thể chỉnh sửa và quản lý sự kiện như bình thường
+                  </Text>
+                </Flex>
+              </VStack>
+
+              <Divider my={2} />
+
+              <Text>
+                Đây là một cách hiệu quả để tạm thời loại bỏ sự kiện khỏi danh
+                sách công khai mà không cần hủy hoàn toàn.
+              </Text>
+
+              <Text fontWeight="bold">
+                Bạn có chắc chắn muốn ẩn sự kiện này không?
+              </Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter bg={modalFooterBg} borderBottomRadius="md">
+            <Button variant="outline" onClick={onHideEventModalClose} mr={3}>
+              Hủy Bỏ
+            </Button>
+            <Button
+              colorScheme="orange"
+              leftIcon={<FaEyeSlash />}
+              onClick={handleConfirmHideEvent}
+            >
+              Xác Nhận Ẩn Sự Kiện
+            </Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     </Container>
   );
