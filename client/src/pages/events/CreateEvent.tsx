@@ -1974,10 +1974,12 @@ const CreateEvent = () => {
       capacity,
       maxTicketsPerPerson,
       isPaid,
-      price:
-        formData.isPaid && formData.ticketTypes.length > 0
-          ? undefined
-          : formData.price,
+      // Sửa lại phần price để không bị undefined khi có phí
+      price: formData.isPaid
+        ? formData.ticketTypes.length > 0
+          ? formData.ticketTypes[0].price // Lấy giá của loại vé đầu tiên
+          : 0
+        : 0, // Đảm bảo luôn có giá trị cho price
       imageUrl: image,
       tags,
       published: true,
