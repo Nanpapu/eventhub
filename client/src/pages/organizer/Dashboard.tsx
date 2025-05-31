@@ -112,7 +112,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  // State cho modal ẩn sự kiện
+  // State cho modal ẩn/bỏ ẩn sự kiện
   const {
     isOpen: isHideEventModalOpen,
     onOpen: onHideEventModalOpen,
@@ -285,70 +285,40 @@ const Dashboard = () => {
     eventId: string,
     currentlyHidden: boolean
   ) => {
-    // Nếu đang hiển thị và sắp ẩn đi, mở modal xác nhận
-    if (!currentlyHidden) {
-      setEventToToggleVisibility({ id: eventId, isHidden: currentlyHidden });
-      onHideEventModalOpen();
-      return;
-    }
-
-    // Nếu đang ẩn và sắp hiển thị, thực hiện luôn không cần xác nhận
-    try {
-      await dispatch(
-        toggleEventVisibility({ id: eventId, isHidden: !currentlyHidden })
-      ).unwrap();
-
-      // Cập nhật UI
-      const updatedEvents = events.map((event) =>
-        event.id === eventId ? { ...event, isHidden: !currentlyHidden } : event
-      );
-      setEvents(updatedEvents);
-
-      toast({
-        title: "Sự kiện đã được hiển thị",
-        description: "Sự kiện đã được hiển thị công khai trở lại",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Không thể thay đổi trạng thái hiển thị. Vui lòng thử lại sau.";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    // Mở modal xác nhận cho cả hai trường hợp: ẩn và bỏ ẩn
+    setEventToToggleVisibility({ id: eventId, isHidden: currentlyHidden });
+    onHideEventModalOpen();
   };
 
-  // Xử lý khi người dùng xác nhận ẩn sự kiện
+  // Xử lý khi người dùng xác nhận ẩn/hiện sự kiện
   const handleConfirmHideEvent = async () => {
     if (!eventToToggleVisibility) return;
+
+    const isCurrentlyHidden = eventToToggleVisibility.isHidden;
 
     try {
       await dispatch(
         toggleEventVisibility({
           id: eventToToggleVisibility.id,
-          isHidden: !eventToToggleVisibility.isHidden,
+          isHidden: !isCurrentlyHidden,
         })
       ).unwrap();
 
       // Cập nhật UI
       const updatedEvents = events.map((event) =>
         event.id === eventToToggleVisibility.id
-          ? { ...event, isHidden: !eventToToggleVisibility.isHidden }
+          ? { ...event, isHidden: !isCurrentlyHidden }
           : event
       );
       setEvents(updatedEvents);
 
       toast({
-        title: "Sự kiện đã được ẩn",
-        description: "Sự kiện đã bị ẩn khỏi danh sách công khai",
+        title: isCurrentlyHidden
+          ? "Sự kiện đã được hiển thị"
+          : "Sự kiện đã được ẩn",
+        description: isCurrentlyHidden
+          ? "Sự kiện đã được hiển thị công khai trở lại"
+          : "Sự kiện đã bị ẩn khỏi danh sách công khai",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -376,7 +346,7 @@ const Dashboard = () => {
   const statBg = useColorModeValue("gray.50", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
 
-  // Màu sắc cho modal ẩn sự kiện
+  // Màu sắc cho modal ẩn/bỏ ẩn sự kiện
   const modalHeaderBg = useColorModeValue("orange.50", "orange.900");
   const modalHeaderColor = useColorModeValue("orange.700", "orange.100");
   const modalFooterBg = useColorModeValue("gray.50", "gray.700");
@@ -384,11 +354,25 @@ const Dashboard = () => {
   const modalAlertColor = useColorModeValue("yellow.800", "yellow.100");
   const modalOverlayBg = useColorModeValue("blackAlpha.300", "blackAlpha.600");
 
-  // Màu sắc cho icon trong modal ẩn sự kiện
+  // Màu sắc cho modal hiển thị sự kiện (bỏ ẩn)
+  const modalShowHeaderBg = useColorModeValue("green.50", "green.900");
+  const modalShowHeaderColor = useColorModeValue("green.700", "green.100");
+  const modalShowFooterBg = useColorModeValue("gray.50", "gray.700");
+  const modalShowAlertBg = useColorModeValue("blue.50", "blue.900");
+  const modalShowAlertColor = useColorModeValue("blue.800", "blue.100");
+
+  // Màu sắc cho icon trong modal ẩn/bỏ ẩn sự kiện
   const usersIconColor = useColorModeValue("blue.500", "blue.300");
   const ticketIconColor = useColorModeValue("green.500", "green.300");
   const calendarIconColor = useColorModeValue("purple.500", "purple.300");
   const editIconColor = useColorModeValue("orange.500", "orange.300");
+
+  // Thêm biến màu sắc cho nút hủy bỏ
+  const cancelBtnBorderColor = useColorModeValue("red.500", "red.300");
+  const cancelBtnTextColor = useColorModeValue("red.500", "red.300");
+  const cancelBtnHoverBg = useColorModeValue("red.50", "red.900");
+  const cancelBtnHoverColor = useColorModeValue("red.600", "red.200");
+  const cancelBtnHoverBorderColor = useColorModeValue("red.600", "red.200");
 
   if (isLoading) {
     return (
@@ -827,7 +811,7 @@ const Dashboard = () => {
         </Tabs>
       </Box>
 
-      {/* Modal xác nhận ẩn sự kiện */}
+      {/* Modal xác nhận ẩn/hiện sự kiện */}
       <Modal
         isOpen={isHideEventModalOpen}
         onClose={onHideEventModalClose}
@@ -837,86 +821,181 @@ const Dashboard = () => {
         <ModalOverlay bg={modalOverlayBg} backdropFilter="blur(10px)" />
         <ModalContent>
           <ModalHeader
-            bg={modalHeaderBg}
+            bg={
+              eventToToggleVisibility?.isHidden
+                ? modalShowHeaderBg
+                : modalHeaderBg
+            }
             borderTopRadius="md"
-            color={modalHeaderColor}
+            color={
+              eventToToggleVisibility?.isHidden
+                ? modalShowHeaderColor
+                : modalHeaderColor
+            }
           >
             <Flex align="center">
-              <Icon as={FaEyeSlash} mr={2} />
-              Xác Nhận Ẩn Sự Kiện
+              <Icon
+                as={eventToToggleVisibility?.isHidden ? FaEye : FaEyeSlash}
+                mr={2}
+              />
+              {eventToToggleVisibility?.isHidden
+                ? "Xác Nhận Hiển Thị Sự Kiện"
+                : "Xác Nhận Ẩn Sự Kiện"}
             </Flex>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody py={6}>
-            <VStack spacing={4} align="stretch">
-              <Alert
-                status="warning"
-                borderRadius="md"
-                bg={modalAlertBg}
-                color={modalAlertColor}
-              >
-                <AlertIcon />
-                <Box>
-                  <AlertTitle>Lưu ý quan trọng!</AlertTitle>
-                  <AlertDescription>
-                    Khi ẩn sự kiện, sự kiện sẽ không xuất hiện trong danh sách
-                    tìm kiếm và khám phá công khai.
-                  </AlertDescription>
-                </Box>
-              </Alert>
+            {eventToToggleVisibility?.isHidden ? (
+              // Nội dung modal BỎ ẨN
+              <VStack spacing={4} align="stretch">
+                <Alert
+                  status="info"
+                  borderRadius="md"
+                  bg={modalShowAlertBg}
+                  color={modalShowAlertColor}
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Thông báo!</AlertTitle>
+                    <AlertDescription>
+                      Khi hiển thị sự kiện, sự kiện sẽ xuất hiện trong danh sách
+                      tìm kiếm và khám phá công khai.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
 
-              <Text fontWeight="medium">Khi ẩn sự kiện:</Text>
+                <Text fontWeight="medium">Khi hiển thị sự kiện:</Text>
 
-              <VStack spacing={2} align="start" pl={4}>
-                <Flex align="center">
-                  <Icon as={FaUsers} color={usersIconColor} mr={2} />
-                  <Text>
-                    Những người đã đăng ký/mua vé vẫn có thể xem được sự kiện
-                  </Text>
-                </Flex>
+                <VStack spacing={2} align="start" pl={4}>
+                  <Flex align="center">
+                    <Icon as={FaUsers} color={usersIconColor} mr={2} />
+                    <Text>
+                      Tất cả người dùng sẽ có thể xem và đăng ký tham gia sự
+                      kiện của bạn
+                    </Text>
+                  </Flex>
 
-                <Flex align="center">
-                  <Icon as={FaTicketAlt} color={ticketIconColor} mr={2} />
-                  <Text>
-                    Vé đã mua vẫn có hiệu lực và có thể sử dụng bình thường
-                  </Text>
-                </Flex>
+                  <Flex align="center">
+                    <Icon as={FaCalendarAlt} color={calendarIconColor} mr={2} />
+                    <Text>
+                      Sự kiện sẽ xuất hiện trong kết quả tìm kiếm và trang khám
+                      phá
+                    </Text>
+                  </Flex>
 
-                <Flex align="center">
-                  <Icon as={FaCalendarAlt} color={calendarIconColor} mr={2} />
-                  <Text>Sự kiện vẫn diễn ra theo lịch trình đã đặt</Text>
-                </Flex>
+                  <Flex align="center">
+                    <Icon as={FaEdit} color={editIconColor} mr={2} />
+                    <Text>
+                      Bạn vẫn có thể ẩn lại sự kiện bất cứ lúc nào nếu cần
+                    </Text>
+                  </Flex>
+                </VStack>
 
-                <Flex align="center">
-                  <Icon as={FaEdit} color={editIconColor} mr={2} />
-                  <Text>
-                    Bạn vẫn có thể chỉnh sửa và quản lý sự kiện như bình thường
-                  </Text>
-                </Flex>
+                <Divider my={2} />
+
+                <Text fontWeight="bold">
+                  Bạn có chắc chắn muốn hiển thị sự kiện này không?
+                </Text>
               </VStack>
+            ) : (
+              // Nội dung modal ẨN (không thay đổi)
+              <VStack spacing={4} align="stretch">
+                <Alert
+                  status="warning"
+                  borderRadius="md"
+                  bg={modalAlertBg}
+                  color={modalAlertColor}
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Lưu ý quan trọng!</AlertTitle>
+                    <AlertDescription>
+                      Khi ẩn sự kiện, sự kiện sẽ không xuất hiện trong danh sách
+                      tìm kiếm và khám phá công khai.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
 
-              <Divider my={2} />
+                <Text fontWeight="medium">Khi ẩn sự kiện:</Text>
 
-              <Text>
-                Đây là một cách hiệu quả để tạm thời loại bỏ sự kiện khỏi danh
-                sách công khai mà không cần hủy hoàn toàn.
-              </Text>
+                <VStack spacing={2} align="start" pl={4}>
+                  <Flex align="center">
+                    <Icon as={FaUsers} color={usersIconColor} mr={2} />
+                    <Text>
+                      Những người đã đăng ký/mua vé vẫn có thể xem được sự kiện
+                    </Text>
+                  </Flex>
 
-              <Text fontWeight="bold">
-                Bạn có chắc chắn muốn ẩn sự kiện này không?
-              </Text>
-            </VStack>
+                  <Flex align="center">
+                    <Icon as={FaTicketAlt} color={ticketIconColor} mr={2} />
+                    <Text>
+                      Vé đã mua vẫn có hiệu lực và có thể sử dụng bình thường
+                    </Text>
+                  </Flex>
+
+                  <Flex align="center">
+                    <Icon as={FaCalendarAlt} color={calendarIconColor} mr={2} />
+                    <Text>Sự kiện vẫn diễn ra theo lịch trình đã đặt</Text>
+                  </Flex>
+
+                  <Flex align="center">
+                    <Icon as={FaEdit} color={editIconColor} mr={2} />
+                    <Text>
+                      Bạn vẫn có thể chỉnh sửa và quản lý sự kiện như bình
+                      thường
+                    </Text>
+                  </Flex>
+                </VStack>
+
+                <Divider my={2} />
+
+                <Text>
+                  Đây là một cách hiệu quả để tạm thời loại bỏ sự kiện khỏi danh
+                  sách công khai mà không cần hủy hoàn toàn.
+                </Text>
+
+                <Text fontWeight="bold">
+                  Bạn có chắc chắn muốn ẩn sự kiện này không?
+                </Text>
+              </VStack>
+            )}
           </ModalBody>
-          <ModalFooter bg={modalFooterBg} borderBottomRadius="md">
-            <Button variant="outline" onClick={onHideEventModalClose} mr={3}>
+          <ModalFooter
+            bg={
+              eventToToggleVisibility?.isHidden
+                ? modalShowFooterBg
+                : modalFooterBg
+            }
+            borderBottomRadius="md"
+          >
+            <Button
+              variant="outline"
+              onClick={onHideEventModalClose}
+              mr={3}
+              borderColor={cancelBtnBorderColor}
+              color={cancelBtnTextColor}
+              _hover={{
+                bg: cancelBtnHoverBg,
+                color: cancelBtnHoverColor,
+                borderColor: cancelBtnHoverBorderColor,
+              }}
+            >
               Hủy Bỏ
             </Button>
             <Button
-              colorScheme="orange"
-              leftIcon={<FaEyeSlash />}
+              colorScheme={
+                eventToToggleVisibility?.isHidden ? "green" : "orange"
+              }
+              leftIcon={
+                <Icon
+                  as={eventToToggleVisibility?.isHidden ? FaEye : FaEyeSlash}
+                />
+              }
               onClick={handleConfirmHideEvent}
             >
-              Xác Nhận Ẩn Sự Kiện
+              {eventToToggleVisibility?.isHidden
+                ? "Xác Nhận Hiển Thị"
+                : "Xác Nhận Ẩn"}
             </Button>
           </ModalFooter>
         </ModalContent>
