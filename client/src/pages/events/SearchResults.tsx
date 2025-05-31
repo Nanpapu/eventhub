@@ -380,7 +380,7 @@ const SearchResults = () => {
               leftIcon={<Icon as={FiX} />}
               size="sm"
             >
-              Clear Filters and Retry
+              Xóa bộ lọc và thử lại
             </Button>
           )}
         </Center>
@@ -390,26 +390,26 @@ const SearchResults = () => {
     if (filteredEvents.length > 0) {
       return (
         <>
-          <Flex
-            justifyContent="space-between"
-            alignItems="center"
-            mb={6}
-            p={4}
-            bg={resultsInfoBg}
-            borderRadius="md"
-          >
-            <Text fontSize="lg" fontWeight="medium">
-              {totalEvents} event{totalEvents !== 1 ? "s" : ""} found
-              {appliedKeyword && ` for "${appliedKeyword}"`}
-              {appliedLocation && ` in "${appliedLocation}"`}
-              {appliedCategory &&
-                ` under "${getCategoryName(appliedCategory)}"`}
-              {areFiltersApplied()
-                ? " with applied filters"
-                : " without filters"}
-              .
-            </Text>
-          </Flex>
+          {areFiltersApplied() && (
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              mb={6}
+              p={4}
+              bg={resultsInfoBg}
+              borderRadius="md"
+            >
+              <Text fontSize="lg" fontWeight="medium">
+                Tìm thấy {totalEvents} sự kiện
+                {appliedKeyword && ` với từ khóa "${appliedKeyword}"`}
+                {appliedLocation && ` tại "${appliedLocation}"`}
+                {appliedCategory &&
+                  ` trong danh mục "${getCategoryName(appliedCategory)}"`}
+                {appliedShowFreeOnly && " (miễn phí)"}
+                {appliedShowPaidOnly && " (có phí)"}
+              </Text>
+            </Flex>
+          )}
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={8}>
             {filteredEvents.map((event) => (
               <EventCard key={event.id} event={event} />
@@ -424,10 +424,11 @@ const SearchResults = () => {
       <Center flexDirection="column" py={10} px={6} textAlign="center">
         <Icon as={FiTag} boxSize={"50px"} color={"orange.300"} mb={4} />
         <Heading as="h2" size="xl" mt={6} mb={2}>
-          No events found
+          Không tìm thấy sự kiện
         </Heading>
         <Text color={"gray.500"} mb={6}>
-          Sorry, we couldn't find any events matching your criteria.
+          Rất tiếc, chúng tôi không tìm thấy sự kiện nào phù hợp với tiêu chí
+          của bạn.
         </Text>
         {areFiltersApplied() && (
           <Button
@@ -437,7 +438,7 @@ const SearchResults = () => {
             size="lg"
             mt={4}
           >
-            Clear All Filters
+            Xóa tất cả bộ lọc
           </Button>
         )}
       </Center>
