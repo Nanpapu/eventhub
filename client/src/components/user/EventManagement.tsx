@@ -22,19 +22,19 @@ import {
   IconButton,
   Icon,
   Spinner,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
   FiCalendar,
   FiMapPin,
   FiEdit,
-  FiTrash2,
-  FiEye,
   FiPlus,
   FiX,
   FiGrid,
   FiBookmark,
 } from "react-icons/fi";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
 import eventService from "../../services/event.service";
@@ -100,6 +100,7 @@ interface Event {
   // Thêm những trường có thể có từ API
   address?: string;
   endTime?: string;
+  isHidden?: boolean;
 }
 
 // Format categories cho SearchBar
@@ -117,6 +118,12 @@ const EventManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [showPaidOnly, setShowPaidOnly] = useState(false);
+
+  // State cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const eventsPerPage = 6; // Số sự kiện mỗi trang, đồng bộ với SearchResults
 
   // State lưu dữ liệu sự kiện
   const [myEvents, setMyEvents] = useState<Event[]>([]);
@@ -171,6 +178,8 @@ const EventManagement = () => {
             })
           );
           setMyEvents(formattedEvents);
+          setTotalEvents(formattedEvents.length);
+          setTotalPages(Math.ceil(formattedEvents.length / eventsPerPage));
         } else {
           setMyEventsError(
             response.message || "Không thể tải danh sách sự kiện của bạn."
@@ -193,7 +202,7 @@ const EventManagement = () => {
     };
 
     fetchMyEvents();
-  }, []);
+  }, [eventsPerPage]);
 
   // Fetch saved events từ API
   useEffect(() => {
@@ -272,6 +281,12 @@ const EventManagement = () => {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
+  // Lấy sự kiện cho trang hiện tại
+  const paginatedMyEvents = filteredMyEvents.slice(
+    (currentPage - 1) * eventsPerPage,
+    currentPage * eventsPerPage
+  );
+
   const filteredSavedEvents = savedEvents.filter((event) => {
     const matchesSearch = event.title
       .toLowerCase()
@@ -285,6 +300,33 @@ const EventManagement = () => {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
+  // Kết hợp tất cả sự kiện đã lọc
+  const allFilteredEvents = [...filteredMyEvents, ...filteredSavedEvents].sort(
+    (a, b) =>
+      new Date(b.date.split("/").reverse().join("-")).getTime() -
+      new Date(a.date.split("/").reverse().join("-")).getTime()
+  ); // Sắp xếp theo ngày giảm dần
+
+  // Cập nhật totalPages cho tất cả sự kiện khi tab thay đổi
+  useEffect(() => {
+    if (tabIndex === 0) {
+      setTotalPages(Math.ceil(allFilteredEvents.length / eventsPerPage));
+    } else if (tabIndex === 1) {
+      setTotalPages(Math.ceil(filteredMyEvents.length / eventsPerPage));
+    }
+  }, [
+    tabIndex,
+    allFilteredEvents.length,
+    filteredMyEvents.length,
+    eventsPerPage,
+  ]);
+
+  // Phân trang cho tất cả sự kiện
+  const paginatedAllEvents = allFilteredEvents.slice(
+    (currentPage - 1) * eventsPerPage,
+    currentPage * eventsPerPage
+  );
+
   // Xử lý tìm kiếm
   const handleSearch = () => {
     // Đã được xử lý thông qua state và filter
@@ -296,15 +338,24 @@ const EventManagement = () => {
     setCategoryFilter("");
     setShowFreeOnly(false);
     setShowPaidOnly(false);
+    setCurrentPage(1); // Reset về trang đầu tiên khi reset filter
   };
 
-  // Xóa sự kiện
-  const handleDeleteEvent = async (eventId: string) => {
-    // TODO: Gọi API để xóa sự kiện trên server
-    // Ví dụ: await eventService.deleteEvent(eventId);
-    // Sau đó cập nhật lại state:
-    setMyEvents(myEvents.filter((event) => event.id !== eventId));
-    // Hiển thị toast thông báo thành công/thất bại
+  // Xử lý chuyển trang
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+      setCurrentPage(newPage);
+      // Sau này khi có API phân trang thực sự, sẽ gọi API load dữ liệu trang mới ở đây
+    }
+  };
+
+  // Xử lý ẩn/hiện sự kiện
+  const handleToggleVisibility = (eventId: string) => {
+    // Trong thực tế, đây sẽ là API call để ẩn/hiện sự kiện
+    const updatedEvents = myEvents.map((event) =>
+      event.id === eventId ? { ...event, isHidden: !event.isHidden } : event
+    );
+    setMyEvents(updatedEvents);
   };
 
   // Xử lý hủy lưu sự kiện - gọi API để hủy lưu
@@ -418,15 +469,30 @@ const EventManagement = () => {
 
               <Box p={4}>
                 <Flex justify="space-between" align="start" mb={2}>
-                  <Badge colorScheme="teal" borderRadius="full" px={2}>
+                  <Badge
+                    colorScheme="teal"
+                    borderRadius="full"
+                    px={2}
+                   
+                  >
                     {getCategoryName(event.category)}
                   </Badge>
                   {event.isPaid ? (
-                    <Badge colorScheme="purple" borderRadius="full" px={2}>
-                      {event.price} VND
+                    <Badge
+                      colorScheme="blue"
+                      borderRadius="full"
+                      px={2}
+                    
+                    >
+                      Trả phí
                     </Badge>
                   ) : (
-                    <Badge colorScheme="green" borderRadius="full" px={2}>
+                    <Badge
+                      colorScheme="green"
+                      borderRadius="full"
+                      px={2}
+                      
+                    >
                       Miễn phí
                     </Badge>
                   )}
@@ -434,6 +500,11 @@ const EventManagement = () => {
 
                 <Heading as="h3" size="md" mb={2} noOfLines={2}>
                   {event.title}
+                  {event.isHidden && (
+                    <Badge ml={2} colorScheme="gray" fontSize="xs">
+                      Ẩn
+                    </Badge>
+                  )}
                 </Heading>
 
                 <Text
@@ -516,116 +587,194 @@ const EventManagement = () => {
     }
 
     return (
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {filteredMyEvents.map((event) => (
-          <Box
-            key={event.id}
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={borderColor}
-            transition="all 0.3s"
-            _hover={{
-              transform: "translateY(-5px)",
-              shadow: "md",
-              bg: cardHoverBg,
-            }}
-          >
-            <Link to={`/events/${event.id}`}>
-              <Box h="200px" overflow="hidden">
-                <Box
-                  bgImage={`url(${event.imageUrl || event.image})`}
-                  bgSize="cover"
-                  bgPosition="center"
-                  h="100%"
-                  w="100%"
-                  transition="transform 0.3s"
-                  _hover={{ transform: "scale(1.05)" }}
-                />
-              </Box>
-
-              <Box p={4}>
-                <Flex justify="space-between" align="start" mb={2}>
-                  <Badge colorScheme="teal" borderRadius="full" px={2}>
-                    {getCategoryName(event.category)}
-                  </Badge>
-                  {event.isPaid ? (
-                    <Badge colorScheme="purple" borderRadius="full" px={2}>
-                      {event.price} VND
-                    </Badge>
-                  ) : (
-                    <Badge colorScheme="green" borderRadius="full" px={2}>
-                      Miễn phí
-                    </Badge>
-                  )}
-                </Flex>
-
-                <Heading as="h3" size="md" mb={2} noOfLines={2}>
-                  {event.title}
-                </Heading>
-
-                <Text
-                  color={secondaryTextColor}
-                  fontSize="sm"
-                  mb={3}
-                  noOfLines={2}
-                >
-                  {event.description}
-                </Text>
-
-                <VStack spacing={1} align="start">
-                  <Flex align="center">
-                    <Icon as={FiCalendar} mr={2} color="teal.500" />
-                    <Text fontSize="sm">
-                      {event.date} • {event.startTime}
-                    </Text>
-                  </Flex>
-
-                  <Flex align="center">
-                    <Icon as={FiMapPin} mr={2} color="teal.500" />
-                    <Text fontSize="sm" noOfLines={1}>
-                      {event.location}
-                    </Text>
-                  </Flex>
-                </VStack>
-              </Box>
-            </Link>
-
-            {/* Actions for "My Events" */}
-            <Flex
-              justify="space-between"
-              align="center"
-              p={4}
-              borderTopWidth="1px"
+      <>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {paginatedMyEvents.map((event) => (
+            <Box
+              key={event.id}
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              bg={cardBg}
               borderColor={borderColor}
+              transition="all 0.3s"
+              _hover={{
+                transform: "translateY(-5px)",
+                shadow: "md",
+                bg: cardHoverBg,
+              }}
             >
-              <Text fontSize="sm" color={secondaryTextColor}>
-                {event.participants || 0} người tham gia
-              </Text>
-              <HStack>
-                <IconButton
-                  aria-label="Edit event"
-                  icon={<FiEdit />}
-                  size="sm"
-                  colorScheme="blue"
-                  variant="outline"
-                  as={Link}
-                  to={`/events/edit/${event.id}`}
-                />
-                <IconButton
-                  aria-label="Delete event"
-                  icon={<FiTrash2 />}
-                  size="sm"
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={() => handleDeleteEvent(event.id)}
-                />
-              </HStack>
-            </Flex>
-          </Box>
-        ))}
-      </SimpleGrid>
+              <Link to={`/events/${event.id}`}>
+                <Box h="200px" overflow="hidden">
+                  <Box
+                    bgImage={`url(${event.imageUrl || event.image})`}
+                    bgSize="cover"
+                    bgPosition="center"
+                    h="100%"
+                    w="100%"
+                    transition="transform 0.3s"
+                    _hover={{ transform: "scale(1.05)" }}
+                  />
+                </Box>
+
+                <Box p={4}>
+                  <Flex justify="space-between" align="start" mb={2}>
+                    <Badge
+                      colorScheme="teal"
+                      borderRadius="full"
+                      px={2}
+                      
+                    >
+                      {getCategoryName(event.category)}
+                    </Badge>
+                    {event.isPaid ? (
+                      <Badge
+                        colorScheme="blue"
+                        borderRadius="full"
+                        px={2}
+                    
+                      >
+                        Trả phí
+                      </Badge>
+                    ) : (
+                      <Badge
+                        colorScheme="green"
+                        borderRadius="full"
+                        px={2}
+                       
+                      >
+                        Miễn phí
+                      </Badge>
+                    )}
+                  </Flex>
+
+                  <Heading as="h3" size="md" mb={2} noOfLines={2}>
+                    {event.title}
+                    {event.isHidden && (
+                      <Badge ml={2} colorScheme="gray" fontSize="xs">
+                        Ẩn
+                      </Badge>
+                    )}
+                  </Heading>
+
+                  <Text
+                    color={secondaryTextColor}
+                    fontSize="sm"
+                    mb={3}
+                    noOfLines={2}
+                  >
+                    {event.description}
+                  </Text>
+
+                  <VStack spacing={1} align="start">
+                    <Flex align="center">
+                      <Icon as={FiCalendar} mr={2} color="teal.500" />
+                      <Text fontSize="sm">
+                        {event.date} • {event.startTime}
+                      </Text>
+                    </Flex>
+
+                    <Flex align="center">
+                      <Icon as={FiMapPin} mr={2} color="teal.500" />
+                      <Text fontSize="sm" noOfLines={1}>
+                        {event.location}
+                      </Text>
+                    </Flex>
+                  </VStack>
+                </Box>
+              </Link>
+
+              {/* Actions for "My Events" */}
+              <Flex
+                justify="space-between"
+                align="center"
+                p={4}
+                borderTopWidth="1px"
+                borderColor={borderColor}
+              >
+                <Text fontSize="sm" color={secondaryTextColor}>
+                  {event.participants || 0} người tham gia
+                </Text>
+                <HStack>
+                  <IconButton
+                    aria-label="Edit event"
+                    icon={<FiEdit />}
+                    size="sm"
+                    colorScheme="blue"
+                    variant="outline"
+                    as={Link}
+                    to={`/events/edit/${event.id}`}
+                  />
+                  <Tooltip
+                    label={event.isHidden ? "Hiện sự kiện" : "Ẩn sự kiện"}
+                  >
+                    <IconButton
+                      aria-label="Toggle visibility"
+                      icon={event.isHidden ? <FaEye /> : <FaEyeSlash />}
+                      size="sm"
+                      colorScheme={event.isHidden ? "green" : "gray"}
+                      variant="outline"
+                      onClick={() => handleToggleVisibility(event.id)}
+                    />
+                  </Tooltip>
+                </HStack>
+              </Flex>
+            </Box>
+          ))}
+        </SimpleGrid>
+        {renderPaginationControls()}
+      </>
+    );
+  };
+
+  // Render pagination controls
+  const renderPaginationControls = () => {
+    if (totalPages <= 1) {
+      return null;
+    }
+
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(
+        <Button
+          key={i}
+          size="sm"
+          colorScheme="teal"
+          variant={currentPage === i ? "solid" : "ghost"}
+          onClick={() => handlePageChange(i)}
+          mx={1}
+        >
+          {i}
+        </Button>
+      );
+    }
+
+    return (
+      <Flex justify="center" mt={8} mb={4}>
+        <HStack spacing={2}>
+          <Button
+            size="sm"
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+            isDisabled={currentPage === 1}
+            colorScheme="teal"
+            variant="outline"
+          >
+            Trước
+          </Button>
+          {pageNumbers}
+          <Button
+            size="sm"
+            onClick={() =>
+              handlePageChange(Math.min(totalPages, currentPage + 1))
+            }
+            isDisabled={currentPage === totalPages}
+            colorScheme="teal"
+            variant="outline"
+          >
+            Sau
+          </Button>
+        </HStack>
+      </Flex>
     );
   };
 
@@ -653,7 +802,7 @@ const EventManagement = () => {
               <Badge ml={2} colorScheme="blue" borderRadius="full">
                 {isMyEventsLoading || isSavedEventsLoading
                   ? "..."
-                  : filteredMyEvents.length + filteredSavedEvents.length}
+                  : allFilteredEvents.length}
               </Badge>
             </Flex>
           </Tab>
@@ -728,7 +877,7 @@ const EventManagement = () => {
                   Tất cả sự kiện (
                   {isMyEventsLoading || isSavedEventsLoading
                     ? "..."
-                    : filteredMyEvents.length + filteredSavedEvents.length}
+                    : allFilteredEvents.length}
                   )
                 </Heading>
                 <Button
@@ -749,19 +898,10 @@ const EventManagement = () => {
                     <Text>Đang tải sự kiện...</Text>
                   </VStack>
                 </Flex>
-              ) : filteredMyEvents.length + filteredSavedEvents.length > 0 ? (
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {[...filteredMyEvents, ...filteredSavedEvents]
-                    .sort(
-                      (a, b) =>
-                        new Date(
-                          b.date.split("/").reverse().join("-")
-                        ).getTime() -
-                        new Date(
-                          a.date.split("/").reverse().join("-")
-                        ).getTime()
-                    ) // Sắp xếp theo ngày giảm dần
-                    .map((event) => (
+              ) : allFilteredEvents.length > 0 ? (
+                <>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                    {paginatedAllEvents.map((event) => (
                       <Box
                         key={event.id}
                         borderWidth="1px"
@@ -788,6 +928,7 @@ const EventManagement = () => {
                             px={2}
                             py={1}
                             borderRadius="md"
+                            variant="solid"
                           >
                             Sự kiện của tôi
                           </Badge>
@@ -817,11 +958,11 @@ const EventManagement = () => {
                               </Badge>
                               {event.isPaid ? (
                                 <Badge
-                                  colorScheme="purple"
+                                  colorScheme="blue"
                                   borderRadius="full"
                                   px={2}
                                 >
-                                  {event.price} VND
+                                  Trả phí
                                 </Badge>
                               ) : (
                                 <Badge
@@ -836,6 +977,11 @@ const EventManagement = () => {
 
                             <Heading as="h3" size="md" mb={2} noOfLines={2}>
                               {event.title}
+                              {event.isHidden && (
+                                <Badge ml={2} colorScheme="gray" fontSize="xs">
+                                  Ẩn
+                                </Badge>
+                              )}
                             </Heading>
 
                             <Text
@@ -886,21 +1032,34 @@ const EventManagement = () => {
                                 as={Link}
                                 to={`/events/edit/${event.id}`}
                               />
-                              <IconButton
-                                aria-label="Delete event"
-                                icon={<FiTrash2 />}
-                                size="sm"
-                                colorScheme="red"
-                                variant="outline"
-                                onClick={() => handleDeleteEvent(event.id)}
-                                display="none"
-                              />
+                              <Tooltip
+                                label={
+                                  event.isHidden ? "Hiện sự kiện" : "Ẩn sự kiện"
+                                }
+                              >
+                                <IconButton
+                                  aria-label="Toggle visibility"
+                                  icon={
+                                    event.isHidden ? <FaEye /> : <FaEyeSlash />
+                                  }
+                                  size="sm"
+                                  colorScheme={
+                                    event.isHidden ? "green" : "gray"
+                                  }
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleToggleVisibility(event.id)
+                                  }
+                                />
+                              </Tooltip>
                             </HStack>
                           </Flex>
                         )}
                       </Box>
                     ))}
-                </SimpleGrid>
+                  </SimpleGrid>
+                  {renderPaginationControls()}
+                </>
               ) : (
                 <Alert status="info" borderRadius="md">
                   <AlertIcon />
@@ -925,16 +1084,27 @@ const EventManagement = () => {
             >
               <Flex justify="space-between" align="center" mb={6}>
                 <Heading as="h3" size="md">
-                  Sự kiện của tôi ({filteredMyEvents.length})
+                  Sự kiện của tôi ({filteredMyEvents.length} / {totalEvents})
                 </Heading>
-                <Button
-                  as={Link}
-                  to="/events/create"
-                  colorScheme="teal"
-                  leftIcon={<FiPlus />}
-                >
-                  Tạo sự kiện mới
-                </Button>
+                <HStack spacing={2}>
+                  <Button
+                    as={Link}
+                    to="/dashboard"
+                    colorScheme="purple"
+                    leftIcon={<FiCalendar />}
+                    variant="outline"
+                  >
+                    Quản lý chuyên sâu
+                  </Button>
+                  <Button
+                    as={Link}
+                    to="/events/create"
+                    colorScheme="teal"
+                    leftIcon={<FiPlus />}
+                  >
+                    Tạo sự kiện mới
+                  </Button>
+                </HStack>
               </Flex>
 
               {/* Hiển thị sự kiện của tôi */}
@@ -961,7 +1131,7 @@ const EventManagement = () => {
                   to="/events"
                   colorScheme="teal"
                   variant="outline"
-                  leftIcon={<FiEye />}
+                  leftIcon={<FaEye />}
                 >
                   Khám phá sự kiện
                 </Button>
