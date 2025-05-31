@@ -14,6 +14,8 @@ import {
   IconButton,
   useColorModeValue,
   Spinner,
+  Avatar,
+  Link,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -25,6 +27,9 @@ import {
   FiDollarSign,
   FiShare2,
   FiHeart,
+  FiMail,
+  FiPhone,
+  FiGlobe,
 } from "react-icons/fi";
 import {
   FaTimes,
@@ -64,6 +69,11 @@ interface EventData {
     id: string;
     name: string;
     avatar?: string;
+    bio?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    eventsCount?: number;
   };
   attendees: number;
   capacity: number;
@@ -93,10 +103,12 @@ const EventDetail = () => {
   const infoBoxBgColor = useColorModeValue("gray.50", "gray.700");
   const infoBoxTextColor = useColorModeValue("gray.600", "gray.300");
   const iconColor = useColorModeValue("teal.500", "teal.300");
+  const organizerCardBg = useColorModeValue("gray.50", "gray.700");
 
   // Lấy thông tin người dùng hiện tại từ Redux store
   const currentUser = useAppSelector(selectUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { isAuthenticated: authCheck } = useAuth();
 
   // Lấy thông tin sự kiện từ API khi component mount
@@ -140,6 +152,11 @@ const EventDetail = () => {
             avatar:
               eventData.organizer?.avatar ||
               "https://ui-avatars.com/api/?name=Unknown&background=0D8ABC&color=fff",
+            bio: eventData.organizer?.bio || "Không có thông tin mô tả.",
+            email: eventData.organizer?.email,
+            phone: eventData.organizer?.phone,
+            website: eventData.organizer?.website,
+            eventsCount: eventData.organizer?.eventsCount || 0,
           },
           attendees: eventData.attendees || 0,
           capacity: eventData.capacity || 50,
@@ -677,22 +694,105 @@ const EventDetail = () => {
                   {event.attendees} đã đăng ký / {event.capacity} chỗ
                 </Text>
               </Flex>
-
-              <Flex align="center" gap={2} w="100%">
-                <Box as={FiUsers} color={iconColor} />
-                <Text fontWeight="medium">Tổ chức:</Text>
-                <Text>{event.organizer.name}</Text>
-              </Flex>
             </VStack>
 
-            <Divider borderColor={borderColor} />
+            <Divider borderColor={borderColor} my={4} />
 
-            {/* Mô tả sự kiện */}
+            {/* Kết hợp phần mô tả sự kiện và thông tin nhà tổ chức */}
             <Box>
-              <Heading as="h3" size="md" mb={3} color={textColor}>
-                Về Sự Kiện Này
+              <Heading as="h3" size="md" mb={4} color={textColor}>
+                Chi Tiết Sự Kiện
               </Heading>
-              <Text color={textColor}>{event.description}</Text>
+
+              {/* Mô tả sự kiện */}
+              <Text color={textColor} mb={6}>
+                {event.description}
+              </Text>
+
+              {/* Thông tin nhà tổ chức - thiết kế dạng card nhẹ nhàng hơn */}
+              <Box
+                bg={organizerCardBg}
+                borderRadius="md"
+                p={4}
+                borderLeft="4px solid"
+                borderColor="teal.400"
+                mt={3}
+              >
+                <Flex direction="column" gap={3}>
+                  {/* Tiêu đề và avatar */}
+                  <Flex align="center" justify="space-between">
+                    <Text
+                      fontSize="sm"
+                      fontWeight="semibold"
+                      color={secondaryTextColor}
+                    >
+                      ĐƯỢC TỔ CHỨC BỞI
+                    </Text>
+
+                    {(event.organizer.eventsCount ?? 0) > 0 && (
+                      <Badge colorScheme="teal" fontSize="xs" variant="subtle">
+                        {event.organizer.eventsCount} sự kiện
+                      </Badge>
+                    )}
+                  </Flex>
+
+                  {/* Thông tin chính */}
+                  <Flex gap={3} align="center">
+                    <Avatar
+                      src={event.organizer.avatar}
+                      name={event.organizer.name}
+                      size="md"
+                    />
+                    <Box>
+                      <Text fontWeight="bold">{event.organizer.name}</Text>
+                      {event.organizer.bio && (
+                        <Text
+                          fontSize="sm"
+                          color={secondaryTextColor}
+                          noOfLines={2}
+                        >
+                          {event.organizer.bio}
+                        </Text>
+                      )}
+                    </Box>
+                  </Flex>
+
+                  {/* Thông tin liên hệ */}
+                  <Flex gap={4} wrap="wrap" mt={1}>
+                    {event.organizer.email && (
+                      <Flex align="center" gap={2} minW="fit-content">
+                        <Box as={FiMail} fontSize="sm" color={iconColor} />
+                        <Text fontSize="sm" color={secondaryTextColor}>
+                          {event.organizer.email}
+                        </Text>
+                      </Flex>
+                    )}
+
+                    {event.organizer.phone && (
+                      <Flex align="center" gap={2} minW="fit-content">
+                        <Box as={FiPhone} fontSize="sm" color={iconColor} />
+                        <Text fontSize="sm" color={secondaryTextColor}>
+                          {event.organizer.phone}
+                        </Text>
+                      </Flex>
+                    )}
+
+                    {event.organizer.website && (
+                      <Flex align="center" gap={2} minW="fit-content">
+                        <Box as={FiGlobe} fontSize="sm" color={iconColor} />
+                        <Link
+                          href={event.organizer.website}
+                          isExternal
+                          color="teal.500"
+                          fontSize="sm"
+                        >
+                          Website chính thức
+                        </Link>
+                      </Flex>
+                    )}
+                  </Flex>
+                </Flex>
+              </Box>
             </Box>
           </VStack>
         </Box>
