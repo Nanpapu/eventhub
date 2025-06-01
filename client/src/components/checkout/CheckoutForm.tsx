@@ -19,10 +19,17 @@ import {
   useColorModeValue,
   Image,
   Badge,
+  Icon,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { FaMoneyBillWave, FaSpinner, FaCheck } from "react-icons/fa";
+import {
+  FaSpinner,
+  FaCreditCard,
+  FaUniversity,
+  FaMoneyCheckAlt,
+  FaWallet,
+} from "react-icons/fa";
 import checkoutService from "../../services/checkout.service";
 import { useAppSelector } from "../../app/hooks";
 import {
@@ -53,12 +60,7 @@ interface CheckoutFormProps {
   onCancel: () => void;
 }
 
-type PaymentMethod =
-  | "credit_card"
-  | "paypal"
-  | "bank_transfer"
-  | "demo_success"
-  | "demo_fail";
+type PaymentMethod = "vnpay" | "momo" | "bank_transfer" | "credit_card";
 
 type FormValues = {
   fullName: string;
@@ -83,12 +85,14 @@ export default function CheckoutForm({
   onSuccess,
   onCancel,
 }: CheckoutFormProps) {
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("demo_success");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("vnpay");
   const [isProcessing, setIsProcessing] = useState(false);
   const toast = useToast();
   const formBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const methodBgActive = useColorModeValue("teal.50", "teal.900");
+  const methodBorder = useColorModeValue("gray.200", "gray.700");
+  const methodActiveBorder = useColorModeValue("teal.500", "teal.300");
   const navigate = useNavigate();
 
   const {
@@ -167,11 +171,54 @@ export default function CheckoutForm({
     return "Standard";
   };
 
+  // Định nghĩa các phương thức thanh toán
+  const paymentMethods = [
+    {
+      id: "vnpay",
+      name: "VNPay",
+      icon: FaMoneyCheckAlt,
+      color: "blue.500",
+      description: "Thanh toán an toàn qua VNPay",
+      fee: 2.5, // 2.5%
+    },
+    {
+      id: "momo",
+      name: "MoMo",
+      icon: FaWallet,
+      color: "pink.500",
+      description: "Thanh toán qua ví điện tử MoMo",
+      fee: 3, // 3%
+    },
+    {
+      id: "bank_transfer",
+      name: "Chuyển khoản ngân hàng",
+      icon: FaUniversity,
+      color: "green.500",
+      description: "Chuyển khoản trực tiếp qua ngân hàng",
+      fee: 1.5, // 1.5%
+    },
+    {
+      id: "credit_card",
+      name: "Thẻ tín dụng/ghi nợ",
+      icon: FaCreditCard,
+      color: "orange.500",
+      description: "Thanh toán qua thẻ Visa, Mastercard, JCB",
+      fee: 3.5, // 3.5%
+    },
+  ];
+
+  // Lấy tỷ lệ phí dịch vụ dựa theo phương thức thanh toán
+  const getServiceFeeRate = () => {
+    const selectedMethod = paymentMethods.find((m) => m.id === paymentMethod);
+    return selectedMethod ? selectedMethod.fee / 100 : 0.05; // Mặc định 5% nếu không tìm thấy
+  };
+
   // Kiểm tra xem có phải là vé miễn phí không
   const isFreeTicket = getTicketPrice() === 0;
   const subtotal = getTicketPrice() * ticketQuantity;
   // Không áp dụng phí dịch vụ cho vé miễn phí
-  const serviceFee = isFreeTicket ? 0 : Math.round(subtotal * 0.05); // Phí dịch vụ 5%
+  const serviceFeeRate = getServiceFeeRate();
+  const serviceFee = isFreeTicket ? 0 : Math.round(subtotal * serviceFeeRate);
   const total = subtotal + serviceFee;
 
   // Xử lý khi gửi form
@@ -204,10 +251,8 @@ export default function CheckoutForm({
         email: data.email,
         phone: data.phone,
         paymentMethodDetails: {
-          type:
-            paymentMethod === "demo_success"
-              ? "DEMO_SUCCESS"
-              : ("DEMO_FAIL" as "DEMO_SUCCESS" | "DEMO_FAIL"),
+          type: "DEMO_SUCCESS" as "DEMO_SUCCESS" | "DEMO_FAIL", // Luôn gọi DEMO_SUCCESS để auto thành công
+          // Không thêm trường method vì không có trong interface DemoPaymentPayload
         },
       };
 
@@ -216,19 +261,28 @@ export default function CheckoutForm({
       const result = await checkoutService.processDemoPayment(payload);
 
       if (result.success) {
+        // Lấy tên phương thức thanh toán
+        const paymentMethodName =
+          paymentMethods.find((m) => m.id === paymentMethod)?.name ||
+          paymentMethod;
+
         toast({
-          title: "Thanh toán Demo thành công!",
-          description: `ID giao dịch của bạn là: ${result.transactionId}`,
+          title: "Thanh toán thành công!",
+          description: `Giao dịch qua ${paymentMethodName} đã được xác nhận thành công.`,
           status: "success",
           duration: 5000,
           isClosable: true,
         });
+
         reset();
         onSuccess(result.transactionId); // Truyền transactionId từ API response
+
+        // Lưu lại loại payment method đã chọn vào localStorage để sau này có thể xem lại
+        localStorage.setItem("lastPaymentMethod", paymentMethod);
       } else {
         // Trường hợp này ít khi xảy ra nếu service đã throw error, nhưng để an toàn
         toast({
-          title: "Thanh toán Demo thất bại",
+          title: "Thanh toán thất bại",
           description: result.message || "Có lỗi xảy ra từ phía server.",
           status: "error",
           duration: 5000,
@@ -328,7 +382,20 @@ export default function CheckoutForm({
                     required: "Vui lòng nhập họ tên đầy đủ",
                   })}
                   placeholder="Nguyễn Văn A"
+                  isDisabled={isAuthenticated && !!currentUser?.name}
+                  _disabled={{
+                    opacity: 0.8,
+                    cursor: "not-allowed",
+                    border: "1px solid",
+                    borderColor: "gray.300",
+                  }}
                 />
+                {isAuthenticated && currentUser?.name && (
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Họ tên được lấy từ tài khoản của bạn. Vui lòng vào trang{" "}
+                    <i>Quản lý tài khoản</i> để chỉnh sửa.
+                  </Text>
+                )}
                 <FormErrorMessage>{errors.fullName?.message}</FormErrorMessage>
               </FormControl>
 
@@ -383,38 +450,67 @@ export default function CheckoutForm({
 
               <Divider my={4} />
 
-              <Heading size="md">Phương thức thanh toán Demo</Heading>
-              <Text
-                fontSize="sm"
-                color={useColorModeValue("gray.600", "gray.400")}
-              >
-                Đây là giao diện demo. Chọn "Thành công" hoặc "Thất bại" để giả
-                lập kết quả.
-              </Text>
+              <Heading size="md">Phương thức thanh toán</Heading>
 
-              <RadioGroup
-                onChange={(value) => setPaymentMethod(value as PaymentMethod)}
-                value={paymentMethod}
-              >
-                <Stack
-                  direction={{ base: "column", md: "row" }}
-                  spacing={4}
-                  mt={2}
+              <Box mt={2}>
+                <RadioGroup
+                  onChange={(value) => setPaymentMethod(value as PaymentMethod)}
+                  value={paymentMethod}
                 >
-                  <Radio value="demo_success" colorScheme="green">
-                    <Flex align="center">
-                      <FaCheck style={{ marginRight: "8px" }} /> Thanh toán
-                      thành công (Demo)
-                    </Flex>
-                  </Radio>
-                  <Radio value="demo_fail" colorScheme="red">
-                    <Flex align="center">
-                      <FaMoneyBillWave style={{ marginRight: "8px" }} /> Thanh
-                      toán thất bại (Demo)
-                    </Flex>
-                  </Radio>
-                </Stack>
-              </RadioGroup>
+                  <Stack spacing={4} direction="column">
+                    {paymentMethods.map((method) => (
+                      <Box
+                        key={method.id}
+                        borderWidth="1px"
+                        borderRadius="md"
+                        p={4}
+                        cursor="pointer"
+                        onClick={() =>
+                          setPaymentMethod(method.id as PaymentMethod)
+                        }
+                        borderColor={
+                          paymentMethod === method.id
+                            ? methodActiveBorder
+                            : methodBorder
+                        }
+                        bg={
+                          paymentMethod === method.id
+                            ? methodBgActive
+                            : "transparent"
+                        }
+                        _hover={{
+                          borderColor: methodActiveBorder,
+                        }}
+                        transition="all 0.2s"
+                      >
+                        <Radio
+                          value={method.id}
+                          colorScheme="teal"
+                          size="lg"
+                          w="100%"
+                        >
+                          <Flex align="center" w="100%" justify="space-between">
+                            <HStack spacing={3}>
+                              <Icon
+                                as={method.icon}
+                                w={6}
+                                h={6}
+                                color={method.color}
+                              />
+                              <VStack align="start" spacing={0}>
+                                <Text fontWeight="medium">{method.name}</Text>
+                                <Text fontSize="xs" color="gray.500">
+                                  {method.description}
+                                </Text>
+                              </VStack>
+                            </HStack>
+                          </Flex>
+                        </Radio>
+                      </Box>
+                    ))}
+                  </Stack>
+                </RadioGroup>
+              </Box>
 
               <Divider my={4} />
 
@@ -429,7 +525,9 @@ export default function CheckoutForm({
                 </HStack>
                 {!isFreeTicket && (
                   <HStack justify="space-between">
-                    <Text>Phí dịch vụ (5%):</Text>
+                    <Text>
+                      Phí dịch vụ ({(serviceFeeRate * 100).toFixed(1)}%):
+                    </Text>
                     <Text fontWeight="medium">
                       {serviceFee.toLocaleString()} đ
                     </Text>
