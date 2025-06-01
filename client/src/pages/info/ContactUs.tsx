@@ -1,17 +1,9 @@
 import {
   Box,
-  Button,
   Container,
-  FormControl,
-  FormLabel,
   Heading,
-  Input,
   Text,
-  Textarea,
-  VStack,
   HStack,
-  FormErrorMessage,
-  useToast,
   SimpleGrid,
   Icon,
   Breadcrumb,
@@ -20,8 +12,9 @@ import {
   useColorModeValue,
   Flex,
   Divider,
+  Button,
+  VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import {
   FaMapMarkerAlt,
   FaPhone,
@@ -30,20 +23,7 @@ import {
 } from "react-icons/fa";
 import { IconType } from "react-icons";
 import { Link } from "react-router-dom";
-
-interface FormValues {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
-interface FormErrors {
-  name?: string;
-  email?: string;
-  subject?: string;
-  message?: string;
-}
+import { ContactForm } from "../../components/common";
 
 // Component hiển thị thông tin liên hệ
 const ContactInfo = ({
@@ -93,96 +73,6 @@ const ContactUs = () => {
   const textColor = useColorModeValue("gray.600", "gray.400");
   const headingColor = useColorModeValue("teal.600", "teal.300");
   const boxShadow = useColorModeValue("sm", "none");
-
-  const [formValues, setFormValues] = useState<FormValues>({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Xóa lỗi khi người dùng bắt đầu nhập
-    if (formErrors[name as keyof FormErrors]) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-    let isValid = true;
-
-    if (!formValues.name.trim()) {
-      errors.name = "Vui lòng nhập tên của bạn";
-      isValid = false;
-    }
-
-    if (!formValues.email.trim()) {
-      errors.email = "Vui lòng nhập địa chỉ email";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
-      errors.email = "Địa chỉ email không hợp lệ";
-      isValid = false;
-    }
-
-    if (!formValues.subject.trim()) {
-      errors.subject = "Vui lòng nhập tiêu đề";
-      isValid = false;
-    }
-
-    if (!formValues.message.trim()) {
-      errors.message = "Vui lòng nhập nội dung tin nhắn";
-      isValid = false;
-    }
-
-    setFormErrors(errors);
-    return isValid;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      setIsSubmitting(true);
-
-      // Mô phỏng việc gửi form
-      setTimeout(() => {
-        toast({
-          title: "Gửi tin nhắn thành công!",
-          description: "Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
-
-        // Reset form
-        setFormValues({
-          name: "",
-          email: "",
-          subject: "",
-          message: "",
-        });
-
-        setIsSubmitting(false);
-      }, 1500);
-    }
-  };
 
   return (
     <Container maxW="6xl" py={10}>
@@ -257,69 +147,8 @@ const ContactUs = () => {
             với bạn trong thời gian sớm nhất.
           </Text>
 
-          <VStack as="form" spacing={6} onSubmit={handleSubmit} align="stretch">
-            <FormControl isRequired isInvalid={Boolean(formErrors.name)}>
-              <FormLabel>Tên của bạn</FormLabel>
-              <Input
-                type="text"
-                name="name"
-                placeholder="Nhập tên của bạn"
-                value={formValues.name}
-                onChange={handleChange}
-                focusBorderColor={accentColor}
-              />
-              <FormErrorMessage>{formErrors.name}</FormErrorMessage>
-            </FormControl>
-
-            <FormControl isRequired isInvalid={Boolean(formErrors.email)}>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="email"
-                name="email"
-                placeholder="Nhập địa chỉ email"
-                value={formValues.email}
-                onChange={handleChange}
-                focusBorderColor={accentColor}
-              />
-              <FormErrorMessage>{formErrors.email}</FormErrorMessage>
-            </FormControl>
-
-            <FormControl isRequired isInvalid={Boolean(formErrors.subject)}>
-              <FormLabel>Tiêu đề</FormLabel>
-              <Input
-                type="text"
-                name="subject"
-                placeholder="Nhập tiêu đề tin nhắn"
-                value={formValues.subject}
-                onChange={handleChange}
-                focusBorderColor={accentColor}
-              />
-              <FormErrorMessage>{formErrors.subject}</FormErrorMessage>
-            </FormControl>
-
-            <FormControl isRequired isInvalid={Boolean(formErrors.message)}>
-              <FormLabel>Tin nhắn</FormLabel>
-              <Textarea
-                name="message"
-                placeholder="Nhập nội dung tin nhắn"
-                value={formValues.message}
-                onChange={handleChange}
-                rows={6}
-                focusBorderColor={accentColor}
-              />
-              <FormErrorMessage>{formErrors.message}</FormErrorMessage>
-            </FormControl>
-
-            <Button
-              colorScheme="teal"
-              size="lg"
-              type="submit"
-              isLoading={isSubmitting}
-              loadingText="Đang gửi..."
-            >
-              Gửi Tin nhắn
-            </Button>
-          </VStack>
+          {/* Sử dụng ContactForm component mới */}
+          <ContactForm colorScheme="teal" accentColor={accentColor} />
         </Box>
 
         <Box>

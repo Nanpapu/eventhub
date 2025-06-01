@@ -5,6 +5,7 @@ export { default as ScrollToTop } from "./ScrollToTop";
 export { default as ColorModeToggle } from "./ColorModeToggle";
 export { default as SearchBar } from "./SearchBar";
 export { default as QrCodeScanner } from "./QrCodeScanner";
+export { default as ContactForm } from "./ContactForm";
 
 // Các component định dạng
 export { default as DateDisplay } from "./DateDisplay";

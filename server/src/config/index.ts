@@ -30,6 +30,7 @@ const config = {
   emailUser: process.env.EMAIL_USER || "",
   emailPass: process.env.EMAIL_PASSWORD || "",
   emailFrom: process.env.EMAIL_FROM || "noreply@eventhub.com",
+  contactEmail: process.env.CONTACT_EMAIL || "contact@eventhub.com",
 };
 
 export default config;
