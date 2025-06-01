@@ -58,6 +58,7 @@ import {
   FaQrcode,
   FaEye,
   FaEyeSlash,
+  FaSync,
 } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -123,6 +124,9 @@ const Dashboard = () => {
     isHidden: boolean;
   } | null>(null);
 
+  // State cho refresh
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // Sử dụng Redux hooks để lấy dữ liệu
   const isLoading = useAppSelector(selectEventLoading);
   const error = useAppSelector(selectEventError);
@@ -131,6 +135,10 @@ const Dashboard = () => {
 
   // State cho dữ liệu đã được xử lý
   const [events, setEvents] = useState<Event[]>([]);
+  // State cho phân loại sự kiện
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [ongoingEvents, setOngoingEvents] = useState<Event[]>([]);
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
 
   // Tải dữ liệu sự kiện từ API
   useEffect(() => {
@@ -144,7 +152,27 @@ const Dashboard = () => {
     if (!userEventsResponse) return;
 
     // Trích xuất mảng sự kiện, kiểm tra cấu trúc của đối tượng response
-    let eventsList: any[] = [];
+    let eventsList: Array<{
+      id?: string;
+      _id?: string;
+      title: string;
+      description: string;
+      date: string | Date;
+      location: string;
+      isOnline?: boolean;
+      imageUrl?: string;
+      capacity?: number;
+      attendees?: number;
+      status?: string;
+      isPaid?: boolean;
+      price?: number;
+      isHidden?: boolean;
+      ticketTypes?: Array<{
+        quantity: number;
+        availableQuantity: number;
+        price: number;
+      }>;
+    }> = [];
 
     if (Array.isArray(userEventsResponse)) {
       eventsList = userEventsResponse;
@@ -152,8 +180,6 @@ const Dashboard = () => {
       // @ts-expect-error - Để tránh lỗi TypeScript
       eventsList = userEventsResponse.events || [];
     }
-
-    console.log("Events list:", eventsList);
 
     // Chuyển đổi dữ liệu từ API sang định dạng cần thiết
     const formattedEvents = eventsList.map((event) => {
@@ -173,11 +199,12 @@ const Dashboard = () => {
       };
     });
 
-    console.log(
-      "Upcoming events count:",
-      formattedEvents.filter((e: Event) => e.status === "upcoming").length
-    );
     setEvents(formattedEvents);
+
+    // Phân loại sự kiện theo trạng thái
+    setUpcomingEvents(formattedEvents.filter((e) => e.status === "upcoming"));
+    setOngoingEvents(formattedEvents.filter((e) => e.status === "ongoing"));
+    setPastEvents(formattedEvents.filter((e) => e.status === "past"));
   }, [userEventsResponse]);
 
   // Hiển thị thông báo lỗi nếu có
@@ -194,25 +221,18 @@ const Dashboard = () => {
   }, [error, toast]);
 
   // Helper function để xác định trạng thái sự kiện
-  const determineEventStatus = (
-    event: any
-  ): "upcoming" | "ongoing" | "past" | "cancelled" => {
-    console.log(`Checking event status for: ${event.title}`);
-    console.log(
-      `Event date: ${event.date}, event status from API: ${event.status}`
-    );
-
+  const determineEventStatus = (event: {
+    id?: string;
+    _id?: string;
+    title: string;
+    date: string | Date;
+    status?: string;
+  }): "upcoming" | "ongoing" | "past" | "cancelled" => {
     if (event.status === "cancelled") {
-      console.log(`Event ${event.title} is cancelled`);
       return "cancelled";
     }
 
     const eventDate = new Date(event.date);
-    const now = new Date();
-
-    console.log(
-      `Event date: ${eventDate.toISOString()}, Current date: ${now.toISOString()}`
-    );
 
     // So sánh theo ngày, bỏ qua giờ phút giây
     const today = new Date();
@@ -220,19 +240,6 @@ const Dashboard = () => {
 
     const eventDay = new Date(eventDate);
     eventDay.setHours(0, 0, 0, 0);
-
-    console.log(
-      `Event day: ${eventDay.toISOString()}, Today: ${today.toISOString()}`
-    );
-    console.log(
-      `Comparison result: ${
-        eventDay.getTime() > today.getTime()
-          ? "UPCOMING"
-          : eventDay.getTime() === today.getTime()
-          ? "ONGOING"
-          : "PAST"
-      }`
-    );
 
     if (eventDay.getTime() === today.getTime()) {
       return "ongoing";
@@ -262,11 +269,6 @@ const Dashboard = () => {
 
     return revenue;
   };
-
-  // Lọc sự kiện theo trạng thái
-  const upcomingEvents = events.filter((event) => event.status === "upcoming");
-  const ongoingEvents = events.filter((event) => event.status === "ongoing");
-  const pastEvents = events.filter((event) => event.status === "past");
 
   // Chuyển đến trang chỉnh sửa sự kiện
   const handleEditEvent = (eventId: string) => {
@@ -341,6 +343,37 @@ const Dashboard = () => {
     }
   };
 
+  // Hàm để làm mới dữ liệu dashboard
+  const handleRefreshData = () => {
+    setIsRefreshing(true);
+    Promise.all([
+      dispatch(fetchUserEvents()),
+      dispatch(fetchOrganizerDashboardStats()),
+    ])
+      .then(() => {
+        toast({
+          title: "Đã làm mới dữ liệu",
+          description: "Số liệu thống kê đã được cập nhật.",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+        });
+      })
+      .catch((error) => {
+        console.error("Error refreshing dashboard data:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể cập nhật số liệu. Vui lòng thử lại sau.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      })
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  };
+
   // Màu sắc cho giao diện
   const cardBg = useColorModeValue("white", "gray.800");
   const statBg = useColorModeValue("gray.50", "gray.700");
@@ -388,14 +421,28 @@ const Dashboard = () => {
   return (
     <Container maxW="7xl" py={8}>
       <Box mb={6}>
-        <Heading as="h1" size="xl" mb={2}>
-          Bảng Điều Khiển Nhà Tổ Chức
-        </Heading>
+        <Flex justify="space-between" align="center">
+          <Heading as="h1" size="xl" mb={2}>
+            Bảng Điều Khiển Nhà Tổ Chức
+          </Heading>
+          <Tooltip label="Làm mới dữ liệu">
+            <IconButton
+              aria-label="Làm mới dữ liệu"
+              icon={<FaSync />}
+              size="md"
+              colorScheme="teal"
+              onClick={handleRefreshData}
+              isLoading={isRefreshing}
+              variant="outline"
+              display="none"
+            />
+          </Tooltip>
+        </Flex>
         <Text color="gray.500">Quản lý sự kiện và xem thông tin tổng quan</Text>
       </Box>
 
       {/* Thống kê tổng quan đơn giản */}
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
+      <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6} mb={8}>
         <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
           <Flex justify="space-between">
             <Box>
@@ -443,6 +490,30 @@ const Dashboard = () => {
               color="white"
             >
               <FaUsers />
+            </Box>
+          </Flex>
+        </Stat>
+
+        <Stat bg={statBg} p={4} borderRadius="lg" boxShadow="md">
+          <Flex justify="space-between">
+            <Box>
+              <StatLabel fontWeight="medium">Sự Kiện Đang Diễn Ra</StatLabel>
+              <StatNumber>
+                {dashboardStats?.ongoingEvents || ongoingEvents.length}
+              </StatNumber>
+              <StatHelpText>Hôm nay</StatHelpText>
+            </Box>
+            <Box
+              bg="orange.500"
+              w="40px"
+              h="40px"
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              color="white"
+            >
+              <FaCalendarAlt />
             </Box>
           </Flex>
         </Stat>
