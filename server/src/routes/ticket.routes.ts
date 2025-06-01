@@ -10,13 +10,17 @@ const router = express.Router();
  * @desc    Get user's tickets
  * @access  Private
  */
-router.get("/my-tickets", authenticate, ticketController.getMyTickets);
+router.get(
+  "/my-tickets",
+  authenticate,
+  asyncHandler(ticketController.getMyTickets)
+);
 
 // Kiểm tra trạng thái vé của người dùng cho sự kiện cụ thể
 router.get(
   "/status/:eventId",
   authenticate,
-  ticketController.getUserTicketStatus
+  asyncHandler(ticketController.getUserTicketStatus)
 );
 
 /**
@@ -28,7 +32,7 @@ router.get(
   "/event/:eventId/attendees",
   authenticate,
   isOrganizer,
-  ticketController.getEventAttendees
+  asyncHandler(ticketController.getEventAttendees)
 );
 
 /**
@@ -40,7 +44,7 @@ router.post(
   "/:ticketId/check-in",
   authenticate,
   isOrganizer,
-  ticketController.checkInTicket
+  asyncHandler(ticketController.checkInTicket)
 );
 
 // Thêm các routes khác cho ticket sau này nếu cần

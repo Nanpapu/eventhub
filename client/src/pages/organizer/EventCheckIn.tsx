@@ -11,8 +11,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  FormControl,
-  FormLabel,
   Divider,
   Badge,
   Table,
@@ -22,7 +20,6 @@ import {
   Th,
   Td,
   Avatar,
-  IconButton,
   useToast,
   useColorModeValue,
   Tabs,
@@ -42,20 +39,11 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Switch,
   Spinner,
+  Select,
 } from "@chakra-ui/react";
-import {
-  FaSearch,
-  FaQrcode,
-  FaUserCheck,
-  FaUserTimes,
-  FaCamera,
-  FaTimes,
-  FaFileDownload,
-  FaSyncAlt,
-} from "react-icons/fa";
-import { useParams, useNavigate } from "react-router-dom";
+import { FaSearch, FaQrcode, FaSyncAlt } from "react-icons/fa";
+import { useParams } from "react-router-dom";
 import { DateDisplay } from "../../components/common";
 import { getDefaultAvatar } from "../../utils/userUtils";
 import eventService from "../../services/event.service";
@@ -71,6 +59,7 @@ interface Attendee {
   checkInStatus: boolean; // Boolean cho biết đã check-in hay chưa
   avatar?: string;
   phone?: string;
+  alreadyCheckedIn?: boolean; // Đánh dấu vé đã được check-in trước đó
 }
 
 /**
@@ -80,7 +69,6 @@ interface Attendee {
 const EventCheckIn = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const toast = useToast();
-  const navigate = useNavigate();
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
 
@@ -120,6 +108,16 @@ const EventCheckIn = () => {
   const grayIconColor = useColorModeValue("gray.300", "gray.500");
   const grayBgColor = useColorModeValue("gray.50", "gray.700");
   const inputHoverBorderColor = useColorModeValue("gray.300", "gray.600");
+  const whiteColor = useColorModeValue("white", "gray.700");
+
+  // State cho bộ lọc
+  const [filterTicketType, setFilterTicketType] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterOptions, setFilterOptions] = useState<{
+    ticketTypes: string[];
+  }>({
+    ticketTypes: [],
+  });
 
   // Tải dữ liệu sự kiện từ API
   useEffect(() => {
@@ -150,6 +148,18 @@ const EventCheckIn = () => {
 
       setAttendees(checkInInfo.attendees || []);
       setCheckedInCount(checkInInfo.checkedInCount || 0);
+
+      // Tạo danh sách các loại vé cho bộ lọc
+      const ticketTypes: string[] = Array.from(
+        new Set(
+          (checkInInfo.attendees || []).map(
+            (attendee: Attendee) => attendee.ticketType
+          )
+        )
+      );
+      setFilterOptions({
+        ticketTypes,
+      });
     } catch (error) {
       console.error("Error loading event data:", error);
       toast({
@@ -184,6 +194,16 @@ const EventCheckIn = () => {
       isClosable: true,
     });
     setIsScanning(false);
+  };
+
+  // Hàm che một phần mã vé
+  const maskTicketId = (ticketId: string): string => {
+    // Luôn che mã vé để bảo mật, chỉ hiển thị 1/4 đầu
+    const visiblePart = Math.floor(ticketId.length / 4);
+    return (
+      ticketId.substring(0, visiblePart) +
+      "•".repeat(ticketId.length - visiblePart)
+    );
   };
 
   // Xử lý check-in bằng ID vé thủ công
@@ -235,6 +255,7 @@ const EventCheckIn = () => {
               ...a,
               checkInStatus: true,
               checkInTime: result.attendee.checkInTime,
+              alreadyCheckedIn: result.attendee.alreadyCheckedIn,
             }
           : a
       );
@@ -243,6 +264,20 @@ const EventCheckIn = () => {
       setCheckedInCount((prev) =>
         result.attendee.alreadyCheckedIn ? prev : prev + 1
       );
+
+      // Nếu đã check-in trước đó, chỉ hiển thị toast thông báo
+      if (result.attendee.alreadyCheckedIn) {
+        toast({
+          title: "Đã check-in trước đó",
+          description: `${foundAttendee.name} đã check-in trước đó`,
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Chỉ mở modal khi check-in thành công lần đầu
       setLastScannedAttendee({
         ...foundAttendee,
         checkInStatus: true,
@@ -251,15 +286,9 @@ const EventCheckIn = () => {
       onOpen(); // Mở modal thông báo
 
       toast({
-        title: result.attendee.alreadyCheckedIn
-          ? "Đã check-in trước đó"
-          : "Check-in thành công",
-        description: `${foundAttendee.name} ${
-          result.attendee.alreadyCheckedIn
-            ? "đã check-in trước đó"
-            : "đã check-in thành công"
-        }`,
-        status: result.attendee.alreadyCheckedIn ? "warning" : "success",
+        title: "Check-in thành công",
+        description: `${foundAttendee.name} đã check-in thành công`,
+        status: "success",
         duration: 3000,
         isClosable: true,
       });
@@ -297,16 +326,50 @@ const EventCheckIn = () => {
   };
 
   // Lọc danh sách người tham dự theo từ khóa tìm kiếm
-  const filteredAttendees = attendees.filter(
-    (attendee) =>
+  const filteredAttendees = attendees.filter((attendee) => {
+    // Lọc theo từ khóa tìm kiếm
+    const matchesKeyword =
+      searchKeyword === "" ||
       attendee.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       attendee.email.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      attendee.ticketId.toLowerCase().includes(searchKeyword.toLowerCase())
-  );
+      attendee.ticketId.toLowerCase().includes(searchKeyword.toLowerCase());
+
+    // Lọc theo loại vé
+    const matchesTicketType =
+      filterTicketType === "" || attendee.ticketType === filterTicketType;
+
+    // Lọc theo trạng thái
+    const matchesStatus =
+      filterStatus === "" ||
+      (filterStatus === "checked-in" && attendee.checkInStatus) ||
+      (filterStatus === "not-checked-in" && !attendee.checkInStatus);
+
+    return matchesKeyword && matchesTicketType && matchesStatus;
+  });
 
   // Tìm người tham dự theo ID
   const findAttendeeById = (id: string): Attendee | undefined => {
     return attendees.find((a) => a.id === id);
+  };
+
+  // Hàm lấy trạng thái hiển thị chi tiết hơn
+  const getDetailedStatus = (
+    attendee: Attendee
+  ): { label: string; color: string } => {
+    if (attendee.checkInStatus) {
+      return { label: "Đã check-in", color: "green" };
+    }
+
+    // Kiểm tra xem sự kiện đã kết thúc chưa
+    const eventDate = new Date(eventDetails.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (eventDate < today) {
+      return { label: "Đã bỏ lỡ", color: "red" };
+    }
+
+    return { label: "Chưa check-in", color: "gray" };
   };
 
   // Toggle trạng thái check-in của người tham dự
@@ -339,18 +402,6 @@ const EventCheckIn = () => {
         isClosable: true,
       });
     }
-  };
-
-  // Export danh sách người tham dự (giả lập)
-  const exportAttendees = () => {
-    toast({
-      title: "Xuất dữ liệu",
-      description: "Đang xuất danh sách người tham dự",
-      status: "info",
-      duration: 3000,
-      isClosable: true,
-    });
-    // Trong thực tế, sẽ gọi API để tạo và tải file CSV/Excel
   };
 
   if (isLoading) {
@@ -578,7 +629,7 @@ const EventCheckIn = () => {
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
                         <Th color={textColor}>Họ tên</Th>
-                        <Th color={textColor}>Mã vé</Th>
+                        <Th color={textColor}>Thông tin vé</Th>
                         <Th color={textColor}>Thời gian check-in</Th>
                       </Tr>
                     </Thead>
@@ -607,9 +658,22 @@ const EventCheckIn = () => {
                               </HStack>
                             </Td>
                             <Td>
-                              <Text fontFamily="mono" color={textColor}>
-                                {attendee.ticketId}
-                              </Text>
+                              <VStack align="start" spacing={0}>
+                                <Text
+                                  fontFamily="mono"
+                                  fontSize="xs"
+                                  color={textColor}
+                                >
+                                  {maskTicketId(attendee.ticketId)}
+                                </Text>
+                                <Badge
+                                  colorScheme="purple"
+                                  variant="subtle"
+                                  fontSize="10px"
+                                >
+                                  {attendee.ticketType}
+                                </Badge>
+                              </VStack>
                             </Td>
                             <Td color={textColor}>
                               {attendee.checkInTime && (
@@ -662,14 +726,45 @@ const EventCheckIn = () => {
                       placeholder="Tìm kiếm người tham dự"
                       value={searchKeyword}
                       onChange={(e) => setSearchKeyword(e.target.value)}
-                      bg={useColorModeValue("white", "gray.700")}
+                      bg={whiteColor}
                       borderColor={borderColor}
                       _hover={{ borderColor: inputHoverBorderColor }}
                       _focus={{ borderColor: "teal.500" }}
                     />
                   </InputGroup>
 
-                  <HStack spacing={3}>
+                  <HStack spacing={3} flexWrap="wrap">
+                    <Box>
+                      <Select
+                        placeholder="Loại vé"
+                        value={filterTicketType}
+                        onChange={(e) => setFilterTicketType(e.target.value)}
+                        size="md"
+                        width="150px"
+                        bg={whiteColor}
+                      >
+                        {filterOptions.ticketTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </Select>
+                    </Box>
+
+                    <Box>
+                      <Select
+                        placeholder="Trạng thái"
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        size="md"
+                        width="150px"
+                        bg={whiteColor}
+                      >
+                        <option value="checked-in">Đã check-in</option>
+                        <option value="not-checked-in">Chưa check-in</option>
+                      </Select>
+                    </Box>
+
                     <Button
                       leftIcon={<FaSyncAlt />}
                       variant="outline"
@@ -681,13 +776,6 @@ const EventCheckIn = () => {
                       loadingText="Đang cập nhật"
                     >
                       Làm mới
-                    </Button>
-                    <Button
-                      leftIcon={<FaFileDownload />}
-                      onClick={exportAttendees}
-                      colorScheme="teal"
-                    >
-                      Xuất dữ liệu
                     </Button>
                   </HStack>
                 </Flex>
@@ -704,10 +792,9 @@ const EventCheckIn = () => {
                     <Thead>
                       <Tr bg={tableHeaderBgColor}>
                         <Th color={textColor}>Người tham dự</Th>
-                        <Th color={textColor}>Sự kiện</Th>
+                        <Th color={textColor}>Thông tin vé</Th>
                         <Th color={textColor}>Trạng thái</Th>
                         <Th color={textColor}>Thời gian check-in</Th>
-                        <Th color={textColor}>Thao tác</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -740,7 +827,7 @@ const EventCheckIn = () => {
                                 fontSize="sm"
                                 color={textColor}
                               >
-                                {attendee.ticketId}
+                                {maskTicketId(attendee.ticketId)}
                               </Text>
                               <Badge colorScheme="purple" variant="subtle">
                                 {attendee.ticketType}
@@ -749,16 +836,12 @@ const EventCheckIn = () => {
                           </Td>
                           <Td>
                             <Badge
-                              colorScheme={
-                                attendee.checkInStatus ? "green" : "gray"
-                              }
+                              colorScheme={getDetailedStatus(attendee).color}
                               variant="subtle"
                               p={1}
                               borderRadius="md"
                             >
-                              {attendee.checkInStatus
-                                ? "Đã check-in"
-                                : "Chưa check-in"}
+                              {getDetailedStatus(attendee).label}
                             </Badge>
                           </Td>
                           <Td color={textColor}>
@@ -773,29 +856,11 @@ const EventCheckIn = () => {
                               "-"
                             )}
                           </Td>
-                          <Td>
-                            <IconButton
-                              aria-label="Toggle check-in status"
-                              icon={
-                                attendee.checkInStatus ? (
-                                  <FaUserTimes />
-                                ) : (
-                                  <FaUserCheck />
-                                )
-                              }
-                              colorScheme={
-                                attendee.checkInStatus ? "red" : "green"
-                              }
-                              size="sm"
-                              onClick={() => toggleCheckInStatus(attendee.id)}
-                              isDisabled={attendee.checkInStatus} // Vé đã check-in không thể hủy
-                            />
-                          </Td>
                         </Tr>
                       ))}
                       {filteredAttendees.length === 0 && (
                         <Tr>
-                          <Td colSpan={5} textAlign="center" py={4}>
+                          <Td colSpan={4} textAlign="center" py={4}>
                             <VStack>
                               <FaSearch size={20} color={grayIconColor} />
                               <Text color={secondaryTextColor}>
@@ -823,30 +888,40 @@ const EventCheckIn = () => {
           borderWidth="1px"
         >
           <ModalHeader color={textColor}>
-            {lastScannedAttendee?.checkInStatus
-              ? "Check-in thành công"
-              : "Check-in thất bại"}
+            {lastScannedAttendee?.alreadyCheckedIn
+              ? "Đã check-in trước đó"
+              : "Check-in thành công"}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {lastScannedAttendee && (
               <VStack spacing={4} align="stretch">
                 {lastScannedAttendee.checkInStatus ? (
-                  <Alert status="success" borderRadius="md">
-                    <AlertIcon />
-                    <Box>
-                      <AlertTitle>Thành công!</AlertTitle>
-                      <AlertDescription>
-                        đã check-in thành công
-                      </AlertDescription>
-                    </Box>
-                  </Alert>
+                  lastScannedAttendee.alreadyCheckedIn ? (
+                    <Alert status="warning" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Đã check-in trước đó!</AlertTitle>
+                        <AlertDescription>
+                          Vé này đã được check-in trước đó
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                  ) : (
+                    <Alert status="success" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Thành công!</AlertTitle>
+                        <AlertDescription>Check-in thành công</AlertDescription>
+                      </Box>
+                    </Alert>
+                  )
                 ) : (
                   <Alert status="error" borderRadius="md">
                     <AlertIcon />
                     <Box>
                       <AlertTitle>Lỗi!</AlertTitle>
-                      <AlertDescription>Đã check-in trước đó</AlertDescription>
+                      <AlertDescription>Không thể check-in</AlertDescription>
                     </Box>
                   </Alert>
                 )}
@@ -887,7 +962,8 @@ const EventCheckIn = () => {
                           Mã vé:
                         </Text>
                         <Text fontSize="sm" fontFamily="mono" color={textColor}>
-                          {lastScannedAttendee.ticketId}
+                          {/* Ẩn mã vé để bảo mật, chỉ hiển thị một phần nhỏ */}
+                          {maskTicketId(lastScannedAttendee.ticketId)}
                         </Text>
                       </HStack>
                       <HStack justify="space-between" mt={1}>
