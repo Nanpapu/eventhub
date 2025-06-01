@@ -42,3 +42,5 @@ build
 *.njsproj
 *.sln
 *.sw? 
+
+.cursorignore
