@@ -517,9 +517,11 @@ const Dashboard = () => {
                             <Image
                               src={event.imageUrl}
                               alt={event.title}
-                              boxSize="40px"
+                              width="71px"
+                              height="40px"
                               borderRadius="md"
-                              objectFit="cover"
+                              objectFit="contain"
+                              bg="gray.100"
                             />
                             <VStack align="start" spacing={0}>
                               <Link
@@ -645,9 +647,11 @@ const Dashboard = () => {
                             <Image
                               src={event.imageUrl}
                               alt={event.title}
-                              boxSize="40px"
+                              width="71px"
+                              height="40px"
                               borderRadius="md"
-                              objectFit="cover"
+                              objectFit="contain"
+                              bg="gray.100"
                             />
                             <VStack align="start" spacing={0}>
                               <Flex align="center">
@@ -755,9 +759,11 @@ const Dashboard = () => {
                             <Image
                               src={event.imageUrl}
                               alt={event.title}
-                              boxSize="40px"
+                              width="71px"
+                              height="40px"
                               borderRadius="md"
-                              objectFit="cover"
+                              objectFit="contain"
+                              bg="gray.100"
                             />
                             <VStack align="start" spacing={0}>
                               <Flex align="center">
