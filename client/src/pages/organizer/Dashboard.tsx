@@ -870,13 +870,26 @@ const Dashboard = () => {
                         </Td>
                         <Td>{event.soldTickets || "--"}</Td>
                         <Td>
-                          <Link
-                            as={RouterLink}
-                            to={`/events/${event.id}`}
-                            color="teal.500"
-                          >
-                            Xem chi tiết
-                          </Link>
+                          <HStack spacing={2}>
+                            <Tooltip label="Xem chi tiết sự kiện">
+                              <Link
+                                as={RouterLink}
+                                to={`/events/${event.id}`}
+                                color="teal.500"
+                              >
+                                Xem chi tiết
+                              </Link>
+                            </Tooltip>
+                            <Tooltip label="Xem lịch sử check-in">
+                              <Link
+                                as={RouterLink}
+                                to={`/organizer/events/${event.id}/check-in?view=history`}
+                                color="blue.500"
+                              >
+                                Xem check-in
+                              </Link>
+                            </Tooltip>
+                          </HStack>
                         </Td>
                       </Tr>
                     ))}

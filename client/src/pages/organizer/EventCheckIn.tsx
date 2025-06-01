@@ -71,6 +71,11 @@ const EventCheckIn = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const location = useLocation();
   const toast = useToast();
+
+  // Thêm kiểm tra xem đây là chế độ xem lịch sử hay không
+  const searchParams = new URLSearchParams(location.search);
+  const isViewHistoryMode = searchParams.get("view") === "history";
+
   const [manualTicketId, setManualTicketId] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -282,12 +287,14 @@ const EventCheckIn = () => {
     );
   };
 
-  // Xử lý check-in bằng ID vé thủ công
-  const handleManualCheckIn = async () => {
-    if (!manualTicketId.trim()) {
+  // Hàm xử lý chung cho quá trình check-in
+  const processCheckIn = async (ticketData: string) => {
+    // Nếu đang ở chế độ xem lịch sử, không cho phép check-in
+    if (isViewHistoryMode) {
       toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập mã vé",
+        title: "Không thể check-in",
+        description:
+          "Bạn đang ở chế độ xem lịch sử check-in. Không thể thực hiện check-in mới.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -295,78 +302,6 @@ const EventCheckIn = () => {
       return;
     }
 
-    await processCheckIn(manualTicketId);
-    setManualTicketId("");
-  };
-
-  // Xử lý khi quét QR thành công
-  const handleQrSuccess = useCallback(
-    (decodedText: string) => {
-      console.log("QR code scanned successfully:", decodedText);
-      // Xử lý check-in với mã vé từ QR code
-      processCheckIn(decodedText);
-      // Tắt scanner sau khi quét thành công
-      setIsQrScannerActive(false);
-      // Hiển thị thông báo
-      toast({
-        title: "Đã quét thành công",
-        description:
-          "Đang xử lý check-in cho mã vé: " +
-          decodedText.substring(0, 8) +
-          "...",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-    },
-    [toast]
-  );
-
-  // Xử lý lỗi khi quét QR
-  const handleQrError = (error: Error | string) => {
-    console.error("QR scan error:", error);
-
-    // Tắt scanner khi gặp lỗi
-    setIsQrScannerActive(false);
-
-    // Hiển thị lỗi chi tiết dựa trên loại lỗi
-    if (typeof error === "string") {
-      if (
-        error.includes("camera") ||
-        error.includes("permission") ||
-        error.includes("getUserMedia")
-      ) {
-        toast({
-          title: "Lỗi truy cập camera",
-          description:
-            "Không thể truy cập camera. Vui lòng đảm bảo bạn đã cấp quyền camera cho trình duyệt.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Lỗi khi quét mã QR",
-          description: error,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } else {
-      toast({
-        title: "Lỗi khi quét mã QR",
-        description:
-          "Đã xảy ra lỗi trong quá trình quét mã QR. Vui lòng thử lại.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  // Hàm xử lý chung cho quá trình check-in
-  const processCheckIn = async (ticketData: string) => {
     try {
       // Đảm bảo tắt camera khi bắt đầu xử lý
       if (isQrScannerActive) {
@@ -450,6 +385,117 @@ const EventCheckIn = () => {
       });
     } finally {
       setIsProcessingCheckIn(false);
+    }
+  };
+
+  // Xử lý check-in bằng ID vé thủ công
+  const handleManualCheckIn = async () => {
+    // Kiểm tra chế độ xem lịch sử
+    if (isViewHistoryMode) {
+      toast({
+        title: "Không thể check-in",
+        description:
+          "Bạn đang ở chế độ xem lịch sử check-in. Không thể thực hiện check-in mới.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!manualTicketId.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập mã vé",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    await processCheckIn(manualTicketId);
+    setManualTicketId("");
+  };
+
+  // Xử lý khi quét QR thành công
+  const handleQrSuccess = useCallback(
+    (decodedText: string) => {
+      console.log("QR code scanned successfully:", decodedText);
+
+      // Kiểm tra chế độ xem lịch sử
+      if (isViewHistoryMode) {
+        toast({
+          title: "Không thể check-in",
+          description:
+            "Bạn đang ở chế độ xem lịch sử check-in. Không thể thực hiện check-in mới.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsQrScannerActive(false);
+        return;
+      }
+
+      // Xử lý check-in với mã vé từ QR code
+      processCheckIn(decodedText);
+      // Tắt scanner sau khi quét thành công
+      setIsQrScannerActive(false);
+      // Hiển thị thông báo
+      toast({
+        title: "Đã quét thành công",
+        description:
+          "Đang xử lý check-in cho mã vé: " +
+          decodedText.substring(0, 8) +
+          "...",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+    [toast, isViewHistoryMode, processCheckIn]
+  );
+
+  // Xử lý lỗi khi quét QR
+  const handleQrError = (error: Error | string) => {
+    console.error("QR scan error:", error);
+
+    // Tắt scanner khi gặp lỗi
+    setIsQrScannerActive(false);
+
+    // Hiển thị lỗi chi tiết dựa trên loại lỗi
+    if (typeof error === "string") {
+      if (
+        error.includes("camera") ||
+        error.includes("permission") ||
+        error.includes("getUserMedia")
+      ) {
+        toast({
+          title: "Lỗi truy cập camera",
+          description:
+            "Không thể truy cập camera. Vui lòng đảm bảo bạn đã cấp quyền camera cho trình duyệt.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Lỗi khi quét mã QR",
+          description: error,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Lỗi khi quét mã QR",
+        description:
+          "Đã xảy ra lỗi trong quá trình quét mã QR. Vui lòng thử lại.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -705,7 +751,9 @@ const EventCheckIn = () => {
         {/* Header */}
         <Box>
           <Heading size="lg" color={textColor}>
-            Check-in sự kiện
+            {isViewHistoryMode
+              ? "Lịch sử check-in sự kiện"
+              : "Check-in sự kiện"}
           </Heading>
           <HStack mt={2}>
             <Heading size="md" fontWeight="normal" color={secondaryTextColor}>
@@ -714,6 +762,11 @@ const EventCheckIn = () => {
             <Badge colorScheme="teal" fontSize="sm">
               {eventDetails.date}
             </Badge>
+            {isViewHistoryMode && (
+              <Badge colorScheme="blue" fontSize="sm">
+                Xem lại
+              </Badge>
+            )}
           </HStack>
           <Text mt={1} color={secondaryTextColor}>
             {eventDetails.location}
@@ -789,11 +842,17 @@ const EventCheckIn = () => {
         </Flex>
 
         {/* Main Content */}
-        <Tabs colorScheme="teal" variant="enclosed">
+        <Tabs
+          colorScheme="teal"
+          variant="enclosed"
+          defaultIndex={isViewHistoryMode ? 1 : 0}
+        >
           <TabList>
-            <Tab fontWeight="medium" color={textColor}>
-              Check-in thủ công
-            </Tab>
+            {!isViewHistoryMode && (
+              <Tab fontWeight="medium" color={textColor}>
+                Check-in thủ công
+              </Tab>
+            )}
             <Tab fontWeight="medium" color={textColor}>
               Danh sách người tham dự
             </Tab>
@@ -801,154 +860,181 @@ const EventCheckIn = () => {
 
           <TabPanels>
             {/* Manual Check-in Tab (thay thế cho QR Scanner Tab) */}
-            <TabPanel px={0}>
-              <VStack spacing={6} align="stretch">
-                <Box
-                  bg={cardBgColor}
-                  p={6}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <VStack spacing={5} align="stretch">
-                    <Heading size="md" color={textColor}>
-                      Check-in bằng mã vé
+            {!isViewHistoryMode && (
+              <TabPanel px={0}>
+                <VStack spacing={6} align="stretch">
+                  <Box
+                    bg={cardBgColor}
+                    p={6}
+                    borderRadius="lg"
+                    boxShadow="sm"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                  >
+                    <VStack spacing={5} align="stretch">
+                      <Heading size="md" color={textColor}>
+                        Check-in bằng mã vé
+                      </Heading>
+                      <Text color={secondaryTextColor}>
+                        Nhập mã vé để check-in người tham dự.
+                      </Text>
+
+                      {/* Manual Entry */}
+                      <Box>
+                        <Heading size="sm" mb={3} color={textColor}>
+                          Nhập mã vé
+                        </Heading>
+                        <HStack>
+                          <Input
+                            placeholder="Nhập mã vé tại đây"
+                            value={manualTicketId}
+                            onChange={(e) => setManualTicketId(e.target.value)}
+                            bg={whiteColor}
+                            borderColor={borderColor}
+                            _hover={{ borderColor: inputHoverBorderColor }}
+                            _focus={{ borderColor: "teal.500" }}
+                          />
+                          <Button
+                            colorScheme="teal"
+                            onClick={handleManualCheckIn}
+                            isLoading={isProcessingCheckIn}
+                            loadingText="Đang xử lý"
+                          >
+                            Check-in
+                          </Button>
+                        </HStack>
+                      </Box>
+
+                      {/* QR Scanner feature */}
+                      <Box mt={4}>
+                        <Divider my={3} borderColor={borderColor} />
+                        <Heading size="sm" mb={3} color={textColor}>
+                          Quét mã QR
+                        </Heading>
+                        {renderQrScanner()}
+                      </Box>
+                    </VStack>
+                  </Box>
+
+                  {/* Recent Check-ins */}
+                  <Box
+                    bg={cardBgColor}
+                    p={6}
+                    borderRadius="lg"
+                    boxShadow="sm"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                  >
+                    <Heading size="md" mb={4} color={textColor}>
+                      Check-in gần đây
                     </Heading>
-                    <Text color={secondaryTextColor}>
-                      Nhập mã vé để check-in người tham dự.
-                    </Text>
-
-                    {/* Manual Entry */}
-                    <Box>
-                      <Heading size="sm" mb={3} color={textColor}>
-                        Nhập mã vé
-                      </Heading>
-                      <HStack>
-                        <Input
-                          placeholder="Nhập mã vé tại đây"
-                          value={manualTicketId}
-                          onChange={(e) => setManualTicketId(e.target.value)}
-                          bg={whiteColor}
-                          borderColor={borderColor}
-                          _hover={{ borderColor: inputHoverBorderColor }}
-                          _focus={{ borderColor: "teal.500" }}
-                        />
-                        <Button
-                          colorScheme="teal"
-                          onClick={handleManualCheckIn}
-                          isLoading={isProcessingCheckIn}
-                          loadingText="Đang xử lý"
-                        >
-                          Check-in
-                        </Button>
-                      </HStack>
-                    </Box>
-
-                    {/* QR Scanner feature */}
-                    <Box mt={4}>
-                      <Divider my={3} borderColor={borderColor} />
-                      <Heading size="sm" mb={3} color={textColor}>
-                        Quét mã QR
-                      </Heading>
-                      {renderQrScanner()}
-                    </Box>
-                  </VStack>
-                </Box>
-
-                {/* Recent Check-ins */}
-                <Box
-                  bg={cardBgColor}
-                  p={6}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                >
-                  <Heading size="md" mb={4} color={textColor}>
-                    Check-in gần đây
-                  </Heading>
-                  <Table size="sm" variant="simple">
-                    <Thead>
-                      <Tr bg={tableHeaderBgColor}>
-                        <Th color={textColor}>Họ tên</Th>
-                        <Th color={textColor}>Thông tin vé</Th>
-                        <Th color={textColor}>Thời gian check-in</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {attendees
-                        .filter((a) => a.checkInStatus)
-                        .sort(
-                          (a, b) =>
-                            new Date(b.checkInTime || "").getTime() -
-                            new Date(a.checkInTime || "").getTime()
-                        )
-                        .slice(0, 5)
-                        .map((attendee) => (
-                          <Tr key={attendee.id} _hover={{ bg: hoverBgColor }}>
-                            <Td>
-                              <HStack>
-                                <Avatar
-                                  size="xs"
-                                  name={attendee.name}
-                                  src={
-                                    attendee.avatar ||
-                                    getDefaultAvatar(attendee.name)
-                                  }
-                                />
-                                <Text color={textColor}>{attendee.name}</Text>
-                              </HStack>
-                            </Td>
-                            <Td>
-                              <VStack align="start" spacing={0}>
-                                <Text
-                                  fontFamily="mono"
-                                  fontSize="xs"
-                                  color={textColor}
-                                >
-                                  {maskTicketId(attendee.ticketId)}
-                                </Text>
-                                <Badge
-                                  colorScheme="purple"
-                                  variant="subtle"
-                                  fontSize="10px"
-                                >
-                                  {attendee.ticketType}
-                                </Badge>
-                              </VStack>
-                            </Td>
-                            <Td color={textColor}>
-                              {attendee.checkInTime && (
-                                <DateDisplay
-                                  date={attendee.checkInTime}
-                                  mode="time"
-                                  showIcon
-                                  size="sm"
-                                />
-                              )}
+                    <Table size="sm" variant="simple">
+                      <Thead>
+                        <Tr bg={tableHeaderBgColor}>
+                          <Th color={textColor}>Họ tên</Th>
+                          <Th color={textColor}>Thông tin vé</Th>
+                          <Th color={textColor}>Thời gian check-in</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {attendees
+                          .filter((a) => a.checkInStatus)
+                          .sort(
+                            (a, b) =>
+                              new Date(b.checkInTime || "").getTime() -
+                              new Date(a.checkInTime || "").getTime()
+                          )
+                          .slice(0, 5)
+                          .map((attendee) => (
+                            <Tr key={attendee.id} _hover={{ bg: hoverBgColor }}>
+                              <Td>
+                                <HStack>
+                                  <Avatar
+                                    size="xs"
+                                    name={attendee.name}
+                                    src={
+                                      attendee.avatar ||
+                                      getDefaultAvatar(attendee.name)
+                                    }
+                                  />
+                                  <Text color={textColor}>{attendee.name}</Text>
+                                </HStack>
+                              </Td>
+                              <Td>
+                                <VStack align="start" spacing={0}>
+                                  <Text
+                                    fontFamily="mono"
+                                    fontSize="xs"
+                                    color={textColor}
+                                  >
+                                    {maskTicketId(attendee.ticketId)}
+                                  </Text>
+                                  <Badge
+                                    colorScheme="purple"
+                                    variant="subtle"
+                                    fontSize="10px"
+                                  >
+                                    {attendee.ticketType}
+                                  </Badge>
+                                </VStack>
+                              </Td>
+                              <Td color={textColor}>
+                                {attendee.checkInTime && (
+                                  <DateDisplay
+                                    date={attendee.checkInTime}
+                                    mode="time"
+                                    showIcon
+                                    size="sm"
+                                  />
+                                )}
+                              </Td>
+                            </Tr>
+                          ))}
+                        {attendees.filter((a) => a.checkInStatus).length ===
+                          0 && (
+                          <Tr>
+                            <Td colSpan={3} textAlign="center">
+                              <Text color={secondaryTextColor}>
+                                Chưa có ai check-in
+                              </Text>
                             </Td>
                           </Tr>
-                        ))}
-                      {attendees.filter((a) => a.checkInStatus).length ===
-                        0 && (
-                        <Tr>
-                          <Td colSpan={3} textAlign="center">
-                            <Text color={secondaryTextColor}>
-                              Chưa có ai check-in
-                            </Text>
-                          </Td>
-                        </Tr>
-                      )}
-                    </Tbody>
-                  </Table>
-                </Box>
-              </VStack>
-            </TabPanel>
+                        )}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                </VStack>
+              </TabPanel>
+            )}
 
             {/* Attendee List Tab - giữ nguyên */}
             <TabPanel px={0}>
               <VStack spacing={6} align="stretch">
+                {isViewHistoryMode && (
+                  <Alert
+                    status="info"
+                    variant="subtle"
+                    borderRadius="md"
+                    mb={4}
+                  >
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle>Chế độ xem lịch sử check-in</AlertTitle>
+                      <AlertDescription>
+                        Đây là chế độ xem lại lịch sử check-in của sự kiện đã
+                        diễn ra. Bạn chỉ có thể xem thông tin, không thể thực
+                        hiện check-in mới.
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                )}
+
+                <Heading size="md" mb={4} color={textColor}>
+                  {isViewHistoryMode
+                    ? "Lịch sử check-in của người tham dự"
+                    : "Danh sách người tham dự"}
+                </Heading>
+
                 <Flex
                   bg={cardBgColor}
                   p={6}
