@@ -27,58 +27,113 @@ const QrCodeScanner = ({
   isActive,
 }: QrCodeScannerProps) => {
   const qrScannerRef = useRef<HTMLDivElement>(null);
-  const [scannerInstance, setScannerInstance] = useState<Html5Qrcode | null>(
-    null
-  );
+  const scannerInstanceRef = useRef<Html5Qrcode | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const isMountedRef = useRef(true);
+  const cameraActiveRef = useRef(false);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  // Đảm bảo camera được dừng và giải phóng khi component unmount
-  useEffect(() => {
-    return () => {
-      if (scannerInstance) {
-        console.log("Cleaning up camera on component unmount");
+  // Tạo container ID duy nhất để tránh xung đột DOM
+  const containerId = useRef(
+    `qr-reader-${Math.random().toString(36).substring(2, 9)}`
+  );
+
+  // Hàm dừng camera an toàn
+  const stopCamera = async () => {
+    try {
+      if (scannerInstanceRef.current && cameraActiveRef.current) {
+        console.log("Stopping camera...");
+
         try {
-          if (scannerInstance.isScanning) {
-            scannerInstance
-              .stop()
-              .catch((err) => console.error("Error stopping camera:", err))
-              .finally(() => {
-                scannerInstance.clear();
-              });
+          if (scannerInstanceRef.current.isScanning) {
+            await scannerInstanceRef.current.stop();
           }
-        } catch (error) {
-          console.error("Error during camera cleanup:", error);
+        } catch (stopError) {
+          console.error("Error stopping camera:", stopError);
         }
+
+        cameraActiveRef.current = false;
+
+        // Đảm bảo giải phóng bộ nhớ
+        if (!isActive) {
+          scannerInstanceRef.current = null;
+        }
+      }
+    } catch (error) {
+      console.error("Critical error during camera cleanup:", error);
+    }
+  };
+
+  // Đảm bảo camera được dừng khi component unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      stopCamera();
+
+      // Force stop all video tracks
+      try {
+        const videoElements = document.querySelectorAll("video");
+        videoElements.forEach((video) => {
+          try {
+            if (video.srcObject) {
+              const stream = video.srcObject as MediaStream;
+              stream.getTracks().forEach((track) => {
+                track.stop();
+              });
+            }
+          } catch (e) {
+            console.error("Error stopping video streams:", e);
+          }
+        });
+      } catch (e) {
+        console.error("Error force stopping camera:", e);
       }
     };
   }, []);
 
-  // Khởi tạo hoặc dừng scanner dựa trên prop isActive
+  // Xử lý visibility change của trang
   useEffect(() => {
-    const qrCodeId = "qr-reader";
+    const handleVisibilityChange = () => {
+      if (document.hidden && cameraActiveRef.current) {
+        console.log("Page hidden, stopping camera");
+        stopCamera();
+      }
+    };
 
-    // Hàm khởi tạo và bắt đầu quét QR
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Xử lý thay đổi isActive prop
+  useEffect(() => {
     const startScanner = async () => {
-      // Dừng instance cũ nếu có
-      if (scannerInstance) {
-        if (scannerInstance.isScanning) {
-          await scannerInstance.stop();
-        }
-        scannerInstance.clear();
-        setScannerInstance(null);
+      if (!isActive || !isMountedRef.current) {
+        await stopCamera();
+        return;
       }
 
-      if (!isActive) return;
+      if (!qrScannerRef.current) {
+        console.error("QR scanner element ref is null");
+        return;
+      }
 
-      setIsLoading(true);
       try {
-        // Khởi tạo Html5Qrcode
-        const html5QrCode = new Html5Qrcode(qrCodeId);
-        setScannerInstance(html5QrCode);
+        // Dừng instance cũ nếu có
+        await stopCamera();
+
+        setIsLoading(true);
+
+        // Khởi tạo HTML5Qrcode mới
+        const html5QrCode = new Html5Qrcode(containerId.current);
+        scannerInstanceRef.current = html5QrCode;
 
         // Liệt kê các thiết bị camera
         const devices = await Html5Qrcode.getCameras();
@@ -92,29 +147,27 @@ const QrCodeScanner = ({
             aspectRatio: 1,
           };
 
-          // Bắt đầu quét với camera đầu tiên
+          // Bắt đầu quét với camera
           await html5QrCode.start(
             cameraId,
             config,
             (decodedText) => {
               // Xử lý khi quét thành công
-              onScanSuccess(decodedText);
-              // Tự động dừng camera sau khi quét thành công
-              if (html5QrCode.isScanning) {
-                html5QrCode.stop().catch((err) => {
-                  console.error(
-                    "Error stopping camera after successful scan:",
-                    err
-                  );
-                });
+              if (isMountedRef.current && isActive) {
+                onScanSuccess(decodedText);
               }
+              // Dừng camera sau khi quét thành công
+              stopCamera();
             },
             (errorMessage) => {
               // Bỏ qua lỗi thường xảy ra khi quét
-              console.log("QR Code scanning error:", errorMessage);
+              if (isMountedRef.current) {
+                console.log("QR Code scanning error:", errorMessage);
+              }
             }
           );
 
+          cameraActiveRef.current = true;
           setPermissionError(null);
         } else {
           setPermissionError("Không tìm thấy thiết bị camera");
@@ -126,51 +179,33 @@ const QrCodeScanner = ({
         );
         if (onScanError) onScanError(error as Error);
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     };
 
-    // Xử lý camera khi isActive thay đổi
-    if (isActive) {
-      startScanner();
-    } else if (scannerInstance) {
-      console.log("Stopping camera because component is not active");
-      if (scannerInstance.isScanning) {
-        scannerInstance
-          .stop()
-          .catch((err) => {
-            console.error("Error stopping camera:", err);
-          })
-          .finally(() => {
-            // Xóa instance sau khi dừng
-            if (scannerInstance) {
-              scannerInstance.clear();
-            }
-          });
-      }
-    }
-  }, [isActive, onScanError, onScanSuccess]);
+    // Bắt đầu quét QR khi component được active
+    startScanner();
 
-  // Xử lý sự kiện visibility change của trang
-  useEffect(() => {
-    // Hàm xử lý khi người dùng chuyển tab hoặc ẩn trang
-    const handleVisibilityChange = () => {
-      if (document.hidden && scannerInstance && scannerInstance.isScanning) {
-        console.log("Page hidden, stopping camera");
-        scannerInstance.stop().catch((err) => {
-          console.error("Error stopping camera on visibility change:", err);
-        });
-      }
-    };
-
-    // Đăng ký sự kiện
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Cleanup
+    // Cleanup khi isActive thay đổi
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stopCamera();
     };
-  }, [scannerInstance]);
+  }, [isActive, onScanSuccess, onScanError]);
+
+  // Xử lý khi component bị unmount
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopCamera();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   if (!isActive) {
     return null;
@@ -204,9 +239,9 @@ const QrCodeScanner = ({
           </Alert>
         )}
 
-        {/* Container cho QR scanner */}
+        {/* Container cho QR scanner với ID duy nhất để tránh xung đột DOM */}
         <Box
-          id="qr-reader"
+          id={containerId.current}
           ref={qrScannerRef}
           width="100%"
           maxWidth="400px"
