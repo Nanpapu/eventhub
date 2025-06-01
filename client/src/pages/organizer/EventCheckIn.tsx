@@ -11,9 +11,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   FormControl,
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   FormLabel,
   Divider,
   Badge,
@@ -44,36 +42,23 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   Switch,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   FaSearch,
   FaQrcode,
   FaUserCheck,
   FaUserTimes,
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   FaCamera,
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   FaTimes,
   FaFileDownload,
   FaSyncAlt,
 } from "react-icons/fa";
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useParams, useNavigate } from "react-router-dom";
 import { DateDisplay } from "../../components/common";
 import { getDefaultAvatar } from "../../utils/userUtils";
-
-/**
- * Các thiết lập cho quy trình check-in
- *
- * LƯU Ý QUAN TRỌNG: Nhiều hàm và biến trong file này hiện đang không sử dụng
- * vì chức năng quét QR code đã bị tạm thời vô hiệu hóa để tránh lỗi TypeScript.
- * Các hàm và biến này sẽ được dùng khi triển khai đầy đủ tính năng QR scanner
- * với thư viện phù hợp hơn trong tương lai.
- *
- * KHÔNG XÓA các biến và hàm này khi phát triển các tính năng khác!
- */
+import eventService from "../../services/event.service";
 
 // Interface cho dữ liệu người tham dự
 interface Attendee {
@@ -83,6 +68,7 @@ interface Attendee {
   ticketId: string;
   ticketType: string;
   checkInTime?: string; // Nếu đã check-in thì có giá trị
+  checkInStatus: boolean; // Boolean cho biết đã check-in hay chưa
   avatar?: string;
   phone?: string;
 }
@@ -90,17 +76,13 @@ interface Attendee {
 /**
  * Trang Check-in cho người tổ chức sự kiện
  * Cho phép nhập mã vé để xác nhận người tham dự
- * (Tạm thời bỏ chức năng quét QR để demo)
  */
 const EventCheckIn = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const toast = useToast();
-  /* eslint-disable @typescript-eslint/no-unused-vars -- Sẽ sử dụng trong tương lai khi phát triển tính năng chuyển hướng */
   const navigate = useNavigate();
-  /* eslint-disable @typescript-eslint/no-unused-vars -- Các biến dưới đây sẽ được sử dụng khi triển khai QR scanner */
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   const [manualTicketId, setManualTicketId] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -112,22 +94,20 @@ const EventCheckIn = () => {
     location: string;
     totalAttendees: number;
   }>({
-    title: "Loading",
+    title: "Đang tải...",
     date: "",
     location: "",
     totalAttendees: 0,
   });
 
-  /* eslint-disable @typescript-eslint/no-unused-vars -- Sẽ sử dụng khi triển khai QR scanner */
   const [activeCamera, setActiveCamera] = useState(false);
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-
   const [lastScannedAttendee, setLastScannedAttendee] =
     useState<Attendee | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars -- Sẽ sử dụng khi triển khai QR scanner */
   const qrReaderRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessingCheckIn, setIsProcessingCheckIn] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Các màu sắc theo theme
   const bgColor = useColorModeValue("white", "gray.900");
@@ -141,45 +121,50 @@ const EventCheckIn = () => {
   const grayBgColor = useColorModeValue("gray.50", "gray.700");
   const inputHoverBorderColor = useColorModeValue("gray.300", "gray.600");
 
-  // Giả lập dữ liệu cho demo
+  // Tải dữ liệu sự kiện từ API
   useEffect(() => {
-    // Trong thực tế, sẽ fetch dữ liệu từ API
-    const mockEventDetails = {
-      title: "Hội nghị công nghệ 2023",
-      date: "15/12/2023",
-      location: "Trung tâm hội nghị, TP.HCM",
-      totalAttendees: 150,
-    };
-
-    // Mock attendees data
-    const mockAttendees: Attendee[] = Array.from({ length: 20 }, (_, i) => ({
-      id: `user-${i + 1}`,
-      name: `Người tham dự ${i + 1}`,
-      email: `attendee${i + 1}@example.com`,
-      ticketId: `TIX-${Math.random()
-        .toString(36)
-        .substring(2, 10)
-        .toUpperCase()}`,
-      ticketType: i % 3 === 0 ? "VIP" : i % 3 === 1 ? "Thường" : "Ưu đãi sớm",
-      checkInTime:
-        i < 8
-          ? new Date(Date.now() - Math.random() * 3600000).toISOString()
-          : undefined,
-      avatar: `https://randomuser.me/api/portraits/${
-        i % 2 === 0 ? "men" : "women"
-      }/${i % 70}.jpg`,
-      phone: `+1 ${Math.floor(Math.random() * 900) + 100}-${
-        Math.floor(Math.random() * 900) + 100
-      }-${Math.floor(Math.random() * 9000) + 1000}`,
-    }));
-
-    setEventDetails(mockEventDetails);
-    setAttendees(mockAttendees);
-    setCheckedInCount(mockAttendees.filter((a) => a.checkInTime).length);
+    if (!eventId) return;
+    loadEventData();
   }, [eventId]);
 
+  // Tải dữ liệu từ API
+  const loadEventData = async () => {
+    try {
+      setIsLoading(true);
+
+      // 1. Lấy thông tin chi tiết sự kiện
+      const eventInfo = await eventService.getEventById(eventId as string);
+
+      // 2. Lấy thông tin check-in
+      const checkInInfo = await eventService.getEventCheckInInfo(
+        eventId as string
+      );
+
+      // Cập nhật state
+      setEventDetails({
+        title: eventInfo.title,
+        date: new Date(eventInfo.date).toLocaleDateString("vi-VN"),
+        location: eventInfo.location,
+        totalAttendees: checkInInfo.totalAttendees || 0,
+      });
+
+      setAttendees(checkInInfo.attendees || []);
+      setCheckedInCount(checkInInfo.checkedInCount || 0);
+    } catch (error) {
+      console.error("Error loading event data:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu sự kiện. Vui lòng thử lại sau.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Xử lý khi quét QR thành công (tạm thời không sử dụng)
-  /* eslint-disable @typescript-eslint/no-unused-vars -- Sẽ sử dụng khi triển khai QR scanner */
   const handleScan = (data: string | null) => {
     if (data) {
       setScanResult(data);
@@ -200,10 +185,9 @@ const EventCheckIn = () => {
     });
     setIsScanning(false);
   };
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // Xử lý check-in bằng ID vé thủ công
-  const handleManualCheckIn = () => {
+  const handleManualCheckIn = async () => {
     if (!manualTicketId.trim()) {
       toast({
         title: "Lỗi",
@@ -215,81 +199,101 @@ const EventCheckIn = () => {
       return;
     }
 
-    processCheckIn(manualTicketId);
+    await processCheckIn(manualTicketId);
     setManualTicketId("");
   };
 
   // Hàm xử lý chung cho quá trình check-in
-  const processCheckIn = (ticketData: string) => {
-    // Parse QR data (trong thực tế sẽ phức tạp hơn và có validation)
-    const ticketId = ticketData.includes("|")
-      ? ticketData
-          .split("|")
-          .find((part) => part.startsWith("TICKET:"))
-          ?.replace("TICKET:", "")
-      : ticketData.trim();
+  const processCheckIn = async (ticketData: string) => {
+    try {
+      setIsProcessingCheckIn(true);
 
-    if (!ticketId) {
+      // Tìm vé trong danh sách hiện có
+      const foundAttendee = attendees.find((a) => a.ticketId === ticketData);
+
+      if (!foundAttendee) {
+        toast({
+          title: "Không tìm thấy vé",
+          description: `Không tìm thấy vé: ${ticketData}`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Gọi API để check-in
+      const result = await eventService.checkInTicket(
+        foundAttendee.ticketId,
+        eventId as string
+      );
+
+      // Cập nhật UI
+      const updatedAttendees = attendees.map((a) =>
+        a.ticketId === foundAttendee.ticketId
+          ? {
+              ...a,
+              checkInStatus: true,
+              checkInTime: result.attendee.checkInTime,
+            }
+          : a
+      );
+
+      setAttendees(updatedAttendees);
+      setCheckedInCount((prev) =>
+        result.attendee.alreadyCheckedIn ? prev : prev + 1
+      );
+      setLastScannedAttendee({
+        ...foundAttendee,
+        checkInStatus: true,
+        checkInTime: result.attendee.checkInTime,
+      });
+      onOpen(); // Mở modal thông báo
+
       toast({
-        title: "Vé không hợp lệ",
-        description: "Vé không hợp lệ",
+        title: result.attendee.alreadyCheckedIn
+          ? "Đã check-in trước đó"
+          : "Check-in thành công",
+        description: `${foundAttendee.name} ${
+          result.attendee.alreadyCheckedIn
+            ? "đã check-in trước đó"
+            : "đã check-in thành công"
+        }`,
+        status: result.attendee.alreadyCheckedIn ? "warning" : "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error during check-in:", error);
+      toast({
+        title: "Lỗi check-in",
+        description: "Không thể check-in vé. Vui lòng thử lại sau.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-      return;
+    } finally {
+      setIsProcessingCheckIn(false);
     }
+  };
 
-    // Tìm người tham dự theo ID vé
-    const attendee = attendees.find((a) => a.ticketId === ticketId);
-
-    if (!attendee) {
+  // Làm mới dữ liệu
+  const handleRefreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadEventData();
       toast({
-        title: "Không tìm thấy vé",
-        description: `Không tìm thấy vé: ${ticketId}`,
-        status: "error",
-        duration: 3000,
+        title: "Đã cập nhật",
+        description: "Danh sách người tham dự đã được cập nhật",
+        status: "success",
+        duration: 2000,
         isClosable: true,
       });
-      return;
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setIsRefreshing(false);
     }
-
-    if (attendee.checkInTime) {
-      setLastScannedAttendee(attendee);
-      onOpen(); // Mở modal cảnh báo
-
-      toast({
-        title: "Đã check-in trước đó",
-        description: `Đã check-in trước đó lúc ${new Date(
-          attendee.checkInTime
-        ).toLocaleTimeString()}`,
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    // Tiến hành check-in
-    const updatedAttendees = attendees.map((a) =>
-      a.id === attendee.id ? { ...a, checkInTime: new Date().toISOString() } : a
-    );
-
-    setAttendees(updatedAttendees);
-    setCheckedInCount(updatedAttendees.filter((a) => a.checkInTime).length);
-    setLastScannedAttendee({
-      ...attendee,
-      checkInTime: new Date().toISOString(),
-    });
-    onOpen(); // Mở modal thông báo
-
-    toast({
-      title: "Check-in thành công",
-      description: `${attendee.name} đã check-in thành công`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
   };
 
   // Lọc danh sách người tham dự theo từ khóa tìm kiếm
@@ -306,31 +310,35 @@ const EventCheckIn = () => {
   };
 
   // Toggle trạng thái check-in của người tham dự
-  const toggleCheckInStatus = (attendeeId: string) => {
+  const toggleCheckInStatus = async (attendeeId: string) => {
     const attendee = findAttendeeById(attendeeId);
     if (!attendee) return;
 
-    const updatedAttendees = attendees.map((a) =>
-      a.id === attendeeId
-        ? {
-            ...a,
-            checkInTime: a.checkInTime ? undefined : new Date().toISOString(),
-          }
-        : a
-    );
+    try {
+      // Nếu đã check-in thì không thể hủy (hoặc bạn có thể thêm API hủy check-in nếu cần)
+      if (attendee.checkInStatus) {
+        toast({
+          title: "Không thể hủy check-in",
+          description: "Vé đã được check-in không thể hủy",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
 
-    setAttendees(updatedAttendees);
-    setCheckedInCount(updatedAttendees.filter((a) => a.checkInTime).length);
-
-    toast({
-      title: attendee.checkInTime ? "Đã hủy" : "Check-in thành công",
-      description: `${attendee.name} ${
-        attendee.checkInTime ? "đã hủy check-in" : "đã check-in"
-      }`,
-      status: attendee.checkInTime ? "info" : "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      // Gọi API check-in
+      await processCheckIn(attendee.ticketId);
+    } catch (error) {
+      console.error("Error toggling check-in status:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái check-in",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // Export danh sách người tham dự (giả lập)
@@ -344,6 +352,17 @@ const EventCheckIn = () => {
     });
     // Trong thực tế, sẽ gọi API để tạo và tải file CSV/Excel
   };
+
+  if (isLoading) {
+    return (
+      <Container maxW="container.xl" py={8} bg={bgColor}>
+        <VStack spacing={6} align="center" justify="center" minHeight="50vh">
+          <Spinner size="xl" color="teal.500" />
+          <Text>Đang tải dữ liệu sự kiện...</Text>
+        </VStack>
+      </Container>
+    );
+  }
 
   return (
     <Container maxW="container.xl" py={8} bg={bgColor}>
@@ -507,6 +526,8 @@ const EventCheckIn = () => {
                         <Button
                           colorScheme="teal"
                           onClick={handleManualCheckIn}
+                          isLoading={isProcessingCheckIn}
+                          loadingText="Đang xử lý"
                         >
                           Check-in
                         </Button>
@@ -563,11 +584,11 @@ const EventCheckIn = () => {
                     </Thead>
                     <Tbody>
                       {attendees
-                        .filter((a) => a.checkInTime)
+                        .filter((a) => a.checkInStatus)
                         .sort(
                           (a, b) =>
-                            new Date(b.checkInTime!).getTime() -
-                            new Date(a.checkInTime!).getTime()
+                            new Date(b.checkInTime || "").getTime() -
+                            new Date(a.checkInTime || "").getTime()
                         )
                         .slice(0, 5)
                         .map((attendee) => (
@@ -602,7 +623,8 @@ const EventCheckIn = () => {
                             </Td>
                           </Tr>
                         ))}
-                      {attendees.filter((a) => a.checkInTime).length === 0 && (
+                      {attendees.filter((a) => a.checkInStatus).length ===
+                        0 && (
                         <Tr>
                           <Td colSpan={3} textAlign="center">
                             <Text color={secondaryTextColor}>
@@ -651,12 +673,14 @@ const EventCheckIn = () => {
                     <Button
                       leftIcon={<FaSyncAlt />}
                       variant="outline"
-                      onClick={() => setSearchKeyword("")}
+                      onClick={handleRefreshData}
                       borderColor={borderColor}
                       color={textColor}
                       _hover={{ bg: hoverBgColor }}
+                      isLoading={isRefreshing}
+                      loadingText="Đang cập nhật"
                     >
-                      Đặt lại
+                      Làm mới
                     </Button>
                     <Button
                       leftIcon={<FaFileDownload />}
@@ -726,13 +750,13 @@ const EventCheckIn = () => {
                           <Td>
                             <Badge
                               colorScheme={
-                                attendee.checkInTime ? "green" : "gray"
+                                attendee.checkInStatus ? "green" : "gray"
                               }
                               variant="subtle"
                               p={1}
                               borderRadius="md"
                             >
-                              {attendee.checkInTime
+                              {attendee.checkInStatus
                                 ? "Đã check-in"
                                 : "Chưa check-in"}
                             </Badge>
@@ -753,17 +777,18 @@ const EventCheckIn = () => {
                             <IconButton
                               aria-label="Toggle check-in status"
                               icon={
-                                attendee.checkInTime ? (
+                                attendee.checkInStatus ? (
                                   <FaUserTimes />
                                 ) : (
                                   <FaUserCheck />
                                 )
                               }
                               colorScheme={
-                                attendee.checkInTime ? "red" : "green"
+                                attendee.checkInStatus ? "red" : "green"
                               }
                               size="sm"
                               onClick={() => toggleCheckInStatus(attendee.id)}
+                              isDisabled={attendee.checkInStatus} // Vé đã check-in không thể hủy
                             />
                           </Td>
                         </Tr>
@@ -798,7 +823,7 @@ const EventCheckIn = () => {
           borderWidth="1px"
         >
           <ModalHeader color={textColor}>
-            {lastScannedAttendee?.checkInTime
+            {lastScannedAttendee?.checkInStatus
               ? "Check-in thành công"
               : "Check-in thất bại"}
           </ModalHeader>
@@ -806,7 +831,7 @@ const EventCheckIn = () => {
           <ModalBody>
             {lastScannedAttendee && (
               <VStack spacing={4} align="stretch">
-                {lastScannedAttendee.checkInTime ? (
+                {lastScannedAttendee.checkInStatus ? (
                   <Alert status="success" borderRadius="md">
                     <AlertIcon />
                     <Box>

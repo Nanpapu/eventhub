@@ -104,10 +104,11 @@ export const fetchOrganizerDashboardStats = createAsyncThunk(
   "events/fetchOrganizerDashboardStats",
   async (_, { rejectWithValue }) => {
     try {
-      return await eventService.getOrganizerDashboardStats();
+      const response = await eventService.getOrganizerDashboardStats();
+      return response;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch dashboard statistics"
+        error.response?.data?.message || "Không thể tải thống kê tổng quan"
       );
     }
   }
@@ -291,7 +292,6 @@ const eventSlice = createSlice({
       .addCase(fetchOrganizerDashboardStats.fulfilled, (state, action) => {
         state.isLoading = false;
         state.dashboardStats = action.payload;
-        state.error = null;
       })
       .addCase(fetchOrganizerDashboardStats.rejected, (state, action) => {
         state.isLoading = false;

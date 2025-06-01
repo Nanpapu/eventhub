@@ -3,8 +3,10 @@ import ticketService from "../services/ticket.service";
 
 class TicketController {
   constructor() {
-    this.getMyTickets = this.getMyTickets.bind(this); // Bind 'this' context
+    this.getMyTickets = this.getMyTickets.bind(this);
     this.getUserTicketStatus = this.getUserTicketStatus.bind(this);
+    this.getEventAttendees = this.getEventAttendees.bind(this);
+    this.checkInTicket = this.checkInTicket.bind(this);
   }
 
   /**
@@ -82,6 +84,85 @@ class TicketController {
       res.status(500).json({
         success: false,
         message: "Không thể kiểm tra trạng thái vé. Vui lòng thử lại sau.",
+      });
+    }
+  }
+
+  /**
+   * Lấy danh sách người tham dự của một sự kiện
+   * @route GET /tickets/event/:eventId/attendees
+   */
+  async getEventAttendees(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params;
+      const organizerId = req.user.id;
+
+      if (!eventId) {
+        return res.status(400).json({
+          success: false,
+          message: "ID sự kiện không được cung cấp",
+        });
+      }
+
+      // Lấy danh sách người tham dự
+      const attendees = await ticketService.getEventAttendees(
+        eventId,
+        organizerId
+      );
+
+      return res.status(200).json({
+        success: true,
+        attendees,
+        totalAttendees: attendees.length,
+        checkedInCount: attendees.filter((a) => a.checkInStatus).length,
+      });
+    } catch (error: any) {
+      console.error("Error in getEventAttendees:", error);
+      const statusCode = error.message.includes("quyền truy cập") ? 403 : 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || "Không thể tải danh sách người tham dự",
+      });
+    }
+  }
+
+  /**
+   * Check-in một vé
+   * @route POST /tickets/:ticketId/check-in
+   */
+  async checkInTicket(req: Request, res: Response) {
+    try {
+      const { ticketId } = req.params;
+      const { eventId } = req.body;
+      const organizerId = req.user.id;
+
+      if (!ticketId || !eventId) {
+        return res.status(400).json({
+          success: false,
+          message: "ID vé và ID sự kiện là bắt buộc",
+        });
+      }
+
+      // Thực hiện check-in
+      const result = await ticketService.checkInTicket(
+        ticketId,
+        eventId,
+        organizerId
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: result.alreadyCheckedIn
+          ? "Vé đã được check-in trước đó"
+          : "Check-in thành công",
+        attendee: result,
+      });
+    } catch (error: any) {
+      console.error("Error in checkInTicket:", error);
+      const statusCode = error.message.includes("quyền truy cập") ? 403 : 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || "Không thể check-in vé",
       });
     }
   }

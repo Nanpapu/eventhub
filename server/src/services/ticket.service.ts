@@ -168,6 +168,143 @@ class TicketService {
     };
   }
 
+  /**
+   * Lấy danh sách người tham dự (đã mua vé) của một sự kiện
+   * @param eventId ID của sự kiện
+   * @param organizerId ID của người tổ chức (để xác thực quyền truy cập)
+   * @returns Danh sách người tham dự với thông tin vé và trạng thái check-in
+   */
+  async getEventAttendees(
+    eventId: string,
+    organizerId: string
+  ): Promise<any[]> {
+    // Kiểm tra id hợp lệ
+    if (
+      !mongoose.Types.ObjectId.isValid(eventId) ||
+      !mongoose.Types.ObjectId.isValid(organizerId)
+    ) {
+      throw new Error("ID sự kiện hoặc ID người tổ chức không hợp lệ");
+    }
+
+    const eventObjectId = new mongoose.Types.ObjectId(eventId);
+
+    // Kiểm tra người tổ chức có quyền xem sự kiện này không
+    const event = await Event.findOne({
+      _id: eventObjectId,
+      organizer: organizerId,
+    });
+
+    if (!event) {
+      throw new Error("Sự kiện không tồn tại hoặc bạn không có quyền truy cập");
+    }
+
+    // Lấy tất cả vé của sự kiện (không lấy những vé đã hủy)
+    const tickets = await Ticket.find({
+      eventId: eventObjectId,
+      status: { $ne: "cancelled" },
+    })
+      .populate({
+        path: "userId",
+        select: "name email phone avatar", // Chỉ lấy những thông tin cần thiết
+      })
+      .sort({ purchaseDate: -1 });
+
+    // Chuyển đổi dữ liệu để trả về
+    return tickets.map((ticket) => {
+      const user = ticket.userId as any; // TypeScript casting
+      return {
+        id: ticket._id.toString(),
+        ticketId: ticket._id.toString(),
+        name: user?.name || "Không có thông tin",
+        email: user?.email || "Không có thông tin",
+        phone: user?.phone,
+        avatar: user?.avatar,
+        ticketType: ticket.ticketTypeName,
+        price: ticket.price,
+        purchaseDate: ticket.purchaseDate,
+        checkInStatus: !!ticket.checkInDate,
+        checkInTime: ticket.checkInDate,
+        status: ticket.status,
+      };
+    });
+  }
+
+  /**
+   * Đánh dấu một vé đã được check-in
+   * @param ticketId ID của vé
+   * @param eventId ID của sự kiện
+   * @param organizerId ID của người tổ chức (để xác thực quyền truy cập)
+   * @returns Thông tin vé đã check-in
+   */
+  async checkInTicket(
+    ticketId: string,
+    eventId: string,
+    organizerId: string
+  ): Promise<any> {
+    // Kiểm tra id hợp lệ
+    if (
+      !mongoose.Types.ObjectId.isValid(ticketId) ||
+      !mongoose.Types.ObjectId.isValid(eventId) ||
+      !mongoose.Types.ObjectId.isValid(organizerId)
+    ) {
+      throw new Error("ID không hợp lệ");
+    }
+
+    const eventObjectId = new mongoose.Types.ObjectId(eventId);
+    const ticketObjectId = new mongoose.Types.ObjectId(ticketId);
+
+    // Kiểm tra người tổ chức có quyền truy cập sự kiện này không
+    const event = await Event.findOne({
+      _id: eventObjectId,
+      organizer: organizerId,
+    });
+
+    if (!event) {
+      throw new Error("Sự kiện không tồn tại hoặc bạn không có quyền truy cập");
+    }
+
+    // Tìm vé
+    const ticket = await Ticket.findOne({
+      _id: ticketObjectId,
+      eventId: eventObjectId,
+    }).populate({
+      path: "userId",
+      select: "name email phone avatar",
+    });
+
+    if (!ticket) {
+      throw new Error("Vé không tồn tại hoặc không thuộc sự kiện này");
+    }
+
+    // Kiểm tra vé đã check-in chưa
+    const alreadyCheckedIn = !!ticket.checkInDate;
+
+    // Nếu chưa check-in, cập nhật trạng thái
+    if (!alreadyCheckedIn) {
+      ticket.checkInDate = new Date();
+      ticket.status = "used";
+      await ticket.save();
+    }
+
+    // Trả về thông tin vé và người dùng
+    const user = ticket.userId as any;
+    return {
+      id: ticket._id.toString(),
+      ticketId: ticket._id.toString(),
+      name: user?.name || "Không có thông tin",
+      email: user?.email || "Không có thông tin",
+      phone: user?.phone,
+      avatar: user?.avatar,
+      ticketType: ticket.ticketTypeName,
+      price: ticket.price,
+      purchaseDate: ticket.purchaseDate,
+      checkInStatus: !!ticket.checkInDate,
+      checkInTime: ticket.checkInDate,
+      status: ticket.status,
+      alreadyCheckedIn: alreadyCheckedIn, // Thêm trường này để UI biết đây là vé đã check-in từ trước
+    };
+  }
+
   // Các hàm service khác cho vé...
   // Ví dụ: async cancelUserTicket(userId: string, ticketId: string): Promise<ITicket | null> { ... }
 }

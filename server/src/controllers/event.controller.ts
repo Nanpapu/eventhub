@@ -237,23 +237,33 @@ class EventController {
 
       // Tính toán các thống kê
       const now = new Date();
-      const upcomingEvents = events.filter(
-        (event: any) =>
-          new Date(event.date) > now && event.status !== "cancelled"
-      );
+
+      // Để so sánh chính xác theo ngày, bỏ qua giờ phút giây
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcomingEvents = events.filter((event: any) => {
+        const eventDate = new Date(event.date);
+        const eventDay = new Date(eventDate);
+        eventDay.setHours(0, 0, 0, 0);
+        return eventDay > today && event.status !== "cancelled";
+      });
 
       const ongoingEvents = events.filter((event: any) => {
         const eventDate = new Date(event.date);
+        const eventDay = new Date(eventDate);
+        eventDay.setHours(0, 0, 0, 0);
         return (
-          eventDate.toDateString() === now.toDateString() &&
-          event.status !== "cancelled"
+          eventDay.getTime() === today.getTime() && event.status !== "cancelled"
         );
       });
 
-      const pastEvents = events.filter(
-        (event: any) =>
-          new Date(event.date) < now && event.status !== "cancelled"
-      );
+      const pastEvents = events.filter((event: any) => {
+        const eventDate = new Date(event.date);
+        const eventDay = new Date(eventDate);
+        eventDay.setHours(0, 0, 0, 0);
+        return eventDay < today && event.status !== "cancelled";
+      });
 
       // Tính tổng số người tham gia và doanh thu
       let totalAttendees = 0;

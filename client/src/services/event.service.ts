@@ -307,6 +307,56 @@ const eventService = {
       throw error;
     }
   },
+
+  /**
+   * Lấy thông tin check-in cho sự kiện (danh sách người tham dự)
+   * @param eventId ID của sự kiện
+   * @returns Thông tin của người tham dự và số liệu thống kê
+   */
+  getEventCheckInInfo: async (eventId: string) => {
+    const response = await api.get(`/tickets/event/${eventId}/attendees`);
+    return response.data;
+  },
+
+  /**
+   * Check-in một vé
+   * @param ticketId ID của vé cần check-in
+   * @param eventId ID của sự kiện
+   * @returns Thông tin kết quả check-in
+   */
+  checkInTicket: async (ticketId: string, eventId: string) => {
+    const response = await api.post(`/tickets/${ticketId}/check-in`, {
+      eventId,
+    });
+    return response.data;
+  },
+
+  /**
+   * Tìm kiếm vé theo ID hoặc thông tin người tham dự
+   * @param eventId ID của sự kiện
+   * @param keyword Từ khóa tìm kiếm (email, tên, ID vé)
+   * @returns Thông tin vé tìm thấy
+   */
+  searchTicket: async (eventId: string, keyword: string) => {
+    const attendees = await eventService.getEventCheckInInfo(eventId);
+    if (!keyword) return attendees;
+
+    // Tìm kiếm trên phía client vì dữ liệu đã có sẵn từ API
+    const keywordLower = keyword.toLowerCase();
+    const filteredAttendees = attendees.attendees.filter(
+      (attendee: any) =>
+        (attendee.name && attendee.name.toLowerCase().includes(keywordLower)) ||
+        (attendee.email &&
+          attendee.email.toLowerCase().includes(keywordLower)) ||
+        (attendee.ticketId &&
+          attendee.ticketId.toLowerCase().includes(keywordLower))
+    );
+
+    return {
+      ...attendees,
+      attendees: filteredAttendees,
+    };
+  },
 };
 
 export default eventService;
