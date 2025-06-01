@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Button,
@@ -41,10 +41,11 @@ import {
   AlertDescription,
   Spinner,
   Select,
+  IconButton,
 } from "@chakra-ui/react";
-import { FaSearch, FaQrcode, FaSyncAlt } from "react-icons/fa";
+import { FaSearch, FaQrcode, FaSyncAlt, FaTimes } from "react-icons/fa";
 import { useParams } from "react-router-dom";
-import { DateDisplay } from "../../components/common";
+import { DateDisplay, QrCodeScanner } from "../../components/common";
 import { getDefaultAvatar } from "../../utils/userUtils";
 import eventService from "../../services/event.service";
 
@@ -91,6 +92,10 @@ const EventCheckIn = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingCheckIn, setIsProcessingCheckIn] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // State cho camera quét QR
+  const [isQrScannerActive, setIsQrScannerActive] = useState(false);
+  const tabChangeRef = useRef(false);
 
   // Các màu sắc theo theme - định nghĩa tất cả ở đầu component
   const bgColor = useColorModeValue("white", "gray.900");
@@ -209,9 +214,122 @@ const EventCheckIn = () => {
     setManualTicketId("");
   };
 
+  // Xử lý khi quét QR thành công
+  const handleQrSuccess = useCallback(
+    (decodedText: string) => {
+      console.log("QR code scanned successfully:", decodedText);
+      // Xử lý check-in với mã vé từ QR code
+      processCheckIn(decodedText);
+      // Hiển thị thông báo
+      toast({
+        title: "Đã quét thành công",
+        description:
+          "Đang xử lý check-in cho mã vé: " +
+          decodedText.substring(0, 8) +
+          "...",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+      // Tắt scanner sau khi quét thành công
+      setIsQrScannerActive(false);
+    },
+    [toast]
+  );
+
+  // Xử lý lỗi khi quét QR
+  const handleQrError = (error: Error | string) => {
+    console.error("QR scan error:", error);
+
+    // Tắt scanner khi gặp lỗi
+    setIsQrScannerActive(false);
+
+    // Hiển thị lỗi chi tiết dựa trên loại lỗi
+    if (typeof error === "string") {
+      if (
+        error.includes("camera") ||
+        error.includes("permission") ||
+        error.includes("getUserMedia")
+      ) {
+        toast({
+          title: "Lỗi truy cập camera",
+          description:
+            "Không thể truy cập camera. Vui lòng đảm bảo bạn đã cấp quyền camera cho trình duyệt.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Lỗi khi quét mã QR",
+          description: error,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Lỗi khi quét mã QR",
+        description:
+          "Đã xảy ra lỗi trong quá trình quét mã QR. Vui lòng thử lại.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Bảo đảm tắt camera khi chuyển tab
+  useEffect(() => {
+    const handleTabChange = () => {
+      if (document.hidden) {
+        tabChangeRef.current = true;
+        setIsQrScannerActive(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleTabChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleTabChange);
+    };
+  }, []);
+
+  // Bảo đảm tắt camera khi unmount component
+  useEffect(() => {
+    return () => {
+      setIsQrScannerActive(false);
+    };
+  }, []);
+
+  // Hiển thị thông báo khi người dùng quay lại sau khi đã chuyển tab
+  useEffect(() => {
+    if (tabChangeRef.current && !document.hidden) {
+      tabChangeRef.current = false;
+      toast({
+        title: "Camera đã tắt",
+        description:
+          "Camera đã tự động tắt vì bạn đã chuyển trang. Vui lòng bật lại nếu cần.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, [toast]);
+
+  // Bật/tắt QR scanner
+  const toggleQrScanner = () => {
+    setIsQrScannerActive(!isQrScannerActive);
+  };
+
   // Hàm xử lý chung cho quá trình check-in
   const processCheckIn = async (ticketData: string) => {
     try {
+      // Đảm bảo tắt camera khi bắt đầu xử lý
+      if (isQrScannerActive) {
+        setIsQrScannerActive(false);
+      }
+
       setIsProcessingCheckIn(true);
 
       // Tìm vé trong danh sách hiện có
@@ -510,30 +628,65 @@ const EventCheckIn = () => {
                       </HStack>
                     </Box>
 
-                    {/* QR Scanner feature - placeholder for future implementation */}
+                    {/* QR Scanner feature */}
                     <Box mt={4}>
                       <Divider my={3} borderColor={borderColor} />
                       <Heading size="sm" mb={3} color={textColor}>
                         Quét mã QR
                       </Heading>
-                      <Box
-                        p={4}
-                        borderWidth="1px"
-                        borderStyle="dashed"
-                        borderRadius="md"
-                        borderColor={borderColor}
-                        bg={grayBgColor}
-                      >
-                        <VStack spacing={2} align="center">
-                          <FaQrcode size={40} color={grayIconColor} />
-                          <Text fontWeight="medium" color={textColor}>
-                            Tính năng quét QR sắp ra mắt
-                          </Text>
-                          <Text color={secondaryTextColor} textAlign="center">
-                            Sử dụng thiết bị camera để quét mã QR của vé
-                          </Text>
-                        </VStack>
-                      </Box>
+                      {isQrScannerActive ? (
+                        <Box
+                          position="relative"
+                          padding={4}
+                          borderWidth="1px"
+                          borderStyle="solid"
+                          borderRadius="md"
+                          borderColor={borderColor}
+                          bg={grayBgColor}
+                        >
+                          <IconButton
+                            aria-label="Đóng"
+                            icon={<FaTimes />}
+                            size="sm"
+                            position="absolute"
+                            top={2}
+                            right={2}
+                            zIndex={2}
+                            onClick={() => {
+                              // Đảm bảo camera tắt khi đóng scanner
+                              setIsQrScannerActive(false);
+                            }}
+                          />
+                          <QrCodeScanner
+                            onScanSuccess={handleQrSuccess}
+                            onScanError={handleQrError}
+                            isActive={isQrScannerActive}
+                          />
+                        </Box>
+                      ) : (
+                        <Box
+                          p={4}
+                          borderWidth="1px"
+                          borderStyle="dashed"
+                          borderRadius="md"
+                          borderColor={borderColor}
+                          bg={grayBgColor}
+                        >
+                          <VStack spacing={2} align="center">
+                            <FaQrcode size={40} color={grayIconColor} />
+                            <Text fontWeight="medium" color={textColor}>
+                              Quét mã QR từ vé của người tham dự
+                            </Text>
+                            <Button
+                              leftIcon={<FaQrcode />}
+                              colorScheme="teal"
+                              onClick={toggleQrScanner}
+                            >
+                              Bắt đầu quét
+                            </Button>
+                          </VStack>
+                        </Box>
+                      )}
                     </Box>
                   </VStack>
                 </Box>
@@ -805,7 +958,17 @@ const EventCheckIn = () => {
       </VStack>
 
       {/* Modal for displaying check-in result */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          // Tắt camera khi đóng modal
+          if (isQrScannerActive) {
+            setIsQrScannerActive(false);
+          }
+          onClose();
+        }}
+        isCentered
+      >
         <ModalOverlay />
         <ModalContent
           bg={cardBgColor}
