@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -69,9 +69,6 @@ interface Attendee {
 const EventCheckIn = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const toast = useToast();
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<string | null>(null);
-
   const [manualTicketId, setManualTicketId] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -88,16 +85,14 @@ const EventCheckIn = () => {
     totalAttendees: 0,
   });
 
-  const [activeCamera, setActiveCamera] = useState(false);
   const [lastScannedAttendee, setLastScannedAttendee] =
     useState<Attendee | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const qrReaderRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingCheckIn, setIsProcessingCheckIn] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Các màu sắc theo theme
+  // Các màu sắc theo theme - định nghĩa tất cả ở đầu component
   const bgColor = useColorModeValue("white", "gray.900");
   const cardBgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -109,6 +104,19 @@ const EventCheckIn = () => {
   const grayBgColor = useColorModeValue("gray.50", "gray.700");
   const inputHoverBorderColor = useColorModeValue("gray.300", "gray.600");
   const whiteColor = useColorModeValue("white", "gray.700");
+
+  // Định nghĩa các màu cho card thống kê
+  const tealBgColor = useColorModeValue("teal.50", "rgba(49, 151, 149, 0.1)");
+  const tealTextColor = useColorModeValue("teal.600", "teal.300");
+  const tealValueColor = useColorModeValue("teal.700", "teal.200");
+
+  const greenBgColor = useColorModeValue("green.50", "rgba(56, 161, 105, 0.1)");
+  const greenTextColor = useColorModeValue("green.600", "green.300");
+  const greenValueColor = useColorModeValue("green.700", "green.200");
+
+  const blueBgColor = useColorModeValue("blue.50", "rgba(49, 130, 206, 0.1)");
+  const blueTextColor = useColorModeValue("blue.600", "blue.300");
+  const blueValueColor = useColorModeValue("blue.700", "blue.200");
 
   // State cho bộ lọc
   const [filterTicketType, setFilterTicketType] = useState<string>("");
@@ -172,28 +180,6 @@ const EventCheckIn = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Xử lý khi quét QR thành công (tạm thời không sử dụng)
-  const handleScan = (data: string | null) => {
-    if (data) {
-      setScanResult(data);
-      processCheckIn(data);
-      setIsScanning(false);
-    }
-  };
-
-  // Xử lý lỗi quét QR (tạm thời không sử dụng)
-  const handleError = (err: Error) => {
-    console.error(err);
-    toast({
-      title: "Check-in thất bại",
-      description: "Lỗi thiết bị",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-    setIsScanning(false);
   };
 
   // Hàm che một phần mã vé
@@ -347,11 +333,6 @@ const EventCheckIn = () => {
     return matchesKeyword && matchesTicketType && matchesStatus;
   });
 
-  // Tìm người tham dự theo ID
-  const findAttendeeById = (id: string): Attendee | undefined => {
-    return attendees.find((a) => a.id === id);
-  };
-
   // Hàm lấy trạng thái hiển thị chi tiết hơn
   const getDetailedStatus = (
     attendee: Attendee
@@ -370,38 +351,6 @@ const EventCheckIn = () => {
     }
 
     return { label: "Chưa check-in", color: "gray" };
-  };
-
-  // Toggle trạng thái check-in của người tham dự
-  const toggleCheckInStatus = async (attendeeId: string) => {
-    const attendee = findAttendeeById(attendeeId);
-    if (!attendee) return;
-
-    try {
-      // Nếu đã check-in thì không thể hủy (hoặc bạn có thể thêm API hủy check-in nếu cần)
-      if (attendee.checkInStatus) {
-        toast({
-          title: "Không thể hủy check-in",
-          description: "Vé đã được check-in không thể hủy",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      // Gọi API check-in
-      await processCheckIn(attendee.ticketId);
-    } catch (error) {
-      console.error("Error toggling check-in status:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể cập nhật trạng thái check-in",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
   };
 
   if (isLoading) {
@@ -453,21 +402,13 @@ const EventCheckIn = () => {
             align="center"
             justify="center"
             p={3}
-            bg={useColorModeValue("teal.50", "rgba(49, 151, 149, 0.1)")}
+            bg={tealBgColor}
             borderRadius="md"
           >
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color={useColorModeValue("teal.600", "teal.300")}
-            >
+            <Text fontSize="sm" fontWeight="medium" color={tealTextColor}>
               Tổng số người tham dự
             </Text>
-            <Text
-              fontSize="3xl"
-              fontWeight="bold"
-              color={useColorModeValue("teal.700", "teal.200")}
-            >
+            <Text fontSize="3xl" fontWeight="bold" color={tealValueColor}>
               {eventDetails.totalAttendees}
             </Text>
           </Flex>
@@ -478,21 +419,13 @@ const EventCheckIn = () => {
             align="center"
             justify="center"
             p={3}
-            bg={useColorModeValue("green.50", "rgba(56, 161, 105, 0.1)")}
+            bg={greenBgColor}
             borderRadius="md"
           >
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color={useColorModeValue("green.600", "green.300")}
-            >
+            <Text fontSize="sm" fontWeight="medium" color={greenTextColor}>
               Đã check-in
             </Text>
-            <Text
-              fontSize="3xl"
-              fontWeight="bold"
-              color={useColorModeValue("green.700", "green.200")}
-            >
+            <Text fontSize="3xl" fontWeight="bold" color={greenValueColor}>
               {checkedInCount}
             </Text>
           </Flex>
@@ -503,21 +436,13 @@ const EventCheckIn = () => {
             align="center"
             justify="center"
             p={3}
-            bg={useColorModeValue("blue.50", "rgba(49, 130, 206, 0.1)")}
+            bg={blueBgColor}
             borderRadius="md"
           >
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color={useColorModeValue("blue.600", "blue.300")}
-            >
+            <Text fontSize="sm" fontWeight="medium" color={blueTextColor}>
               Tỷ lệ tham dự
             </Text>
-            <Text
-              fontSize="3xl"
-              fontWeight="bold"
-              color={useColorModeValue("blue.700", "blue.200")}
-            >
+            <Text fontSize="3xl" fontWeight="bold" color={blueValueColor}>
               {eventDetails.totalAttendees
                 ? Math.round(
                     (checkedInCount / eventDetails.totalAttendees) * 100
@@ -569,7 +494,7 @@ const EventCheckIn = () => {
                           placeholder="Nhập mã vé tại đây"
                           value={manualTicketId}
                           onChange={(e) => setManualTicketId(e.target.value)}
-                          bg={useColorModeValue("white", "gray.700")}
+                          bg={whiteColor}
                           borderColor={borderColor}
                           _hover={{ borderColor: inputHoverBorderColor }}
                           _focus={{ borderColor: "teal.500" }}
