@@ -11,6 +11,7 @@ export interface EventFilter {
   page?: number;
   limit?: number;
   organizer?: string;
+  upcomingOnly?: boolean;
 }
 
 export const createEventSchema = Joi.object({
@@ -210,4 +211,5 @@ export const eventFilterSchema = Joi.object({
     .messages({
       "string.pattern.base": "ID nhà tổ chức không hợp lệ",
     }),
+  upcomingOnly: Joi.boolean(),
 });

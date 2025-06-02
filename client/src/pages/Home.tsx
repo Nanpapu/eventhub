@@ -50,7 +50,9 @@ const Home = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(`${API_URL}/events?limit=6`);
+        const response = await axios.get(
+          `${API_URL}/events?limit=6&upcomingOnly=true`
+        );
 
         if (response.data.success) {
           // Chuyển đổi dữ liệu từ API để phù hợp với interface EventCardData

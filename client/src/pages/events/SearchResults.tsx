@@ -103,6 +103,7 @@ const SearchResults = () => {
       const apiFilter: EventFilter = {
         page: pageToFetch,
         limit: eventsPerPage,
+        upcomingOnly: true,
       };
 
       if (filters.keyword) apiFilter.keyword = filters.keyword;

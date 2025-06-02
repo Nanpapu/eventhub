@@ -9,6 +9,7 @@ export interface EventFilter {
   isFree?: boolean;
   page?: number;
   limit?: number;
+  upcomingOnly?: boolean;
 }
 
 export interface CreateEventData {

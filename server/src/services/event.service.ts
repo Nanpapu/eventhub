@@ -57,6 +57,7 @@ const eventService = {
         isFree,
         page = 1,
         limit = 10,
+        upcomingOnly,
       } = filter;
 
       const query: any = {
@@ -83,7 +84,7 @@ const eventService = {
       }
 
       // Filter theo ngày
-      if (startDate || endDate) {
+      if (startDate || endDate || upcomingOnly) {
         query.date = {};
 
         if (startDate) {
@@ -92,6 +93,13 @@ const eventService = {
 
         if (endDate) {
           query.date.$lte = new Date(endDate);
+        }
+
+        // Nếu upcomingOnly=true, chỉ lấy sự kiện từ ngày hiện tại trở đi
+        if (upcomingOnly) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Đặt thời gian về 00:00:00
+          query.date.$gte = today;
         }
       }
 
