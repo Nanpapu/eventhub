@@ -595,19 +595,29 @@ const Dashboard = () => {
                               bg="gray.100"
                             />
                             <VStack align="start" spacing={0}>
-                              <Link
-                                as={RouterLink}
-                                to={`/events/${event.id}`}
-                                fontWeight="medium"
-                                _hover={{ color: "teal.500" }}
-                              >
-                                {event.title}
-                              </Link>
-                              {event.isHidden && (
-                                <Badge colorScheme="gray" fontSize="2xs" ml={2}>
-                                  Ẩn
+                              <Flex align="center">
+                                <Link
+                                  as={RouterLink}
+                                  to={`/events/${event.id}`}
+                                  fontWeight="medium"
+                                  _hover={{ color: "teal.500" }}
+                                  mr={2}
+                                >
+                                  {event.title}
+                                </Link>
+                                {event.isHidden && (
+                                  <Badge
+                                    colorScheme="gray"
+                                    fontSize="2xs"
+                                    mr={2}
+                                  >
+                                    Ẩn
+                                  </Badge>
+                                )}
+                                <Badge colorScheme="blue" fontSize="2xs">
+                                  Sắp diễn ra
                                 </Badge>
-                              )}
+                              </Flex>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
                                   ? "Sự Kiện Trực Tuyến"
@@ -774,6 +784,15 @@ const Dashboard = () => {
                                 )}
                                 %)
                               </Text>
+                              <Progress
+                                value={
+                                  (event.soldTickets / event.totalTickets) * 100
+                                }
+                                size="sm"
+                                colorScheme="teal"
+                                w="100%"
+                                borderRadius="full"
+                              />
                             </VStack>
                           ) : (
                             <Text>--</Text>
@@ -818,7 +837,7 @@ const Dashboard = () => {
                     <Tr>
                       <Th>Sự Kiện</Th>
                       <Th>Ngày</Th>
-                      <Th>Người Tham Gia</Th>
+                      <Th>Bán Vé</Th>
                       <Th>Thao Tác</Th>
                     </Tr>
                   </Thead>
@@ -848,10 +867,17 @@ const Dashboard = () => {
                                   {event.title}
                                 </Link>
                                 {event.isHidden && (
-                                  <Badge colorScheme="gray" fontSize="2xs">
+                                  <Badge
+                                    colorScheme="gray"
+                                    fontSize="2xs"
+                                    mr={2}
+                                  >
                                     Ẩn
                                   </Badge>
                                 )}
+                                <Badge colorScheme="orange" fontSize="2xs">
+                                  Đã diễn ra
+                                </Badge>
                               </Flex>
                               <Text fontSize="xs" color="gray.500">
                                 {event.isOnline
@@ -868,26 +894,55 @@ const Dashboard = () => {
                             day: "numeric",
                           })}
                         </Td>
-                        <Td>{event.soldTickets || "--"}</Td>
                         <Td>
-                          <HStack spacing={2}>
+                          {event.soldTickets !== undefined &&
+                          event.totalTickets !== undefined ? (
+                            <VStack align="start" spacing={1}>
+                              <Text>
+                                {event.soldTickets}/{event.totalTickets} (
+                                {Math.round(
+                                  (event.soldTickets / event.totalTickets) * 100
+                                )}
+                                %)
+                              </Text>
+                              <Progress
+                                value={
+                                  (event.soldTickets / event.totalTickets) * 100
+                                }
+                                size="sm"
+                                colorScheme="teal"
+                                w="100%"
+                                borderRadius="full"
+                              />
+                            </VStack>
+                          ) : (
+                            <Text>--</Text>
+                          )}
+                        </Td>
+                        <Td>
+                          <HStack spacing={1}>
                             <Tooltip label="Xem chi tiết sự kiện">
-                              <Link
+                              <IconButton
+                                aria-label="Xem chi tiết"
+                                icon={<FaEye />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="blue"
                                 as={RouterLink}
                                 to={`/events/${event.id}`}
-                                color="teal.500"
-                              >
-                                Xem chi tiết
-                              </Link>
+                                display="none"
+                              />
                             </Tooltip>
                             <Tooltip label="Xem lịch sử check-in">
-                              <Link
+                              <IconButton
+                                aria-label="Xem lịch sử check-in"
+                                icon={<FaQrcode />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="teal"
                                 as={RouterLink}
                                 to={`/organizer/events/${event.id}/check-in?view=history`}
-                                color="blue.500"
-                              >
-                                Xem check-in
-                              </Link>
+                              />
                             </Tooltip>
                           </HStack>
                         </Td>
