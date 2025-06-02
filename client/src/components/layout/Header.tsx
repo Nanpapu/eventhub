@@ -298,7 +298,7 @@ export default function Header() {
                   variant="solid"
                   colorScheme="teal"
                   bg="teal.500"
-                  _hover={{ bg: "teal.600", boxShadow: "sm" }}
+                  _hover={{ bg: "teal.200", boxShadow: "sm" }}
                   size="sm"
                   px={4}
                   borderRadius="md"

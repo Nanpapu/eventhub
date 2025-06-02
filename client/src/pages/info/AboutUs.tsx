@@ -321,6 +321,7 @@ const AboutUs = () => {
           <Button
             as={Link}
             to="/contact"
+            variant="outline"
             colorScheme="teal"
             size="lg"
             leftIcon={<Icon as={FaEnvelope} />}

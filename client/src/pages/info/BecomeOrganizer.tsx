@@ -415,6 +415,7 @@ const BecomeOrganizer = () => {
             as={Link}
             to="/register?role=organizer"
             size="lg"
+            variant="outline"
             colorScheme="teal"
           >
             Đăng ký làm Người tổ chức
