@@ -31,6 +31,8 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Tooltip,
+  Circle,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import {
@@ -40,8 +42,8 @@ import {
   FiClock,
   FiList,
   FiClock as FiHistory,
-  FiX,
   FiCode,
+  FiCheckCircle,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { SearchBar } from "../../components/common";
@@ -65,6 +67,7 @@ interface Ticket {
   status: "upcoming" | "past" | "canceled" | "used";
   ticketStatusOriginal?: "reserved" | "paid" | "cancelled" | "used";
   eventCategory?: string;
+  checkInDate?: string; // Thêm trường thời gian check-in
 }
 
 /**
@@ -149,7 +152,11 @@ const MyTickets = () => {
       return matchesSearch && matchesLocation && ticket.status === "upcoming";
     } else if (tabIndex === 2) {
       // Vé đã qua
-      return matchesSearch && matchesLocation && ticket.status === "past";
+      return (
+        matchesSearch &&
+        matchesLocation &&
+        (ticket.status === "past" || ticket.status === "used")
+      );
     } else {
       // Vé đã hủy
       return matchesSearch && matchesLocation && ticket.status === "canceled";
@@ -167,6 +174,14 @@ const MyTickets = () => {
         ticket.location.toLowerCase().includes(locationFilter.toLowerCase());
 
       if (status) {
+        if (status === "past") {
+          // Đối với "past", bao gồm cả "used" và "past"
+          return (
+            matchesSearch &&
+            matchesLocation &&
+            (ticket.status === status || ticket.status === "used")
+          );
+        }
         return matchesSearch && matchesLocation && ticket.status === status;
       }
       return matchesSearch && matchesLocation;
@@ -292,6 +307,7 @@ const MyTickets = () => {
               </Badge>
             </Flex>
           </Tab>
+          {/* Tab "Đã hủy" đã bị ẩn
           <Tab
             fontWeight="semibold"
             _selected={{ color: activeColor, bg: activeBg }}
@@ -306,6 +322,7 @@ const MyTickets = () => {
               </Badge>
             </Flex>
           </Tab>
+          */}
         </TabList>
 
         {/* SearchBar Component */}
@@ -386,11 +403,15 @@ const MyTickets = () => {
           <TabPanel p={0}>
             {/* Log cho tab 'Đã qua' */}
             {/* {console.log("[MyTickets] Rendering 'Đã qua' tab. Filtered tickets length:", filteredTickets.filter(t => t.status === 'past').length)} */}
-            {filteredTickets.filter((ticket) => ticket.status === "past")
-              .length > 0 ? (
+            {filteredTickets.filter(
+              (ticket) => ticket.status === "past" || ticket.status === "used"
+            ).length > 0 ? (
               <VStack spacing={6} align="stretch">
                 {filteredTickets
-                  .filter((ticket) => ticket.status === "past")
+                  .filter(
+                    (ticket) =>
+                      ticket.status === "past" || ticket.status === "used"
+                  )
                   .map((ticket) => (
                     <TicketCard
                       key={ticket.id}
@@ -410,10 +431,8 @@ const MyTickets = () => {
             )}
           </TabPanel>
 
-          {/* Tab: Vé đã hủy */}
+          {/* Tab "Đã hủy" đã bị ẩn
           <TabPanel p={0}>
-            {/* Log cho tab 'Đã hủy' */}
-            {/* {console.log("[MyTickets] Rendering 'Đã hủy' tab. Filtered tickets length:", filteredTickets.filter(t => t.status === 'canceled').length)} */}
             {filteredTickets.filter((ticket) => ticket.status === "canceled")
               .length > 0 ? (
               <VStack spacing={6} align="stretch">
@@ -435,6 +454,7 @@ const MyTickets = () => {
               </Alert>
             )}
           </TabPanel>
+          */}
         </TabPanels>
       </Tabs>
     </Box>
@@ -455,6 +475,12 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
 
+  // Màu sắc và style cho vé đã check-in
+  const usedTicketBg = useColorModeValue("gray.50", "gray.700");
+  const usedTicketBorderColor = useColorModeValue("gray.300", "gray.600");
+  const watermarkColor = useColorModeValue("gray.200", "gray.600");
+  const usedTextColor = useColorModeValue("gray.500", "gray.400");
+
   // QR Code modal controls
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -467,6 +493,8 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
         return "gray";
       case "canceled":
         return "red";
+      case "used":
+        return "purple";
       default:
         return "gray";
     }
@@ -481,21 +509,64 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
         return "Đã kết thúc";
       case "canceled":
         return "Đã hủy";
+      case "used":
+        return "Đã sử dụng";
       default:
         return "";
     }
   };
+
+  // Kiểm tra xem vé đã được sử dụng chưa
+  const isUsedTicket = ticket.status === "used";
+
+  // Style cho card dựa vào trạng thái vé
+  const cardStyle = isUsedTicket
+    ? {
+        bg: usedTicketBg,
+        borderColor: usedTicketBorderColor,
+        opacity: 0.85,
+        position: "relative" as const,
+      }
+    : {
+        bg: cardBg,
+        borderColor: borderColor,
+      };
 
   return (
     <Box
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
-      bg={cardBg}
-      borderColor={borderColor}
+      borderColor={cardStyle.borderColor}
+      bg={cardStyle.bg}
       boxShadow="sm"
       p={0}
+      opacity={cardStyle.opacity}
+      position={cardStyle.position}
     >
+      {/* Watermark cho vé đã sử dụng */}
+      {isUsedTicket && (
+        <Flex
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%) rotate(-30deg)"
+          zIndex={2}
+          pointerEvents="none"
+          opacity={0.2}
+        >
+          <Text
+            fontSize="6xl"
+            fontWeight="extrabold"
+            color={watermarkColor}
+            textTransform="uppercase"
+            letterSpacing="wider"
+          >
+            Đã sử dụng
+          </Text>
+        </Flex>
+      )}
+
       <Flex direction={{ base: "column", md: "row" }}>
         {/* Ảnh sự kiện */}
         <Box
@@ -504,13 +575,42 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
           bgImage={`url(${ticket.image})`}
           bgSize="cover"
           bgPosition="center"
-        />
+          filter={isUsedTicket ? "grayscale(0.5)" : "none"}
+          position="relative"
+        >
+          {/* Check-in badge (chỉ hiển thị nếu vé đã check-in) */}
+          {isUsedTicket && (
+            <Tooltip
+              label={`Đã check-in: ${
+                ticket.checkInDate || "Không có thông tin"
+              }`}
+              placement="top"
+              hasArrow
+            >
+              <Circle
+                size="40px"
+                bg="green.500"
+                color="white"
+                position="absolute"
+                top={2}
+                right={2}
+                boxShadow="md"
+              >
+                <Icon as={FiCheckCircle} boxSize={5} />
+              </Circle>
+            </Tooltip>
+          )}
+        </Box>
 
         {/* Thông tin vé */}
         <Box flex="1" p={6}>
           <Flex justify="space-between" align="start" mb={3}>
             <VStack align="start" spacing={1}>
-              <Heading as="h3" size="md" color={textColor}>
+              <Heading
+                as="h3"
+                size="md"
+                color={isUsedTicket ? usedTextColor : textColor}
+              >
                 {ticket.eventTitle}
               </Heading>
               <HStack>
@@ -544,13 +644,19 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
             <VStack align="start" spacing={1}>
               <Flex align="center">
                 <Icon as={FiCalendar} mr={2} color="teal.500" />
-                <Text fontSize="sm" color={secondaryTextColor}>
+                <Text
+                  fontSize="sm"
+                  color={isUsedTicket ? usedTextColor : secondaryTextColor}
+                >
                   {ticket.date} • {ticket.startTime}
                 </Text>
               </Flex>
               <Flex align="center">
                 <Icon as={FiMapPin} mr={2} color="teal.500" />
-                <Text fontSize="sm" color={secondaryTextColor}>
+                <Text
+                  fontSize="sm"
+                  color={isUsedTicket ? usedTextColor : secondaryTextColor}
+                >
                   {ticket.location}
                 </Text>
               </Flex>
@@ -559,13 +665,25 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
             <VStack align="start" spacing={1}>
               <Flex align="center">
                 <Icon as={FiClock} mr={2} color="teal.500" />
-                <Text fontSize="sm" color={secondaryTextColor}>
+                <Text
+                  fontSize="sm"
+                  color={isUsedTicket ? usedTextColor : secondaryTextColor}
+                >
                   Ngày mua: {ticket.purchaseDate}
                 </Text>
               </Flex>
-              <Text fontSize="sm" fontWeight="medium">
+              <Text
+                fontSize="sm"
+                fontWeight="medium"
+                color={isUsedTicket ? usedTextColor : textColor}
+              >
                 Mã vé: {ticket.id}
               </Text>
+              {isUsedTicket && ticket.checkInDate && (
+                <Text fontSize="sm" color="green.500" fontWeight="medium">
+                  Đã check-in: {ticket.checkInDate}
+                </Text>
+              )}
             </VStack>
           </Stack>
 
@@ -601,8 +719,10 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
                 mr={2}
                 isDisabled={ticket.status === "canceled"}
                 onClick={onOpen}
+                opacity={isUsedTicket ? 0.7 : 1}
+                _hover={isUsedTicket ? {} : { opacity: 0.8 }}
               >
-                Xem mã QR
+                {isUsedTicket ? "Vé đã sử dụng" : "Xem mã QR"}
               </Button>
               <Button
                 size="sm"
@@ -622,7 +742,9 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Mã QR vé của bạn</ModalHeader>
+          <ModalHeader>
+            {isUsedTicket ? "Vé đã được sử dụng" : "Mã QR vé của bạn"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="center" py={4}>
@@ -632,17 +754,63 @@ const TicketCard = ({ ticket, onCancel }: TicketCardProps) => {
                 borderRadius="md"
                 borderColor={borderColor}
                 bg="white"
+                position="relative"
               >
                 <QRCode
                   value={ticket.id}
                   size={200}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                 />
+                {/* Overlay "Đã sử dụng" cho vé đã check-in */}
+                {isUsedTicket && (
+                  <Flex
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bg="rgba(0,0,0,0.1)"
+                    justifyContent="center"
+                    alignItems="center"
+                    borderRadius="md"
+                  >
+                    <Text
+                      color="red.500"
+                      fontWeight="bold"
+                      fontSize="2xl"
+                      transform="rotate(-30deg)"
+                      bgColor="rgba(255,255,255,0.7)"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                    >
+                      ĐÃ SỬ DỤNG
+                    </Text>
+                  </Flex>
+                )}
               </Box>
               <Text fontWeight="bold">Mã vé: {ticket.id}</Text>
-              <Text fontSize="sm" color={secondaryTextColor} textAlign="center">
-                Xuất trình mã QR này khi tham gia sự kiện để xác nhận vé của bạn
-              </Text>
+              {isUsedTicket ? (
+                <Alert status="info" borderRadius="md">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Vé đã được sử dụng</AlertTitle>
+                    <AlertDescription>
+                      Vé này đã được check-in vào{" "}
+                      {ticket.checkInDate || "trước đó"}.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              ) : (
+                <Text
+                  fontSize="sm"
+                  color={secondaryTextColor}
+                  textAlign="center"
+                >
+                  Xuất trình mã QR này khi tham gia sự kiện để xác nhận vé của
+                  bạn
+                </Text>
+              )}
             </VStack>
           </ModalBody>
           <ModalFooter>
