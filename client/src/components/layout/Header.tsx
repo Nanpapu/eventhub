@@ -22,6 +22,7 @@ import {
   MenuDivider,
   useToast,
   ButtonGroup,
+  Image,
 } from "@chakra-ui/react";
 import {
   MdMenu as HamburgerIcon,
@@ -45,6 +46,7 @@ import {
   selectUser,
 } from "../../app/features/authSlice";
 import { getDefaultAvatar } from "../../utils/userUtils";
+import logo from "../../assets/EventHub_logo.png";
 
 export default function Header() {
   const { isOpen, onToggle } = useDisclosure();
@@ -132,7 +134,7 @@ export default function Header() {
           />
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
-          <ChakraLink
+          {/* <ChakraLink
             as={Link}
             to="/"
             textAlign={useBreakpointValue({ base: "center", md: "left" })}
@@ -145,9 +147,17 @@ export default function Header() {
             }}
           >
             EventHub
+          </ChakraLink> */}
+          <ChakraLink as={Link} to="/">
+            <Image
+              src={logo}
+              alt="EventHub logo"
+              height="80px"
+              objectFit="cover"
+            />
           </ChakraLink>
 
-          <Flex display={{ base: "none", md: "flex" }} ml={10}>
+          <Flex display={{ base: "none", md: "flex" }} align="center" ml={10}>
             <DesktopNav navItems={filteredNavItems} currentUser={currentUser} />
           </Flex>
         </Flex>
