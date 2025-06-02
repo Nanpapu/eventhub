@@ -654,6 +654,7 @@ const PressKit = () => {
         </Text>
         <Button
           colorScheme={buttonColorScheme}
+          variant="outline"
           size="lg"
           leftIcon={<FaEnvelope />}
           as={Link}

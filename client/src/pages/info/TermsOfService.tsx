@@ -517,7 +517,14 @@ const TermsOfService = () => {
               </Text>
               <Text>Điện thoại: +84 123 456 789</Text>
             </VStack>
-            <Button as={Link} to="/contact" colorScheme="teal" size="lg" mt={4}>
+            <Button
+              as={Link}
+              to="/contact"
+              colorScheme="teal"
+              variant="outline"
+              size="lg"
+              mt={4}
+            >
               Liên hệ với chúng tôi
             </Button>
           </TermsSection>
@@ -632,6 +639,7 @@ const TermsOfService = () => {
           <Button
             as={Link}
             to="/contact"
+            variant="outline"
             colorScheme="teal"
             size="lg"
             width={{ base: "full", md: "auto" }}

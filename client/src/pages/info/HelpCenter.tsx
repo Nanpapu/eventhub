@@ -245,14 +245,14 @@ const HelpCenter = () => {
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Trung tâm Trợ giúp</BreadcrumbLink>
+          <BreadcrumbLink>Trung tâm trợ giúp</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
       {/* Header */}
       <Box mb={10} textAlign="center">
         <Heading as="h1" size="2xl" mb={4} color={headingColor}>
-          Trung tâm Trợ giúp
+          Trung tâm trợ giúp
         </Heading>
         <Text fontSize="lg" maxW="2xl" mx="auto" color={textColor}>
           Tìm câu trả lời nhanh chóng cho các câu hỏi của bạn về EventHub
@@ -542,8 +542,15 @@ const HelpCenter = () => {
           Nếu bạn không tìm thấy câu trả lời cho câu hỏi của mình, hãy liên hệ
           với đội ngũ hỗ trợ của chúng tôi.
         </Text>
-        <Button as={Link} to="/contact" colorScheme="blue" size="lg" px={8}>
-          Liên hệ Hỗ trợ
+        <Button
+          as={Link}
+          to="/contact"
+          colorScheme="blue"
+          variant="outline"
+          size="lg"
+          px={8}
+        >
+          Liên hệ hỗ trợ
         </Button>
       </Box>
 

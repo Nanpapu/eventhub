@@ -875,6 +875,7 @@ const EventManagement = () => {
                   as={Link}
                   to="/create-event"
                   colorScheme="teal"
+                  variant="outline"
                   leftIcon={<FiPlus />}
                 >
                   Tạo sự kiện mới
@@ -1093,6 +1094,7 @@ const EventManagement = () => {
                     to="/events/create"
                     colorScheme="teal"
                     leftIcon={<FiPlus />}
+                    variant="outline"
                   >
                     Tạo sự kiện mới
                   </Button>

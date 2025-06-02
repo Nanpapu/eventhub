@@ -561,6 +561,7 @@ const Dashboard = () => {
                   as={RouterLink}
                   to="/create-event"
                   colorScheme="teal"
+                  variant="outline"
                   leftIcon={<FaPlus />}
                   size="sm"
                 >
