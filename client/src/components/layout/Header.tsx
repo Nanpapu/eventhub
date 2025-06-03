@@ -655,18 +655,7 @@ interface UserForHeader {
 const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Sự kiện",
-    children: [
-      {
-        label: "Tất cả sự kiện",
-        subLabel: "Tìm sự kiện gần bạn",
-        href: "/events",
-      },
-      {
-        label: "Danh mục",
-        subLabel: "Duyệt sự kiện theo danh mục",
-        href: "/events/categories",
-      },
-    ],
+    href: "/events",
   },
   {
     label: "Tạo sự kiện",

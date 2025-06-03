@@ -1082,7 +1082,7 @@ const EventDetail = () => {
       </Flex>
 
       {/* Phần sự kiện liên quan */}
-      <Box mt={10}>
+      {/* <Box mt={10}>
         <Heading size="lg" mb={6} color={textColor}>
           Sự Kiện Tương Tự
         </Heading>
@@ -1090,7 +1090,7 @@ const EventDetail = () => {
           Sắp ra mắt... Sự kiện tương tự sẽ được hiển thị khi kết nối với
           backend.
         </Text>
-      </Box>
+      </Box> */}
     </Container>
   );
 };

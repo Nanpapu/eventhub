@@ -60,24 +60,24 @@ const AboutUs = () => {
   // Dữ liệu đội ngũ thành viên
   const teamMembers: TeamMemberProps[] = [
     {
-      name: "Nguyễn Văn A",
+      name: "Trần Phương Lâm",
       role: "Frontend Developer",
       image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1589656966895-2f33e7653819?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", // Hình con mèo
       bio: "Sinh viên năm 4 chuyên ngành Kỹ thuật phần mềm tại UIT. Có kinh nghiệm phát triển giao diện người dùng với React và NextJS.",
     },
     {
-      name: "Trần Thị B",
+      name: "Trần Trọng Nhân",
       role: "Backend Developer",
       image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", // Hình con chó
       bio: "Sinh viên năm 4 chuyên ngành Khoa học máy tính tại UIT. Chuyên về phát triển backend với Node.js và xây dựng APIs.",
     },
     {
-      name: "Lê Văn C",
+      name: "Bùi Gia Huy",
       role: "Database Engineer",
       image:
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", // Hình con chim
       bio: "Sinh viên năm 4 chuyên ngành Hệ thống thông tin tại UIT. Có kiến thức sâu về thiết kế và quản lý cơ sở dữ liệu.",
     },
   ];
@@ -173,7 +173,7 @@ const AboutUs = () => {
         </Box>
         <Box>
           <Image
-            src="https://images.unsplash.com/photo-1540317580384-e5d43867caa6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            src="client/src/assets/EventHub_alt_logo.png"
             alt="Sự kiện EventHub"
             borderRadius="lg"
             shadow="lg"
