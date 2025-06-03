@@ -18,6 +18,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { EventCard, EventCardData } from "../components/events/EventCard";
 import { categories } from "../utils/categoryUtils";
+import { useAppSelector } from "../app/hooks";
+import { selectUser, selectIsAuthenticated } from "../app/features/authSlice";
 
 // API response interface
 interface ApiEventData {
@@ -43,6 +45,10 @@ const Home = () => {
   const [events, setEvents] = useState<EventCardData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Lấy thông tin người dùng từ Redux store
+  const user = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   // Lấy danh sách sự kiện từ API
   useEffect(() => {
@@ -92,7 +98,11 @@ const Home = () => {
 
   // Handler cho nút "Tạo sự kiện"
   const handleCreateEvent = () => {
-    navigate("/become-organizer");
+    if (isAuthenticated && user && user.role === "organizer") {
+      navigate("/create-event");
+    } else {
+      navigate("/become-organizer");
+    }
   };
 
   return (

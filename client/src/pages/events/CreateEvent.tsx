@@ -260,7 +260,19 @@ const BasicInfoStep: React.FC<StepProps> = ({
           onChange={handleChange}
           borderColor={borderColor}
           placeholder="VD: Hội thảo Công nghệ Blockchain 2024"
+          maxLength={300}
         />
+        <Flex justify="space-between" mt={1}>
+          <FormHelperText>
+            Tên sự kiện của bạn. Tối thiểu 20 ký tự, tối đa 300 ký tự.
+          </FormHelperText>
+          <Text
+            fontSize="xs"
+            color={formData.title.length < 20 ? "red.500" : "gray.500"}
+          >
+            {formData.title.length}/300 ký tự
+          </Text>
+        </Flex>
         {errors.title && <FormErrorMessage>{errors.title}</FormErrorMessage>}
       </FormControl>
 
@@ -1868,6 +1880,8 @@ const CreateEvent = () => {
       case 0:
         if (!formData.title.trim()) {
           newStepErrors.title = "Tên sự kiện là bắt buộc.";
+        } else if (formData.title.trim().length < 20) {
+          newStepErrors.title = "Tên sự kiện phải có ít nhất 20 ký tự.";
         }
         if (!formData.description.trim()) {
           newStepErrors.description = "Mô tả sự kiện là bắt buộc.";
