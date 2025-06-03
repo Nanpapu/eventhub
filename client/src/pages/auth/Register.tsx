@@ -170,6 +170,7 @@ const Register = () => {
               Tạo tài khoản để trải nghiệm tất cả tính năng của EventHub
             </Text>
 
+            {/* Social login buttons - temporarily hidden
             <Stack direction="row" spacing={4}>
               <Button
                 w="full"
@@ -198,6 +199,7 @@ const Register = () => {
               </Text>
               <Divider borderColor={dividerColor} />
             </Flex>
+            */}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <Stack spacing={4}>

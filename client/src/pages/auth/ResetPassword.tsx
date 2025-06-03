@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
+import logo from "../../assets/EventHub_logo.png";
 
 interface ResetPasswordFormValues {
   password: string;
@@ -127,7 +128,12 @@ const ResetPassword = () => {
       <Stack spacing={8}>
         <Stack spacing={6}>
           <Center>
-            <Image src="/logo.svg" alt="EventHub Logo" w="64px" h="64px" />
+            <Image
+              src={logo}
+              alt="EventHub Logo"
+              w="160px"
+              objectFit="contain"
+            />
           </Center>
           <Stack spacing={3} textAlign="center">
             <Heading fontSize="2xl" fontWeight="bold">

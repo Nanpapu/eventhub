@@ -176,6 +176,7 @@ const Login = () => {
               Đăng nhập để tiếp tục hành trình với EventHub
             </Text>
 
+            {/* Social login buttons - temporarily hidden
             <Stack direction="row" spacing={4}>
               <Button
                 w="full"
@@ -204,6 +205,7 @@ const Login = () => {
               </Text>
               <Divider borderColor={dividerColor} />
             </Flex>
+            */}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <Stack spacing={4}>
