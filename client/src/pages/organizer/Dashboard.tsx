@@ -306,13 +306,38 @@ const Dashboard = () => {
         })
       ).unwrap();
 
-      // Cập nhật UI
+      // Cập nhật UI cho tất cả các state
       const updatedEvents = events.map((event) =>
         event.id === eventToToggleVisibility.id
           ? { ...event, isHidden: !isCurrentlyHidden }
           : event
       );
       setEvents(updatedEvents);
+
+      // Cập nhật các state phân loại sự kiện
+      setUpcomingEvents((prev) =>
+        prev.map((event) =>
+          event.id === eventToToggleVisibility.id
+            ? { ...event, isHidden: !isCurrentlyHidden }
+            : event
+        )
+      );
+
+      setOngoingEvents((prev) =>
+        prev.map((event) =>
+          event.id === eventToToggleVisibility.id
+            ? { ...event, isHidden: !isCurrentlyHidden }
+            : event
+        )
+      );
+
+      setPastEvents((prev) =>
+        prev.map((event) =>
+          event.id === eventToToggleVisibility.id
+            ? { ...event, isHidden: !isCurrentlyHidden }
+            : event
+        )
+      );
 
       toast({
         title: isCurrentlyHidden

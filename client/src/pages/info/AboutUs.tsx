@@ -4,33 +4,29 @@ import {
   Heading,
   Text,
   SimpleGrid,
-  VStack,
-  HStack,
-  Icon,
-  Button,
-  Flex,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
   Image,
   List,
   ListItem,
   ListIcon,
+  Icon,
+  Button,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Stack,
   Divider,
   useColorModeValue,
-  Link as ChakraLink,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import {
-  FaCheckCircle,
-  FaLightbulb,
   FaUsers,
+  FaLightbulb,
   FaCode,
   FaGraduationCap,
-  FaEnvelope,
-  FaArrowRight,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { IconType } from "react-icons";
+import logo from "../../assets/EventHub_alt_logo.png";
 
 // Định nghĩa cấu trúc dữ liệu thành viên trong team
 interface TeamMemberProps {
@@ -171,14 +167,13 @@ const AboutUs = () => {
             </ListItem>
           </List>
         </Box>
-        <Box>
+        <Box display="flex" justifyContent="center" alignItems="center">
           <Image
-            src="client/src/assets/EventHub_alt_logo.png"
-            alt="Sự kiện EventHub"
+            src={logo}
+            alt="EventHub Logo"
+            maxH="300px"
+            objectFit="contain"
             borderRadius="lg"
-            shadow="lg"
-            objectFit="cover"
-            h="100%"
           />
         </Box>
       </SimpleGrid>
@@ -241,7 +236,7 @@ const AboutUs = () => {
               transition="all 0.3s"
               _hover={{ shadow: "md" }}
             >
-              <VStack spacing={4} align="center">
+              <Stack spacing={4} align="center">
                 <Image
                   src={member.image}
                   alt={member.name}
@@ -251,18 +246,18 @@ const AboutUs = () => {
                   border="4px solid"
                   borderColor={accentColor}
                 />
-                <VStack spacing={1}>
+                <Stack spacing={1}>
                   <Heading as="h3" size="md">
                     {member.name}
                   </Heading>
                   <Text fontWeight="bold" color={accentColor} fontSize="sm">
                     {member.role}
                   </Text>
-                </VStack>
+                </Stack>
                 <Text textAlign="center" color={textColor}>
                   {member.bio}
                 </Text>
-              </VStack>
+              </Stack>
             </Box>
           ))}
         </SimpleGrid>
@@ -317,14 +312,14 @@ const AboutUs = () => {
           Bạn quan tâm đến việc tổ chức sự kiện hoặc muốn tìm hiểu thêm về
           EventHub? Hãy liên hệ với chúng tôi ngay hôm nay!
         </Text>
-        <HStack spacing={4} justify="center">
+        <Stack spacing={4} justify="center">
           <Button
             as={Link}
             to="/contact"
             variant="outline"
             colorScheme="teal"
             size="lg"
-            leftIcon={<Icon as={FaEnvelope} />}
+            leftIcon={<Icon as={FaUsers} />}
           >
             Liên hệ
           </Button>
@@ -334,11 +329,11 @@ const AboutUs = () => {
             variant="outline"
             colorScheme="teal"
             size="lg"
-            rightIcon={<Icon as={FaArrowRight} />}
+            rightIcon={<Icon as={FaUsers} />}
           >
             Trở thành Nhà tổ chức
           </Button>
-        </HStack>
+        </Stack>
       </Box>
 
       {/* Footer note */}
