@@ -34,6 +34,7 @@ import {
   FiX,
   FiGrid,
   FiBookmark,
+  FiUserPlus,
 } from "react-icons/fi";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -41,6 +42,7 @@ import { SearchBar } from "../../components/common";
 import eventService from "../../services/event.service";
 import { getCategoryName, getCategoryOptions } from "../../utils/categoryUtils";
 import { getLocationOptions } from "../../utils/locationUtils";
+import useAuth from "../../hooks/useAuth";
 
 // Interface cho dữ liệu sự kiện thô từ API (cho cả myEvents và savedEvents)
 interface ApiEventDto {
@@ -146,6 +148,10 @@ const EventManagement = () => {
 
   // Toast thông báo
   const toast = useToast();
+
+  // Lấy thông tin người dùng để kiểm tra vai trò
+  const { user } = useAuth();
+  const isOrganizer = user?.role === "organizer";
 
   // Fetch "Sự kiện của tôi" (sự kiện do người dùng tạo)
   useEffect(() => {
@@ -545,6 +551,40 @@ const EventManagement = () => {
   };
 
   const renderMyEventsContent = () => {
+    // Kiểm tra nếu không phải nhà tổ chức, hiển thị thông báo
+    if (!isOrganizer) {
+      return (
+        <Alert
+          status="info"
+          borderRadius="md"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          textAlign="center"
+          py={6}
+        >
+          <AlertIcon boxSize="40px" mr={0} />
+          <AlertTitle mt={4} mb={2} fontSize="lg">
+            Bạn cần trở thành nhà tổ chức!
+          </AlertTitle>
+          <AlertDescription maxWidth="md">
+            Để tạo và quản lý sự kiện, bạn cần trở thành nhà tổ chức trên
+            EventHub. Nhà tổ chức có thể tạo sự kiện, quản lý đăng ký và nhiều
+            tính năng khác.
+          </AlertDescription>
+          <Button
+            as={Link}
+            to="/become-organizer"
+            mt={6}
+            colorScheme="teal"
+            leftIcon={<FiUserPlus />}
+          >
+            Trở thành nhà tổ chức
+          </Button>
+        </Alert>
+      );
+    }
+
     if (isMyEventsLoading) {
       return (
         <Flex justify="center" align="center" minH="200px">
@@ -577,14 +617,16 @@ const EventManagement = () => {
             <AlertDescription>
               Bạn chưa tạo sự kiện nào hoặc không có sự kiện phù hợp với bộ lọc
               hiện tại.{" "}
-              <ChakraLink
-                as={Link}
-                to="/create-event"
-                color="teal.500"
-                fontWeight="bold"
-              >
-                Tạo sự kiện mới ngay!
-              </ChakraLink>
+              {isOrganizer && (
+                <ChakraLink
+                  as={Link}
+                  to="/create-event"
+                  color="teal.500"
+                  fontWeight="bold"
+                >
+                  Tạo sự kiện mới ngay!
+                </ChakraLink>
+              )}
             </AlertDescription>
           </Flex>
         </Alert>
@@ -871,15 +913,17 @@ const EventManagement = () => {
                     : allFilteredEvents.length}
                   )
                 </Heading>
-                <Button
-                  as={Link}
-                  to="/create-event"
-                  colorScheme="teal"
-                  variant="outline"
-                  leftIcon={<FiPlus />}
-                >
-                  Tạo sự kiện mới
-                </Button>
+                {isOrganizer && (
+                  <Button
+                    as={Link}
+                    to="/create-event"
+                    colorScheme="teal"
+                    variant="outline"
+                    leftIcon={<FiPlus />}
+                  >
+                    Tạo sự kiện mới
+                  </Button>
+                )}
               </Flex>
 
               {/* Hiển thị tất cả sự kiện */}
@@ -1079,26 +1123,28 @@ const EventManagement = () => {
                 <Heading as="h3" size="md">
                   Sự kiện của tôi ({filteredMyEvents.length} / {totalEvents})
                 </Heading>
-                <HStack spacing={2}>
-                  <Button
-                    as={Link}
-                    to="/dashboard"
-                    colorScheme="purple"
-                    leftIcon={<FiCalendar />}
-                    variant="outline"
-                  >
-                    Quản lý chuyên sâu
-                  </Button>
-                  <Button
-                    as={Link}
-                    to="/events/create"
-                    colorScheme="teal"
-                    leftIcon={<FiPlus />}
-                    variant="outline"
-                  >
-                    Tạo sự kiện mới
-                  </Button>
-                </HStack>
+                {isOrganizer && (
+                  <HStack spacing={2}>
+                    <Button
+                      as={Link}
+                      to="/dashboard"
+                      colorScheme="purple"
+                      leftIcon={<FiCalendar />}
+                      variant="outline"
+                    >
+                      Quản lý chuyên sâu
+                    </Button>
+                    <Button
+                      as={Link}
+                      to="/events/create"
+                      colorScheme="teal"
+                      leftIcon={<FiPlus />}
+                      variant="outline"
+                    >
+                      Tạo sự kiện mới
+                    </Button>
+                  </HStack>
+                )}
               </Flex>
 
               {/* Hiển thị sự kiện của tôi */}

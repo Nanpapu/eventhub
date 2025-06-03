@@ -21,7 +21,7 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
-import logo from "../../assets/EventHub_logo.png";
+import logo from "../../assets/EventHub_alt_logo.png";
 
 interface ResetPasswordFormValues {
   password: string;

@@ -24,6 +24,7 @@ import { useForm } from "react-hook-form";
 import { FaArrowLeft } from "react-icons/fa";
 import authService from "../../services/auth.service";
 import { useState } from "react";
+import logo from "../../assets/EventHub_alt_logo.png";
 
 interface ForgotPasswordFormValues {
   email: string;
@@ -96,7 +97,7 @@ const ForgotPassword = () => {
       <Stack spacing={8}>
         <Stack spacing={6}>
           <Center>
-            <Image src="/logo.svg" alt="EventHub Logo" w="64px" h="64px" />
+            <Image src={logo} alt="EventHub Logo" w="64px" h="64px" />
           </Center>
           <Stack spacing={3} textAlign="center">
             <Heading fontSize="2xl" fontWeight="bold">
