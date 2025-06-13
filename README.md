@@ -194,16 +194,3 @@ Chức năng "Sự kiện đã lưu" cho phép người dùng lưu lại các s�
 4. **Hủy lưu sự kiện**:
    - Từ trang danh sách đã lưu: Nhấn vào biểu tượng trái tim trên card sự kiện
    - Từ trang chi tiết: Nhấn vào biểu tượng trái tim đã được kích hoạt
-
-## Trang mới đã thêm
-
-1. **SavedEvents.tsx**: Hiển thị tất cả sự kiện đã lưu của người dùng
-
-## Tương lai phát triển
-
-Các tính năng có thể phát triển trong tương lai:
-
-1. Lưu trữ sự kiện đã lưu trong cơ sở dữ liệu để đồng bộ giữa các thiết bị
-2. Thêm chức năng nhóm sự kiện đã lưu thành các danh sách riêng
-3. Thông báo khi sự kiện đã lưu sắp diễn ra
-4. Chia sẻ danh sách sự kiện đã lưu với bạn bè
