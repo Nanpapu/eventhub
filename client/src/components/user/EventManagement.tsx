@@ -735,7 +735,7 @@ const EventManagement = () => {
                     colorScheme="blue"
                     variant="outline"
                     as={Link}
-                    to={`/events/edit/${event.id}`}
+                    to={`/create-event?edit=${event.id}`}
                   />
                   <Tooltip
                     label={event.isHidden ? "Hiện sự kiện" : "Ẩn sự kiện"}
@@ -1066,7 +1066,7 @@ const EventManagement = () => {
                                 colorScheme="blue"
                                 variant="outline"
                                 as={Link}
-                                to={`/events/edit/${event.id}`}
+                                to={`/create-event?edit=${event.id}`}
                               />
                               <Tooltip
                                 label={
